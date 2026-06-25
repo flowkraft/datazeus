@@ -1,0 +1,14 @@
+# Build artifacts (built in CI, never committed)
+
+# Anki decks — built from cards/cards.yaml by tools/build-anki.py
+**/*.apkg
+# Maven (koans) output
+**/target/
+# rendered videos — published to CDN / website, not git
+*.mp4
+
+# Tooling
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store

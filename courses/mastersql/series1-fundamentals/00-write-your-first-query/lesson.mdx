@@ -1,0 +1,92 @@
+---
+title: "Stop Watching SQL Tutorials — Write Your First Query in 60 Seconds"
+description: "No slides, no setup lecture. Type one query against real business data and answer a real question — your first 60 seconds of SQL."
+topic: "master-sql"
+tags: ["sql", "fundamentals", "getting-started"]
+level: "beginner"
+module: "series1-fundamentals"
+order: 0
+date: "2026-06-23"
+published: true
+---
+
+<VideoPlayer videoId="master-sql-series1-00-write-your-first-query" />
+
+## Stop watching. Start writing.
+
+Every other SQL course makes you **watch** slides for two hours before you touch a keyboard. Not here. In the next minute **you** write a real query and get a real answer — then we'll explain what just happened.
+
+## A real question
+
+Here's how SQL actually starts in a job. Your boss leans over and asks:
+
+> *How many orders did we ship in June?*
+
+Most people open a spreadsheet and start scrolling. An hour later, they're still scrolling. You're not going to **find** the answer — you're going to **ask** for it.
+
+## Your first query
+
+Type this exactly (don't copy-paste — typing is how it sticks), and hit **Run**:
+
+```sql
+SELECT count(*) AS june_orders
+FROM "Orders"
+WHERE "OrderDate" >= DATE '2024-06-01'
+  AND "OrderDate" <  DATE '2024-07-01';
+```
+
+```text
+ june_orders
+-------------
+           4
+```
+
+**Four.** One line, and you just answered a real business question from real company data. That is SQL. Read it the way you'd say it out loud: *count the rows in Orders where the order date falls in June.* (`count(*)` counts rows; `WHERE` keeps only the ones you care about; the half-open range `>= June 1 … < July 1` captures all of June with no end-of-month surprises.)
+
+## It's real data, not toy data
+
+No `foo`, no `bar`. Real customers, real countries — ask who they are:
+
+```sql
+SELECT "CompanyName", "Country"
+FROM "Customers"
+LIMIT 5;
+```
+
+```text
+ CompanyName                          | Country
+--------------------------------------+---------
+ Alfreds Futterkiste                  | Germany
+ Ana Trujillo Emparedados y helados   | Mexico
+ Antonio Moreno Taquería              | Mexico
+ Around the Horn                      | UK
+ Berglunds snabbköp                   | Sweden
+```
+
+This is **Northwind** — a small import/export company (Customers, Orders, Products, Suppliers, Employees). Real enough to ask real questions, small enough to fit in your head.
+
+## One skill, every database
+
+We practise on **PostgreSQL** — it's free and the cleanest teacher there is. But what you learn here runs on Oracle, SQL Server, MySQL and Db2 too. Learn it **once**; whenever a query needs a vendor-specific trick, we'll flag it and show the portable version. You're not learning one database — you're learning SQL.
+
+## The deal: how every lesson works
+
+1. **Type** the query yourself — typing teaches your brain; copy-paste only teaches your eyes.
+2. **Predict** the answer before you run it. Say it out loud: *"I expect 4."* Wrong → you just learned something. Right → that's earned confidence. (Our **koans** turn this into code: fill in the number, run, go green.)
+3. **Run** it. No watching. No slides you forget by lunch.
+
+Do this for a handful of lessons and you'll answer questions nobody else at your company can.
+
+## What's next
+
+**Next lesson:** [Ask Your Database Anything — `SELECT`](/datazeus-academy/master-sql/meet-your-data-with-select) — meet your tables, rows and columns by querying them.
+
+---
+
+## 🧪 Practice & remember
+
+- **Koans** — fill in the blanks and watch the tests go green:
+  from the repo root run `./koans.sh sql S1 _00` (`koans.bat sql S1 _00` on Windows) —
+  that's course · series · episode (package `datazeus.mastersql.series1._00`).
+- **Flashcards** — `…/00-write-your-first-query/cards/cards.yaml` → build the deck with `python tools/build-anki.py`.
+- **Scripts** — the exact SQL above lives in `…/00-write-your-first-query/scripts/` (`june-orders.sql`, `customers.sql`).

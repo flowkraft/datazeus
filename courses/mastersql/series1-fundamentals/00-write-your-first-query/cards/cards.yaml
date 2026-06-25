@@ -1,0 +1,32 @@
+# Flashcards for Master SQL · Series 1 · 00 — Write Your First Query
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
+# tools/build-anki.py turns it into a .apkg with genanki.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds update the same deck (no duplicates).
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+
+deck: "DataZeus::Master SQL::Series 1::00 Write Your First Query"
+guid: "datazeus-master-sql-series1-00-write-your-first-query"
+tags: ["datazeus", "master-sql", "series-1", "sql"]
+
+cards:
+  - cloze: "You don't {{c1::find}} the answer in SQL — you {{c1::ask}} for it. SQL is {{c2::declarative}}: you say *what* you want, the database works out *how*."
+
+  - basic:
+      front: "How do you count the rows that match a condition?"
+      back: "SELECT count(*) FROM <table> WHERE <condition>; — `count(*)` counts rows, `WHERE` keeps only the matching ones."
+
+  - cloze: "To capture a whole month safely, use a {{c1::half-open}} range: `\"OrderDate\" >= DATE '2024-06-01' AND \"OrderDate\" < DATE '2024-07-01'` — no end-of-month or time-of-day surprises."
+
+  - basic:
+      front: "Why teach on PostgreSQL but call the SQL 'portable'?"
+      back: "Postgres is free and standards-leading — but standard SQL transfers to Oracle, SQL Server, MySQL, Db2. You learn SQL once; vendor-specific tricks get flagged with a portable alternative."
+
+  - cloze: "The three habits that make SQL stick: {{c1::type}} every query, {{c2::predict}} the answer before you run, then {{c3::run}} it."
+
+  - basic:
+      front: "What is the Northwind dataset?"
+      back: "A small import/export company — Customers, Orders, Products, Suppliers, Employees — real enough to ask real questions, small enough to fit in your head."

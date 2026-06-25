@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.flowkraft.datazeus</groupId>
+  <artifactId>datazeus-tests</artifactId>
+  <version>1.0.0</version>
+  <packaging>jar</packaging>
+
+  <!--
+    DataZeus tests — ONE Spock/Groovy module, TWO source roots, same toolchain:
+      mvn test            → compiles & runs src/verify/groovy  (*Spec): the publish GATE
+                            (must always be green — proves every lesson claim is true)
+      mvn test -Pkoans    → compiles & runs src/koans/groovy   (*Koans): learner exercises
+                            (red until you fill the ___; a different, richer set than the gate)
+
+    The two roots are intentionally separate: the gate verifies EXACTLY the queries the
+    lesson/video show; the koans are related practice, not a blanked copy of the gate.
+
+    Both run against the canonical ../datasets/northwind/northwind.duckdb (opened as a
+    throwaway copy) — the SAME database the learner queries in the CLI / CloudBeaver.
+    No Docker, no external DB. (Versions below may need a bump for your toolchain.)
+  -->
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.release>17</maven.compiler.release>
+    <groovy.version>4.0.22</groovy.version>
+    <spock.version>2.3-groovy-4.0</spock.version>
+    <duckdb.version>1.1.3</duckdb.version>
+    <!-- Which source root the default build compiles & runs. The `koans` profile flips it. -->
+    <test.src.dir>${project.basedir}/src/verify/groovy</test.src.dir>
+    <test.includes>**/*Spec.java</test.includes>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy</artifactId>
+      <version>${groovy.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.groovy</groupId>
+      <artifactId>groovy-sql</artifactId>
+      <version>${groovy.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.spockframework</groupId>
+      <artifactId>spock-core</artifactId>
+      <version>${spock.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.duckdb</groupId>
+      <artifactId>duckdb_jdbc</artifactId>
+      <version>${duckdb.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <!-- Compile ONLY the active source root (gate by default, koans under -Pkoans). -->
+      <plugin>
+        <groupId>org.codehaus.gmavenplus</groupId>
+        <artifactId>gmavenplus-plugin</artifactId>
+        <version>3.0.2</version>
+        <configuration>
+          <testSources>
+            <testSource>
+              <directory>${test.src.dir}</directory>
+              <includes>
+                <include>**/*.groovy</include>
+              </includes>
+            </testSource>
+          </testSources>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>addTestSources</goal>
+              <goal>compileTests</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+        <configuration>
+          <includes>
+            <include>${test.includes}</include>
+          </includes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!-- `mvn test -Pkoans` compiles & runs the learner koans instead of the gate. -->
+    <profile>
+      <id>koans</id>
+      <properties>
+        <test.src.dir>${project.basedir}/src/koans/groovy</test.src.dir>
+        <test.includes>**/*Koans.java</test.includes>
+      </properties>
+      <build>
+        <!-- puts the "path to enlightenment" global-extension registration on the
+             koans classpath (it is absent from the default verified-gate run). -->
+        <testResources>
+          <testResource>
+            <directory>${project.basedir}/src/koans/resources</directory>
+          </testResource>
+        </testResources>
+      </build>
+    </profile>
+  </profiles>
+</project>
