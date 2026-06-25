@@ -90,12 +90,19 @@ interface Scene {
   cta?: string[]; // a no-dialogue "your turn" call-to-action slide: no avatars, no caption, no TTS
   ctaSql?: string[]; // a code card shown between the first cta line and the rest (the query to type)
   exchange?: { who: Speaker; line: string }[]; // a short two-turn back-and-forth shown at the bottom
+  // a multi-turn Q/A "chat" on ONE slide: each turn voiced inline (Liam/Bella), revealed one at a
+  // time (crossfade). `dir` is the ElevenLabs direction (with [tag]) for that turn's narration.
+  qa?: { who: Speaker; line: string; dir: string }[];
+  qaCard?: string[]; // optional SQL card shown from `qaCardFromTurn` onward (e.g. the ANSI query)
+  qaCardLabel?: string; // small note under the card (e.g. "ANSI standard — portable everywhere")
+  qaCardFromTurn?: number; // which turn index the card appears on (default: last turn)
   units?: number;
   seconds?: number; // FIXED scene length in seconds (overrides word-count pacing) — e.g. a timed terminal
   terminalSteps?: { label?: string; lines: string[] }[]; // a terminal that CYCLES these screens, 5s each
   editor?: boolean; // render the Notepad++-style koan-file mock (file tree + code) as the slide's content
   koansRun?: boolean; // render the "path to enlightenment" koans run-output card (red→green)
   centerLines?: string[]; // a big centred statement in the middle; a line that is just ">" renders as the accent pivot
+  midNote?: string; // a faint, greyed "key takeaway" subtitle filling an otherwise-empty middle (visual only)
 }
 
 const SCENES: Scene[] = [
@@ -238,6 +245,31 @@ const SCENES: Scene[] = [
     units: 50,
   },
   {
+    id: "reads-like-english",
+    headline: "SQL READS LIKE ENGLISH",
+    speaker: "leo", // Leo opens (turn 0 = primary audio, Liam); turns alternate inline
+    leo: "smiling",
+    mnemosyne: "smiling",
+    midNote: "Declarative: you say WHAT you want — the engine works out HOW.",
+    qa: [
+      {
+        who: "leo",
+        line: "Mnemosyne, can I tell you something? Typing that query in CloudBeaver, it was surprisingly easy to grasp what it would do — just like you said, **SQL reads almost like English**. That really stuck with me.",
+        dir: "[warm, a little reflective and pleased] Mnemosyne, can I tell you something? Typing that query in CloudBeaver, it was surprisingly easy to grasp what it would do — just like you said, S-Q-L reads almost like English. That really stuck with me.",
+      },
+      {
+        who: "mnemosyne",
+        line: "I'm so glad, Leo. And it's true — reading SQL often isn't far from reading English. I could even joke that if you know English, you half-know SQL — so why bother with me? But here's the real reason: SQL is a **declarative** language. You declare **what** you want, and the engine works out **how** to get it — unlike **imperative** languages like Java, where you spell out every step yourself. That 'what, not how' is exactly what lets SQL read like plain English. Does that make sense?",
+        dir: "[warm and playful, then clear and teaching] I'm so glad, Leo. And it's true — reading S-Q-L often isn't far from reading English. I could even joke that if you know English, you half-know S-Q-L, so why bother with me? But here's the real reason: S-Q-L is a declarative language. You declare what you want, and the engine works out how to get it — unlike imperative languages, like Java, where you spell out every step yourself. That 'what, not how' is exactly what lets S-Q-L read like plain English. Does that make sense?",
+      },
+      {
+        who: "leo",
+        line: "It does — a lot. Honestly, I'm far less **afraid** of SQL now. I'm confident that, in plenty of cases, I can just read a query and understand what it does.",
+        dir: "[confident and reassured, brightening] It does — a lot. Honestly, I'm far less afraid of S-Q-L now. I'm confident that, in plenty of cases, I can just read a query and understand what it does.",
+      },
+    ],
+  },
+  {
     id: "boring-theory",
     headline: "THE BORING THEORY",
     text: "Leo, now that you've executed your first SQL query, let me give you a little more background about our setup and where we go from here. You already saw **PostgreSQL** pre-populated with the **Northwind** sample data, and used **CloudBeaver** to connect and run your query…",
@@ -308,13 +340,71 @@ const SCENES: Scene[] = [
   {
     id: "duck-or-cb",
     headline: "DUCKDB and POSTGRESQL",
-    text: "So why both, Leo? **DuckDB** gives you a smooth, frictionless experience while doing the koans — it's just a file, with no server to start, so nothing gets in your way. **PostgreSQL** is the real database you reach for when you want to explore the data **visually** — you open **CloudBeaver**, which connects to it by default. Same schema, same data, same answers: DuckDB for effortless practice, PostgreSQL for real-world exploration.",
+    text: "Leo, you might be wondering why we'd complicate our lives with two different database engines at all. **DuckDB** gives you a smooth, frictionless experience while doing the koans — it's just a file, with no server to start, so nothing gets in your way. **PostgreSQL** is the real database you reach for when you want to explore the data **visually** — you open **CloudBeaver**, which connects to it by default. Same schema, same data, same answers: DuckDB for effortless practice, PostgreSQL for real-world exploration.",
     thoughtLines: [
       "DuckDB is just a file on disk…",
       "same portability benefits as SQLite!",
     ],
     mnemosyne: "talking",
     units: 48,
+  },
+  {
+    id: "why-quotes",
+    headline: "WHY THE QUOTES?",
+    speaker: "leo", // Leo opens (turn 0 = primary audio, Liam); turns alternate inline
+    leo: "questioning",
+    mnemosyne: "smiling",
+    midNote: "Default to ANSI SQL — but stay open to vendor extensions that bring real gains.",
+    qa: [
+      {
+        who: "leo",
+        line: "One more thing, Mnemosyne — doing the koans I noticed the table names are in quotes again, like when I ran that query in CloudBeaver. Does that matter? Could I just write `orders` — or `Orders` — without the quotes, and it'd still work?",
+        dir: "[curious, a little puzzled] One more thing, Mnemosyne — doing the koans, I noticed the table names are in quotes again, like when I ran that query in CloudBeaver. Does that actually matter? Could I just write orders, or Orders, without the quotes, and it'd still work?",
+      },
+      {
+        who: "mnemosyne",
+        line: "Great question, Leo. The quotes make the name **exact** — capitals and all. Northwind's tables were created as quoted, capitalised names like `\"Orders\"`, so we quote them to match. And honestly — in your koans, dropping them works fine; `orders` runs just the same.",
+        dir: "[warm and encouraging] Great question, Leo. The quotes make the name exact — capitals and all. Northwind's tables were created as quoted, capitalised names like Orders, so we quote them to match. And honestly — in your koans, dropping them works fine; orders runs just the same.",
+      },
+      {
+        who: "leo",
+        line: "So… the quotes are optional, then?",
+        dir: "[mildly surprised, leaning in] So… the quotes are optional, then?",
+      },
+      {
+        who: "mnemosyne",
+        line: "Here's the catch. Koans run on **DuckDB**, which ignores case — so `orders` happily found `\"Orders\"`. But run that same query in CloudBeaver on **PostgreSQL** and it folds `orders` to lowercase, hunts for a table named `orders`, and there isn't one. Same SQL, broken result.",
+        dir: "[warm, energetic and involved] Here's the catch. Koans run on DuckDB, which ignores case — so orders happily found Orders. But run that same query in CloudBeaver on PostgreSQL, and it folds orders to lowercase, hunts for a table named orders, and there isn't one. Same S-Q-L, broken result.",
+      },
+      {
+        who: "leo",
+        line: "Okay — so what's the safe way to write it?",
+        dir: "[eager to get it right] Okay — so what's the safe way to write it?",
+      },
+      {
+        who: "mnemosyne",
+        line: "Use the **ANSI-standard** form — the one already on your screen: double quotes around the names, plus a `DATE` literal. Double quotes are the one identifier style every database understands. Keep it consistent — don't mix quoted, capitalised tables with unquoted names — and your query runs the same on DuckDB, PostgreSQL, anywhere.",
+        dir: "[warm, clear and reassuring] Use the ANSI-standard form — the one already on your screen: double quotes around the names, plus a DATE literal. Double quotes are the one identifier style every database understands. Keep it consistent — don't mix quoted, capitalised tables with unquoted names — and your query runs the same on DuckDB, PostgreSQL, anywhere.",
+      },
+      {
+        who: "leo",
+        line: "Got it. So should I just always stick to ANSI and avoid anything engine-specific?",
+        dir: "[thoughtful, drawing the lesson together] Got it. So should I just always stick to ANSI, and avoid anything engine-specific?",
+      },
+      {
+        who: "mnemosyne",
+        line: "It ties back to why we picked these two, Leo. **DuckDB** and **PostgreSQL** are highly compatible, with excellent **ANSI** support — so almost everything you learn carries across. But now and then the engines differ, like the quoting we just saw. So lean on **ANSI** by default, and when a nuance appears, don't fight it — understand it. The twist: a **vendor-specific** feature is sometimes exactly where your biggest performance win hides. So stay ANSI by default, but stay aware — reach for a vendor extension in the specific situations where you have a strong reason, like a big performance gain, as we'll see later in the course.",
+        dir: "[warm, wise and reassuring] It ties back to why we picked these two, Leo. DuckDB and PostgreSQL are highly compatible, with excellent ANSI support — so almost everything you learn carries across. But now and then the engines differ, like the quoting we just saw. So lean on ANSI by default, and when a nuance appears, don't fight it — understand it. The twist: a vendor-specific feature is sometimes exactly where your biggest performance win hides. So stay ANSI by default, but stay aware — reach for a vendor extension only in the specific situations where you have a strong reason, like a big performance gain, as we'll see later in the course.",
+      },
+    ],
+    qaCard: [
+      "SELECT count(*)",
+      'FROM "Orders"',
+      "WHERE \"OrderDate\" >= DATE '2024-06-01'",
+      "  AND \"OrderDate\" <  DATE '2024-07-01';",
+    ],
+    qaCardLabel: "ANSI standard — double-quoted names + DATE literal → runs on DuckDB & PostgreSQL",
+    qaCardFromTurn: 5,
   },
   {
     id: "lets-go",
@@ -394,20 +484,20 @@ const DIRECTED: Record<string, string> = {
   "koans-file": "[warm, energetic and involved] Here's the koan file, Leo — each blank is one you fill in. Replace it, run it, and watch red turn green.",
   "koans-run": "[warm, energetic and involved] Run it, and the koans walk you one step at a time: a green win, then the next one red with a hint. Fix it, rerun, and repeat — all the way to enlightenment.",
   "compatible": "[warm, energetic and involved] Leo, did you run your koans? Are you enlightened now? Here's the beautiful part: both DuckDB — the engine your koans run on — and PostgreSQL come pre-populated with the same Northwind: identical schema, identical data. DuckDB's S-Q-L was even forked from PostgreSQL, so the same query gives the same result in either one. That's portability in action: the koans run on DuckDB, CloudBeaver talks to PostgreSQL — same S-Q-L, same answers.",
-  "duck-or-cb": "[warm and conversational, easy-going] So why both, Leo? DuckDB gives you a smooth, frictionless experience while doing the koans — it's just a file, with no server to start, so nothing gets in your way. PostgreSQL is the real database you reach for when you want to explore your data visually — you open CloudBeaver, which connects to it by default. Same schema, same data, same answers: DuckDB for effortless practice, PostgreSQL for real-world exploration.",
+  "duck-or-cb": "[warm and conversational, easy-going] Leo, you might be wondering why we'd complicate our lives with two different database engines at all. DuckDB gives you a smooth, frictionless experience while doing the koans — it's just a file, with no server to start, so nothing gets in your way. PostgreSQL is the real database you reach for when you want to explore your data visually — you open CloudBeaver, which connects to it by default. Same schema, same data, same answers: DuckDB for effortless practice, PostgreSQL for real-world exploration.",
   "lets-go": "[warm, proud and encouraging] That's it, Leo — you're ready. In the lessons ahead, you'll write even more real queries against Northwind.",
 };
 // Leo's voiced reply for each two-turn exchange — played on the SAME slide right
 // after Mnemosyne (a separate Liam clip; the on-screen exchange already shows the line).
 const LEO_REPLY: Record<string, string> = {
-  "warm-up": "[warm, positive and confident] Yes, Mnemosyne — I'm ready. Let's go.",
+  "warm-up": "[warm, eager and decisive] Yes, Mnemosyne — I'm ready. Let's go!",
   "watch-trap": "[a rueful, knowing chuckle] Ouch. That's literally been me.",
   "our-deal": "[warm, eager and decisive] Deal — I want to actually write S-Q-L, not just watch.",
   "lets-go": "[warm, upbeat and motivated] Just what I need, Mnemosyne — to practise writing my own queries as much as possible.",
 };
 const defaultTag = (s: Scene) => (s.speaker === "leo" ? "[bright, eager and upbeat]" : "[warm and encouraging]");
 const directedFor = (s: Scene): string =>
-  DIRECTED[s.id] ?? (s.text ? `${defaultTag(s)} ${stripMarks(s.text)}` : "");
+  s.qa ? s.qa[0].dir : DIRECTED[s.id] ?? (s.text ? `${defaultTag(s)} ${stripMarks(s.text)}` : "");
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
 function buildVideoModel(id: string): VideoModel {
@@ -429,30 +519,44 @@ function buildVideoModel(id: string): VideoModel {
       },
     };
   });
-  // Audio-only companion clips: an exchange's final Leo reply, voiced by Leo (Liam),
-  // played on the SAME slide right after Mnemosyne. APPENDED at the end so the visual
-  // scenes' ids/indices never shift; FirstQueryVideo renders only the visual scenes.
-  const leoScenes: typeof baseScenes = [];
+  // Audio-only companion clips played on the SAME slide as their visual scene. APPENDED at
+  // the end with STABLE, index-free ids so inserting/reordering visual scenes never renames
+  // them; FirstQueryVideo renders only the visual scenes and folds these clips into their slide.
+  const extraScenes: typeof baseScenes = [];
   SCENES.forEach((s) => {
+    // existing 2-turn exchange: Leo's final reply, voiced after Mnemosyne on the same slide
     const t = s.exchange?.[s.exchange.length - 1];
     if (s.exchange && t?.who === "leo") {
-      const k = baseScenes.length + leoScenes.length;
-      leoScenes.push({
-        id: `${pad2(k + 1)}${s.id}-leo`,
+      extraScenes.push({
+        id: `${s.id}-leo`,
         textSsml: LEO_REPLY[s.id] ?? `[bright, eager and upbeat] ${stripMarks(t.line)}`,
         speakAloud: true,
         sceneDuration: clamp(wc(t.line), DIALOGUE_FLOOR_WORDS, DIALOGUE_CAP_WORDS) * FRAMES_PER_WORD,
         voiceId: LEO_VOICE_ID,
-        aiTts: {
-          position: `Leo's reply on the ${s.id} slide.`,
-          summarizedContext: SUMMARIZED_CONTEXT,
-          instructions: LEO_TTS,
-          speed: undefined,
-        },
+        aiTts: { position: `Leo's reply on the ${s.id} slide.`, summarizedContext: SUMMARIZED_CONTEXT, instructions: LEO_TTS, speed: undefined },
+      });
+    }
+    // multi-turn Q/A slide: turns 1..N-1 as same-slide clips (turn 0 is the primary scene audio)
+    if (s.qa) {
+      s.qa.forEach((turn, k) => {
+        if (k === 0) return;
+        extraScenes.push({
+          id: `${s.id}-t${k}`,
+          textSsml: turn.dir,
+          speakAloud: true,
+          sceneDuration: clamp(wc(turn.line), DIALOGUE_FLOOR_WORDS, DIALOGUE_CAP_WORDS) * FRAMES_PER_WORD,
+          voiceId: turn.who === "leo" ? LEO_VOICE_ID : MNEMOSYNE_VOICE_ID,
+          aiTts: {
+            position: `Turn ${k + 1} on the ${s.id} slide.`,
+            summarizedContext: SUMMARIZED_CONTEXT,
+            instructions: turn.who === "leo" ? LEO_TTS : MNEMO_TTS,
+            speed: turn.who === "leo" ? undefined : 1.1,
+          },
+        });
       });
     }
   });
-  const model = new VideoModel({ id, scenes: [...baseScenes, ...leoScenes] });
+  const model = new VideoModel({ id, scenes: [...baseScenes, ...extraScenes] });
   model.audio.tts.scenePaddingMs = 250; // breathing room after each line — matches the experiment videos (was 150, felt clipped)
   return model;
 }
@@ -788,7 +892,7 @@ const Stamp: React.FC<{ text: string; frame: number }> = ({ text, frame }) => {
   );
 };
 
-const DoodleScene: React.FC<{ scene: Scene; sceneModel: SceneModel; modelId: string; voiceId: string; durationInFrames: number; leoStart?: number; leoSceneModel?: SceneModel }> = ({ scene, sceneModel, modelId, voiceId, durationInFrames, leoStart, leoSceneModel }) => {
+const DoodleScene: React.FC<{ scene: Scene; sceneModel: SceneModel; modelId: string; voiceId: string; durationInFrames: number; leoStart?: number; leoSceneModel?: SceneModel; qaStarts?: number[]; qaClipModels?: (SceneModel | undefined)[] }> = ({ scene, sceneModel, modelId, voiceId, durationInFrames, leoStart, leoSceneModel, qaStarts, qaClipModels }) => {
   const frame = useCurrentFrame();
   const hasResult = !!scene.result;
   const speaker: Speaker = scene.speaker ?? "mnemosyne";
@@ -815,10 +919,19 @@ const DoodleScene: React.FC<{ scene: Scene; sceneModel: SceneModel; modelId: str
     }
     exStarts.forEach((s, i) => { if (frame >= s) activeTurn = i; });
   }
-  const activeWho: Speaker = scene.exchange ? scene.exchange[activeTurn].who : speaker;
+  // multi-turn Q/A: the active turn is the latest whose start frame has arrived
+  if (scene.qa && qaStarts) {
+    qaStarts.forEach((s, i) => { if (frame >= s) activeTurn = i; });
+  }
+  const activeWho: Speaker = scene.qa ? scene.qa[activeTurn]?.who ?? speaker : scene.exchange ? scene.exchange[activeTurn].who : speaker;
   const leoSpeaking = activeWho === "leo";
   const mnemoSpeaking = activeWho === "mnemosyne";
   const tLines = scene.thoughtLines ?? (scene.thought ? [scene.thought] : null);
+  // faint "key takeaway" subtitle for an empty middle — fades out when a Q/A card arrives
+  const qaCardTurn = scene.qaCardFromTurn ?? ((scene.qa?.length ?? 1) - 1);
+  const midNoteOp = scene.midNote
+    ? fadeIn(frame, 12, 16) * (scene.qaCard && qaStarts ? Math.max(0, 1 - fadeIn(frame, qaStarts[qaCardTurn] ?? 0, 12)) : 1) * 0.5
+    : 0;
   // headline shrinks for long titles (e.g. the loop's process arrow), underline follows
   const hlLen = scene.headline?.length ?? 0;
   const hlLong = hlLen > 30;
@@ -836,6 +949,13 @@ const DoodleScene: React.FC<{ scene: Scene; sceneModel: SceneModel; modelId: str
           <Audio src={staticFile(getAssetOutputFileName("assets/rb", modelId, leoSceneModel.id, getVoiceInfoDetails(leoSceneModel.voiceId || LEO_VOICE_ID)))} volume={VIDEO_CONFIG.audio.sceneAudio.defaultVolume} />
         </Sequence>
       )}
+      {/* multi-turn Q/A: each turn after the first plays inline, sequenced after the previous one */}
+      {TTS_AUDIO_ENABLED && VIDEO_CONFIG.audio.tts.engine !== "web-speech-api" && scene.qa && qaStarts && qaClipModels &&
+        qaClipModels.map((m, k) => (m && k > 0 ? (
+          <Sequence key={`qa-audio-${k}`} from={qaStarts[k]}>
+            <Audio src={staticFile(getAssetOutputFileName("assets/rb", modelId, m.id, getVoiceInfoDetails(m.voiceId || (scene.qa![k].who === "leo" ? LEO_VOICE_ID : MNEMOSYNE_VOICE_ID))))} volume={VIDEO_CONFIG.audio.sceneAudio.defaultVolume} />
+          </Sequence>
+        ) : null))}
       <svg viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", height: "100%", position: "absolute" }}>
         <defs>
           <pattern id="dz-dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -850,6 +970,11 @@ const DoodleScene: React.FC<{ scene: Scene; sceneModel: SceneModel; modelId: str
           </g>
         )}
       </svg>
+      {scene.midNote && (
+        <div style={{ position: "absolute", left: 300, right: 300, top: 372, textAlign: "center", fontFamily: HAND, fontStyle: "italic", fontSize: 34, lineHeight: 1.4, color: INK_SOFT, opacity: midNoteOp, pointerEvents: "none" }}>
+          {scene.midNote}
+        </div>
+      )}
       {scene.centerLines && (
         <div style={{ position: "absolute", left: 160, right: 160, top: 330, textAlign: "center", opacity: fadeIn(frame, 8, 14) }}>
           {scene.centerLines.map((l, i) => {
@@ -937,7 +1062,42 @@ const DoodleScene: React.FC<{ scene: Scene; sceneModel: SceneModel; modelId: str
         <>
           <CharacterHead who="leo" expr={scene.leo ?? "smiling"} side="left" speaking={leoSpeaking} />
           <CharacterHead who="mnemosyne" expr={scene.mnemosyne ?? "smiling"} side="right" speaking={mnemoSpeaking} />
-          {scene.exchange ? (
+          {scene.qa && qaStarts ? (
+            <>
+              {/* the ANSI query card (appears on the final-answer turn) */}
+              {scene.qaCard && (() => {
+                const cardTurn = scene.qaCardFromTurn ?? (scene.qa!.length - 1);
+                const op = fadeIn(frame, qaStarts[cardTurn] ?? 0, 12);
+                return (
+                  <div style={{ position: "absolute", left: 0, right: 0, top: 240, display: "flex", flexDirection: "column", alignItems: "center", opacity: op }}>
+                    <div style={{ background: CARD, border: `3px solid ${INK}`, borderRadius: 14, boxShadow: "7px 7px 0 rgba(38,70,83,0.12)", padding: "20px 36px", transform: "rotate(-0.5deg)" }}>
+                      <pre style={{ margin: 0, fontFamily: MONO, fontSize: 34, lineHeight: 1.4, whiteSpace: "pre" }}>
+                        {scene.qaCard.map((l, i) => (<div key={i}>{hi(l, `qac${i}`)}</div>))}
+                      </pre>
+                    </div>
+                    {scene.qaCardLabel && (
+                      <div style={{ marginTop: 16, fontFamily: HAND, fontSize: 26, fontWeight: 700, color: ACCENT, textAlign: "center" }}>← {scene.qaCardLabel}</div>
+                    )}
+                  </div>
+                );
+              })()}
+              {/* the chat bubble — one turn visible at a time, crossfading as each is spoken */}
+              <div style={{ position: "absolute", left: 300, right: 300, bottom: 56, height: 150 }}>
+                {scene.qa.map((turn, k) => {
+                  const start = qaStarts![k] ?? 0;
+                  const next = qaStarts![k + 1];
+                  const op = Math.max(0, fadeIn(frame, start, 8) - (next != null ? fadeIn(frame, next, 8) : 0));
+                  if (op <= 0.001) return null;
+                  return (
+                    <div key={k} style={{ position: "absolute", left: 0, right: 0, bottom: 0, textAlign: "center", fontFamily: HAND, fontSize: 32, lineHeight: 1.3, color: turn.who === "leo" ? ACCENT : INK, opacity: op }}>
+                      <span style={{ fontWeight: 800 }}>{turn.who === "leo" ? "Leo: " : "Mnemosyne: "}</span>
+                      {renderCaption(turn.line, turn.who === "leo" ? ACCENT : INK)}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : scene.exchange ? (
             <div style={{ position: "absolute", left: 340, right: 340, bottom: 48, textAlign: "left" }}>
               {scene.exchange.map((t, i) => (
                 <div key={i} style={{ marginBottom: 16, fontFamily: HAND, fontSize: 30, lineHeight: 1.28, color: t.who === "leo" ? ACCENT : INK, opacity: fadeIn(frame, exStarts[i] ?? 0, 8) * (i === activeTurn ? 1 : 0.5) }}>
@@ -967,19 +1127,33 @@ export const FirstQueryVideo: React.FC<{ voiceId?: string; backgroundMusic?: str
   const { durations } = useVideoDuration(videoModelMasterSqlS1E00, voiceId || NARRATOR_VOICE_ID);
   if (!durations || durations.length === 0) return null;
 
-  // Only the first SCENES.length model entries are visual; any extra entries are
-  // appended audio-only Leo-reply clips. Map each visual exchange → its Leo clip index.
+  // Only the first SCENES.length model entries are visual; extras are appended same-slide
+  // companion clips: "<id>-leo" (an exchange's Leo reply) or "<id>-t<k>" (a Q/A turn).
   const VISUAL_COUNT = SCENES.length;
   const leoIndexByVisual: Record<number, number> = {};
+  const qaClipsByVisual: Record<number, number[]> = {};
   videoModelMasterSqlS1E00.scenes.forEach((sm, idx) => {
-    if (idx >= VISUAL_COUNT && sm.id.endsWith("-leo")) {
-      const parent = sm.id.replace(/^\d+/, "").replace(/-leo$/, "");
-      const vIdx = SCENES.findIndex((s) => s.id === parent);
+    if (idx < VISUAL_COUNT) return;
+    if (sm.id.endsWith("-leo")) {
+      const vIdx = SCENES.findIndex((s) => s.id === sm.id.replace(/-leo$/, ""));
       if (vIdx >= 0) leoIndexByVisual[vIdx] = idx;
     }
+    const m = sm.id.match(/^(.+)-t(\d+)$/);
+    if (m) {
+      const vIdx = SCENES.findIndex((s) => s.id === m[1]);
+      if (vIdx >= 0) {
+        if (!qaClipsByVisual[vIdx]) qaClipsByVisual[vIdx] = [];
+        qaClipsByVisual[vIdx][+m[2] - 1] = idx;
+      }
+    }
   });
-  // A visual scene lasts its own narration + (for exchanges) Leo's reply clip.
-  const visualDur = (i: number) => durations[i] + (leoIndexByVisual[i] != null ? durations[leoIndexByVisual[i]] : 0);
+  // A visual scene lasts its own narration + any same-slide companion clips it carries.
+  const visualDur = (i: number) => {
+    let d = durations[i];
+    if (leoIndexByVisual[i] != null) d += durations[leoIndexByVisual[i]];
+    if (qaClipsByVisual[i]) for (const ci of qaClipsByVisual[i]) d += durations[ci] || 0;
+    return d;
+  };
 
   const panelsStart = INTRO_FRAMES;
   let panelsFrames = 0;
@@ -1028,9 +1202,24 @@ export const FirstQueryVideo: React.FC<{ voiceId?: string; backgroundMusic?: str
         const leoIdx = leoIndexByVisual[index];
         const leoSceneModel = leoIdx != null ? videoModelMasterSqlS1E00.scenes[leoIdx] : undefined;
         const leoStart = leoIdx != null ? durations[index] : undefined; // Leo's clip begins when Mnemosyne's ends
+        // multi-turn Q/A: cumulative start frame per turn + the appended clip model per turn
+        const qaIdxs = qaClipsByVisual[index];
+        let qaStarts: number[] | undefined;
+        let qaClipModels: (SceneModel | undefined)[] | undefined;
+        const qaScene = SCENES[index].qa;
+        if (qaIdxs && qaScene) {
+          const N = qaScene.length;
+          qaStarts = [0];
+          qaClipModels = [undefined];
+          for (let k = 1; k < N; k++) {
+            const durOfPrev = k - 1 === 0 ? durations[index] : durations[qaIdxs[k - 2]] || 0;
+            qaStarts[k] = qaStarts[k - 1] + durOfPrev;
+            qaClipModels[k] = videoModelMasterSqlS1E00.scenes[qaIdxs[k - 1]];
+          }
+        }
         return (
           <Sequence key={sceneModel.id} from={from} durationInFrames={visualDur(index)}>
-            <DoodleScene scene={SCENES[index]} sceneModel={sceneModel} modelId={videoModelMasterSqlS1E00.id} voiceId={voiceId || NARRATOR_VOICE_ID} durationInFrames={visualDur(index)} leoStart={leoStart} leoSceneModel={leoSceneModel} />
+            <DoodleScene scene={SCENES[index]} sceneModel={sceneModel} modelId={videoModelMasterSqlS1E00.id} voiceId={voiceId || NARRATOR_VOICE_ID} durationInFrames={visualDur(index)} leoStart={leoStart} leoSceneModel={leoSceneModel} qaStarts={qaStarts} qaClipModels={qaClipModels} />
           </Sequence>
         );
       })}
