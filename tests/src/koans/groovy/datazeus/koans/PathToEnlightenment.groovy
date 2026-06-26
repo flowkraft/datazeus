@@ -239,7 +239,7 @@ class PathToEnlightenment implements IGlobalExtension {
         return ZEN[Math.abs(seed) % ZEN.size()]
     }
 
-    /** "datazeus.mastersql.series1._00" -> "series1 _00 " (matches the koans.bat command). */
+    /** "datazeus.learnsql.series1._00" -> "series1 _00 " (matches the koans.bat command). */
     private static String tag(String specName) {
         def segs = (specPackages[specName] ?: "").split(/\./)
         String s = segs.find { it.startsWith("series") }

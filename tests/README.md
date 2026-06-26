@@ -19,7 +19,7 @@ learner can run **just the slice they're on**:
 
 ```
 src/<root>/groovy/datazeus/<course>/series<N>/ep<NN>/<Lesson>{Spec|Koans}.groovy
-e.g.  datazeus/mastersql/series1/_00/WriteYourFirstQueryKoans.groovy
+e.g.  datazeus/learnsql/series1/_00/WriteYourFirstQueryKoans.groovy
 ```
 
 Run a scope with the wrapper (it builds a path filter that keeps the `*Koans`
@@ -45,12 +45,12 @@ Course aliases: `sql modeling etl warehousing dbt viz bi`. Episode is two digits
 ```bash
 mvn test            # the gate (src/verify, must be green)
 mvn test -Pkoans    # all koans (src/koans, red until filled)
-mvn test -Pkoans -Dtest.includes="**/mastersql/series1/_00/**/*Koans.java"   # one lesson
+mvn test -Pkoans -Dtest.includes="**/learnsql/series1/_00/**/*Koans.java"   # one lesson
 ```
 The `-Pkoans` profile flips which source root is compiled/run — one toolchain.
 
 The gate spec reads the lesson's **own** `scripts/*.sql` (relative to this module), so the
-SQL is authored once under `courses/mastersql/.../scripts/` and verified here — no drift.
+SQL is authored once under `courses/learnsql/.../scripts/` and verified here — no drift.
 
 > The `___` trick: it's an `Object`, so `actualInt == ___` is always `false` (red) until
 > replaced with the right value. Same idea as Ruby/Python/Kotlin Koans.

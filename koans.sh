@@ -4,12 +4,12 @@
 #
 #  Usage:  ./koans.sh [course] [series] [lesson]   (each narrows the run)
 #    ./koans.sh                            # every koan, every course
-#    ./koans.sh mastersql                  # all Master SQL koans
-#    ./koans.sh mastersql series1          # Master SQL · series1
-#    ./koans.sh mastersql series1 _00      # ONE lesson   ← the usual path
+#    ./koans.sh learnsql                  # all Master SQL koans
+#    ./koans.sh learnsql series1          # Master SQL · series1
+#    ./koans.sh learnsql series1 _00      # ONE lesson   ← the usual path
 #
 #  The tokens match the folders AND the run's header ("Forging 'series1 _00 ...'").
-#  Short aliases work too: sql=mastersql, S1=series1, and plain "1 00".
+#  Short aliases work too: sql=learnsql, S1=series1, and plain "1 00".
 #  Courses:  sql · modeling · etl · warehousing · dbt · viz · bi. Needs a JDK 17+
 #  and Maven; koans run on an embedded DuckDB — no Docker.
 # ============================================================================
@@ -22,7 +22,7 @@ fi
 
 case "$1" in
   ""|all)      seg="" ;;
-  sql)         seg="mastersql" ;;
+  sql)         seg="learnsql" ;;
   modeling)    seg="datamodeling" ;;
   etl)         seg="etlpipelines" ;;
   warehousing) seg="datawarehousing" ;;

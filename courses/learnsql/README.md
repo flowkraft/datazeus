@@ -8,7 +8,7 @@ at `content/datazeus-academy/master-sql/` (Contentlayer `topic: master-sql`).
 watch slides. Each lesson is a self-contained bundle: `lesson.mdx` · `scripts/*.sql` ·
 `cards/cards.yaml` (the video composition lives in the `cli-remotion` project — see
 `video/README.md`). Its koans live in `../../tests/src/koans`
-(package `datazeus.mastersql.series<N>.ep<NN>`), gated by a verified spec in `../../tests/src/verify`.
+(package `datazeus.learnsql.series<N>.ep<NN>`), gated by a verified spec in `../../tests/src/verify`.
 Run one lesson's koans with `./koans.sh sql <series> <episode>` (e.g. `./koans.sh sql S1 _00`).
 
 ## Series & episodes
@@ -18,7 +18,7 @@ lessons can be slotted in between without renumbering the rest.
 > lesson, wired end-to-end (mdx · scripts · cards · video · verify spec · koans).
 
 ### Series 1 — Fundamentals  (query one table, then glue two)
-- [x] **00 · Write Your First Query** — `series1-fundamentals/00-write-your-first-query/` · slug `mastersql-series1-00-write-your-first-query`
+- [x] **00 · Write Your First Query** — `series1-fundamentals/00-write-your-first-query/` · slug `learnsql-series1-00-write-your-first-query`
 - [ ] 05 · Ask Your Database Anything: SELECT
 - [ ] 10 · Throw Away the Rows You Don't Care About: WHERE
 - [ ] 15 · Who's Your #1 Customer? ORDER BY & Top-N

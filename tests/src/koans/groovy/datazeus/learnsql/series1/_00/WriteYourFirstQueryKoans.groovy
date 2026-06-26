@@ -1,4 +1,4 @@
-package datazeus.mastersql.series1._00
+package datazeus.learnsql.series1._00
 
 import datazeus.koans.KoanBase
 import spock.lang.Stepwise
@@ -11,7 +11,7 @@ import spock.lang.Stepwise
  * You don't fill in a number here — you WRITE THE QUERY. Each koan blanks the one
  * piece that is the lesson; replace the `___`, then run
  *
- *     koans.bat mastersql series1 _00   (Windows)     ./koans.sh mastersql series1 _00   (macOS/Linux)
+ *     koans.bat learnsql series1 _00   (Windows)     ./koans.sh learnsql series1 _00   (macOS/Linux)
  *
  * The koan runs YOUR query and compares the result to the goal. PREDICT the answer
  * first (that's the skill) — if it comes back wrong, the hint shows what your query

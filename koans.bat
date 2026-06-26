@@ -4,12 +4,12 @@ REM  DataZeus SQL Koans - walk the path to enlightenment.
 REM
 REM  Usage:  koans.bat [course] [series] [lesson]   (each narrows the run)
 REM    koans.bat                            every koan, every course
-REM    koans.bat mastersql                  all Master SQL koans
-REM    koans.bat mastersql series1          Master SQL, series1
-REM    koans.bat mastersql series1 _00      ONE lesson   <- the usual path
+REM    koans.bat learnsql                  all Master SQL koans
+REM    koans.bat learnsql series1          Master SQL, series1
+REM    koans.bat learnsql series1 _00      ONE lesson   <- the usual path
 REM
 REM  The tokens match the folders AND the run's header ("Forging 'series1 _00 ...'").
-REM  Short aliases work too: sql=mastersql, S1=series1, and plain "1 00".
+REM  Short aliases work too: sql=learnsql, S1=series1, and plain "1 00".
 REM  Courses: sql modeling etl warehousing dbt viz bi. Needs a JDK 17+ and Maven;
 REM  koans run on an embedded DuckDB - no Docker.
 REM ===========================================================================
@@ -23,7 +23,7 @@ if errorlevel 1 (
 )
 
 set "seg="
-if /I "%~1"=="sql" set "seg=mastersql"
+if /I "%~1"=="sql" set "seg=learnsql"
 if /I "%~1"=="modeling" set "seg=datamodeling"
 if /I "%~1"=="etl" set "seg=etlpipelines"
 if /I "%~1"=="warehousing" set "seg=datawarehousing"

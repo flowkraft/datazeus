@@ -1,4 +1,4 @@
-package datazeus.mastersql.series1._00
+package datazeus.learnsql.series1._00
 
 import datazeus.support.NorthwindGateSpec
 import spock.lang.Unroll
@@ -58,6 +58,6 @@ class WriteYourFirstQuerySpec extends NorthwindGateSpec {
     // Paths are relative to the tests/ module dir (where `mvn` runs).
 
     private static String script(String name) {
-        new File("../courses/mastersql/series1-fundamentals/00-write-your-first-query/scripts/${name}.sql").text
+        new File("../courses/learnsql/series1-fundamentals/00-write-your-first-query/scripts/${name}.sql").text
     }
 }
