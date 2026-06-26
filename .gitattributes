@@ -1,0 +1,17 @@
+# Normalize line endings: text is LF everywhere (so Windows checkouts don't get CRLF,
+# which would break YAML front-matter parsing like `published: true\r` in Contentlayer).
+* text=auto eol=lf
+
+# Windows batch must stay CRLF; shell scripts must be LF.
+*.bat text eol=crlf
+*.sh  text eol=lf
+
+# Binaries — never touch.
+*.duckdb binary
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.mp3    binary
+*.mp4    binary
+*.apkg   binary
