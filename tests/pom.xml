@@ -19,9 +19,18 @@
     The two roots are intentionally separate: the gate verifies EXACTLY the queries the
     lesson/video show; the koans are related practice, not a blanked copy of the gate.
 
-    Both run against the canonical ../datasets/northwind/northwind.duckdb (opened as a
-    throwaway copy) — the SAME database the learner queries in the CLI / CloudBeaver.
-    No Docker, no external DB. (Versions below may need a bump for your toolchain.)
+    The KOANS run only against the canonical ../datasets/northwind/northwind.duckdb (opened
+    as a throwaway copy) — no Docker, nothing to install: learners just write SQL.
+
+    The GATE (*Spec) runs every lesson's SQL on BOTH engines, because identical data on two
+    engines does NOT guarantee identical query results (date casts, NULL logic, integer
+    division, identifier folding, …). DuckDB is the bundled file; Postgres is a real engine:
+      - default: an ephemeral Testcontainers postgres:16.2 (the version DataPallas ships),
+        seeded from the duckdb — both DBs are the same NorthwindDataGenerator output, so the
+        data is identical by construction. Needs only a running Docker engine.
+      - on demand: set PGHOST (e.g. PGHOST=localhost) to assert against the LIVE DataPallas
+        "Northwind (PostgreSQL)" the learner uses in CloudBeaver (rb-northwind-postgres).
+    (Versions below may need a bump for your toolchain.)
   -->
 
   <properties>
@@ -30,6 +39,8 @@
     <groovy.version>4.0.22</groovy.version>
     <spock.version>2.3-groovy-4.0</spock.version>
     <duckdb.version>1.1.3</duckdb.version>
+    <postgresql.version>42.7.4</postgresql.version>
+    <testcontainers.version>1.20.4</testcontainers.version>
     <!-- Which source root the default build compiles & runs. The `koans` profile flips it. -->
     <test.src.dir>${project.basedir}/src/verify/groovy</test.src.dir>
     <test.includes>**/*Spec.java</test.includes>
@@ -56,6 +67,19 @@
       <groupId>org.duckdb</groupId>
       <artifactId>duckdb_jdbc</artifactId>
       <version>${duckdb.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Postgres half of the dual-engine gate (driver + ephemeral container). -->
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>${postgresql.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>${testcontainers.version}</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
