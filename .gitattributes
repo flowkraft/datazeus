@@ -4,6 +4,7 @@
 
 # Windows batch must stay CRLF; shell scripts must be LF.
 *.bat text eol=crlf
+*.cmd text eol=crlf
 *.sh  text eol=lf
 
 # Binaries — never touch.
