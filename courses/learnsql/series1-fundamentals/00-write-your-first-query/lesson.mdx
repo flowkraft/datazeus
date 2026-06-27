@@ -103,7 +103,7 @@ From a terminal:
 
 ```powershell
 cd c:/DataPallas/db/datazeus
-.\koans.bat learnsql series1 _00
+.\zeus.bat koans learnsql series1 _00
 ```
 
 The koans run on **DuckDB** — a database that's *just a file*. Think SQLite, but with far better **PostgreSQL** compatibility. They run on the pre-populated `northwind.duckdb`, completely **self-contained**: no database server to start. Run it and the koans walk you one step at a time — a **green** win, then the next one **red** with a hint — fix, rerun, repeat all the way to green.
@@ -167,6 +167,6 @@ Up next: **SELECT — meet your tables, rows & columns** by querying them. (Brow
 ## 🧪 Practice & remember
 
 - **Koans** — fill in the blanks and watch the tests go green:
-  from the repo root run `./koans.sh sql S1 _00` (`koans.bat sql S1 _00` on Windows) —
+  from the datazeus folder run `./zeus.sh koans learnsql series1 _00` (`.\zeus.bat koans learnsql series1 _00` on Windows) —
   that's course · series · episode (package `datazeus.learnsql.series1._00`).
 - **Scripts** — the exact SQL above lives in `…/00-write-your-first-query/scripts/` (`june-orders.sql`, `customers.sql`).
