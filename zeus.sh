@@ -4,6 +4,7 @@
 #
 #  Usage:  ./zeus.sh <command> [args]
 #    zeus koans [course] [series] [lesson]   walk the path (narrow with each token)
+#    zeus test                               run the verify gate (the *Spec tests; needs Docker)
 #    zeus update                             pull the latest courses & koans (keeps your edits)
 #    zeus help                               this help
 #
@@ -21,6 +22,7 @@ zeus_help() {
 DataZeus - Master Everything Data, become a Data Zeus.
 
   zeus koans [course] [series] [lesson]   walk the path
+  zeus test                               run the verify gate (the *Spec tests; needs Docker)
   zeus update                             pull the latest courses & koans (keeps your edits)
   zeus help                               this help
 
@@ -148,10 +150,41 @@ zeus_koans() {
   fi
 }
 
+zeus_test() {
+  # Run the VERIFY GATE (the *Spec tests), NOT the koans. Same Maven logic as zeus_koans
+  # (your Maven if present, else the bundled wrapper). Needs a JDK 17+ AND Docker — the gate
+  # starts a throwaway PostgreSQL to check every lesson on a real engine — unless PGHOST
+  # points at a live Postgres.
+  if ! command -v java >/dev/null 2>&1 && [ -z "$JAVA_HOME" ]; then
+    echo "Java was not found. Install a JDK 17+ and run again."
+    exit 1
+  fi
+  if [ -z "$PGHOST" ] && { ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; }; then
+    echo
+    echo "============================================================"
+    echo " DOCKER IS NOT RUNNING (or not installed)."
+    echo
+    echo " The DataZeus test gate needs Docker: it starts a throwaway"
+    echo " PostgreSQL to verify every lesson on a real engine."
+    echo
+    echo " Fix: start Docker, then run  ./zeus.sh test  again."
+    echo " Or:  use a live Postgres -  PGHOST=localhost ./zeus.sh test"
+    echo "============================================================"
+    echo
+    exit 1
+  fi
+  if command -v mvn >/dev/null 2>&1; then
+    mvn -f "$DIR/tests/pom.xml" test
+  else
+    ( cd "$DIR/tests" && chmod +x mvnw 2>/dev/null; ./mvnw test )
+  fi
+}
+
 case "$1" in
   update)         zeus_update ;;
   help|-h|--help) zeus_help ;;
   "")             zeus_help ;;
   koans)          shift; zeus_koans "$@" ;;
+  test)           zeus_test ;;
   *)              zeus_koans "$@" ;;   # bare form: treat as koans args
 esac

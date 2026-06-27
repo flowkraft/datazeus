@@ -4,6 +4,7 @@ REM  DataZeus - Master Everything Data, become a Data Zeus.
 REM
 REM  Usage:  zeus <command> [args]
 REM    zeus koans [course] [series] [lesson]   walk the path (narrow with each token)
+REM    zeus test                               run the verify gate (the *Spec tests; needs Docker)
 REM    zeus update                             pull the latest courses ^& koans (keeps your edits)
 REM    zeus help                               this help
 REM
@@ -25,6 +26,7 @@ if /I "%cmd%"=="help"    goto :help
 if /I "%cmd%"=="-h"      goto :help
 if /I "%cmd%"=="--help"  goto :help
 if /I "%cmd%"=="/?"      goto :help
+if /I "%cmd%"=="test"    goto :test
 if "%cmd%"==""           goto :help
 
 REM "zeus koans <a> <b> <c>" OR the bare "zeus <course> <series> <lesson>"
@@ -39,6 +41,7 @@ goto :koans
 echo DataZeus - Master Everything Data, become a Data Zeus.
 echo.
 echo   zeus koans [course] [series] [lesson]   walk the path
+echo   zeus test                               run the verify gate ^(the *Spec tests; needs Docker^)
 echo   zeus update                             pull the latest courses ^& koans ^(keeps your edits^)
 echo   zeus help                               this help
 echo.
@@ -115,6 +118,46 @@ if exist "%PROG%" (
   type "%LOG%"
 )
 endlocal & exit /b 0
+
+:test
+REM Run the VERIFY GATE (the *Spec tests), NOT the koans. Same Maven logic as `zeus koans`
+REM (your Maven if present, else the bundled wrapper). Needs a JDK 17+ AND Docker - the gate
+REM starts a throwaway PostgreSQL to check every lesson on a real engine - unless PGHOST
+REM points at a live Postgres.
+set "HASJAVA="
+where java >nul 2>nul && set "HASJAVA=1"
+if not defined HASJAVA if defined JAVA_HOME set "HASJAVA=1"
+if not defined HASJAVA (
+  echo Java was not found. Install a JDK 17+ and run again.
+  echo ^(Maven is downloaded automatically by the wrapper - no Maven install needed.^)
+  endlocal & exit /b 1
+)
+if defined PGHOST goto :test_run
+docker info >nul 2>nul
+if not errorlevel 1 goto :test_run
+echo.
+echo ============================================================
+echo  DOCKER IS NOT RUNNING ^(or not installed^).
+echo.
+echo  The DataZeus test gate needs Docker: it starts a throwaway
+echo  PostgreSQL to verify every lesson on a real engine.
+echo.
+echo  Fix: start Docker Desktop, then run  zeus test  again.
+echo  Or:  use a live Postgres -  set PGHOST=localhost ^&^& zeus test
+echo ============================================================
+echo.
+endlocal & exit /b 1
+:test_run
+where mvn >nul 2>nul
+if not errorlevel 1 goto :test_mvn
+pushd "%DIR%tests"
+call .\mvnw.cmd test
+set "RC=!errorlevel!"
+popd
+endlocal & exit /b !RC!
+:test_mvn
+call mvn -f "%DIR%tests\pom.xml" test
+endlocal & exit /b !errorlevel!
 
 :update
 echo Updating DataZeus from github.com/flowkraft/datazeus ...
