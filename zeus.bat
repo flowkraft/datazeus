@@ -139,11 +139,12 @@ echo.
 echo ============================================================
 echo  DOCKER IS NOT RUNNING ^(or not installed^).
 echo.
-echo  The DataZeus test gate needs Docker: it starts a throwaway
+echo  The DataZeus tests need Docker: it starts a throwaway
 echo  PostgreSQL to verify every lesson on a real engine.
 echo.
 echo  Fix: start Docker Desktop, then run  zeus test  again.
-echo  Or:  use a live Postgres -  set PGHOST=localhost ^&^& zeus test
+echo  ^(Once up, you can target your Northwind Postgres from the Learn Data guide
+echo   instead of a throwaway:  set PGHOST=localhost ^&^& zeus test^)
 echo ============================================================
 echo.
 endlocal & exit /b 1
