@@ -12,7 +12,8 @@ REM    zeus koans                       every koan, every course
 REM    zeus koans learnsql              all Master SQL koans
 REM    zeus koans learnsql series1 _00  ONE lesson   <- the usual path
 REM  Short aliases: sql=learnsql, S1=series1, plain "1 00". Courses: sql modeling
-REM  etl warehousing dbt viz bi. Needs a JDK 17+ and Maven; koans run on embedded DuckDB.
+REM  etl warehousing dbt viz bi. Needs a JDK 17+ (uses your Maven if present, else the bundled
+REM  wrapper fetches one); koans run on embedded DuckDB.
 REM ===========================================================================
 setlocal enabledelayedexpansion
 set "DIR=%~dp0"
@@ -46,9 +47,14 @@ echo Short aliases: sql=learnsql, S1=series1. Courses: sql modeling etl warehous
 endlocal & exit /b 0
 
 :koans
-where mvn >nul 2>nul
-if errorlevel 1 (
-  echo Maven ^(mvn^) was not found on your PATH. Install a JDK 17+ and Maven, then run again.
+REM Koans build with Maven: your installed Maven if you have one, otherwise the bundled
+REM wrapper (tests\mvnw.cmd) fetches one automatically. Either way you only need a JDK 17+.
+set "HASJAVA="
+where java >nul 2>nul && set "HASJAVA=1"
+if not defined HASJAVA if defined JAVA_HOME set "HASJAVA=1"
+if not defined HASJAVA (
+  echo Java was not found. Install a JDK 17+ and run again.
+  echo ^(Maven is downloaded automatically by the wrapper - no Maven install needed.^)
   endlocal & exit /b 1
 )
 
@@ -89,7 +95,16 @@ set "LOG=%DIR%tests\target\koans-build.log"
 if not exist "%DIR%tests\target" mkdir "%DIR%tests\target"
 if exist "%PROG%" del "%PROG%" >nul 2>nul
 
-call mvn -q -f "%DIR%tests\pom.xml" -Pkoans test -Dtest.includes="!inc!" > "%LOG%" 2>&1
+where mvn >nul 2>nul
+if not errorlevel 1 (
+  REM Maven is installed - use it directly.
+  call mvn -q -f "%DIR%tests\pom.xml" -Pkoans test -Dtest.includes="!inc!" > "%LOG%" 2>&1
+) else (
+  REM No Maven on PATH - bootstrap one via the bundled wrapper (downloads it once).
+  pushd "%DIR%tests"
+  call .\mvnw.cmd -q -Pkoans test -Dtest.includes="!inc!" > "%LOG%" 2>&1
+  popd
+)
 
 if exist "%PROG%" (
   type "%PROG%"
@@ -104,20 +119,71 @@ endlocal & exit /b 0
 :update
 echo Updating DataZeus from github.com/flowkraft/datazeus ...
 set "TMP_DZ=%TEMP%\datazeus-update-%RANDOM%%RANDOM%"
+set "URL=https://github.com/flowkraft/datazeus/archive/refs/heads/main.zip"
+set "ZIP=%TMP_DZ%\dz.zip"
+set "NEW=%TMP_DZ%\datazeus-main"
 mkdir "%TMP_DZ%" 2>nul
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { Invoke-WebRequest -UseBasicParsing -Uri 'https://github.com/flowkraft/datazeus/archive/refs/heads/main.zip' -OutFile '%TMP_DZ%\dz.zip'; Expand-Archive -Path '%TMP_DZ%\dz.zip' -DestinationPath '%TMP_DZ%' -Force } catch { exit 1 }"
-if errorlevel 1 (
-  echo Update failed - could not download ^(check your internet connection^).
+
+REM Prefer native curl + tar (built into Windows 10 1803+; Windows' tar is bsdtar, which
+REM extracts .zip directly). Fall back to PowerShell Invoke-WebRequest + Expand-Archive on
+REM older Windows. Success = "the extracted folder exists", so it doesn't matter which ran.
+where curl >nul 2>nul && where tar >nul 2>nul && (
+  curl -fsSL -o "%ZIP%" "%URL%" 2>nul && tar -xf "%ZIP%" -C "%TMP_DZ%" 2>nul
+)
+if not exist "%NEW%" (
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; try { Invoke-WebRequest -UseBasicParsing -Uri '%URL%' -OutFile '%ZIP%'; Expand-Archive -Path '%ZIP%' -DestinationPath '%TMP_DZ%' -Force } catch { exit 1 }" 2>nul
+)
+if not exist "%NEW%" (
+  echo Update failed - could not download or extract.
+  echo ^(Check your internet connection, or that 'curl'/'tar' or PowerShell 5+ is available.^)
   rmdir /s /q "%TMP_DZ%" 2>nul
   endlocal & exit /b 1
 )
-set "NEW=%TMP_DZ%\datazeus-main"
-REM Your editable koans live under tests\src\koans - preserve that whole tree.
-REM 1) refresh everything EXCEPT your koans tree (framework, datasets, courses, verify-gates, scripts)
-robocopy "%NEW%" "%ROOT%" /E /XD "%NEW%\tests\src\koans" /NFL /NDL /NJH /NJS /NC /NS /NP >nul
-REM 2) add only brand-NEW koan lessons into that tree; never overwrite a koan you've filled in
-robocopy "%NEW%\tests\src\koans" "%ROOT%\tests\src\koans" /E /XC /XN /XO /NFL /NDL /NJH /NJS /NC /NS /NP >nul
+REM --- Generic, marker-driven merge ------------------------------------------
+REM Editable workspaces declare themselves with a .zeus-keep marker (koans today,
+REM katas tomorrow). Refresh everything else; inside each workspace: add new
+REM exercises, update ones you never touched, preserve ones you edited.
+REM "Never touched" = identical (fc) to the baseline snapshot from the last update.
+set "BASE=%ROOT%\.zeus-baseline"
+set "WSLIST=%TMP_DZ%\workspaces.txt"
+type nul>"%WSLIST%"
+
+REM 1) discover workspaces (paths relative to NEW) from .zeus-keep markers
+for /f "delims=" %%M in ('dir /s /b /a:-d "%NEW%\.zeus-keep" 2^>nul') do (
+  set "wd=%%~dpM"
+  set "wd=!wd:%NEW%\=!"
+  if defined wd set "wd=!wd:~0,-1!"
+  >>"%WSLIST%" echo(!wd!
+)
+for %%A in ("%WSLIST%") do if %%~zA EQU 0 >"%WSLIST%" echo tests\src\koans
+
+REM 2) refresh everything EXCEPT the workspaces (+ the local baseline cache)
+set "XD=/XD "%BASE%""
+for /f "usebackq delims=" %%W in ("%WSLIST%") do set "XD=!XD! /XD "%NEW%\%%W""
+robocopy "%NEW%" "%ROOT%" /E !XD! /NFL /NDL /NJH /NJS /NC /NS /NP >nul
+
+REM 3) per-workspace merge against the baseline; 4) then refresh the baseline
+for /f "usebackq delims=" %%W in ("%WSLIST%") do if exist "%NEW%\%%W" (
+  for /f "delims=" %%F in ('dir /s /b /a:-d "%NEW%\%%W\*" 2^>nul') do (
+    set "rel=%%F"
+    set "rel=!rel:%NEW%\=!"
+    set "loc=%ROOT%\!rel!"
+    set "bas=%BASE%\!rel!"
+    if not exist "!loc!" (
+      call :dzcopy "%%F" "!loc!"
+    ) else if exist "!bas!" (
+      fc /b "!loc!" "!bas!" >nul 2>nul
+      if not errorlevel 1 call :dzcopy "%%F" "!loc!"
+    )
+  )
+  robocopy "%NEW%\%%W" "%BASE%\%%W" /E /NFL /NDL /NJH /NJS /NC /NS /NP >nul
+)
 rmdir /s /q "%TMP_DZ%" 2>nul
 echo.
-echo DataZeus is up to date. Your in-progress koans were left untouched.
+echo DataZeus is up to date. Your in-progress edits were left untouched.
 endlocal & exit /b 0
+
+:dzcopy
+for %%P in ("%~2") do if not exist "%%~dpP" mkdir "%%~dpP" >nul 2>nul
+copy /y "%~1" "%~2" >nul 2>nul
+exit /b 0

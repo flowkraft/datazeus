@@ -19,6 +19,19 @@ import java.sql.Types
  */
 class NorthwindSeed {
 
+    /**
+     * Seed the WHOLE Northwind: discover every base table in the duckdb and copy them all into
+     * Postgres. Individual specs never name tables — they just query whatever Northwind has.
+     * (Tables are created without constraints, so insertion order is irrelevant.)
+     */
+    static void copyAll(Sql duck, Sql pg) {
+        List<String> tables = []
+        duck.eachRow('''SELECT table_name FROM information_schema.tables
+                        WHERE table_schema = 'main' AND table_type = 'BASE TABLE'
+                        ORDER BY table_name''') { tables << (it.table_name as String) }
+        copy(duck, pg, tables)
+    }
+
     static void copy(Sql duck, Sql pg, List<String> tables) {
         for (String table : tables) {
             copyTable(duck, pg, table)

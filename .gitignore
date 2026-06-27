@@ -7,6 +7,9 @@
 # rendered videos — published to CDN / website, not git
 *.mp4
 
+# Per-machine baseline snapshot `zeus update` uses to detect your edits (never committed)
+.zeus-baseline/
+
 # Tooling
 node_modules/
 __pycache__/
