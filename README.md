@@ -32,7 +32,7 @@ New hands-on lessons are added regularly — ⭐ star the repo to follow along.
 Everything here is **free and open source**, and the fastest way to get a real data
 playground *and* these lessons running on your machine is **DataPallas**:
 
-👉 **https://datapallas.com/docs/learn-data-engineering**
+👉 **https://datapallas.com/learn-data**
 
 It sets up a real database, sample data, and a place to write and run queries — so you
 can go from zero to your first query in minutes.

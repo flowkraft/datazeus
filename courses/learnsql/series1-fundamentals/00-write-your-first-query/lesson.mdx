@@ -1,5 +1,5 @@
 ---
-title: "Stop Watching SQL Tutorials — Write Your First Query in 60 Seconds"
+title: "Write Your First Query — Stop Watching SQL Tutorials"
 description: "No slides, no setup lecture. Type one query against real business data and answer a real question — your first 60 seconds of SQL."
 topic: "learn-sql"
 tags: ["sql", "fundamentals", "getting-started"]
@@ -14,34 +14,66 @@ published: true
 
 ## Stop watching. Start writing.
 
-Every other SQL course makes you **watch** slides for two hours before you touch a keyboard. Not here. In the next minute **you** write a real query and get a real answer — then we'll explain what just happened.
+One real practice session beats watching **twenty** polished SQL videos. Here's the honest trap: you watch all twenty… and still freeze the moment you have to write a query yourself. So that's *not* how we work here.
 
-## A real question
+Our deal: you don't watch — **you** come up with the queries and write them yourself, on real, production-like data. Every lesson opens with the **least theory possible** — just enough to write something — then you practise, then we fill in the details. Never theory for its own sake.
+
+## The SQL-thinking loop
+
+Before your very first query, learn the one habit that *is* the whole skill — the **loop**:
+
+1. **Ask** your data question in plain language.
+2. **Translate** the same question into SQL (SQL reads almost like English — just with stricter rules).
+3. **Guess** the result *before* you run it. Yes, guessing.
+4. **Run** it and compare with your guess.
+
+Repeat until it's second nature. That loop **is** the skill — everything else is detail.
+
+## A real question — run the loop
 
 Here's how SQL actually starts in a job. Your boss leans over and asks:
 
-> *How many orders did we ship in June?*
+> *How many orders did we ship in June 2024?*
 
-Most people open a spreadsheet and start scrolling. An hour later, they're still scrolling. You're not going to **find** the answer — you're going to **ask** for it.
+That's **step 1** — plain language. Now **step 2**: translate it into SQL by reading the question almost word for word:
 
-## Your first query
-
-Type this exactly (don't copy-paste — typing is how it sticks), and hit **Run**:
+- It's a question that asks for data → **`SELECT`**.
+- It's about **orders** → the **`"Orders"`** table.
+- It asks **"how many"** → **`count(*)`**.
+- Only **"in June"** → add a **`WHERE`** on the date.
 
 ```sql
-SELECT count(*) AS june_orders
+SELECT count(*)
 FROM "Orders"
 WHERE "OrderDate" >= DATE '2024-06-01'
   AND "OrderDate" <  DATE '2024-07-01';
 ```
 
-```text
- june_orders
--------------
-           4
-```
+**Step 3 — guess before you run.** Don't skip this. An educated guess: *less than 10* — business tends to be slow over the summer.
 
-**Four.** One line, and you just answered a real business question from real company data. That is SQL. Read it the way you'd say it out loud: *count the rows in Orders where the order date falls in June.* (`count(*)` counts rows; `WHERE` keeps only the ones you care about; the half-open range `>= June 1 … < July 1` captures all of June with no end-of-month surprises.)
+## Your turn — run it
+
+Type it yourself in **CloudBeaver** (don't copy-paste — typing is how it sticks), and hit **Run**:
+
+| count |
+| ----: |
+|     4 |
+
+**Four.** The guess (*under 10*) was right — and one line of SQL just answered a real business question from real company data. Read it the way you'd say it out loud: *count the rows in Orders where the order date falls in June.* (`count(*)` counts rows; `WHERE` keeps only the ones you care about; the half-open range `>= June 1 … < July 1` captures all of June with no end-of-month surprises.)
+
+## Why bother guessing?
+
+The guess isn't a gimmick. Because you know your data and how the business works, you make an **educated** guess — and every time you do that bit of thinking, you understand your data a little better. Do it enough and you develop a **feel** for it: you'll glance at a question and already sense the shape of the answer.
+
+## SQL reads like English — because it's *declarative*
+
+Typing that query, it's surprisingly easy to grasp what it'll do — SQL really does read almost like English. Here's *why*: SQL is a **declarative** language. You declare **what** you want, and the engine works out **how** to get it — unlike **imperative** languages such as Java, where you spell out every step yourself. That "*what*, not *how*" is exactly what lets SQL read like plain English — and it's why you're already half-way there: in plenty of cases you can just *read* a query and understand it.
+
+## The setup: PostgreSQL + Northwind + CloudBeaver
+
+You ran that query against **PostgreSQL**, pre-populated with the **Northwind** sample data, using **CloudBeaver** to connect and run it. (New here? The [Learn Data](/docs/learn-data) guide walks you through starting Northwind PostgreSQL and CloudBeaver in a couple of minutes.)
+
+**Why PostgreSQL?** It starts fast, it's a light database server, and it has solid **ANSI SQL** support. ANSI SQL is SQL written the **standard** way — it works across every enterprise database, so what you learn here transfers to Oracle, SQL Server, MySQL and Db2 too. (PostgreSQL itself is also growing fast in the enterprise.) You're not learning one database — you're learning **SQL**.
 
 ## It's real data, not toy data
 
@@ -53,33 +85,82 @@ FROM "Customers"
 LIMIT 5;
 ```
 
-```text
- CompanyName                          | Country
---------------------------------------+---------
- Alfreds Futterkiste                  | Germany
- Ana Trujillo Emparedados y helados   | Mexico
- Antonio Moreno Taquería              | Mexico
- Around the Horn                      | UK
- Berglunds snabbköp                   | Sweden
-```
+| CompanyName                        | Country |
+| ---------------------------------- | ------- |
+| Alfreds Futterkiste                | Germany |
+| Ana Trujillo Emparedados y helados | Mexico  |
+| Antonio Moreno Taquería            | Mexico  |
+| Around the Horn                    | UK      |
+| Berglunds snabbköp                 | Sweden  |
 
 This is **Northwind** — a small import/export company (Customers, Orders, Products, Suppliers, Employees). Real enough to ask real questions, small enough to fit in your head.
 
-## One skill, every database
+## Koans & DuckDB — where it actually sticks
 
-We practise on **PostgreSQL** — it's free and the cleanest teacher there is. But what you learn here runs on Oracle, SQL Server, MySQL and Db2 too. Learn it **once**; whenever a query needs a vendor-specific trick, we'll flag it and show the portable version. You're not learning one database — you're learning SQL.
+Reading is nice, but the **koans** are where SQL sticks. A koan is a tiny **fill-in-the-blank** exercise: each one is a failing test with a `___` blank; replace the blank to make it pass, and the next koan unlocks — step by step, "to enlightenment." You learn SQL by *doing*, not watching.
+
+From a terminal:
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\koans.bat learnsql series1 _00
+```
+
+The koans run on **DuckDB** — a database that's *just a file*. Think SQLite, but with far better **PostgreSQL** compatibility. They run on the pre-populated `northwind.duckdb`, completely **self-contained**: no database server to start. Run it and the koans walk you one step at a time — a **green** win, then the next one **red** with a hint — fix, rerun, repeat all the way to green.
+
+## Two engines, one Northwind
+
+Why both DuckDB *and* PostgreSQL? Because they're two doors to the **same** data:
+
+- **DuckDB** — frictionless **practice**. It's just a file, no server, nothing in your way. Perfect for the koans.
+- **PostgreSQL** — the real database for **exploring** visually. You open **CloudBeaver**, which connects to it by default.
+
+Both come pre-populated with the **same Northwind** — identical schema, identical data. DuckDB's SQL was even *forked from PostgreSQL*, so the **same query gives the same result** in either one. Same schema, same data, same answers: DuckDB for effortless practice, PostgreSQL for real-world exploration.
+
+## Why the double quotes?
+
+You may have noticed the table names are wrapped in double quotes — `"Orders"`, `"Customers"`. One rule explains it:
+
+> **Unquoted** names get *case-folded* by the database; **quoted** names are taken *exactly as written*.
+
+Northwind's tables were created with quoted, capitalised names — the table really is called `"Orders"`, capital *O* and all. The query you ran quotes them to match:
+
+```sql
+SELECT count(*)
+FROM "Orders"
+WHERE "OrderDate" >= DATE '2024-06-01'
+  AND "OrderDate" <  DATE '2024-07-01';
+```
+
+Let's say you drop the quotes and write the query like this (notice also `orders` instead of `Orders`):
+
+```sql
+SELECT count(*)
+FROM orders
+WHERE OrderDate >= DATE '2024-06-01'
+  AND OrderDate <  DATE '2024-07-01';
+```
+
+- In **DuckDB** (in your koans, for instance) it **works** — DuckDB ignores case, so `orders` finds `"Orders"` and `OrderDate` finds `"OrderDate"`.
+- Paste the **exact same unquoted query** into CloudBeaver on **PostgreSQL** and it **breaks** — Postgres lowercases the unquoted names, hunts for a table called `orders` (and a column `orderdate`), and finds neither. *Same SQL, broken result.*
+
+So write the **ANSI-standard** form — the quoted version above: double-quoted names match the stored name exactly, plus a `DATE` literal. Double quotes are the one identifier style every database understands, so the quoted query runs identically on DuckDB **and** PostgreSQL.
+
+> **ANSI standard** — double-quoted names + `DATE` literal → same result on DuckDB & PostgreSQL.
+
+**Rule of thumb:** lean on **ANSI by default**, and when the engines differ (like this quoting), don't fight it — understand it. The twist: a **vendor-specific** feature is sometimes exactly where your biggest performance win hides. So stay ANSI by default, but stay *aware* — reach for a vendor extension in the specific spots where you have a strong reason (like a big performance gain), as we'll see later in the course.
 
 ## The deal: how every lesson works
 
 1. **Type** the query yourself — typing teaches your brain; copy-paste only teaches your eyes.
-2. **Predict** the answer before you run it. Say it out loud: *"I expect 4."* Wrong → you just learned something. Right → that's earned confidence. (Our **koans** turn this into code: fill in the number, run, go green.)
+2. **Predict** the answer before you run it. Say it out loud: *"I expect 4."* Wrong → you just learned something. Right → that's earned confidence. (The koans turn this into code: fill in the number, run, go green.)
 3. **Run** it. No watching. No slides you forget by lunch.
 
 Do this for a handful of lessons and you'll answer questions nobody else at your company can.
 
 ## What's next
 
-**Next lesson:** [Ask Your Database Anything — `SELECT`](/datazeus-academy/master-sql/meet-your-data-with-select) — meet your tables, rows and columns by querying them.
+Up next: **SELECT — meet your tables, rows & columns** by querying them. (Browse the rest of the series on the [Learn SQL](/data-academy/learn-sql) course page.)
 
 ---
 
@@ -88,5 +169,4 @@ Do this for a handful of lessons and you'll answer questions nobody else at your
 - **Koans** — fill in the blanks and watch the tests go green:
   from the repo root run `./koans.sh sql S1 _00` (`koans.bat sql S1 _00` on Windows) —
   that's course · series · episode (package `datazeus.learnsql.series1._00`).
-- **Flashcards** — `…/00-write-your-first-query/cards/cards.yaml` → build the deck with `python tools/build-anki.py`.
 - **Scripts** — the exact SQL above lives in `…/00-write-your-first-query/scripts/` (`june-orders.sql`, `customers.sql`).

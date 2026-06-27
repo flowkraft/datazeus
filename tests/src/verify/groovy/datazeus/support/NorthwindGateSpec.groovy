@@ -1,6 +1,7 @@
 package datazeus.support
 
 import groovy.sql.Sql
+import org.testcontainers.DockerClientFactory
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import spock.lang.Shared
@@ -57,6 +58,12 @@ abstract class NorthwindGateSpec extends Specification {
                     "PGHOST is set but ${url} is not a seeded Northwind — start it via " +
                     "DataPallas ▸ Apps / Starter Packs ▸ Northwind DB (PostgreSQL) ▸ Start."
         } else {
+            if (!DockerClientFactory.instance().isDockerAvailable()) {
+                throw new IllegalStateException(
+                    "Running these tests needs Docker to be installed and started — they spin up " +
+                    "PostgreSQL in a throwaway container. Install Docker (Docker Desktop) and start " +
+                    "it, then run again. Or set PGHOST to point at an already-running Northwind PostgreSQL.")
+            }
             pgc = new PostgreSQLContainer(DockerImageName.parse(PG_IMAGE))
             pgc.start()
             pg = Sql.newInstance(pgc.jdbcUrl, pgc.username, pgc.password, "org.postgresql.Driver")

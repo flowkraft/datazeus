@@ -6,8 +6,7 @@ at `content/datazeus-academy/master-sql/` (Contentlayer `topic: master-sql`).
 
 **The promise:** you *write* the queries yourself, against real business data — you don't
 watch slides. Each lesson is a self-contained bundle: `lesson.mdx` · `scripts/*.sql` ·
-`cards/cards.yaml` (the video composition lives in the `cli-remotion` project — see
-`video/README.md`). Its koans live in `../../tests/src/koans`
+`cards/cards.yaml`. Its koans live in `../../tests/src/koans`
 (package `datazeus.learnsql.series<N>.ep<NN>`), gated by a verified spec in `../../tests/src/verify`.
 Run one lesson's koans with `./koans.sh sql <series> <episode>` (e.g. `./koans.sh sql S1 _00`).
 
