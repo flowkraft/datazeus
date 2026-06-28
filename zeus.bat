@@ -188,7 +188,7 @@ REM Editable workspaces declare themselves with a .zeus-keep marker (koans today
 REM katas tomorrow). Refresh everything else; inside each workspace: add new
 REM exercises, update ones you never touched, preserve ones you edited.
 REM "Never touched" = identical (fc) to the baseline snapshot from the last update.
-set "BASE=%ROOT%\.zeus-baseline"
+set "BASE=%ROOT%\.internal-donttouch"
 set "WSLIST=%TMP_DZ%\workspaces.txt"
 type nul>"%WSLIST%"
 

@@ -64,7 +64,7 @@ zeus_update() {
   # katas tomorrow). Refresh everything else; inside each workspace: add new
   # exercises, update ones you never touched, preserve ones you edited.
   # "Never touched" = byte-identical (cmp) to the baseline snapshot from last update.
-  baseline="$DIR/.zeus-baseline"
+  baseline="$DIR/.internal-donttouch"
 
   # 1) discover workspaces (paths relative to the download) from the markers
   workspaces="$( cd "$new" && find . -name .zeus-keep -type f 2>/dev/null \

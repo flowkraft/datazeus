@@ -8,7 +8,7 @@
 *.mp4
 
 # Per-machine baseline snapshot `zeus update` uses to detect your edits (never committed)
-.zeus-baseline/
+.internal-donttouch/
 
 # Tooling
 node_modules/
