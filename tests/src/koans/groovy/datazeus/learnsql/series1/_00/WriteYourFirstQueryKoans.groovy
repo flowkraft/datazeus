@@ -1,6 +1,6 @@
 package datazeus.learnsql.series1._00
 
-import datazeus.koans.KoanBase
+import datazeus._internal.KoanBase
 import spock.lang.Stepwise
 
 /**

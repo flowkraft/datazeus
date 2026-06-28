@@ -36,7 +36,7 @@ Course aliases: `sql modeling etl warehousing dbt viz bi`. Episode is two digits
 ## The ritual — the path to enlightenment
 - Each `*Koans` spec is `@Stepwise`: koans run **in order**, and once one fails the
   rest **wait** (are skipped) — you fix them one at a time.
-- A Spock global extension (`datazeus.koans.PathToEnlightenment`, registered only on the
+- A Spock global extension (`datazeus._internal.PathToEnlightenment`, registered only on the
   koans classpath) prints a progress bar + the next koan to "sit with", or the
   enlightenment line when every koan in scope is green. It scopes automatically to
   whatever you ran.

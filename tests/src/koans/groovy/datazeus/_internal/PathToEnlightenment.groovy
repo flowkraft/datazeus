@@ -1,4 +1,4 @@
-package datazeus.koans
+package datazeus._internal
 
 import org.spockframework.runtime.AbstractRunListener
 import org.spockframework.runtime.extension.IGlobalExtension
@@ -117,7 +117,7 @@ class PathToEnlightenment implements IGlobalExtension {
             // A query koan threw a ready-made, goal-aware hint — use it verbatim.
             // (Spock may wrap a condition's exception, so walk the cause chain.)
             for (Throwable cur = t; cur != null; cur = cur.cause) {
-                if (cur.getClass().name == "datazeus.koans.KoanHint") return cur.message
+                if (cur.getClass().name == "datazeus._internal.KoanHint") return cur.message
                 if (cur.cause == cur) break
             }
             // SpockComparisonFailure / ConditionNotSatisfiedError both carry a `condition`

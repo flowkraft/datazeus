@@ -1,4 +1,4 @@
-package datazeus.koans
+package datazeus._internal
 
 /**
  * A koan failure whose message IS the learner-facing hint (a goal-aware "compare"

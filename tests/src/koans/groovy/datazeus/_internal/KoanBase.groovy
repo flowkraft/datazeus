@@ -1,4 +1,4 @@
-package datazeus.koans
+package datazeus._internal
 
 import groovy.sql.Sql
 import spock.lang.Shared
@@ -15,7 +15,7 @@ import java.nio.file.StandardCopyOption
  * blank (`___`) goes INSIDE the SQL — you write the query, the koan checks the
  * RESULT. (You learn SQL by writing queries, not by typing in a number.)
  *
- *     import datazeus.koans.KoanBase
+ *     import datazeus._internal.KoanBase
  *     import spock.lang.Stepwise
  *
  *     @Stepwise   // koans run in order; once one fails, the rest wait
