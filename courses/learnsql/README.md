@@ -5,10 +5,10 @@ The first DataZeus track. Hands-on SQL on the real **Northwind** dataset, taught
 at `content/datazeus-academy/master-sql/` (Contentlayer `topic: master-sql`).
 
 **The promise:** you *write* the queries yourself, against real business data — you don't
-watch slides. Each lesson is a self-contained bundle: `lesson.mdx` · `scripts/*.sql` ·
+watch slides. Each lesson is a self-contained bundle: `<NN-slug>.mdx` · `scripts/*.sql` ·
 `cards/cards.yaml`. Its koans live in `../../tests/src/koans`
-(package `datazeus.learnsql.series<N>.ep<NN>`), gated by a verified spec in `../../tests/src/verify`.
-Run one lesson's koans with `./koans.sh sql <series> <episode>` (e.g. `./koans.sh sql S1 _00`).
+(package `datazeus.learnsql.series<N>._<NN>`), gated by a verified spec in `../../tests/src/verify`.
+Run one lesson's koans with `./zeus.sh koans learnsql <series> <episode>` (e.g. `./zeus.sh koans learnsql series1 _00`).
 
 ## Series & episodes
 Three series, natural progression. Episodes are **gap-numbered** (00, 05, 10, …) so new
