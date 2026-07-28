@@ -1,0 +1,168 @@
+# The ordered episode list for BI & Data Visualization. Field docs live in
+# courses/learnsql/curriculum.yaml. `short` is omitted until an episode has a video.
+#
+# One track, not two: choosing a chart and defining a metric are the same job — getting a
+# decision made. Series 1 is charts that tell the truth, Series 2 is richer analysis and the
+# metric definitions behind it, Series 3 is dashboards, delivery and getting it adopted.
+
+course: learn-bi
+track: bi
+title: BI & Data Visualization
+
+excludes:
+  - topic: "Writing the queries behind the widgets"
+    where: "covered in Master SQL"
+  - topic: "Building the warehouse and the cubes themselves"
+    where: "covered in Data Warehousing; here you consume them"
+  - topic: "Natural-language questions and AI-assisted analysis"
+    where: "covered in AI for Data"
+  - topic: "Plotting for your own exploration in Python"
+    where: "covered in Python for Data — this track is about charts other people read"
+
+series:
+  - slug: series1-charts-that-tell-the-truth
+    title: Charts That Tell the Truth
+    tagline: see it yourself, then show it honestly
+    level: beginner
+    episodes:
+      - n: "00"
+        slug: why-visualize
+        title: "Why Visualize — From Rows to Insight in One Look"
+        status: planned
+      - n: "05"
+        slug: visual-encoding
+        title: "Visual Encoding — Position, Length, Colour and What the Eye Reads First"
+        status: planned
+      - n: "10"
+        slug: choosing-the-right-chart
+        title: "Choosing the Right Chart — Match the Chart to the Question"
+        status: planned
+      - n: "15"
+        slug: bar-and-column
+        title: "Bar & Column — Comparing Categories (Revenue by Category)"
+        status: planned
+      - n: "20"
+        slug: line-and-area
+        title: "Line & Area — Trends Over Time (Monthly Orders)"
+        status: planned
+      - n: "25"
+        slug: part-to-whole
+        title: "Pie, Donut & Part-to-Whole — And Why to Use Them Sparingly"
+        status: planned
+      - n: "30"
+        slug: kpis-gauges-and-numbers
+        title: "KPIs, Gauges & Big Numbers — When a Number Beats a Chart"
+        status: planned
+      - n: "35"
+        slug: colour-and-accessibility
+        title: "Colour — Meaning, Scales and Accessibility"
+        status: planned
+      - n: "40"
+        slug: honest-charts
+        title: "Honest Charts — Axes, Scales and How Not to Mislead"
+        status: planned
+      - n: "45"
+        slug: your-first-chart
+        title: "Your First Chart — Query to Widget, Hands-On"
+        status: planned
+
+  - slug: series2-from-charts-to-answers
+    title: From Charts to Answers
+    tagline: richer encodings, and agreeing what the numbers mean
+    level: intermediate
+    episodes:
+      - n: "00"
+        slug: aggregation-and-granularity
+        title: "Aggregation & Granularity — What One Mark Actually Represents"
+        status: planned
+      - n: "05"
+        slug: multi-series-and-small-multiples
+        title: "Multi-Series & Small Multiples — Compare Without Clutter"
+        status: planned
+      - n: "10"
+        slug: distributions
+        title: "Distributions — Histograms & Box Plots, Beyond the Average"
+        status: planned
+      - n: "15"
+        slug: geospatial
+        title: "Geospatial — Choropleth Maps (Sales by ShipCountry)"
+        status: planned
+      - n: "20"
+        slug: flows-and-correlation
+        title: "Sankey & Scatter — Flows, Relationships and Two Measures at Once"
+        status: planned
+      - n: "25"
+        slug: time-intelligence
+        title: "Time Intelligence — MTD, YTD, YoY, Moving Averages & Sparklines"
+        status: planned
+      - n: "30"
+        slug: pivot-tables
+        title: "Pivot Tables — Cross-Tab Analysis (Category × Quarter)"
+        status: planned
+      - n: "35"
+        slug: metrics-and-kpis
+        title: "Metrics & KPIs — Defining What 'Good' Means, Once"
+        status: planned
+      - n: "40"
+        slug: the-semantic-layer
+        title: "The Semantic Layer — One Definition of Revenue the Whole Org Uses"
+        status: planned
+      - n: "45"
+        slug: filters-and-drill-down
+        title: "Filters, Drill-Down & Cross-Filtering — Let People Ask the Next Question"
+        status: planned
+
+  - slug: series3-dashboards-and-delivery
+    title: Dashboards, Delivery & Adoption
+    tagline: make it land, and keep it trusted
+    level: advanced
+    episodes:
+      - n: "00"
+        slug: dashboard-layout
+        title: "Dashboard Layout — Information Hierarchy and What Belongs at the Top"
+        status: planned
+      - n: "05"
+        slug: exploratory-vs-explanatory
+        title: "Exploratory vs Explanatory — Design for Who's Looking"
+        status: planned
+      - n: "10"
+        slug: build-a-dashboard
+        title: "Build a Multi-Widget Dashboard — Hands-On on the Canvas"
+        status: planned
+      - n: "15"
+        slug: linked-views
+        title: "Linked Views & Cross-Widget Drill-Down — Click a Bar, Filter the Page"
+        status: planned
+      - n: "20"
+        slug: operational-reporting
+        title: "Operational & Pixel-Perfect Reporting — When the Layout Is the Requirement"
+        status: planned
+      - n: "25"
+        slug: report-bursting
+        title: "Report Bursting — One Report, Many Recipients, Each Seeing Only Theirs"
+        status: planned
+      - n: "30"
+        slug: scheduled-delivery
+        title: "Scheduled Delivery — Email, Portals and Files, on a Schedule"
+        status: planned
+      - n: "35"
+        slug: self-service-portals
+        title: "Self-Service Portals — Secure, Personalized Access Without a Ticket"
+        status: planned
+      - n: "40"
+        slug: governance-and-row-level-security
+        title: "Governance & Row-Level Security — One Version of the Truth, Safely Shared"
+        status: planned
+      - n: "45"
+        slug: data-storytelling
+        title: "Data Storytelling — Annotation, Narrative and Sequence"
+        status: planned
+      - n: "50"
+        slug: embedded-analytics
+        title: "Embedded Analytics — BI Inside Your Own Application"
+        status: planned
+      - n: "55"
+        slug: capstone-executive-suite
+        title: "Capstone — A Northwind Executive Suite: Cube → Dashboards → Delivery"
+        tags: ["capstone"]
+        status: planned

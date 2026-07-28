@@ -1,0 +1,260 @@
+# The ordered episode list for Master SQL — the SINGLE source of truth for the roadmap.
+#
+# Anything that has to know "what are the episodes, in what order, and where are we"
+# reads THIS file: the course page (/data-academy/learn-sql), the "you are here" roadmap
+# card in each Remotion composition, and the lesson/koan folder names.
+#
+# course:  the topic slug — matches config/learning.ts AND each lesson's `topic` front-matter.
+# track:   the folder + slug token (no hyphen); courses/<track>/ and the koan package.
+# series:  ordered; `slug` is the folder name and the lesson's `module` front-matter.
+# tagline: the one-line promise, shown under the series title on the roadmap card.
+# level:   beginner | intermediate | advanced — a property of the SERIES, not the episode,
+#          so it can't drift and never has to be guessed per lesson.
+#
+# EPISODE FIELDS
+#   n       gap-numbered (00, 05, 10, …) so a new episode slots in without renumbering.
+#   slug    the lesson folder is <n>-<slug>; the URL is /data-academy/<course>/<slug>.
+#           MUST be unique across the whole course — the route drops the series.
+#   title   "<SQL topic> — <hook>". The keywords lead, because someone scanning the course
+#           TOC is asking "does this cover the stuff I need?" before anything else; the hook
+#           follows to say why it matters. The course page renders the two halves as
+#           bold + muted, so keep the " — " separator. For a PUBLISHED episode this must
+#           match the lesson .mdx front-matter `title` (the MDX wins on the rendered page).
+#   short   the compact label for the roadmap card, where the full title won't fit. The
+#           topic half is IDENTICAL to `title` — only the hook is compressed — so the card
+#           and the course page are scanned by the same keywords. Keep it under ~55 chars,
+#           the width the card holds on one line. The Series 1 list is mirrored in the
+#           video's TOC slide (the `toc.episodes` array in the Remotion composition):
+#           change one and change the other.
+#   status  published — the .mdx exists, is published, and the video is live
+#           planned   — on the roadmap, not built yet
+#   tags    only labels that are already TRUE of an unwritten episode — "capstone" today.
+#           Topical tags belong in the lesson's own front-matter once it exists; guessing
+#           them here just creates a second source of truth that drifts.
+#   seed    bulk — needs the larger dataset (datasets/bulk/), not the 79-row Northwind.
+#
+# IDs are DERIVED, never repeated here: a lesson's Remotion composition, its mp4, the
+# videos.manifest.json key, public/videos/<id>/, the TTS assets under cli-remotion's
+# public/assets/rb/<id>/, and the `dp-slug:` tag on the uploaded YouTube video are all
+# `<track>-<series-number>-<n>-<slug>` — e.g. learnsql-series1-00-start-here.
+# Renaming a slug therefore means renaming all of those together.
+
+course: learn-sql
+track: learnsql
+title: Master SQL
+
+# Scope decisions that a scanner would otherwise read as holes in the course. Rendered at
+# the foot of the course page, so "missing" reads as "deliberate, and it lives over there".
+excludes:
+  - topic: "DDL, keys, constraints & normalization"
+    where: "covered in Learn Data Modeling — it's schema design, not writing queries"
+  - topic: "Isolation levels, locking & concurrency"
+    where: "covered in Data Ops, Series 2 — Running PostgreSQL in Production; COMMIT and ROLLBACK basics are in Series 2 here"
+  - topic: "ROLLUP, CUBE, GROUPING SETS & OLAP cubes"
+    where: "covered in Learn Data Warehousing, where the star schema lives"
+
+series:
+  - slug: series1-fundamentals
+    title: SQL Fundamentals
+    tagline: query one table, then glue two
+    level: beginner
+    episodes:
+      # The orientation episode: the SQL-thinking loop and one real query, but also the
+      # toolchain — Northwind on PostgreSQL, CloudBeaver, DuckDB and the koans.
+      - n: "00"
+        slug: start-here
+        title: "Start Here: The SQL Thinking Loop — Your First Query, CloudBeaver & the Koans"
+        short: "Start Here: The SQL Thinking Loop — your first query"
+        status: published
+      - n: "05"
+        slug: meet-your-data-with-select
+        title: "SELECT, Column Lists & Data Types — Meet Your Tables, Rows & Columns"
+        short: "SELECT, Column Lists & Data Types — meet your data"
+        status: published
+      - n: "10"
+        slug: where-filtering
+        title: "WHERE, AND/OR/NOT, IN, BETWEEN — Throw Away the Rows You Don't Care About"
+        short: "WHERE, AND/OR/NOT, IN, BETWEEN — throw away the rest"
+        status: planned
+      - n: "15"
+        slug: order-by-and-top-n
+        title: "ORDER BY, LIMIT & FETCH FIRST — Who's Your #1 Customer?"
+        short: "ORDER BY, LIMIT & FETCH FIRST — your #1 customer"
+        status: planned
+      - n: "20"
+        slug: distinct-aliases-expressions
+        title: "Aliases, Expressions & DISTINCT — Make Messy Output Look Like a Report"
+        short: "Aliases, Expressions & DISTINCT — output like a report"
+        status: planned
+      - n: "25"
+        slug: aggregate-functions
+        title: "COUNT, SUM, AVG, MIN, MAX — One Number That Runs the Business"
+        short: "COUNT, SUM, AVG, MIN, MAX — one number that runs it"
+        status: planned
+      - n: "30"
+        slug: group-by
+        title: "GROUP BY — Turn 1,000 Rows into the Few Numbers Your Boss Wants"
+        short: "GROUP BY — 1,000 rows into a few numbers"
+        status: planned
+      # Closes the aggregation arc inside Series 1 — grouping you can't filter is half a tool.
+      - n: "35"
+        slug: having-vs-where
+        title: "HAVING vs WHERE — Why WHERE Can't Filter Your Totals"
+        short: "HAVING vs WHERE — why WHERE can't filter totals"
+        status: planned
+      - n: "40"
+        slug: joins
+        title: "JOINs: INNER, LEFT, RIGHT, FULL — Glue Two Tables Together"
+        short: "JOINs: INNER, LEFT, RIGHT, FULL — glue two tables"
+        status: planned
+      - n: "45"
+        slug: null-and-three-valued-logic
+        title: "NULL & Three-Valued Logic — The Invisible Trap That Wrecks Real Queries"
+        short: "NULL & Three-Valued Logic — the invisible trap"
+        status: planned
+      - n: "50"
+        slug: your-first-real-report
+        title: "SELECT + JOIN + GROUP BY — Build a Report Your Boss Would Actually Use"
+        short: "SELECT + JOIN + GROUP BY — your first real report"
+        tags: ["capstone"]
+        status: planned
+
+  - slug: series2-intermediate
+    title: Intermediate SQL
+    tagline: answer real business questions
+    level: intermediate
+    episodes:
+      - n: "00"
+        slug: multi-table-joins
+        title: "Multi-Table JOINs — Follow the Data Across 3, 4, 5 Tables"
+        short: "Multi-Table JOINs — across 3, 4, 5 tables"
+        status: planned
+      - n: "05"
+        slug: subqueries
+        title: "Subqueries & EXISTS — Answer 'Who's Above Average?'"
+        short: "Subqueries & EXISTS — who's above average?"
+        status: planned
+      - n: "10"
+        slug: self-joins-and-hierarchies
+        title: "Self-JOINs & Hierarchies — The Org Chart Hiding Inside One Table"
+        short: "Self-JOINs & Hierarchies — the org chart inside"
+        status: planned
+      - n: "15"
+        slug: case-expressions
+        title: "CASE — SQL's If/Then for Labels & Buckets"
+        short: "CASE — SQL's if/then for labels & buckets"
+        status: planned
+      - n: "20"
+        slug: dates-and-times
+        title: "Dates & Times — 'Last 30 Days' Is Harder Than It Looks"
+        short: "Dates & Times — 'last 30 days' is harder"
+        status: planned
+      - n: "25"
+        slug: text-search-and-regex
+        title: "LIKE, ILIKE & Regex — Find It Even If It's Misspelled"
+        short: "LIKE, ILIKE & Regex — even if it's misspelled"
+        status: planned
+      - n: "30"
+        slug: string-and-number-functions
+        title: "String & Number Functions — Clean Up Messy Real-World Data"
+        short: "String & Number Functions — clean up messy data"
+        status: planned
+      - n: "35"
+        slug: set-operations
+        title: "UNION, INTERSECT, EXCEPT — Stack Them or Subtract Them"
+        short: "UNION, INTERSECT, EXCEPT — stack or subtract"
+        status: planned
+      # The only episode that writes data — placed late, once filtering is second nature.
+      # COMMIT/ROLLBACK basics live here; isolation levels belong to a future ops track.
+      - n: "40"
+        slug: insert-update-delete
+        title: "INSERT, UPDATE, DELETE & Transactions — Change the Data, Safely"
+        short: "INSERT, UPDATE, DELETE & Transactions — safely"
+        status: planned
+      - n: "45"
+        slug: views
+        title: "VIEWs — Stop Pasting the Same Query"
+        short: "VIEWs — stop pasting the same query"
+        status: planned
+
+  - slug: series3-advanced
+    title: Advanced SQL
+    tagline: production-grade + cross-vendor
+    level: advanced
+    episodes:
+      # Block A — advanced query-writing (the hands-on heart). CTEs come first: they're the
+      # simplest structural tool, and every query after this one is readable because of them.
+      - n: "00"
+        slug: ctes
+        title: "CTEs (WITH) — Break a Monster Query into Readable Steps"
+        short: "CTEs (WITH) — a monster query, in readable steps"
+        status: planned
+      - n: "05"
+        slug: window-functions-i
+        title: "Window Functions I: OVER, PARTITION BY & Ranking — See the Total AND the Detail at Once"
+        short: "Window Functions I: OVER, PARTITION BY & Ranking"
+        status: planned
+      - n: "10"
+        slug: window-functions-ii
+        title: "Window Functions II: LAG/LEAD, Running Totals & Frames — Month-over-Month Growth in One Query"
+        short: "Window Functions II: LAG/LEAD, Running Totals & Frames"
+        status: planned
+      - n: "15"
+        slug: recursive-ctes
+        title: "Recursive CTEs — Walk an Org Chart to the Top"
+        short: "Recursive CTEs — walk an org chart to the top"
+        status: planned
+        seed: bulk
+      - n: "20"
+        slug: pivot-and-unpivot
+        title: "PIVOT & UNPIVOT — Turn Rows into a Cross-Tab Report, the Portable Way"
+        short: "PIVOT & UNPIVOT — rows into a cross-tab report"
+        status: planned
+      - n: "25"
+        slug: cohorts-and-repeat-purchase
+        title: "Cohorts & Repeat-Purchase Analysis — Who Comes Back?"
+        short: "Cohorts & Repeat-Purchase Analysis — who comes back?"
+        status: planned
+      - n: "30"
+        slug: json-in-sql
+        title: "JSON in SQL — Query Semi-Structured Data Without Leaving the Database"
+        short: "JSON in SQL — semi-structured data, in place"
+        status: planned
+      # Block B — performance, reframed around "make THIS query fast". All three need a
+      # dataset big enough for the planner to have real choices to make.
+      - n: "35"
+        slug: explain-query-plans
+        title: "EXPLAIN / EXPLAIN ANALYZE — Why Is This Query Slow? Read the Plan"
+        short: "EXPLAIN / EXPLAIN ANALYZE — read the plan"
+        status: planned
+        seed: bulk
+      - n: "40"
+        slug: indexes
+        title: "Indexes — From 10 Seconds to 10 Milliseconds (and When NOT to Use Them)"
+        short: "Indexes — 10 seconds to 10 milliseconds"
+        status: planned
+        seed: bulk
+      - n: "45"
+        slug: slow-to-fast
+        title: "Query Tuning Capstone — Fix a Real Slow Query, Live"
+        tags: ["capstone"]
+        short: "Query Tuning Capstone — fix a real slow query, live"
+        status: planned
+        seed: bulk
+      # Block C — the cross-vendor finale
+      - n: "50"
+        slug: ansi-sql-vs-dialects
+        title: "ANSI SQL vs Dialects — The Same SQL Breaks on Another Database, Here's Why"
+        short: "ANSI SQL vs Dialects — the same SQL breaks"
+        status: planned
+      - n: "55"
+        slug: portable-sql
+        title: "Portable Paging, Strings, Dates & UPSERT — Write Once, Run Anywhere"
+        short: "Portable Paging, Strings, Dates & UPSERT — anywhere"
+        status: planned
+      - n: "60"
+        slug: one-query-five-databases
+        title: "Northwind on Postgres, Oracle, SQL Server, MySQL & Db2 — One Query, Five Databases"
+        short: "Northwind on Postgres, Oracle, SQL Server, MySQL & Db2"
+        tags: ["capstone"]
+        status: planned

@@ -1,0 +1,160 @@
+# The ordered episode list for AI for Data. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: use AI on data you're responsible for, and be able to prove
+# the answer is right. Series 1 is AI as a copilot (what most people need first), Series 2
+# teaches it about your data, Series 3 ships a feature you'd defend in an audit.
+
+course: learn-ai
+track: ai
+title: AI for Data
+
+excludes:
+  - topic: "Classical machine learning — features, training, model selection"
+    where: "not covered; this track is LLM-era work on data you already have"
+  - topic: "Reading and fixing the SQL a model writes"
+    where: "covered in Master SQL — you still have to be able to check its work"
+  - topic: "Dashboards and metric governance"
+    where: "covered in BI & Data Visualization"
+
+series:
+  - slug: series1-ai-as-a-copilot
+    title: AI as Your Data Copilot
+    tagline: get an answer, and know whether to trust it
+    level: beginner
+    episodes:
+      - n: "00"
+        slug: what-an-llm-can-and-cant-do
+        title: "What an LLM Can and Can't Do With Your Data — A Realistic Baseline"
+        status: planned
+      - n: "05"
+        slug: text-to-sql
+        title: "Text-to-SQL — Ask in English, Then Read the Query It Wrote"
+        status: planned
+      - n: "10"
+        slug: schema-context
+        title: "Schema Context — Why the Model Needs Your Tables, Not Just Your Question"
+        status: planned
+      - n: "15"
+        slug: prompt-patterns-for-data
+        title: "Prompt Patterns for Data — Few-Shot, Constraints and Guardrails"
+        status: planned
+      - n: "20"
+        slug: verify-the-sql
+        title: "Verify the Answer — Does the Generated Query Actually Return the Right Rows?"
+        status: planned
+      - n: "25"
+        slug: failure-modes
+        title: "Failure Modes — Invented Columns, Silent Wrong Joins, Confident Nonsense"
+        status: planned
+      - n: "30"
+        slug: ai-in-the-query-editor
+        title: "AI in the Query Editor — Explain, Refactor and Optimize an Existing Query"
+        status: planned
+      - n: "35"
+        slug: privacy-and-local-models
+        title: "Privacy & Local Models — Keeping Your Data Off Someone Else's Server"
+        status: planned
+      - n: "40"
+        slug: documenting-with-ai
+        title: "Documenting With AI — Schemas, Lineage and Runbooks You'll Actually Keep"
+        status: planned
+      - n: "45"
+        slug: copilot-capstone
+        title: "Capstone — Answer a Real Northwind Question With AI, and Prove It's Right"
+        tags: ["capstone"]
+        status: planned
+
+  - slug: series2-embeddings-and-retrieval
+    title: Embeddings & Retrieval
+    tagline: teach it about your data, not the internet's
+    level: intermediate
+    episodes:
+      - n: "00"
+        slug: what-is-an-embedding
+        title: "Embeddings — Turning Rows and Text into Vectors"
+        status: planned
+      - n: "05"
+        slug: similarity-and-distance
+        title: "Similarity & Distance — Cosine, Euclidean and Approximate Nearest Neighbours"
+        status: planned
+      - n: "10"
+        slug: vector-storage
+        title: "Vector Storage Where Your Data Already Lives — pgvector and DuckDB vss"
+        status: planned
+      - n: "15"
+        slug: semantic-search
+        title: "Semantic Search Over Northwind — Find Products by Meaning, Not LIKE"
+        status: planned
+      - n: "20"
+        slug: chunking-and-metadata
+        title: "Chunking & Metadata — The Boring Choices That Decide Retrieval Quality"
+        status: planned
+      - n: "25"
+        slug: rag-fundamentals
+        title: "RAG — Retrieve First, Then Generate"
+        status: planned
+      - n: "30"
+        slug: rag-on-your-warehouse
+        title: "RAG on Your Warehouse — Ground the Model in Your Schema and Docs"
+        status: planned
+      - n: "35"
+        slug: hybrid-search
+        title: "Hybrid Search — Combining Keyword and Vector Retrieval"
+        status: planned
+      - n: "40"
+        slug: evaluating-retrieval
+        title: "Evaluating Retrieval — Recall, Precision and a Test Set You Trust"
+        status: planned
+      - n: "45"
+        slug: rag-capstone
+        title: "Capstone — A Question-Answering Layer Over Your Own Data"
+        tags: ["capstone"]
+        status: planned
+
+  - slug: series3-agents-and-production
+    title: Agents, Evaluation & Production
+    tagline: ship it without regretting it later
+    level: advanced
+    episodes:
+      - n: "00"
+        slug: tools-and-function-calling
+        title: "Tools & Function Calling — Let the Model Run a Query, Under Supervision"
+        status: planned
+      - n: "05"
+        slug: agents-over-the-warehouse
+        title: "Agents Over the Warehouse — Multi-Step Questions, Bounded Permissions"
+        status: planned
+      - n: "10"
+        slug: read-only-contracts
+        title: "Read-Only Contracts & Least Privilege — What an Agent Must Never Touch"
+        status: planned
+      - n: "15"
+        slug: eval-harnesses
+        title: "Eval Harnesses — Score Generated SQL Against Known-Good Answers"
+        status: planned
+      - n: "20"
+        slug: regression-testing-prompts
+        title: "Regression-Testing Prompts — Keep Quality When the Model Changes Under You"
+        status: planned
+      - n: "25"
+        slug: cost-and-latency
+        title: "Cost & Latency — Context Size, Caching and What to Precompute"
+        status: planned
+      - n: "30"
+        slug: fine-tuning-vs-rag
+        title: "Fine-Tuning vs RAG vs Prompting — The Cheapest Thing That Actually Works"
+        status: planned
+      - n: "35"
+        slug: structured-output
+        title: "Structured Output — JSON, Schemas and Parsing You Can Rely On"
+        status: planned
+      - n: "40"
+        slug: observability-for-ai
+        title: "Observability for AI Features — Log the Prompt, the Query and the Answer"
+        status: planned
+      - n: "45"
+        slug: capstone-ai-feature
+        title: "Capstone — Ship an AI Data Feature: Grounded, Evaluated, Auditable"
+        tags: ["capstone"]
+        status: planned

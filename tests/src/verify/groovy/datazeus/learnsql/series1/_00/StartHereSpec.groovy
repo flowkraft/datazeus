@@ -13,17 +13,17 @@ import java.sql.SQLException
  * Postgres — so we prove the learner gets the SAME result whether they use the DuckDB CLI or
  * the Northwind PostgreSQL in CloudBeaver, not just that the data matches.
  *
- * The learner-facing version, with the queries blanked to ___, is WriteYourFirstQueryKoans.
+ * The learner-facing version, with the queries blanked to ___, is StartHereKoans.
  *
  * Convention: the spec runs the SAME *.sql files the lesson/video show, so the SQL is
  * authored in exactly one place (the lesson's scripts/) and verified here — no drift.
  */
-class WriteYourFirstQuerySpec extends NorthwindGateSpec {
+class StartHereSpec extends NorthwindGateSpec {
 
     @Unroll
     def "[#engine] the hero query: June shipped exactly four orders"() {
         expect:
-        sqlFor(engine).firstRow(script("june-orders")).june_orders == 4
+        sqlFor(engine).firstRow(script("june-orders")).values().first() == 4
 
         where:
         engine << ENGINES
@@ -98,6 +98,6 @@ class WriteYourFirstQuerySpec extends NorthwindGateSpec {
     // Paths are relative to the tests/ module dir (where `mvn` runs).
 
     private static String script(String name) {
-        new File("../courses/learnsql/series1-fundamentals/00-write-your-first-query/scripts/${name}.sql").text
+        new File("../courses/learnsql/series1-fundamentals/00-start-here/scripts/${name}.sql").text
     }
 }

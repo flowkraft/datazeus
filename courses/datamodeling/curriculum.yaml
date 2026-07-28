@@ -1,0 +1,162 @@
+# The ordered episode list for Data Modeling. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: decide what the tables should be, before anyone writes a query
+# against them. Series 1 reads a schema, Series 2 designs one that survives change, Series 3
+# reshapes it for analytics. Northwind is the OLTP case study; its star schema is the OLAP one.
+
+course: learn-data-modeling
+track: datamodeling
+title: Data Modeling
+
+excludes:
+  - topic: "Writing queries against these schemas"
+    where: "covered in Master SQL"
+  - topic: "Loading the model — pipelines, SCD-2 loads, backfills"
+    where: "covered in ETL & Data Pipelines and Analytics Engineering (dbt)"
+  - topic: "Running, tuning and migrating the live database"
+    where: "covered in Data Ops — this track designs the change, that one ships it safely"
+
+series:
+  - slug: series1-modeling-fundamentals
+    title: Modeling Fundamentals
+    tagline: read and understand a schema
+    level: beginner
+    episodes:
+      - n: "00"
+        slug: conceptual-logical-physical
+        title: "Conceptual, Logical & Physical — What Data Modeling Actually Is"
+        status: planned
+      - n: "05"
+        slug: entities-and-relationships
+        title: "Entities, Attributes & Relationships — Read the Northwind ER Diagram"
+        status: planned
+      - n: "10"
+        slug: keys-and-referential-integrity
+        title: "Primary Keys, Foreign Keys & Referential Integrity — Make Bad Data Impossible"
+        status: planned
+      - n: "15"
+        slug: one-to-many-and-junction-tables
+        title: "One-to-Many & Many-to-Many — The Junction Table (Orders ↔ Products)"
+        status: planned
+      - n: "20"
+        slug: data-types-and-domains
+        title: "Data Types & Domains — Choosing the Right Column, and What It Costs Later"
+        status: planned
+      - n: "25"
+        slug: normalization-1nf-3nf
+        title: "Normalization: 1NF, 2NF, 3NF — Kill Redundancy Without Killing Clarity"
+        status: planned
+      - n: "30"
+        slug: constraints
+        title: "NOT NULL, UNIQUE, CHECK & DEFAULT — Constraints That Enforce the Rules"
+        status: planned
+      - n: "35"
+        slug: diagram-to-ddl
+        title: "CREATE TABLE — From Diagram to DDL, the Standard Way"
+        status: planned
+      - n: "40"
+        slug: naming-conventions
+        title: "Naming Conventions — Schemas That Explain Themselves"
+        status: planned
+      - n: "45"
+        slug: reverse-engineering-a-schema
+        title: "Reverse-Engineering — Point AI at a Database and Get the ER Diagram"
+        status: planned
+
+  - slug: series2-modeling-for-the-real-world
+    title: Modeling for the Real World
+    tagline: design for the change that's coming
+    level: intermediate
+    episodes:
+      - n: "00"
+        slug: bcnf-and-when-to-stop
+        title: "BCNF & When to Stop Normalizing — Purity vs Practicality"
+        status: planned
+      - n: "05"
+        slug: denormalization
+        title: "Denormalization — Trading Purity for Speed, on Purpose"
+        status: planned
+      - n: "10"
+        slug: surrogate-vs-natural-keys
+        title: "Surrogate vs Natural Keys — Why Northwind Uses Both"
+        status: planned
+      - n: "15"
+        slug: modeling-hierarchies
+        title: "Hierarchies — Adjacency List, Path Enumeration & Nested Sets"
+        status: planned
+      - n: "20"
+        slug: temporal-data
+        title: "Temporal Data — Effective Dates, History Tables and 'As Of' Questions"
+        status: planned
+      - n: "25"
+        slug: lookups-and-reference-data
+        title: "Lookups, Enums & Reference Data — Where Constants Should Live"
+        status: planned
+      - n: "30"
+        slug: many-to-many-with-attributes
+        title: "Many-to-Many With Attributes — When the Junction Has Facts of Its Own"
+        status: planned
+      - n: "35"
+        slug: indexing-as-a-modeling-decision
+        title: "Indexing as a Modeling Decision — Design for the Reads You Expect"
+        status: planned
+      - n: "40"
+        slug: schema-evolution
+        title: "Schema Evolution — Add, Rename and Split Without Breaking Downstream"
+        status: planned
+      - n: "45"
+        slug: oltp-vs-olap-models
+        title: "OLTP vs OLAP Models — Why One Schema Can't Serve Both"
+        status: planned
+
+  - slug: series3-dimensional-modeling
+    title: Dimensional Modeling
+    tagline: model it for the questions, not the transactions
+    level: advanced
+    episodes:
+      - n: "00"
+        slug: facts-and-dimensions
+        title: "Facts & Dimensions — The Kimball Method in One Lesson"
+        status: planned
+      - n: "05"
+        slug: the-star-schema
+        title: "The Star Schema — fact_sales Plus Customer, Product and Date"
+        status: planned
+      - n: "10"
+        slug: snowflake-vs-star
+        title: "Snowflake vs Star — Normalizing Dimensions, and What It Costs You"
+        status: planned
+      - n: "15"
+        slug: slowly-changing-dimensions
+        title: "Slowly Changing Dimensions — Type 1, 2 and 3, and Which to Pick"
+        status: planned
+      - n: "20"
+        slug: grain-and-additivity
+        title: "Grain & Additivity — Get the Fact Table Right the First Time"
+        status: planned
+      - n: "25"
+        slug: the-date-dimension
+        title: "The Date Dimension — Why a Calendar Table Beats date_trunc"
+        status: planned
+      - n: "30"
+        slug: build-northwinds-star-schema
+        title: "Build Northwind's Star Schema — Hands-On in DuckDB"
+        status: planned
+      - n: "35"
+        slug: data-vault
+        title: "Data Vault 2.0 — Hubs, Links & Satellites, and When Scale Demands Them"
+        status: planned
+      - n: "40"
+        slug: wide-tables-and-one-big-table
+        title: "Wide Tables & One Big Table — The Analytics-Engineering Shift"
+        status: planned
+      - n: "45"
+        slug: modeling-for-columnar-engines
+        title: "Modeling for Columnar Engines — Sort Keys, Denormalized Facts, MergeTree"
+        status: planned
+      - n: "50"
+        slug: capstone-oltp-to-star
+        title: "Capstone — From Northwind OLTP to a Clean Star Schema"
+        tags: ["capstone"]
+        status: planned

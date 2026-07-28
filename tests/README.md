@@ -19,7 +19,7 @@ learner can run **just the slice they're on**:
 
 ```
 src/<root>/groovy/datazeus/<course>/series<N>/ep<NN>/<Lesson>{Spec|Koans}.groovy
-e.g.  datazeus/learnsql/series1/_00/WriteYourFirstQueryKoans.groovy
+e.g.  datazeus/learnsql/series1/_00/StartHereKoans.groovy
 ```
 
 Run a scope with the wrapper (it builds a path filter that keeps the `*Koans`

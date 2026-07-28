@@ -1,0 +1,160 @@
+# The ordered episode list for ETL & Data Pipelines. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: get data from where it is to where it's useful, repeatedly,
+# without losing or duplicating a row. Series 1 moves it safely, Series 2 keeps it
+# maintainable, Series 3 is production flow at volume.
+
+course: learn-etl-pipelines
+track: etlpipelines
+title: ETL & Data Pipelines
+
+excludes:
+  - topic: "The SQL inside the transforms"
+    where: "covered in Master SQL"
+  - topic: "Designing the target schema"
+    where: "covered in Data Modeling"
+  - topic: "Doing the T as version-controlled, tested models"
+    where: "covered in Analytics Engineering (dbt) — this track owns Extract and Load"
+  - topic: "cron internals, monitoring, alerting and on-call"
+    where: "covered in Data Ops — here a pipeline just gets handed to the scheduler"
+
+series:
+  - slug: series1-etl-fundamentals
+    title: ETL Fundamentals
+    tagline: move data, without losing any of it
+    level: beginner
+    episodes:
+      - n: "00"
+        slug: etl-vs-elt
+        title: "ETL vs ELT — What Moves, What Transforms, and Where"
+        status: planned
+      - n: "05"
+        slug: sources-and-sinks
+        title: "Sources & Sinks — Files, APIs and Databases as Connections"
+        status: planned
+      - n: "10"
+        slug: your-first-pipeline
+        title: "Your First Pipeline — Load a CSV into a Table"
+        status: planned
+      - n: "15"
+        slug: staging
+        title: "Staging — Land Raw Before You Transform Anything"
+        status: planned
+      - n: "20"
+        slug: transform-with-sql
+        title: "Transform with SQL — SELECT-Driven Reshaping"
+        status: planned
+      - n: "25"
+        slug: idempotency
+        title: "Idempotency — Re-Runnable Loads with TRUNCATE+INSERT and MERGE"
+        status: planned
+      - n: "30"
+        slug: incremental-loads-and-watermarks
+        title: "Incremental Loads & Watermarks — Only What Changed"
+        status: planned
+      - n: "35"
+        slug: types-and-casting-across-sources
+        title: "Types & Casting Across Sources — When 'Y', 'yes' and 1 All Mean True"
+        status: planned
+      - n: "40"
+        slug: row-counts-and-logging
+        title: "Row Counts & Logging — Answer 'Did It Actually Work?'"
+        status: planned
+      - n: "45"
+        slug: from-script-to-scheduled-job
+        title: "From Script to Scheduled Job — Hand a Pipeline to the Scheduler"
+        status: planned
+
+  - slug: series2-maintainable-pipelines
+    title: Pipelines You Can Maintain
+    tagline: build it to survive contact with reality
+    level: intermediate
+    episodes:
+      - n: "00"
+        slug: scripted-pipelines
+        title: "Scripted Pipelines — Groovy Seed Scripts with dbSql, vendor and params"
+        status: planned
+      - n: "05"
+        slug: parameterized-and-reusable-jobs
+        title: "Parameterized & Reusable Jobs — One Script, Many Tables"
+        status: planned
+      - n: "10"
+        slug: data-quality-gates
+        title: "Data Quality Gates — Nulls, Ranges and Referential Gaps, Before They Land"
+        status: planned
+      - n: "15"
+        slug: deduplication-and-conformance
+        title: "Deduplication & Conformance — One Customer, One Row"
+        status: planned
+      - n: "20"
+        slug: late-and-out-of-order-data
+        title: "Late & Out-of-Order Data — When Yesterday Arrives Tomorrow"
+        status: planned
+      - n: "25"
+        slug: errors-retries-dead-letters
+        title: "Errors, Retries & Dead Letters — Fail Without Losing Rows"
+        status: planned
+      - n: "30"
+        slug: surrogate-keys-and-lookups
+        title: "Surrogate Keys & Dimension Lookups — Business Keys to Warehouse IDs"
+        status: planned
+      - n: "35"
+        slug: load-order
+        title: "Load Order — Dimensions First, Then Facts, and What Breaks Otherwise"
+        status: planned
+      - n: "40"
+        slug: cross-database-pipelines
+        title: "Cross-Database Pipelines — Northwind PostgreSQL → ClickHouse"
+        status: planned
+      - n: "45"
+        slug: orchestration-and-dags
+        title: "Orchestration & DAGs — Dependencies, Not a Pile of Cron Entries"
+        status: planned
+
+  - slug: series3-production-data-flow
+    title: Production Data Flow
+    tagline: ELT at volume, and the day you have to rerun a month
+    level: advanced
+    episodes:
+      - n: "00"
+        slug: elt-push-down
+        title: "ELT — Push the Transform Down into the Warehouse"
+        status: planned
+      - n: "05"
+        slug: building-the-star-schema
+        title: "Building the Star Schema — SQLite → DuckDB and ClickHouse, Hands-On"
+        status: planned
+      - n: "10"
+        slug: scd2-loads-in-practice
+        title: "SCD Type 2 Loads — Keep History Without Duplicating It"
+        status: planned
+      - n: "15"
+        slug: change-data-capture
+        title: "Change Data Capture — Stream the Deltas Instead of Reloading"
+        status: planned
+      - n: "20"
+        slug: incremental-models-and-snapshots
+        title: "Incremental Models & Snapshots — The Pattern dbt Later Formalized"
+        status: planned
+      - n: "25"
+        slug: backfills-and-reprocessing
+        title: "Backfills & Reprocessing — Rewrite History Without Breaking Downstream"
+        status: planned
+      - n: "30"
+        slug: idempotent-merge-at-scale
+        title: "Idempotent MERGE at Scale — and the Vendor Differences That Bite"
+        status: planned
+      - n: "35"
+        slug: contracts-lineage-observability
+        title: "Data Contracts, Lineage & Observability — Know What Broke, and Who Cares"
+        status: planned
+      - n: "40"
+        slug: bulk-loading-and-parallelism
+        title: "Bulk Loading & Parallelism — COPY, Partitions and Throughput"
+        status: planned
+      - n: "45"
+        slug: capstone-orchestrate-northwind
+        title: "Capstone — Orchestrate the Full Northwind Pipeline End to End"
+        tags: ["capstone"]
+        status: planned

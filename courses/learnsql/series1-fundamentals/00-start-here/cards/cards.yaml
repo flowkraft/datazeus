@@ -1,0 +1,56 @@
+# Flashcards for Master SQL · Series 1 · 00 — Start Here
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
+# tools/build-anki.py turns it into a .apkg with genanki.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds update the same deck (no duplicates).
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+
+deck: "DataZeus::Master SQL::Series 1::00 Start Here"
+guid: "datazeus-master-sql-series1-00-start-here"
+tags: ["datazeus", "master-sql", "series-1", "sql"]
+
+cards:
+  - cloze: "The SQL thinking loop, in order: ask the question in {{c1::plain language}}, translate it into {{c2::SQL}}, {{c3::guess}} the answer, then {{c4::run it and compare}}."
+
+  - basic:
+      front: "Why guess the answer before you run the query?"
+      back: "A wrong guess teaches you something on the spot, and a result far from what you expected is usually a signal — a typo, a bad assumption, or a surprise hiding in the data. Do it for a few weeks and you develop a feel for the numbers."
+
+  - cloze: "You don't {{c1::find}} the answer in SQL — you {{c1::ask}} for it. SQL is {{c2::declarative}}: you say *what* you want, the database works out *how*."
+
+  - basic:
+      front: "How do you count the rows that match a condition?"
+      back: "SELECT count(*) FROM <table> WHERE <condition>; — `count(*)` counts rows, `WHERE` keeps only the matching ones."
+
+  - cloze: "To capture a whole month safely, use a {{c1::half-open}} range: `\"OrderDate\" >= DATE '2024-06-01' AND \"OrderDate\" < DATE '2024-07-01'` — no end-of-month or time-of-day surprises."
+
+  - basic:
+      front: "Why are Northwind's tables written in double quotes — `\"Orders\"`, not `Orders`?"
+      back: "An unquoted name gets case-folded by the database; a quoted name is taken exactly as you wrote it. Northwind's tables were created with quoted, capitalized names, so the table really is `\"Orders\"`, capital O and all."
+
+  - basic:
+      front: "You run `SELECT count(*) FROM orders` — unquoted — on DuckDB, then on PostgreSQL. What happens?"
+      back: "DuckDB ignores case, finds `\"Orders\"`, and works. PostgreSQL lowercases the unquoted name, goes looking for a table called `orders`, and fails. Same SQL, different outcome — which is why you write the quoted version."
+
+  - cloze: "Double-quoted names plus a {{c1::DATE}} literal are the {{c2::ANSI}}-standard form, and give the same result on DuckDB and PostgreSQL."
+
+  - basic:
+      front: "Why teach on PostgreSQL but call the SQL 'portable'?"
+      back: "Postgres is free and standards-leading — but standard SQL transfers to Oracle, SQL Server, MySQL, Db2. You learn SQL once; vendor-specific tricks get flagged with a portable alternative."
+
+  - basic:
+      front: "What is a koan?"
+      back: "A tiny fill-in-the-blank exercise: a failing test with a `___` where the answer belongs. Fill the blank, run it, watch red turn green — and the next one unlocks. SQL by doing, in the smallest possible doses."
+
+  - basic:
+      front: "Why two engines — DuckDB and PostgreSQL — for the same Northwind?"
+      back: "Two doors into identical data. DuckDB is a single file with no server, so nothing gets between you and the koans; PostgreSQL is a real server that CloudBeaver connects to for exploring visually. DuckDB's SQL was derived from Postgres', so the same query gives the same answer in either."
+
+  - basic:
+      front: "What is the Northwind dataset?"
+      back: "A small import/export company — Customers, Orders, Products, Suppliers, Employees — real enough to ask real questions, small enough to fit in your head."
+
+  - cloze: "The three habits that make SQL stick: {{c1::type}} every query, {{c2::predict}} the answer before you run, then {{c3::run}} it."

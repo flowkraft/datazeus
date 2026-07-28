@@ -1,0 +1,158 @@
+# The ordered episode list for Analytics Engineering (dbt). Field docs live in
+# courses/learnsql/curriculum.yaml. `short` is omitted until an episode has a video.
+#
+# The job this track teaches: turn a folder of ad-hoc SELECTs into a version-controlled,
+# tested, documented transformation project the whole team can change without fear.
+# Built as a real Northwind project — raw → staging → marts — on the DataPallas warehouse.
+
+course: learn-dbt
+track: dbt
+title: Analytics Engineering (dbt)
+
+excludes:
+  - topic: "Extract and Load — dbt does neither"
+    where: "covered in ETL & Data Pipelines; dbt starts once the raw data has landed"
+  - topic: "The warehouse itself — engines, partitions, storage, tuning"
+    where: "covered in Data Warehousing"
+  - topic: "Dimensional design decisions — grain, SCD type, star vs snowflake"
+    where: "covered in Data Modeling; here you implement the model you already chose"
+
+series:
+  - slug: series1-dbt-fundamentals
+    title: dbt Fundamentals
+    tagline: your first models, and the DAG that appears for free
+    level: beginner
+    episodes:
+      - n: "00"
+        slug: what-dbt-is
+        title: "What dbt Is (and Isn't) — The T in ELT, and Why It Earned a Name"
+        status: planned
+      - n: "05"
+        slug: project-anatomy
+        title: "Project Anatomy — profiles.yml, dbt_project.yml and the models Folder"
+        status: planned
+      - n: "10"
+        slug: your-first-model
+        title: "Your First Model — A SELECT That Becomes a View (stg_orders)"
+        status: planned
+      - n: "15"
+        slug: ref-and-source
+        title: "ref() & source() — How dbt Works Out What to Build First"
+        status: planned
+      - n: "20"
+        slug: materializations
+        title: "Materializations — view, table, ephemeral, and When Each Wins"
+        status: planned
+      - n: "25"
+        slug: the-staging-layer
+        title: "The Staging Layer — Clean Raw Northwind Once, Reuse It Everywhere"
+        status: planned
+      - n: "30"
+        slug: marts
+        title: "Marts — Build dim_customer and fct_sales on Top of Staging"
+        status: planned
+      - n: "35"
+        slug: seeds
+        title: "Seeds — Version-Controlled CSV Reference Data"
+        status: planned
+      - n: "40"
+        slug: run-build-compile
+        title: "dbt run, build & compile — The Everyday Loop"
+        status: planned
+      - n: "45"
+        slug: docs-and-lineage
+        title: "Generated Docs & Lineage — The Northwind DAG, Drawn For You"
+        status: planned
+
+  - slug: series2-trustworthy-dbt
+    title: Trustworthy dbt
+    tagline: make the numbers provable, not just repeatable
+    level: intermediate
+    episodes:
+      - n: "00"
+        slug: built-in-tests
+        title: "Built-in Tests — not_null, unique, relationships, accepted_values"
+        status: planned
+      - n: "05"
+        slug: custom-tests
+        title: "Singular & Custom Tests — Assert the Business Rule, Not Just the Column"
+        status: planned
+      - n: "10"
+        slug: sources-and-freshness
+        title: "Sources & Freshness — Declare Raw Tables and Catch a Stale Feed"
+        status: planned
+      - n: "15"
+        slug: incremental-models
+        title: "Incremental Models — Build Only the New Orders"
+        status: planned
+      - n: "20"
+        slug: snapshots
+        title: "Snapshots — SCD Type 2 History Without Writing the Merge"
+        status: planned
+      - n: "25"
+        slug: jinja-and-variables
+        title: "Jinja & Variables — DRY SQL That's Still Readable"
+        status: planned
+      - n: "30"
+        slug: macros
+        title: "Macros & dbt_utils — Reusable SQL Logic"
+        status: planned
+      - n: "35"
+        slug: descriptions-and-contracts
+        title: "Descriptions & Contracts — Documentation People Actually Trust"
+        status: planned
+      - n: "40"
+        slug: project-structure
+        title: "Project Structure — staging / intermediate / marts, and Why the Split Holds"
+        status: planned
+      - n: "45"
+        slug: environments-and-targets
+        title: "Environments & Targets — dev vs prod, and Multiple Warehouses"
+        status: planned
+
+  - slug: series3-analytics-engineering-at-scale
+    title: Analytics Engineering at Scale
+    tagline: a project a whole team can live in
+    level: advanced
+    episodes:
+      - n: "00"
+        slug: packages
+        title: "Packages — Reuse Community Code (dbt_utils, codegen)"
+        status: planned
+      - n: "05"
+        slug: incremental-strategies
+        title: "Incremental Strategies — merge, insert_overwrite, append"
+        status: planned
+      - n: "10"
+        slug: semantic-layer-and-metrics
+        title: "The Semantic Layer & Metrics — One Definition of Revenue, in Code"
+        status: planned
+      - n: "15"
+        slug: exposures
+        title: "Exposures — Lineage All the Way to the Dashboard"
+        status: planned
+      - n: "20"
+        slug: testing-strategy
+        title: "Testing Strategy — Unit Tests, Contracts and Quality at Scale"
+        status: planned
+      - n: "25"
+        slug: ci-cd-for-dbt
+        title: "CI/CD for dbt — Slim CI, State Comparison and dbt build in a Pipeline"
+        status: planned
+      - n: "30"
+        slug: modeling-for-columnar-warehouses
+        title: "Modeling for Columnar Warehouses — dbt on ClickHouse and DuckDB"
+        status: planned
+      - n: "35"
+        slug: cross-engine-dbt
+        title: "Cross-Engine dbt — The Same Models on PostgreSQL, DuckDB and ClickHouse"
+        status: planned
+      - n: "40"
+        slug: dbt-mesh-and-multi-project
+        title: "dbt Mesh & Multi-Project — When One Repo Stops Scaling"
+        status: planned
+      - n: "45"
+        slug: capstone-production-project
+        title: "Capstone — A Production Northwind Project: Staging → Marts → Metrics"
+        tags: ["capstone"]
+        status: planned

@@ -1,0 +1,162 @@
+# The ordered episode list for Data Ops — the SINGLE source of truth for this roadmap.
+# Field documentation lives in courses/learnsql/curriculum.yaml.
+#
+# `short` is omitted throughout: it's the label for a video's roadmap card, and none of
+# these episodes has a video yet. Add it per episode when the video is produced.
+#
+# The job this track teaches: keep the thing running. Series 1 is the terminal a data
+# person actually lives in, Series 2 is the database underneath everything, Series 3 is
+# what happens when a nightly job dies at 3 a.m.
+
+course: learn-data-ops
+track: dataops
+title: Data Ops
+
+excludes:
+  - topic: "Writing and tuning the queries themselves"
+    where: "covered in Master SQL, Series 3 — EXPLAIN, indexes and the tuning capstone"
+  - topic: "Row-level data quality, dedup & conformance"
+    where: "covered in Learn ETL & Data Pipelines — here we watch whether the pipeline ran at all"
+  - topic: "Schema design & normalization"
+    where: "covered in Learn Data Modeling; this track only migrates a schema safely"
+
+series:
+  - slug: series1-linux-for-data
+    title: Linux for Data
+    tagline: the terminal, and why you end up living in it
+    level: beginner
+    episodes:
+      - n: "00"
+        slug: why-the-terminal
+        title: "The Terminal — Why One Pipe Answers a Data Question Faster Than a GUI"
+        status: planned
+      - n: "05"
+        slug: files-and-navigation
+        title: "Files, Paths & Navigation — Where Your Data Actually Lives"
+        status: planned
+      - n: "10"
+        slug: look-at-data-without-a-database
+        title: "cat, less, head, tail & wc — Look at Data Without a Database"
+        status: planned
+      - n: "15"
+        slug: cut-grep-sort-uniq
+        title: "cut, grep, sort & uniq — Slice Columns and Rows on the Command Line"
+        status: planned
+      - n: "20"
+        slug: sed-and-awk
+        title: "sed & awk — Reshape CSV and TSV Text Streams"
+        status: planned
+      - n: "25"
+        slug: pipes-and-redirection
+        title: "Pipes & Redirection — Compose Tiny Tools into a Pipeline"
+        status: planned
+      - n: "30"
+        slug: ssh-scp-rsync
+        title: "ssh, scp & rsync — Move Data Between Machines"
+        status: planned
+      - n: "35"
+        slug: permissions-and-environment
+        title: "Permissions, Users & Environment Variables — Secrets a Job Can Read"
+        status: planned
+      - n: "40"
+        slug: cron-and-systemd-timers
+        title: "cron & systemd Timers — Turn a Script into a Nightly Job"
+        status: planned
+      - n: "45"
+        slug: bash-glue
+        title: "Bash Glue — Variables, Loops, Exit Codes & Logging for ETL"
+        status: planned
+
+  - slug: series2-postgres-in-production
+    title: Running PostgreSQL in Production
+    tagline: the database that has to stay up
+    level: intermediate
+    episodes:
+      - n: "00"
+        slug: transactions-and-acid
+        title: "Transactions & ACID — BEGIN, COMMIT, ROLLBACK and What They Guarantee"
+        status: planned
+      # The episode Master SQL deliberately hands over — see that course's `excludes`.
+      - n: "05"
+        slug: isolation-levels
+        title: "Isolation Levels: The ANSI Four — Dirty Reads, Phantoms & What Postgres Really Does"
+        status: planned
+      - n: "10"
+        slug: mvcc-and-vacuum
+        title: "MVCC, Bloat & VACUUM — Why Postgres Keeps Old Row Versions"
+        status: planned
+      - n: "15"
+        slug: locks-and-deadlocks
+        title: "Locks & Deadlocks — Why Your UPDATE Is Hanging"
+        status: planned
+      - n: "20"
+        slug: connections-and-pooling
+        title: "Connections & Pooling — PgBouncer and the Limit You Will Hit"
+        status: planned
+      - n: "25"
+        slug: configuration-and-memory
+        title: "Configuration & Memory — shared_buffers, work_mem and Defaults Worth Changing"
+        status: planned
+      - n: "30"
+        slug: backup-and-restore
+        title: "Backup & Restore — pg_dump, PITR, and Proving It Actually Restores"
+        status: planned
+      - n: "35"
+        slug: zero-downtime-migrations
+        title: "Schema Migrations Without Downtime — Locks, Defaults & the Safe Order"
+        status: planned
+      - n: "40"
+        slug: roles-grants-and-rls
+        title: "Roles, Grants & Row-Level Security — Least Privilege for Data Access"
+        status: planned
+      - n: "45"
+        slug: replication-and-upgrades
+        title: "Replication & Upgrades — Read Replicas, Failover and Major-Version Moves"
+        status: planned
+
+  - slug: series3-reliability
+    title: Reliability
+    tagline: what happens when the nightly job dies at 3 a.m.
+    level: advanced
+    episodes:
+      - n: "00"
+        slug: scheduling-at-scale
+        title: "Scheduling at Scale — cron, systemd Timers, or a Real Orchestrator?"
+        status: planned
+      - n: "05"
+        slug: logging-and-structured-output
+        title: "Logging & Structured Output — Make a Failure Readable at 3 a.m."
+        status: planned
+      - n: "10"
+        slug: monitoring-and-metrics
+        title: "Monitoring & Metrics — Watch Postgres, Disk and Job Health"
+        status: planned
+      - n: "15"
+        slug: alerting-and-on-call
+        title: "Alerting & On-Call — Page a Human Only When It Matters"
+        status: planned
+      - n: "20"
+        slug: freshness-and-volume-checks
+        title: "Freshness & Volume Checks — Catch a Pipeline That Silently Stopped"
+        status: planned
+      - n: "25"
+        slug: incident-response
+        title: "Incident Response & Postmortems — Diagnose, Fix, Write It Down"
+        status: planned
+      - n: "30"
+        slug: containers-for-data-jobs
+        title: "Containers for Data Jobs — Compose, Images & Runs You Can Reproduce"
+        status: planned
+      - n: "35"
+        slug: capacity-and-retention
+        title: "Capacity, Storage & Retention — Disk, Partitions and TTL"
+        status: planned
+      - n: "40"
+        slug: cost-control
+        title: "Cost Control — Compute, Storage and the Bill Nobody Reads"
+        status: planned
+      - n: "45"
+        slug: reliability-capstone
+        title: "Reliability Capstone — Put a Northwind Pipeline On Call"
+        tags: ["capstone"]
+        status: planned

@@ -250,7 +250,7 @@ class PathToEnlightenment implements IGlobalExtension {
         return parts ? parts.join(" ") + " " : ""
     }
 
-    /** "WriteYourFirstQueryKoans" -> "Write Your First Query". */
+    /** "StartHereKoans" -> "Start Here". */
     private static String prettySpec(String specName) {
         String base = specName.replaceAll(/Koans$/, "")
         return base.replaceAll(/([a-z])([A-Z])/, '$1 $2')

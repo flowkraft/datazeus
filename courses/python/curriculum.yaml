@@ -1,0 +1,158 @@
+# The ordered episode list for Python for Data. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: the half of the data job SQL can't do — read a file nobody
+# cleaned, call an API, reshape it, and leave behind a script someone else can run.
+# Same Northwind data as the SQL track, so the two reinforce each other instead of competing.
+
+course: learn-python
+track: python
+title: Python for Data
+
+excludes:
+  - topic: "Machine learning — features, training, model selection"
+    where: "not covered; this track is about moving and shaping data. For LLM-era work see AI for Data"
+  - topic: "Charts other people read, and dashboards"
+    where: "covered in BI & Data Visualization — here you plot only to see the data yourself"
+  - topic: "Scheduling, cron and running jobs in production"
+    where: "covered in Data Ops — this track gets the script ready to be scheduled"
+
+series:
+  - slug: series1-python-fundamentals
+    title: Python for Data Fundamentals
+    tagline: from zero to a script that moves data
+    level: beginner
+    episodes:
+      - n: "00"
+        slug: your-first-script
+        title: "Your First Script — Read a CSV and Answer a Question in Ten Lines"
+        status: planned
+      - n: "05"
+        slug: types-and-collections
+        title: "Strings, Numbers, Lists & Dicts — The Four Types You'll Use All Day"
+        status: planned
+      - n: "10"
+        slug: loops-conditionals-functions
+        title: "Loops, Conditionals & Functions — Stop Repeating Yourself"
+        status: planned
+      - n: "15"
+        slug: files-and-encodings
+        title: "Files, Paths & Encodings — Read and Write Data Without Mangling It"
+        status: planned
+      - n: "20"
+        slug: dataframes
+        title: "DataFrames — pandas and polars, and Which to Reach For"
+        status: planned
+      - n: "25"
+        slug: select-filter-sort
+        title: "Select, Filter & Sort — The SQL Ideas You Know, in Python Syntax"
+        status: planned
+      - n: "30"
+        slug: groupby-and-aggregate
+        title: "groupby & Aggregate — GROUP BY Without the Database"
+        status: planned
+      - n: "35"
+        slug: merge-and-join
+        title: "merge & join — Glue Two DataFrames Together"
+        status: planned
+      - n: "40"
+        slug: missing-data-and-dtypes
+        title: "Missing Data & dtypes — NaN, None and the Casts That Bite"
+        status: planned
+      - n: "45"
+        slug: first-end-to-end-script
+        title: "End to End — Messy CSV In, Clean Table Out"
+        status: planned
+
+  - slug: series2-real-data
+    title: Working With Real Data
+    tagline: files, databases and APIs — nothing pre-cleaned
+    level: intermediate
+    episodes:
+      - n: "00"
+        slug: csv-json-parquet
+        title: "CSV, JSON & Parquet — Pick the Right File Format (and Why Parquet Usually Wins)"
+        status: planned
+      - n: "05"
+        slug: duckdb-from-python
+        title: "DuckDB from Python — Run SQL on Files and DataFrames, No Server"
+        status: planned
+      - n: "10"
+        slug: databases-from-python
+        title: "psycopg & SQLAlchemy — Query PostgreSQL from Python"
+        status: planned
+      - n: "15"
+        slug: parameterized-queries
+        title: "Parameterized Queries — Never Build SQL with f-Strings"
+        status: planned
+      - n: "20"
+        slug: apis-and-json
+        title: "HTTP APIs & JSON — Pull Data You Don't Own (Pagination, Retries, Rate Limits)"
+        status: planned
+      - n: "25"
+        slug: dates-and-timezones
+        title: "Dates, Times & Time Zones — The Bugs That Only Appear in Production"
+        status: planned
+      - n: "30"
+        slug: cleaning-and-validation
+        title: "Cleaning & Validation — Types, Ranges and Rows You Should Reject"
+        status: planned
+      - n: "35"
+        slug: reshaping
+        title: "pivot, melt & Reshape — Wide, Long, and Back Again"
+        status: planned
+      - n: "40"
+        slug: quick-plots
+        title: "Quick Plots — Look at Your Data Before Anyone Else Does"
+        status: planned
+      - n: "45"
+        slug: notebooks-vs-scripts
+        title: "Notebooks vs Scripts — Explore in One, Ship the Other"
+        status: planned
+
+  - slug: series3-python-that-ships
+    title: Python That Ships
+    tagline: code someone else can run next month
+    level: advanced
+    episodes:
+      - n: "00"
+        slug: environments-and-dependencies
+        title: "venv, pip & uv — Environments That Still Work Next Month"
+        status: planned
+      - n: "05"
+        slug: project-structure
+        title: "Project Structure & Imports — From One File to a Real Package"
+        status: planned
+      - n: "10"
+        slug: cli-scripts
+        title: "argparse & CLI Scripts — Turn a Notebook into a Job"
+        status: planned
+      - n: "15"
+        slug: config-and-secrets
+        title: "Config & Secrets — Environment Variables, and Nothing Hardcoded"
+        status: planned
+      - n: "20"
+        slug: logging-and-errors
+        title: "Logging & Error Handling — Fail Loudly, Retry Sensibly"
+        status: planned
+      - n: "25"
+        slug: testing-with-pytest
+        title: "pytest — Test the Transform, Not the Database"
+        status: planned
+      - n: "30"
+        slug: performance-and-memory
+        title: "Performance & Memory — Chunking, Vectorizing, and When to Push It Back to SQL"
+        status: planned
+      - n: "35"
+        slug: polars-and-lazy-evaluation
+        title: "polars & Lazy Evaluation — When pandas Runs Out of Room"
+        status: planned
+      - n: "40"
+        slug: packaging-and-handoff
+        title: "Packaging & Hand-Off — Make It Runnable by Someone Who Isn't You"
+        status: planned
+      - n: "45"
+        slug: capstone-python-pipeline
+        title: "Capstone — A Tested Python Job That Loads Northwind End to End"
+        tags: ["capstone"]
+        status: planned

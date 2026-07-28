@@ -1,6 +1,6 @@
 ---
-title: "Write Your First Query"
-description: "The fastest way to learn SQL is to write it. In this first lesson you write a real query against real business data and answer a question your boss might actually ask."
+title: "Start Here: The SQL Thinking Loop — Your First Query, CloudBeaver & the Koans"
+description: "The fastest way to learn SQL is to write it. You answer a real business question in your first few minutes, learn the loop you'll use every time, and meet the tools you'll practise with: Northwind on PostgreSQL, CloudBeaver, DuckDB and the koans."
 topic: "learn-sql"
 tags: ["sql", "fundamentals", "getting-started"]
 level: "beginner"
@@ -10,13 +10,21 @@ date: "2026-06-23"
 published: true
 ---
 
-<VideoPlayer videoId="learnsql-series1-00-write-your-first-query" />
+<VideoPlayer videoId="learnsql-series1-00-start-here" />
 
 ## Watching isn't the same as doing
 
 You can watch twenty SQL tutorials back to back and still go blank the first time someone asks you to write a query yourself. That's not a discipline problem. Watching and doing are just different skills, and only one of them is the one you'll need at your desk.
 
 So we're going to do it the other way around. You write the queries, against real, production-like data, starting in the next few minutes. Each lesson gives you only as much theory as you need to write something useful, then gets out of the way so you can practice. The finer details come afterward, once you've got something concrete to hang them on.
+
+## How every lesson goes
+
+1. Type the query yourself. Typing teaches your hands and your head; copy-paste only teaches your eyes.
+2. Predict the answer before you run it. Say it out loud: "I expect four." If you're wrong, you just learned something. If you're right, that confidence is earned. (The koans turn this into code: you fill in the number, run it, and watch it go green.)
+3. Run it. No watching, and no slides you'll have forgotten by lunch.
+
+Keep that up for a handful of lessons and you'll find yourself answering questions nobody else around you can.
 
 ## The loop you'll use every time
 
@@ -106,6 +114,14 @@ cd c:/DataPallas/db/datazeus
 .\zeus.bat koans learnsql series1 _00
 ```
 
+The file you edit is:
+
+```
+c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_00\StartHereKoans.groovy
+```
+
+Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
+
 These run on DuckDB, a database that lives in a single file. Think SQLite, but much closer to PostgreSQL in how it behaves. The koans use a ready-made `northwind.duckdb` file, so there's nothing to install and no server to start. You run the command, the first koan goes green, the next shows up red with a hint, and you work down the list: fix, rerun, green, and on to the next.
 
 ## Two engines, one Northwind
@@ -149,14 +165,6 @@ That's why the quoted version is the one to write. Double-quoted names match the
 
 A good default, then: write standard SQL, and when two engines genuinely disagree (like this quoting business), don't paper over it, understand why. There's a twist worth holding onto, though. Every so often a vendor's own non-standard feature is exactly where a big performance win lives. So lean on the standard by default, stay aware of where the engines differ, and reach for a vendor-specific trick when you have a real reason to, something we'll run into later in the course.
 
-## How every lesson goes
-
-1. Type the query yourself. Typing teaches your hands and your head; copy-paste only teaches your eyes.
-2. Predict the answer before you run it. Say it out loud: "I expect four." If you're wrong, you just learned something. If you're right, that confidence is earned. (The koans turn this into code: you fill in the number, run it, and watch it go green.)
-3. Run it. No watching, and no slides you'll have forgotten by lunch.
-
-Keep that up for a handful of lessons and you'll find yourself answering questions nobody else around you can.
-
 ## What's next
 
 Next up is SELECT, where you meet your tables, rows, and columns by actually querying them. (The rest of the series lives on the [Learn SQL](/data-academy/learn-sql) course page.)
@@ -166,4 +174,4 @@ Next up is SELECT, where you meet your tables, rows, and columns by actually que
 ## 🧪 Practice & remember
 
 - **Koans** — fill in the blanks and watch the tests turn green. From the datazeus folder, run `./zeus.sh koans learnsql series1 _00` (or `.\zeus.bat koans learnsql series1 _00` on Windows). That's course · series · episode, the package `datazeus.learnsql.series1._00`.
-- **Scripts** — the SQL from this lesson lives in `…/00-write-your-first-query/scripts/` as `june-orders.sql` and `customers.sql`.
+- **Scripts** — the SQL from this lesson lives in `…/00-start-here/scripts/` as `june-orders.sql` and `customers.sql`.

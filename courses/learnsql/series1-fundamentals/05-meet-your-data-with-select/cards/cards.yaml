@@ -1,0 +1,50 @@
+# Flashcards for Master SQL · Series 1 · 05 — Meet Your Data With SELECT
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
+# tools/build-anki.py turns it into a .apkg with genanki.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds update the same deck (no duplicates).
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+
+deck: "DataZeus::Master SQL::Series 1::05 Meet Your Data With SELECT"
+guid: "datazeus-master-sql-series1-05-meet-your-data-with-select"
+tags: ["datazeus", "master-sql", "series-1", "sql"]
+
+cards:
+  - basic:
+      front: "You are given a database you have never seen. What are the first two queries you run on a table?"
+      back: "`SELECT * FROM \"TheTable\" LIMIT 5;` to see what it holds, then `SELECT \"the\", \"columns\", \"you\", \"need\" FROM \"TheTable\";` to work with it."
+
+  - cloze: "`SELECT *` is how you find out what a table {{c1::contains}}. It is not how you {{c2::work with}} one — for that you name the columns yourself."
+
+  - basic:
+      front: "What is the 'select list'?"
+      back: "The comma-separated columns between SELECT and FROM. It decides which columns come back, and in what order."
+
+  - cloze: "Two separate controls: the {{c1::select list}} decides which COLUMNS come back, and {{c2::LIMIT}} decides how many ROWS."
+
+  - basic:
+      front: "\"Employees\" stores LastName before FirstName. You run `SELECT \"FirstName\", \"LastName\" FROM \"Employees\"`. Which column comes first in the result?"
+      back: "FirstName — the select list decides the column order, not the table. The database rearranges nothing; you described the answer you wanted."
+
+  - basic:
+      front: "Chai costs 18. Why does the query return `18.0000`?"
+      back: "That is the column's data type being displayed. UnitPrice is declared DECIMAL(10,4) — four decimal places — so all four are printed even when they are zeros."
+
+  - basic:
+      front: "How do you find out what type a column is?"
+      back: "Query the catalog: `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'Products';` — standard tables that describe your tables."
+
+  - cloze: "`'Products'` in {{c1::single}} quotes is a text {{c1::value}}; `\"ProductName\"` in {{c2::double}} quotes is the {{c2::name of a column}}. They are not interchangeable."
+
+  - basic:
+      front: "Define table, column and row."
+      back: "A table holds all the records of one kind (every category). A column is one named piece of information every row carries (CategoryName). A row is one complete record — row 1 is the Beverages category, id, name and description together."
+
+  - cloze: "The same column is reported as {{c1::DECIMAL(10,4)}} by DuckDB and {{c2::numeric}} by PostgreSQL; text is {{c1::VARCHAR}} on one, {{c2::text}} on the other. Same data, different vocabulary."
+
+  - basic:
+      front: "Besides unreadable output, what does SELECT * cost you?"
+      back: "The database reads every column you asked for and sends all of them over the network to whatever asked — including wide ones like Notes or Photo that you never look at. On a big table queried often, that is measurable, wasted time."

@@ -1,0 +1,158 @@
+# The ordered episode list for Data Warehousing. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: build the place the questions get answered fast. Series 1 is
+# why a warehouse exists and how you query one, Series 2 is the columnar engines and cubes
+# that make it quick, Series 3 is scale, cost and the modern lakehouse.
+
+course: learn-data-warehousing
+track: datawarehousing
+title: Data Warehousing
+
+excludes:
+  - topic: "Designing the dimensional model — grain, SCD type, star vs snowflake"
+    where: "covered in Data Modeling; here you build and query the model"
+  - topic: "The pipelines that load it"
+    where: "covered in ETL & Data Pipelines and Analytics Engineering (dbt)"
+  - topic: "Dashboards, metric definitions and delivery to business users"
+    where: "covered in BI & Data Visualization"
+
+series:
+  - slug: series1-warehousing-fundamentals
+    title: Warehousing Fundamentals
+    tagline: why a second copy of your data is worth it
+    level: beginner
+    episodes:
+      - n: "00"
+        slug: oltp-vs-olap
+        title: "OLTP vs OLAP — Two Workloads, Two Designs, One Business"
+        status: planned
+      - n: "05"
+        slug: what-a-warehouse-is
+        title: "Warehouse, Lake & Lakehouse — What Each One Actually Is"
+        status: planned
+      - n: "10"
+        slug: star-schema-for-analytics
+        title: "The Star Schema from the Query Side — Why Analysts Like It"
+        status: planned
+      - n: "15"
+        slug: facts-dimensions-grain-in-practice
+        title: "Facts, Dimensions & Grain in Practice — Reading Someone Else's Warehouse"
+        status: planned
+      - n: "20"
+        slug: loading-the-warehouse
+        title: "Loading the Warehouse — From Northwind OLTP to fact_sales"
+        status: planned
+      - n: "25"
+        slug: slice-dice-rollup-drilldown
+        title: "Slice, Dice, Roll-Up & Drill-Down — The Four Analytical Moves"
+        status: planned
+      - n: "30"
+        slug: rollup-cube-grouping-sets
+        title: "ROLLUP, CUBE & GROUPING SETS — Subtotals the Standard Way"
+        status: planned
+      - n: "35"
+        slug: pre-aggregation
+        title: "Pre-Aggregation — Summary Tables and Materialized Views"
+        status: planned
+      - n: "40"
+        slug: date-dimension-in-practice
+        title: "Time-Based Analysis — The Date Dimension Doing Real Work"
+        status: planned
+      - n: "45"
+        slug: your-first-warehouse
+        title: "Your First Warehouse — Build It, Load It, Query It"
+        status: planned
+
+  - slug: series2-columnar-engines-and-cubes
+    title: Columnar Engines & Cubes
+    tagline: the machinery that makes it fast
+    level: intermediate
+    episodes:
+      - n: "00"
+        slug: columnar-storage
+        title: "Columnar Storage — Why Analytics Loves Columns"
+        status: planned
+      - n: "05"
+        slug: duckdb
+        title: "DuckDB — An Embedded Analytical Warehouse, Hands-On"
+        status: planned
+      - n: "10"
+        slug: clickhouse-mergetree
+        title: "ClickHouse & MergeTree — Columnar at Scale, Hands-On"
+        status: planned
+      - n: "15"
+        slug: partitioning-and-sort-keys
+        title: "Partitioning, Sort Keys & Data Skipping — Read Less, Answer Sooner"
+        status: planned
+      - n: "20"
+        slug: olap-cubes
+        title: "OLAP Cubes — Dimensions, Measures & Hierarchies in cube.xml"
+        status: planned
+      - n: "25"
+        slug: the-northwind-cubes
+        title: "The Northwind Cubes — Sales, Inventory, Customers, Warehouse"
+        status: planned
+      - n: "30"
+        slug: mdx-and-pivot-analysis
+        title: "MDX & Pivot Analysis — Querying a Cube Instead of a Table"
+        status: planned
+      - n: "35"
+        slug: materialized-views
+        title: "Materialized Views & Incremental Aggregation — Compute Once, Read Often"
+        status: planned
+      - n: "40"
+        slug: star-vs-one-big-table
+        title: "Star vs One Big Table on Columnar Engines — Benchmarked, Not Argued"
+        status: planned
+      - n: "45"
+        slug: compression-and-encoding
+        title: "Compression & Encoding — Why the Same Table Is Ten Times Smaller Here"
+        status: planned
+
+  - slug: series3-advanced-warehousing
+    title: Advanced Warehousing
+    tagline: scale, cost, and the modern stack
+    level: advanced
+    episodes:
+      - n: "00"
+        slug: columnar-query-performance
+        title: "Query Performance on Columnar Engines — Reading the Plan Again"
+        status: planned
+      - n: "05"
+        slug: clickhouse-matviews-and-projections
+        title: "Aggregating Materialized Views & Projections — ClickHouse Answering Before You Ask"
+        status: planned
+      - n: "10"
+        slug: scd-in-the-warehouse
+        title: "Slowly Changing Dimensions in the Warehouse — Querying History Correctly"
+        status: planned
+      - n: "15"
+        slug: billions-of-rows
+        title: "Billions of Rows — Partitions, Sharding & Distribution"
+        status: planned
+      - n: "20"
+        slug: lakehouse
+        title: "Lakehouse — Parquet, Iceberg and DuckDB Straight on Files"
+        status: planned
+      - n: "25"
+        slug: streaming-ingestion
+        title: "Streaming Ingestion — Minutes Behind Instead of a Day"
+        status: planned
+      - n: "30"
+        slug: cost-storage-and-tiering
+        title: "Cost & Storage — Compression, TTL and Tiering"
+        status: planned
+      - n: "35"
+        slug: benchmark-duckdb-vs-clickhouse
+        title: "Benchmark — The Same Star Schema on DuckDB vs ClickHouse"
+        status: planned
+      - n: "40"
+        slug: warehouse-to-bi
+        title: "From Warehouse to BI — Feeding Dashboards, Cubes and Extracts"
+        status: planned
+      - n: "45"
+        slug: capstone-full-warehouse
+        title: "Capstone — Build, Load and Query the Full Northwind Warehouse"
+        tags: ["capstone"]
+        status: planned
