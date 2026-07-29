@@ -17,6 +17,17 @@
 # ============================================================================
 DIR="$(cd "$(dirname "$0")" && pwd)"
 
+# A previous `zeus update` staged a newer launcher. Apply it FIRST, before this file is
+# read any further, then hand over to it. It cannot be applied during the update itself
+# (see the note in zeus_update); swapping here is safe because exec replaces the process
+# immediately, so nothing further is read from the old file.
+[ -f "$DIR/zeus.bat.new" ] && mv -f "$DIR/zeus.bat.new" "$DIR/zeus.bat" 2>/dev/null
+if [ -f "$DIR/zeus.sh.new" ]; then
+  mv -f "$DIR/zeus.sh.new" "$DIR/zeus.sh" && chmod +x "$DIR/zeus.sh" 2>/dev/null
+  echo "Applied the newer zeus.sh that 'zeus update' downloaded."
+  exec "$DIR/zeus.sh" "$@"
+fi
+
 zeus_help() {
   cat <<'EOF'
 DataZeus - Master Everything Data, become a Data Zeus.
@@ -73,8 +84,15 @@ zeus_update() {
   _in_ws() { for w in $workspaces; do case "$1" in "$w"/*|"$w") return 0 ;; esac; done; return 1; }
 
   # 2) refresh everything EXCEPT the workspaces
+  # The launchers are STAGED, never overwritten in place: sh reads the script
+  # incrementally and cp rewrites the SAME inode, so replacing zeus.sh while it is the
+  # running script makes the shell resume at a byte offset inside different content and
+  # abort silently - taking the lesson merge below down with it. Applied on the next run.
   ( cd "$new" && find . -type f 2>/dev/null | sed 's#^\./##' | while IFS= read -r f; do
       _in_ws "$f" && continue
+      case "$f" in
+        zeus.sh|zeus.bat) cmp -s "$new/$f" "$DIR/$f" || cp "$new/$f" "$DIR/$f.new"; continue ;;
+      esac
       mkdir -p "$DIR/$(dirname "$f")"; cp "$new/$f" "$DIR/$f"
     done )
 
@@ -118,15 +136,82 @@ zeus_koans() {
     bi)          seg="bi" ;;
     *)           seg="$1" ;;
   esac
-  ser="$2"; ser="${ser#series}"; ser="${ser#S}"; ser="${ser#s}"
-  epi="$3"; epi="${epi#ep}"; epi="${epi#EP}"; epi="${epi#_}"
+  # Resolve each token against the REAL tree instead of assuming a fixed shape.
+  # A course is course/series/lesson OR course/lesson, and nothing here needs to know
+  # which: at every level we try the token as typed and with the prefixes we use
+  # ("1" -> series1, "05" -> _05, "S1" -> series1), take whichever directory actually
+  # exists, and build BOTH the Maven glob and the missing-scope check from the names
+  # we resolved.
+  #
+  # That is what makes a 2-level course work with no special case, and - just as
+  # importantly - what stops the error message from naming the WRONG level: with a
+  # hardcoded course/series/lesson shape, `zeus koans dbt _01` on a 2-level course
+  # would look for dbt/series01 and confidently report "SERIES _01 is missing".
+  KDIR="$DIR/tests/src/koans/groovy/datazeus"
+  _resolve() {                      # $1 = parent dir, $2 = token exactly as typed
+    _t="$2"
+    _s="${_t#series}"; _s="${_s#S}"; _s="${_s#s}"      # 1 | S1 | series1  -> series1
+    _e="${_t#ep}"; _e="${_e#EP}"; _e="${_e#_}"         # 05 | _05 | ep05   -> _05
+    for _c in "$_t" "series$_s" "_$_e"; do
+      [ -n "$_c" ] && [ -d "$1/$_c" ] && { printf '%s' "$_c"; return 0; }
+    done
+    return 1
+  }
+  scope=""; cur="$KDIR"; badval=""; badparent=""
+  for tok in "$seg" "$2" "$3"; do
+    [ -z "$tok" ] && break                             # tokens run out -> broader scope
+    if m="$(_resolve "$cur" "$tok")"; then
+      scope="$scope/$m"; cur="$cur/$m"
+    else
+      badval="$tok"; badparent="$cur"; break
+    fi
+  done
   inc="**/*Koans.java"
-  if [ -n "$seg" ]; then
-    inc="**/${seg}"
-    [ -n "$ser" ] && inc="${inc}/series${ser}"
-    [ -n "$epi" ] && inc="${inc}/_${epi}"
-    inc="${inc}/**/*Koans.java"
+  [ -n "$scope" ] && inc="**${scope}/**/*Koans.java"
+  # --- Is this lesson actually in this copy? ---------------------------------
+  # The common case: someone watches a newly published episode, pastes its command,
+  # and that lesson simply is not in their download yet. Without this check Maven
+  # matches nothing, path-to-enlightenment.txt is never written, and the branch
+  # below reports "a compile error in your edit" - sending people to hunt a typo in
+  # their own code instead of running `zeus update`.
+  # The walk above already stopped at the FIRST token it could not resolve, so we
+  # know exactly which word is wrong - and the directory it failed in gives us the
+  # real alternatives for that same word. No level ever has to be named or guessed,
+  # which is what keeps this correct for both 3-level and 2-level courses.
+  if [ -n "$badval" ]; then
+    echo
+    echo "=========================================================================="
+    echo "  \"$badval\" IS NOT IN YOUR COPY OF DATAZEUS."
+    echo
+    echo "  Looked in:  ${badparent#$DIR/}"
+    echo
+    printf "  What you DO have there:\n      "
+    ls -1 "$badparent" 2>/dev/null | grep -v '^_internal$' | tr '\n' ' '; echo
+    echo
+    echo "  Nothing was compiled and nothing was run - your koans are fine."
+    echo "  This is not an error in anything you typed into a koan."
+    echo
+    echo "  If \"$badval\" is misspelled, correct it against the list above."
+    echo
+    echo "  If it is spelled right, it was published after you downloaded"
+    echo "  DataZeus. Fetch the latest - safe to run at any time:"
+    echo
+    echo "      ./zeus.sh update"
+    echo
+    echo "  Koans you have already solved are KEPT - update never overwrites"
+    echo "  an exercise you have edited."
+    echo
+    echo "  Then run your command again:"
+    echo
+    echo "      ./zeus.sh koans $1 $2 $3"
+    echo
+    echo "  (Then run your command again.)"
+
+    echo "=========================================================================="
+    echo
+    return 1
   fi
+
   echo "Walking the path...  (scope: $inc)"
   echo "  first run compiles the koans and downloads dependencies — give it a moment."
   PROG="$DIR/tests/target/path-to-enlightenment.txt"
@@ -143,8 +228,19 @@ zeus_koans() {
   if [ -f "$PROG" ]; then
     cat "$PROG"
   else
-    echo "The koans did not run. This usually means a compile error in your edit"
-    echo "(e.g. a typo where the ___ used to be). Maven said:"
+    # The lesson folder EXISTS (the guard above already proved that) and Maven still
+    # produced no progress file - so this really is the learner's own code failing to
+    # compile. Say so definitively; a missing lesson never reaches this branch.
+    echo
+    echo "=========================================================================="
+    echo "  YOUR KOANS DID NOT COMPILE."
+    echo
+    echo "  The lesson is present - this is an error in the code you edited,"
+    echo "  usually a typo where the ___ used to be (a missing quote, comma"
+    echo "  or bracket). You do NOT need to update; fix the edit and re-run."
+    echo
+    echo "  Maven said:"
+    echo "=========================================================================="
     echo
     cat "$LOG"
   fi
