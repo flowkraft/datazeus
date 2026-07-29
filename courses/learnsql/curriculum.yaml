@@ -68,7 +68,7 @@ series:
         status: published
       - n: "05"
         slug: meet-your-data-with-select
-        title: "SELECT, Column Lists & Data Types — Meet Your Tables, Rows & Columns"
+        title: "SELECT, Column Lists & Data Types — Meet Your Data"
         short: "SELECT, Column Lists & Data Types — meet your data"
         status: published
       - n: "10"
