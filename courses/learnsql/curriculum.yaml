@@ -75,7 +75,7 @@ series:
         slug: where-filtering
         title: "WHERE, AND/OR/NOT, IN, BETWEEN — Throw Away the Rows You Don't Care About"
         short: "WHERE, AND/OR/NOT, IN, BETWEEN — throw away the rest"
-        status: planned
+        status: published
       - n: "15"
         slug: order-by-and-top-n
         title: "ORDER BY, LIMIT & FETCH FIRST — Who's Your #1 Customer?"

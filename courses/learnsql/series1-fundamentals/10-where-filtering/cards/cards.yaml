@@ -1,0 +1,50 @@
+# Flashcards for Master SQL · Series 1 · 10 — WHERE, AND/OR/NOT, IN, BETWEEN
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
+# tools/build-anki.py turns it into a .apkg with genanki.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds update the same deck (no duplicates).
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+
+deck: "DataZeus::Master SQL::Series 1::10 WHERE Filtering"
+guid: "datazeus-master-sql-series1-10-where-filtering"
+tags: ["datazeus", "master-sql", "series-1", "sql"]
+
+cards:
+  - basic:
+      front: "What does WHERE do to a table's data?"
+      back: "Nothing. WHERE shapes the ANSWER — it tests every row and returns only the ones that pass. The table itself is untouched."
+
+  - cloze: "In a WHERE test, text values go in {{c1::'single quotes'}}, column names go in {{c2::\"double quotes\"}}, and numbers are written {{c3::bare, with no quotes}}."
+
+  - basic:
+      front: "WHERE \"Country\" = 'germany' returns zero rows on Northwind. Why — and why is there no error?"
+      back: "SQL text comparison is exact, capitals included: the column holds 'Germany'. An empty result is a valid answer, so nothing fails. A suspiciously empty filter → check spelling and case first."
+
+  - cloze: "SQL's not-equal operator is spelled {{c1::<>}} in the standard — and every course database also accepts {{c2::!=}} as the same operator."
+
+  - cloze: "Each {{c1::AND}} makes a result NARROWER (both tests must pass); each {{c2::OR}} makes it WIDER (either test is enough)."
+
+  - basic:
+      front: "WHERE \"CategoryID\" = 1 OR \"CategoryID\" = 2 AND \"UnitPrice\" < 15 — what does SQL actually evaluate, and what's the fix?"
+      back: "AND binds first: CategoryID = 1 OR (CategoryID = 2 AND UnitPrice < 15) — every category-1 row gets in at ANY price. Fix: (CategoryID = 1 OR CategoryID = 2) AND UnitPrice < 15. Rule: the moment AND and OR mix, parenthesize."
+
+  - basic:
+      front: "You wrote \"Country\" = 'Mexico' OR \"Country\" = 'Venezuela' OR \"Country\" = 'Argentina'. What's the cleaner way?"
+      back: "\"Country\" IN ('Mexico', 'Venezuela', 'Argentina') — one test against a list. NOT IN keeps everyone the list does not name."
+
+  - cloze: "BETWEEN 10 AND 20 includes {{c1::both ends}} — it means {{c2::>= 10 AND <= 20}}. To exclude the ends, write two strict comparisons: {{c3::> 10 AND < 20}}."
+
+  - basic:
+      front: "Aniseed Syrup costs exactly 10.0000. Which of these keeps it: UnitPrice BETWEEN 10 AND 20, or UnitPrice > 10 AND UnitPrice < 20?"
+      back: "BETWEEN keeps it (ends included, 9 rows). The strict version drops it (8 rows). Neither is 'more correct' — decide on purpose whether a boundary row belongs."
+
+  - basic:
+      front: "Write the WHERE that counts June 2024 orders and cannot miss a late-June timestamp."
+      back: "WHERE \"OrderDate\" >= DATE '2024-06-01' AND \"OrderDate\" < DATE '2024-07-01' — the half-open range. BETWEEN …-06-01 AND …-06-30 silently drops a timestamp like 2024-06-30 14:00."
+
+  - cloze: "The date-range reflex: {{c1::>=}} the first day, {{c2::<}} the first day of the {{c3::next}} month — works for dates, timestamps and every month length."
+
+  - cloze: "In a LIKE pattern, {{c1::%}} stands for 'anything here': 'Ch%' means {{c2::starts with Ch}}, and '%an%' means {{c3::contains an}}. LIKE is {{c4::case-exact}}, like every text comparison."
