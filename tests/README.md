@@ -27,8 +27,8 @@ restriction, so the gate never runs during a koans session):
 
 ```bash
 ./koans.sh                 # every koan, every course
-./koans.sh sql             # all Master SQL koans
-./koans.sh sql 1           # Master SQL · Series 1
+./koans.sh sql             # all Learn SQL koans
+./koans.sh sql 1           # Learn SQL · Series 1
 ./koans.sh sql S1 _00        # ONE lesson (Series 1 · lesson _00)  ← the usual path
 ```
 Course aliases: `sql modeling etl warehousing dbt viz bi`. Episode is two digits.

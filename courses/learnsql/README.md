@@ -1,4 +1,4 @@
-# Master SQL — Learn SQL by Doing
+# Learn SQL — SQL by Doing
 
 Hands-on SQL on the real **Northwind** dataset, taught on **PostgreSQL** with portable
 ANSI SQL (vendor differences flagged).

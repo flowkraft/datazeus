@@ -4,7 +4,7 @@ build-anki.py — turn a lesson's cards.yaml (OUR own format, NOT CrowdAnki) int
 Anki .apkg using genanki.
 
     pip install genanki pyyaml
-    python tools/build-anki.py courses/master-sql/series-1-fundamentals/00-write-your-first-query
+    python tools/build-anki.py courses/learnsql/series1-fundamentals/00-start-here
     python tools/build-anki.py            # build every lesson that has cards/cards.yaml
 
 cards.yaml schema (see any lesson's cards/cards.yaml):

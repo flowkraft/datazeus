@@ -13,7 +13,7 @@ excludes:
   - topic: "Classical machine learning — features, training, model selection"
     where: "not covered; this track is LLM-era work on data you already have"
   - topic: "Reading and fixing the SQL a model writes"
-    where: "covered in Master SQL — you still have to be able to check its work"
+    where: "covered in Learn SQL — you still have to be able to check its work"
   - topic: "Dashboards and metric governance"
     where: "covered in BI & Data Visualization"
 

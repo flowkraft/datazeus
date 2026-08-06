@@ -11,7 +11,7 @@ title: Data Modeling
 
 excludes:
   - topic: "Writing queries against these schemas"
-    where: "covered in Master SQL"
+    where: "covered in Learn SQL"
   - topic: "Loading the model — pipelines, SCD-2 loads, backfills"
     where: "covered in ETL & Data Pipelines and Analytics Engineering (dbt)"
   - topic: "Running, tuning and migrating the live database"

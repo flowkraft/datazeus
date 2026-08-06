@@ -11,7 +11,7 @@ title: ETL & Data Pipelines
 
 excludes:
   - topic: "The SQL inside the transforms"
-    where: "covered in Master SQL"
+    where: "covered in Learn SQL"
   - topic: "Designing the target schema"
     where: "covered in Data Modeling"
   - topic: "Doing the T as version-controlled, tested models"

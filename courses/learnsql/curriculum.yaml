@@ -1,4 +1,4 @@
-# The ordered episode list for Master SQL — the SINGLE source of truth for the roadmap.
+# The ordered episode list for Learn SQL — the SINGLE source of truth for the roadmap.
 #
 # Anything that has to know "what are the episodes, in what order, and where are we"
 # reads THIS file: the course page (/data-academy/learn-sql), the "you are here" roadmap
@@ -41,7 +41,7 @@
 
 course: learn-sql
 track: learnsql
-title: Master SQL
+title: Learn SQL
 
 # Scope decisions that a scanner would otherwise read as holes in the course. Rendered at
 # the foot of the course page, so "missing" reads as "deliberate, and it lives over there".

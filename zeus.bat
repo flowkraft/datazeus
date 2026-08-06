@@ -10,7 +10,7 @@ REM    zeus help                               this help
 REM
 REM  koans examples:
 REM    zeus koans                       every koan, every course
-REM    zeus koans learnsql              all Master SQL koans
+REM    zeus koans learnsql              all Learn SQL koans
 REM    zeus koans learnsql series1 _00  ONE lesson   <- the usual path
 REM  Short aliases: sql=learnsql, S1=series1, plain "1 00". Courses: sql modeling
 REM  etl warehousing dbt viz bi. Needs a JDK 17+ (uses your Maven if present, else the bundled

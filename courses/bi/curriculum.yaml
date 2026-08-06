@@ -11,7 +11,7 @@ title: BI & Data Visualization
 
 excludes:
   - topic: "Writing the queries behind the widgets"
-    where: "covered in Master SQL"
+    where: "covered in Learn SQL"
   - topic: "Building the warehouse and the cubes themselves"
     where: "covered in Data Warehousing; here you consume them"
   - topic: "Natural-language questions and AI-assisted analysis"

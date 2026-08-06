@@ -1,4 +1,4 @@
-# Flashcards for Master SQL · Series 1 · 05 — Meet Your Data With SELECT
+# Flashcards for Learn SQL · Series 1 · 05 — Meet Your Data With SELECT
 #
 # OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
 # tools/build-anki.py turns it into a .apkg with genanki.
@@ -8,9 +8,9 @@
 # cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
 # tags:  applied to every card in the file.
 
-deck: "DataZeus::Master SQL::Series 1::05 Meet Your Data With SELECT"
-guid: "datazeus-master-sql-series1-05-meet-your-data-with-select"
-tags: ["datazeus", "master-sql", "series-1", "sql"]
+deck: "DataZeus::Learn SQL::Series 1::05 Meet Your Data With SELECT"
+guid: "datazeus-learn-sql-series1-05-meet-your-data-with-select"
+tags: ["datazeus", "learn-sql", "series-1", "sql"]
 
 cards:
   - basic:

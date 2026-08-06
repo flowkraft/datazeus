@@ -14,7 +14,7 @@ title: Data Ops
 
 excludes:
   - topic: "Writing and tuning the queries themselves"
-    where: "covered in Master SQL, Series 3 — EXPLAIN, indexes and the tuning capstone"
+    where: "covered in Learn SQL, Series 3 — EXPLAIN, indexes and the tuning capstone"
   - topic: "Row-level data quality, dedup & conformance"
     where: "covered in Learn ETL & Data Pipelines — here we watch whether the pipeline ran at all"
   - topic: "Schema design & normalization"
@@ -76,7 +76,7 @@ series:
         slug: transactions-and-acid
         title: "Transactions & ACID — BEGIN, COMMIT, ROLLBACK and What They Guarantee"
         status: planned
-      # The episode Master SQL deliberately hands over — see that course's `excludes`.
+      # The episode Learn SQL deliberately hands over — see that course's `excludes`.
       - n: "05"
         slug: isolation-levels
         title: "Isolation Levels: The ANSI Four — Dirty Reads, Phantoms & What Postgres Really Does"

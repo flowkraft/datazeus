@@ -5,7 +5,7 @@ import spock.lang.Stepwise
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════════╗
- * ║  SQL KOANS — Master SQL · Series 1 · 00 Start Here                          ║
+ * ║  SQL KOANS — Learn SQL · Series 1 · 00 Start Here                           ║
  * ╚══════════════════════════════════════════════════════════════════════════╝
  *
  * You don't fill in a number here — you WRITE THE QUERY. Each koan blanks the one
