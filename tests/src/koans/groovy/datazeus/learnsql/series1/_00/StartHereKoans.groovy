@@ -59,7 +59,7 @@ class StartHereKoans extends KoanBase {
 
     // 4) Real data, not toy data. Ask for two columns instead of a count and you get
     //    real companies in real countries. Fill in the column holding the country.
-    //    (ORDER BY is what makes "the first five" mean anything — without it the
+    //    (ORDER BY is what decides WHICH five you get — without it the
     //    database may hand you any five rows it likes.)
     def "real data: five customers and where they are"() {
         expect:
