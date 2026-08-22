@@ -11,7 +11,7 @@ import spock.lang.Stepwise
  * You don't fill in a number here — you WRITE THE QUERY. Each koan blanks the one
  * piece that is the lesson; replace the `___`, then run
  *
- *     koans.bat learnsql series1 _10   (Windows)     ./koans.sh learnsql series1 _10   (macOS/Linux)
+ *     zeus.bat koans learnsql series1 _10  (Windows)   ./zeus.sh koans learnsql series1 _10  (macOS/Linux)
  *
  * The koan runs YOUR query and compares the result to the goal. PREDICT the answer
  * first (that's the skill) — if it comes back wrong, the hint shows what your query

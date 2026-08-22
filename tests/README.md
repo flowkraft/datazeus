@@ -26,12 +26,12 @@ Run a scope with the wrapper (it builds a path filter that keeps the `*Koans`
 restriction, so the gate never runs during a koans session):
 
 ```bash
-./koans.sh                 # every koan, every course
-./koans.sh sql             # all Learn SQL koans
-./koans.sh sql 1           # Learn SQL · Series 1
-./koans.sh sql S1 _00        # ONE lesson (Series 1 · lesson _00)  ← the usual path
+./zeus.sh koans                            # every koan, every course
+./zeus.sh koans learnsql                   # all Learn SQL koans
+./zeus.sh koans learnsql series1           # Learn SQL · Series 1
+./zeus.sh koans learnsql series1 _00       # ONE lesson  ← the usual path
 ```
-Course aliases: `sql modeling etl warehousing dbt viz bi`. Episode is two digits.
+On Windows the same scopes run as `.\zeus.bat koans learnsql series1 _00`.
 
 ## The ritual — the path to enlightenment
 - Each `*Koans` spec is `@Stepwise`: koans run **in order**, and once one fails the
