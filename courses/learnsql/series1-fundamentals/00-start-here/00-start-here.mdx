@@ -89,6 +89,7 @@ No `foo`, no `bar` here. These are real customers in real countries, so go ahead
 ```sql
 SELECT "CompanyName", "Country"
 FROM "Customers"
+ORDER BY "CompanyName"
 LIMIT 5;
 ```
 
@@ -99,6 +100,8 @@ LIMIT 5;
 | Antonio Moreno Taquería            | Mexico  |
 | Around the Horn                    | UK      |
 | Berglunds snabbköp                 | Sweden  |
+
+`LIMIT 5` asks for five rows, and `ORDER BY` decides which five. Without it you'd still get five, but the database would be free to hand you any five it liked, in any order — and a different day, or a different engine, could hand you a different set. Whenever you cut a result short, say what you're sorting by. (There's a lesson of its own on this later in the series.)
 
 This is Northwind, a small import/export business with the usual moving parts: customers, orders, products, suppliers, employees. It's real enough to ask honest questions of, and small enough to keep the whole thing in your head.
 

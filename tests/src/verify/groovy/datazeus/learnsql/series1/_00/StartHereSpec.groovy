@@ -29,10 +29,20 @@ class StartHereSpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
+    // Asserts the ROWS, not just how many there are. The lesson prints this exact table, so
+    // a count-only check let the two drift: the script once had no ORDER BY, which makes the
+    // five rows whatever the engine feels like handing back — and the lesson's table and the
+    // koan's answer key disagreed for months without failing anything.
     @Unroll
-    def "[#engine] SELECT CompanyName, Country FROM Customers LIMIT 5 returns five rows"() {
+    def "[#engine] the five customers the lesson prints, in the order it prints them"() {
         expect:
-        sqlFor(engine).rows(script("customers")).size() == 5
+        sqlFor(engine).rows(script("customers")).collect { it.values().toList() } == [
+                ["Alfreds Futterkiste", "Germany"],
+                ["Ana Trujillo Emparedados y helados", "Mexico"],
+                ["Antonio Moreno Taquería", "Mexico"],
+                ["Around the Horn", "UK"],
+                ["Berglunds snabbköp", "Sweden"],
+        ]
 
         where:
         engine << ENGINES

@@ -11,7 +11,7 @@ import spock.lang.Stepwise
  * You don't fill in a number here — you WRITE THE QUERY. Each koan blanks the one
  * piece that is the lesson; replace the `___`, then run
  *
- *     koans.bat learnsql series1 _00   (Windows)     ./koans.sh learnsql series1 _00   (macOS/Linux)
+ *     zeus.bat koans learnsql series1 _00  (Windows)   ./zeus.sh koans learnsql series1 _00  (macOS/Linux)
  *
  * The koan runs YOUR query and compares the result to the goal. PREDICT the answer
  * first (that's the skill) — if it comes back wrong, the hint shows what your query
@@ -59,14 +59,16 @@ class StartHereKoans extends KoanBase {
 
     // 4) Real data, not toy data. Ask for two columns instead of a count and you get
     //    real companies in real countries. Fill in the column holding the country.
+    //    (ORDER BY is what makes "the first five" mean anything — without it the
+    //    database may hand you any five rows it likes.)
     def "real data: five customers and where they are"() {
         expect:
         shouldReturn([["Alfreds Futterkiste", "Germany"],
-                      ["Blauer See Delikatessen", "Germany"],
-                      ["Drachenblut Delikatessen", "Germany"],
-                      ["Frankenversand", "Germany"],
-                      ["Königlich Essen", "Germany"]], '''
-            SELECT "CompanyName", ___ FROM "Customers" LIMIT 5
+                      ["Ana Trujillo Emparedados y helados", "Mexico"],
+                      ["Antonio Moreno Taquería", "Mexico"],
+                      ["Around the Horn", "UK"],
+                      ["Berglunds snabbköp", "Sweden"]], '''
+            SELECT "CompanyName", ___ FROM "Customers" ORDER BY "CompanyName" LIMIT 5
         ''')
     }
 
