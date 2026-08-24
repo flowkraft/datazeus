@@ -8,8 +8,6 @@
 # `koan:` rung, or it does not belong here. Checked against all 34 episodes on 2026-08-24.
 #
 # NOT HERE, DELIBERATELY:
-#   numpy       arrives transitively with pandas. Listed nowhere so it cannot drift out of step
-#               with whatever pandas wants — but it IS present, so a koan may import it.
 #   matplotlib  the only plotting episode is Series 2 · 40, whose `hands_on` is `jupyter` alone.
 #               A plot is judged by eyes, there is no koan, and nothing here needs to draw.
 #   scipy       nothing in this track uses it.
@@ -18,6 +16,12 @@
 
 pytest==8.3.4
 pandas==2.2.3
+# EXPLICIT even though pandas pulls it in anyway, because a transitive pin is not a pin: a
+# pandas release that widens or changes its numpy requirement would move numpy under us
+# silently, and several koans assert on values whose dtype and rounding numpy decides. If a
+# koan's expected answer ever has to change, it should be because somebody bumped a line in
+# this file — never because a dependency of a dependency shifted.
+numpy==2.5.2
 polars==1.17.1
 duckdb==1.1.3
 
