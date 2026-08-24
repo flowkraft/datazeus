@@ -91,6 +91,21 @@ series:
         dataset: messy
         core: true
         status: planned
+      # SAY WHICH ONE THE TRACK USES FROM HERE, and say it in this episode. The comparison is
+      # right — "which do I reach for" is a real question and the koan is a `choose` — but a
+      # reader who meets two libraries at episode 20 and then sees only pandas until Series 3
+      # is entitled to wonder whether they were supposed to keep using both.
+      # THE HONEST RANKING, and it is not a tie:
+      #   pandas   what you INHERIT. Open any existing notebook or script at a new job and it
+      #            is pandas. It is the default for the rest of this track — 25, 30, 35, 40,
+      #            Series 2 · 35 and Series 3 · 30 are all pandas, and that is deliberate.
+      #   polars   what you CHOOSE. Faster, lazier, a cleaner API, and genuinely rising — but
+      #            a choice you make on a new project, not something you find already there.
+      #            It returns at Series 3 · 35 with the case that actually decides it: the
+      #            data no longer fits in memory.
+      #   numpy    you almost never type it. It arrives under pandas — its dtypes, its
+      #            coercion rules, its NaN — which is why this track has no numpy episode and
+      #            teaches the parts you DO meet inside Series 1 · 40 and Series 3 · 30.
       - n: "20"
         slug: dataframes
         title: "DataFrames — pandas and polars, and Which to Reach For"
