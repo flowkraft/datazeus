@@ -2,10 +2,40 @@
 # behaviour under you turns a green koan red for a reason the learner cannot act on. Bump these
 # deliberately and re-run every koan, the same way you would bump the DuckDB version in the
 # JVM tests' pom.xml.
+#
+# EVERY LINE HERE IS REQUIRED BY AN EPISODE THAT DECLARES A KOAN. That is the test for adding
+# one: find the episode in courses/python/curriculum.yaml, check its `hands_on` contains a
+# `koan:` rung, or it does not belong here. Checked against all 34 episodes on 2026-08-24.
+#
+# NOT HERE, DELIBERATELY:
+#   numpy       arrives transitively with pandas. Listed nowhere so it cannot drift out of step
+#               with whatever pandas wants — but it IS present, so a koan may import it.
+#   matplotlib  the only plotting episode is Series 2 · 40, whose `hands_on` is `jupyter` alone.
+#               A plot is judged by eyes, there is no koan, and nothing here needs to draw.
+#   scipy       nothing in this track uses it.
+# Those two absences are the whole reason this image is ~640MB and the Jupyter one is 5.4GB.
+# Somebody who never opens a notebook should not pull five gigabytes to run one koan.
+
 pytest==8.3.4
 pandas==2.2.3
 polars==1.17.1
 duckdb==1.1.3
+
 # Series 2 · 02 (Excel Files). pandas does not bundle an .xlsx reader — read_excel raises
 # ImportError without this — and datasets/generated/make_messy_excel.py writes with it too.
 openpyxl==3.1.5
+
+# Series 2 · 00 (CSV, JSON & Parquet). polars and duckdb read Parquet on their own, but the
+# episode's subject is pandas, and pandas.read_parquet needs an engine.
+pyarrow==18.1.0
+
+# Series 2 · 10 is literally titled "psycopg & SQLAlchemy Core — Querying PostgreSQL from
+# Python", and Series 2 · 15 (parameterized queries) is the same connection. Both declare
+# koans, and neither could run: the image had no PostgreSQL driver at all.
+psycopg[binary]==3.2.3
+SQLAlchemy==2.0.36
+
+# Series 2 · 20 (HTTP APIs & JSON) and Series 3 · 32 (threads for slow API calls). The stub
+# server is stdlib http.server, but the CLIENT is the subject — pagination, retries, backoff
+# and a connection pool are what the episodes teach, and urllib is not how anyone does that.
+httpx==0.28.1
