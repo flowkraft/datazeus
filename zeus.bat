@@ -446,6 +446,37 @@ for /f "usebackq delims=" %%W in ("%WSLIST%") do if exist "%NEW%\%%W" (
   )
   robocopy "%NEW%\%%W" "%BASE%\%%W" /E /NFL /NDL /NJH /NJS /NC /NS /NP >nul
 )
+REM 5) PRUNE what upstream dropped. Steps 2-4 only ever copy - robocopy runs /E, NOT /MIR or
+REM /PURGE - so a file we RENAMED or MOVED upstream stays on disk forever. Invisible until a
+REM `_todo` stub is promoted to a real lesson: the promoted file arrives, the stub remains
+REM beside it, and the convention that says "a _todo file is not a real lesson" is undermined
+REM by the stub sitting next to the real one.
+REM CONSERVATIVE BY DESIGN: only files WE shipped, that upstream no longer has, that the
+REM learner never edited. Anything edited is kept and named.
+for /f "usebackq delims=" %%W in ("%WSLIST%") do if exist "%BASE%\%%W" (
+  for /f "delims=" %%F in ('dir /s /b /a:-d "%BASE%\%%W\*" 2^>nul') do (
+    set "rel=%%F"
+    set "rel=!rel:%BASE%\=!"
+    if not exist "%NEW%\!rel!" (
+      if exist "%ROOT%\!rel!" (
+        fc /b "%ROOT%\!rel!" "%%F" >nul 2>nul
+        if not errorlevel 1 (
+          del /q "%ROOT%\!rel!" >nul 2>nul
+        ) else (
+          echo   kept your edited !rel! ^(no longer shipped^)
+        )
+      )
+    )
+  )
+)
+REM Outside the workspaces there is no baseline, so prune only `_todo` artifacts: they are
+REM ours, nobody hand-edits a stub, and they go stale by design once an episode is written.
+for /f "delims=" %%F in ('dir /s /b /a:-d "%ROOT%\courses\_todo-*" 2^>nul') do (
+  set "rel=%%F"
+  set "rel=!rel:%ROOT%\=!"
+  if not exist "%NEW%\!rel!" del /q "%%F" >nul 2>nul
+)
+
 rmdir /s /q "%TMP_DZ%" 2>nul
 echo.
 echo DataZeus is up to date. Your in-progress edits were left untouched.

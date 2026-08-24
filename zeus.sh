@@ -113,6 +113,33 @@ zeus_update() {
         mkdir -p "$baseline/$w/$(dirname "$f")"; cp "$new/$w/$f" "$baseline/$w/$f"
       done )
   done
+  # 5) PRUNE what upstream dropped. Steps 2-4 only ever copy, so a file we RENAMED or MOVED
+  #    upstream stays on disk forever. That is invisible until a `_todo` stub is promoted to a
+  #    real lesson - the promoted file arrives, the stub remains beside it, and the convention
+  #    that says "a _todo file is not a real lesson" is undermined by the stub sitting next to
+  #    the real one.
+  #    CONSERVATIVE BY DESIGN: only files WE shipped, that upstream no longer has, that the
+  #    learner never edited. Anything edited is kept and named. An update must never silently
+  #    destroy somebody's work.
+  kept=""
+  for w in $workspaces; do
+    [ -d "$baseline/$w" ] || continue
+    ( cd "$baseline/$w" && find . -type f 2>/dev/null | sed 's#^\./##' ) | while IFS= read -r f; do
+      [ -f "$new/$w/$f" ] && continue                      # still shipped
+      loc="$DIR/$w/$f"; bas="$baseline/$w/$f"
+      [ -f "$loc" ] || continue
+      if cmp -s "$loc" "$bas"; then rm -f "$loc"; else echo "  kept your edited $w/$f (no longer shipped)"; fi
+    done
+  done
+  # Outside the workspaces there is no baseline to compare against, so prune only `_todo`
+  # artifacts: they are ours, nobody hand-edits a stub, and they are the files that go stale
+  # by design the moment an episode is written.
+  find "$DIR/courses" -name "_todo-*" -type f 2>/dev/null | while IFS= read -r loc; do
+    rel="${loc#$DIR/}"
+    [ -f "$new/$rel" ] || rm -f "$loc"
+  done
+  find "$DIR/courses" -type d -empty -delete 2>/dev/null
+
   # --------------------------------------------------------------------------
   rm -rf "$tmp"
   echo
