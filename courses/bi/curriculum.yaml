@@ -81,14 +81,14 @@ excludes:
 
   # The reciprocal half of the near-collision, stated on both sides on purpose.
   - topic: "Implementing the metric as version-controlled, tested code"
-    where: "covered in Analytics Engineering (dbt), Series 3 · 10, which writes the agreed definition as code. In this course, Series 2 · 40 is the earlier job of agreeing what it should mean"
+    where: "covered in Analytics Engineering with dbt, Series 3 · 30, which writes the agreed definition as code. In this course, Series 2 · 40 is the earlier job of agreeing what it should mean"
   - topic: "Getting the dashboard's data there on time"
     where: "covered in ETL & Data Pipelines and Data Ops — here the numbers are assumed to have arrived"
 
 series:
   - slug: series1-charts-that-tell-the-truth
     title: Charts That Tell the Truth
-    tagline: see it yourself, then show it honestly
+    tagline: pick the right chart, and build one that is not misleading
     level: beginner
     episodes:
       - n: "00"
@@ -177,7 +177,7 @@ series:
         status: planned
   - slug: series2-from-charts-to-answers
     title: From Charts to Answers
-    tagline: richer encodings, and agreeing what the numbers mean
+    tagline: harder chart types, and one agreed definition per metric
     level: intermediate
     episodes:
       - n: "00"
@@ -272,7 +272,7 @@ series:
         status: planned
   - slug: series3-dashboards-and-delivery
     title: Dashboards, Delivery & Adoption
-    tagline: make it land, and keep it trusted
+    tagline: build a dashboard, then schedule, share and secure it
     level: advanced
     episodes:
       # SOURCE (few): Stephen Few, "Information Dashboard Design" — a dashboard fits on ONE SCREEN, and what belongs top-left. His argument, worth naming.

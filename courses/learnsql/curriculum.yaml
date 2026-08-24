@@ -211,7 +211,7 @@ excludes:
 series:
   - slug: series1-fundamentals
     title: SQL Fundamentals
-    tagline: query one table, then glue two
+    tagline: SELECT, WHERE, GROUP BY and your first JOIN
     level: beginner
     episodes:
       # The orientation episode: the SQL-thinking loop and one real query, but also the
@@ -311,7 +311,7 @@ series:
 
   - slug: series2-intermediate
     title: Intermediate SQL
-    tagline: answer real business questions
+    tagline: CTEs, subqueries and window functions on real questions
     level: intermediate
     episodes:
       # Opens the series by POSING the question that 05 and 06 answer: count the rows before
@@ -342,7 +342,7 @@ series:
       # it is a local trick: Data Modeling Series 1 · 10 teaches grain from the DESIGN side
       # (what should one row be, before the table exists — the mirror of this episode, which
       # is the QUERY side: what did one row become after you joined). Data Warehousing and
-      # Analytics Engineering (dbt) both build on it again for fact tables and model tests.
+      # Analytics Engineering with dbt both build on it again for fact tables and model tests.
       - n: "06"
         slug: join-fan-out
         title: "Join Fan-Out & Grain — When a Join Silently Multiplies Your Rows"
@@ -414,7 +414,7 @@ series:
         short: "VIEWs — name a query, reuse it"
         hands_on: ["koan:equivalent"]
         status: planned
-      # Moved down from Series 3, because "answer real business questions" is not true
+      # Moved down from Series 3, because "CTEs, subqueries and window functions on real questions" is not true
       # without them: running totals, month-over-month, rank-within-region and
       # latest-row-per-customer ARE what business questions look like, and they are the
       # table stakes of an analyst screen. They close the series rather than opening it
@@ -452,7 +452,7 @@ series:
 
   - slug: series3-advanced
     title: Advanced SQL
-    tagline: the hard queries, and making them fast
+    tagline: the harder queries, and how to make a slow one fast
     level: advanced
     episodes:
       # Block A — the question shapes that need real machinery. CTEs and both window-function

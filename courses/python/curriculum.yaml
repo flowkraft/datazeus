@@ -58,7 +58,7 @@ excludes:
 series:
   - slug: series1-python-fundamentals
     title: Python for Data Fundamentals
-    tagline: from zero to a script that moves data
+    tagline: Python basics, then pandas — filter, group and join data
     level: beginner
     episodes:
       - n: "00"

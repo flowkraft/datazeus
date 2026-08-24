@@ -1,13 +1,116 @@
-# The ordered episode list for Analytics Engineering (dbt). Field docs live in
+# The ordered episode list for Analytics Engineering with dbt. Field docs live in
 # courses/learnsql/curriculum.yaml. `short` is omitted until an episode has a video.
 #
 # The job this track teaches: turn a folder of ad-hoc SELECTs into a version-controlled,
 # tested, documented transformation project the whole team can change without fear.
 # Built as a real Northwind project — raw → staging → marts — on the DataPallas warehouse.
+#
+# THE ENGINE, decided 2026-08-24 — and the decision this track had simply never made. Series 1 ·
+# 15 teaches profiles.yml, and profiles.yml IS the adapter choice, so not one episode of this
+# track could actually be written until somebody answered this.
+#   SERIES 1 AND 2 — DuckDB, via dbt-duckdb. No server, no container, no credentials: the file
+#     is the database, a koan runs in milliseconds, and a learner's first contact with dbt is
+#     dbt rather than devops. The engine itself is somebody else's episode — Data Warehousing,
+#     Series 2 · 05.
+#   SERIES 3 — ClickHouse, via dbt-clickhouse, and the switch is the FIRST episode of the series
+#     instead of a footnote late in it. "At scale" is the reason anyone moves to a columnar
+#     engine at all, so the move is the premise the rest of the series stands on: everything
+#     after Series 3 · 00 runs there.
+#   NOT PostgreSQL, and this one is worth the sentence because it is the obvious answer: it is
+#     the first-party adapter and Northwind already ships on it. But every koan would then need
+#     a running container for a lesson that is not about the server. It stays the third target
+#     in Series 2 · 45, where multiple warehouses is the actual subject.
+#
+# THE CLICKHOUSE BOUNDARY, because two tracks now touch it and neither may teach the other's
+# half. Data Warehousing owns the ENGINE — MergeTree, partitions, sort keys, compression,
+# projections. This track owns the ADAPTER: what dbt-clickhouse can and cannot express. Those
+# are different subjects, and the second one lives nowhere else in the academy.
+#
+# ── WHAT dbt ACTUALLY IS, because every author of these episodes needs the same answer ──
+# It is NOT a language and NOT a scripting tool. It is a COMPILER and a SCHEDULER for SQL
+# that you write. Series 1 · 00 has to land this in its first paragraph or nothing after it
+# makes sense.
+#   WHAT THE READER WRITES   .sql files, each holding exactly ONE SELECT — no CREATE, no
+#                            INSERT, no DDL; .yml for tests, docs, sources and config; and
+#                            .csv for seeds. That is the whole surface.
+#   THE ONE NON-SQL THING    Jinja, inside those .sql files — {{ ref(...) }}, {% if %},
+#                            {% macro %}. It is string templating, NOT Python, and it is
+#                            fully rendered to plain SQL before anything reaches a database.
+#   WHAT dbt DOES            renders the Jinja, reads every ref() to build the dependency
+#                            graph, sorts it, wraps each SELECT in CREATE TABLE AS or
+#                            CREATE VIEW AS — that is all a "materialization" is — and sends
+#                            those statements to the warehouse in order.
+#   THE SENTENCE THAT MATTERS MOST: NOT ONE ROW OF DATA PASSES THROUGH dbt. It is not pandas
+#                            and it is not Spark. The warehouse does 100% of the work. dbt
+#                            only decides which SQL runs, and when.
+#   PYTHON MODELS exist since 1.3 (a .py returning a DataFrame) but only on BigQuery,
+#   Databricks, Snowflake and dbt-duckdb. A side door. Do not teach it as the main path, and
+#   do not let a reader arriving from Python for Data confuse it for one.
+#
+# ── WHICH dbt VERSION, decided 2026-08-24: dbt Core v1.12, and the .12 is the whole point ─
+# There are now two dbt engines. The choice is forced by Series 3 — but the VERSION within
+# that choice is what makes the eventual switch nearly free, so pin it, do not say "v1.x".
+#   dbt Core v2 / FUSION   a Rust binary: no Python, no virtualenv, much faster parsing, and
+#                          a strict language spec that catches a typo'd `desciptin` instead
+#                          of ignoring it. A genuinely better tool. But DuckDB is BETA and
+#                          CLI-only, and CLICKHOUSE IS NOT SUPPORTED AT ALL — in v2 the
+#                          adapters live in a Rust monorepo speaking ADBC, so the Python
+#                          dbt-clickhouse cannot be plugged in, and third-party adapters are
+#                          explicitly "not on the near-term roadmap". Series 3 is 13 of our
+#                          37 episodes. We cannot ship a third of the track unrunnable.
+#   dbt Core v1.12         the LAST v1, and dbt Labs built it as the on-ramp to v2: it
+#                          already ENFORCES the behaviour changes that v2 removes, and it
+#                          ships the Fusion parser behind `--use-v2-parser`. So anything
+#                          taught on it is v2-correct by construction, and the course project
+#                          can be proven to parse under the Rust engine before a word ships.
+#
+# WHY THE VERSION CHOICE COSTS SO LITTLE: v1 and v2 support the SAME dbt language. Of the
+# fifteen documented breaking changes, almost all are hygiene a new course would never teach
+# — removed deprecations, YAML anchors needing an `anchors:` key, duplicate docs blocks,
+# algebraic operations inside a macro's return. The one that touches us we already got right:
+# the `-m` / `--models` flag is an ERROR in v2, and the Series 1 · 10 beat teaches `--select`.
+# Two others are worth an author knowing: `config.get()` no longer reads `meta` (use
+# `config.meta_get()`), and unit tests all run BEFORE the DAG rather than in lineage order,
+# which is a Series 3 · 40 detail.
+#
+# WHEN CLICKHOUSE FUSION SHIPS — parts are merged and end-to-end tests pass, so this may be
+# months not years — the migration is `dbt-autofix` plus a rewrite of the install section of
+# Series 1 · 15. Not a rewrite of the course. That is the entire reason for pinning .12
+# rather than an older v1.
+#
+# ── IS dbt FREE ENOUGH TO BASE 37 EPISODES ON? Checked 2026-08-24, answer YES ──────────
+# Asked because it is the right question to ask before writing a course, and because the
+# answer was genuinely in doubt for twelve months. Every claim below was verified against
+# dbt Labs' own licensing FAQ and the adapters' repositories on that date. RE-CHECK IT
+# before the first episode ships — this is a moving story, not a settled one.
+#   dbt Core          APACHE 2.0. Free, including commercially, with no restriction. This is
+#                     what the whole track runs on.
+#   dbt-duckdb        Apache-2, in the duckdb org.        Series 1 and 2.
+#   dbt-clickhouse    open source, maintained by ClickHouse Inc.   Series 3.
+#   DuckDB            MIT.        ClickHouse    Apache 2.0.
+#   So: 36 of our 37 episodes run on Apache-2.0 software and cost nothing. The 37th is
+#   Series 3 · 50, which already tells the reader it needs a paid tier and why.
+#
+# THE SCARE, worth writing down because somebody will hear a version of it and ask:
+#   MAY 2025   dbt Labs shipped the new Fusion engine under ELv2 — source-available, and NOT
+#              an OSI-approved open source licence. The community read it as dbt going the
+#              way of Elasticsearch, and said so loudly.
+#   JUNE 2026  RESOLVED. The ELv2 code was moved out of the dbt-fusion repo and into
+#              dbt-core UNDER APACHE 2.0. dbt Core v2.0 is Fusion-powered and open source.
+#              Fivetran and dbt Labs completed their merger the same day.
+#   TODAY      "dbt Fusion" is a proprietary binary layered on that open core — free to
+#              download, with `dbt login` gating premium features. We do not need it.
+#
+# THE RISK THAT IS ACTUALLY LEFT, and it is not a licensing one: that dbt Core receives
+# maintenance while the paid platform receives the innovation, until running Core in
+# production quietly stops being practical. Nobody can prove or disprove that today. It is
+# the thing to watch, it plays out over years rather than months, and it is a reason to
+# re-check this block — not a reason to avoid the tool. dbt is in 61% of data engineering
+# job postings and is used by around 90,000 teams weekly; there is no second candidate.
 
 course: learn-dbt
 track: dbt
-title: Analytics Engineering (dbt)
+title: Analytics Engineering with dbt
 
 # Two real prerequisites, and dbt is the one track in the academy where a second one is honest:
 # dbt is SQL plus a project structure, and it starts AFTER the raw data has landed. Someone who
@@ -27,8 +130,8 @@ prerequisites:
 excludes:
   - topic: "Extract and Load — dbt does neither"
     where: "covered in ETL & Data Pipelines; dbt starts once the raw data has landed"
-  - topic: "The warehouse itself — engines, partitions, storage, tuning"
-    where: "covered in Data Warehousing"
+  - topic: "The warehouse engine itself — MergeTree internals, partitions, sort keys, storage, tuning"
+    where: "covered in Data Warehousing, Series 2 · 10 for MergeTree and Data Warehousing, Series 2 · 15 for partitions and sort keys. In this course, Series 3 runs dbt ON that engine — what the adapter can and cannot express, which is a different subject"
   - topic: "Dimensional design decisions — grain, SCD type, star vs snowflake"
     where: "covered in Data Modeling; here you implement the model you already chose"
 
@@ -36,14 +139,14 @@ excludes:
     where: "covered in Learn SQL — a dbt model is a SELECT, and this track is the project around it"
   # The near-collision worth naming: dbt 3 · 10 and BI 2 · 40 are both called the semantic layer.
   - topic: "Agreeing with the business what a metric MEANS, and governing it"
-    where: "covered in BI & Data Visualization, Series 2 · 40, which is where the business agrees what a metric means. In this course, Series 3 · 10 expresses that agreed definition as code"
+    where: "covered in BI & Data Visualization, Series 2 · 40, which is where the business agrees what a metric means. In this course, Series 3 · 30 expresses that agreed definition as code"
   - topic: "Dashboards themselves"
     where: "covered in BI & Data Visualization — exposures here only record that a dashboard depends on a model"
 
 series:
   - slug: series1-dbt-fundamentals
     title: dbt Fundamentals
-    tagline: your first models, and the DAG that appears for free
+    tagline: turn SQL files into a project dbt builds in the right order
     level: beginner
     episodes:
       - n: "00"
@@ -58,6 +161,17 @@ series:
         hands_on: ["koan:author", "dbt"]
         core: true
         status: planned
+      # ALSO OWNS NODE SELECTION, added as a beat 2026-08-24. After `dbt run` it is the most
+      # typed thing in the tool, and it appeared in no episode and no brief anywhere in the
+      # track — the words "State Comparison" in the Series 3 CI/CD title were the only trace.
+      #   THE FOUR THAT COVER almost everything: `--select my_model`, `--select my_model+`
+      #   (it and everything downstream), `--select +my_model` (it and everything UP), and
+      #   `--exclude`. Plus `tag:` once tags exist.
+      #   WHY IT BELONGS HERE and not in an episode of its own: the everyday loop IS running a
+      #   SUBSET. Nobody builds the whole project while working on one model, and a reader who
+      #   finishes this episode without knowing that will rebuild everything for a week.
+      #   `state:modified+` is deliberately NOT here — it needs a stored manifest to compare
+      #   against, which is Series 3 · 45 in this course.
       - n: "10"
         slug: run-build-compile
         title: "dbt run, build & compile — The Everyday Loop"
@@ -105,6 +219,35 @@ series:
         hands_on: ["eyes", "dbt"]
         status: planned
 
+      # ADDED 2026-08-24, and it closes a hole in the WHOLE ACADEMY rather than just this
+      # track: git, branches, diffs and pull requests appear in ZERO episodes across all twelve
+      # curricula. Checked by grep, not assumed. The nearest thing anywhere is BI & Data
+      # Visualization, Series 3 · 15, which version-controls a dashboard.
+      # This track's own header promises to turn a folder of ad-hoc SELECTs into a
+      # VERSION-CONTROLLED, tested, documented project. Tested had a whole series, documented
+      # had two episodes, and version-controlled had nothing at all.
+      # SERIES 1, not later, because every episode after this one assumes the project is in a
+      # repo — and at 47 rather than earlier so it does not interrupt 05 → 10 → 15 → 20, which
+      # is the run that gets a first model working. Get it working, then make it safe.
+      # WHAT THE EPISODE OWES:
+      #   WHAT GOES IN      models, tests, seeds, dbt_project.yml, packages.yml.
+      #   WHAT NEVER DOES   profiles.yml, because it holds credentials. This is the episode
+      #                     that explains why dbt keeps that file OUTSIDE the project by
+      #                     default, which until now looked like an odd piece of trivia in
+      #                     Series 1 · 15.
+      #   .gitignore        target/, dbt_packages/, logs/ — all three are build output, and a
+      #                     diff full of compiled SQL is how a repo becomes unreviewable.
+      #   THE DIFF          a model's diff IS a SQL diff, and that is the whole argument for
+      #                     this tool over a folder of saved queries: you can SEE what changed,
+      #                     and so can the person who has to approve it.
+      # NOT A GIT TUTORIAL. Branch, commit, diff, merge, and stop. The reader came for dbt, and
+      # reviewing somebody else's change is its own episode later — Series 3 · 42 here.
+      - n: "47"
+        slug: the-project-in-git
+        title: "The Project in Git — What Belongs in the Repo, and What Must Never"
+        hands_on: ["koan:process:tool", "terminal"]
+        core: true
+        status: planned
       # SERIES 1 PROJECT, added 2026-08-24. The series had none: the core path
       # walked ten episodes with nothing built at the end of them.
       # sources -> staging -> marts, with the DAG dbt draws for you as the proof. Not a new subject;
@@ -118,7 +261,7 @@ series:
         status: planned
   - slug: series2-trustworthy-dbt
     title: Trustworthy dbt
-    tagline: make the numbers provable, not just repeatable
+    tagline: tests that catch a bad load, and a structure that survives
     level: intermediate
     episodes:
       - n: "00"
@@ -167,10 +310,46 @@ series:
         title: "Descriptions & Contracts — Documentation People Actually Trust"
         hands_on: ["koan:process:tool"]
         status: planned
+      # ALSO OWNS NAMING AND STYLE, added as a beat 2026-08-24, because the layer split is
+      # only half a convention if the files inside the layers are named however each person
+      # felt that day.
+      #   THE PREFIXES: stg_, int_, dim_, fct_. Boring on purpose — the point is that a
+      #   colleague can tell what a file IS from its name in a directory listing, without
+      #   opening it and without asking you.
+      #   DISTINCT FROM Data Modeling, Series 3 · 29, which names TABLES AND COLUMNS in a
+      #   schema somebody is designing. This is a naming convention for MODEL FILES in a
+      #   project, which is a different artifact with a different audience.
+      #   ENFORCE IT, do not document it: sqlfluff in the same pipeline that runs the tests.
+      #   A convention a human has to remember is a convention that decays, and the reader has
+      #   already met that argument once in this series — it is why the tests exist.
       - n: "40"
         slug: project-structure
         title: "Project Structure — staging / intermediate / marts, and Why the Split Holds"
         hands_on: ["koan:choose"]
+        core: true
+        status: planned
+      # ADDED 2026-08-24, and of everything in this pass it is the one the track most obviously
+      # owed: the header says the job is to "turn A FOLDER OF AD-HOC SELECTS into a
+      # version-controlled, tested, documented transformation project", and no episode did the
+      # turning. The reader was shown the destination ten times and never the journey — which
+      # is a problem, because arriving at a green field is not the job anyone is actually hired
+      # to do. They are hired because a pile already exists.
+      # AT 42, immediately after Series 2 · 40, because the split you are refactoring TOWARD has
+      # to exist in the reader's head before "refactor" means anything.
+      # THE EPISODE: one real 200-line Northwind query — the kind with the same subquery pasted
+      # three times, two CASE ladders and a join whose purpose nobody remembers. Decompose it
+      # into staging + intermediate + marts.
+      # THE KOAN IS THE POINT, and `equivalent` is why this episode can exist at all: the new
+      # model set must return EXACTLY what the old query returned. That assertion is the entire
+      # discipline of refactoring compressed into one rung — you have not refactored anything
+      # if the numbers moved, you have just rewritten it and hoped.
+      # THE HONEST BEAT: sometimes the old query was WRONG, and your faithful refactor
+      # faithfully reproduces the bug. Say what to do — fix it in a SEPARATE commit, after the
+      # equivalence is proved, never in the same change. Nobody can review both at once.
+      - n: "42"
+        slug: refactoring-a-query-pile
+        title: "Refactoring a Query Pile — One 200-Line SELECT Into a Layered Model Set"
+        hands_on: ["koan:equivalent", "koan:author"]
         core: true
         status: planned
       - n: "45"
@@ -193,62 +372,178 @@ series:
         status: planned
   - slug: series3-analytics-engineering-at-scale
     title: Analytics Engineering at Scale
-    tagline: a project a whole team can live in
+    tagline: move the project to ClickHouse, and work on it as a team
     level: advanced
+    # RENUMBERED WHOLE, 2026-08-24, and the reason is the first episode. The old series opened
+    # with `packages` and got to a columnar engine at 30, which meant two thirds of "at scale"
+    # ran on the same laptop-sized engine as Series 1. Backwards: at work the engine move is
+    # what STARTS this phase, not what decorates the end of it. So the move is now 00, the five
+    # episodes that follow are the adapter's real behaviour, and the team material — packages,
+    # metrics, exposures, review, CI, mesh — runs on top of a warehouse that justifies it.
+    #
+    # The old numbers all shifted. Every reference into this series was re-read by eye, which
+    # CurriculumSpec's own comment says is the only way: there were two, both pointing at the
+    # semantic layer at the old 3 · 10, and both now say 3 · 30 — the exclude in this file and
+    # the one in BI & Data Visualization.
     episodes:
+      # THE ENGINE MOVE, and the premise of the series. Absorbs the old 3 · 30
+      # "dbt on Columnar Engines", which was itself a merge of two earlier episodes — it is now
+      # first rather than seventh, which is the only change that matters.
+      # THE HEADLINE IS THAT MOST MODELS DO NOT CHANGE. Say that first and prove it, because a
+      # reader who believes an engine move means rewriting everything will never propose one.
+      # Then the ones that DO, which is the next five episodes.
+      # `equivalent` across the two engines is the assertion: the whole claim is that the same
+      # project produces the same numbers. `count:scanned` is the reason anybody bothered.
       - n: "00"
+        slug: moving-to-a-columnar-engine
+        title: "Moving to a Columnar Engine — The Same dbt Project, Pointed at ClickHouse"
+        hands_on: ["koan:equivalent", "koan:count:scanned", "duckdb", "clickhouse"]
+        core: true
+        status: planned
+      # ADDED 2026-08-24. The first thing that breaks after the move, and it breaks quietly.
+      # `view` on ClickHouse is not the cheap pointer it is on DuckDB or Postgres, and a
+      # staging layer built entirely of views — which is exactly what Series 1 · 30 taught, and
+      # correctly for that engine — turns into re-reading the raw data on every single query.
+      #   TABLE, and which MergeTree engine the adapter puts underneath it.
+      #   VIEW, and why the reader's Series 1 habit is now the expensive choice.
+      #   MATERIALIZED VIEW, which on ClickHouse is an INSERT TRIGGER and not a cached SELECT.
+      #     This is the single biggest impedance mismatch in the adapter and the place readers
+      #     lose days. The engine side is Data Warehousing, Series 3 · 05; what is new here is
+      #     that dbt's model of "a materialization" and ClickHouse's do not line up.
+      - n: "05"
+        slug: clickhouse-materializations
+        title: "Materializations on ClickHouse — MergeTree Tables and the View That Is Not Free"
+        hands_on: ["koan:choose", "koan:count:scanned", "clickhouse"]
+        status: planned
+      # ADDED 2026-08-24, absorbing the old 3 · 05 "Incremental Strategies — merge,
+      # insert_overwrite, append", which listed three strategies in the abstract. On a real
+      # columnar engine the list collapses to a decision, which is a better episode.
+      # THE FACT THE WHOLE EPISODE TURNS ON: ClickHouse has no UPDATE worth the name. So dbt's
+      # default `merge` strategy — the one Series 2 · 15 taught and the reader now trusts —
+      # cannot work the way they think it does.
+      #   INSERT_OVERWRITE BY PARTITION is the answer, and it is genuinely elegant: replace a
+      #     whole partition atomically instead of updating rows inside it. It also forces the
+      #     reader to have chosen a partition key deliberately, which is the real lesson.
+      #   APPEND, and when duplicates are acceptable because something downstream dedupes.
+      #   `rerun` is the assertion — run it twice, the totals must not double. That is the bug
+      #     this episode exists to prevent and it is invisible on the first run.
+      - n: "10"
+        slug: incremental-without-update
+        title: "Incremental Without UPDATE — Replacing a Partition Instead of Editing Rows"
+        hands_on: ["koan:rerun", "koan:choose", "clickhouse"]
+        core: true
+        status: planned
+      # ADDED 2026-08-24. Series 2 · 20 taught snapshots as the way to keep history, and on
+      # this engine that tool is largely gone — snapshots need the same UPDATE the episode
+      # above just established does not exist.
+      # WHAT REPLACES IT: ReplacingMergeTree, plus the thing everyone gets wrong — the
+      # replacement happens WHEN THE ENGINE FEELS LIKE IT, at an unspecified future merge. Your
+      # query sees duplicates until then.
+      #   FINAL forces it and costs real time; a GROUP BY with argMax is the cheaper habit.
+      #   `predict` is the right rung precisely because the honest answer to "how many rows
+      #   does this return" is "it depends when you ask" — which is the lesson.
+      # SCD Type 2 as a MODELLING idea stays where it lives: Data Modeling, Series 3 · 15.
+      # This is only what happens to that idea on an engine that cannot update a row.
+      - n: "15"
+        slug: history-without-snapshots
+        title: "History Without Snapshots — ReplacingMergeTree, FINAL and What Deduplication Costs"
+        hands_on: ["koan:predict", "koan:count:scanned", "clickhouse"]
+        status: planned
+      # ADDED 2026-08-24, and it is the episode that keeps the reader employed. Series 2 · 00
+      # taught `unique` and `not_null` and taught them as free. On a billion-row table `unique`
+      # is a full scan and a sort, and a reader who carries their Series 2 habits over will
+      # ship a test suite that costs more to run than the models it tests.
+      #   WHAT TO DO INSTEAD: assert on a WINDOW rather than the table (yesterday's partition,
+      #     not all history), sample deliberately and say so, and move the expensive checks off
+      #     the every-run path.
+      #   NOT_NULL stays cheap. Say which ones are still free — this must not read as "testing
+      #     is too expensive on ClickHouse", which is the wrong lesson and the one a reader
+      #     will take if the episode only lists costs.
+      #   `count:scanned` is the assertion, and it is the same rung Data Warehousing uses for
+      #     the same reason: it is the only honest way to grade "cheaper" without a stopwatch.
+      - n: "20"
+        slug: testing-a-big-table
+        title: "Testing a Big Table — Why unique Stops Being Free, and What to Assert Instead"
+        hands_on: ["koan:choose", "koan:count:scanned", "clickhouse"]
+        status: planned
+      - n: "25"
         slug: packages
         title: "Packages — Reuse Community Code (dbt_utils, codegen)"
         hands_on: ["koan:complete"]
         status: planned
-      - n: "05"
-        slug: incremental-strategies
-        title: "Incremental Strategies — merge, insert_overwrite, append"
-        hands_on: ["koan:rerun", "koan:choose"]
-        status: planned
-      - n: "10"
+      - n: "30"
         slug: semantic-layer-and-metrics
         title: "The Semantic Layer & Metrics — One Definition of Revenue, in Code"
         hands_on: ["koan:equivalent"]
         core: true
         status: planned
-      - n: "15"
+      # ALSO OWNS THE BREAKING CHANGE, added as a beat 2026-08-24. Exposures are the only thing
+      # in the project that knows a dashboard exists, so this is the one episode that can
+      # honestly answer the question every analytics engineer gets in their first month:
+      # "I need to rename a column and I do not know who is using it."
+      #   THE ANSWER IN THREE STEPS: the exposure list tells you WHO breaks. Add the new name
+      #   beside the old one and ship both. Remove the old one only after the consumers named
+      #   in the exposures have moved.
+      #   WHY NOT JUST RENAME IT: because the rename succeeds, the tests pass, dbt is perfectly
+      #   happy, and a dashboard nobody told you about goes blank on Monday morning. Nothing in
+      #   the project fails — which is exactly why this needs teaching rather than discovering.
+      - n: "35"
         slug: exposures
         title: "Exposures — Lineage All the Way to the Dashboard"
         hands_on: ["koan:complete"]
         status: planned
-      - n: "20"
+      - n: "40"
         slug: testing-strategy
         title: "Testing Strategy — Unit Tests, Contracts and Quality at Scale"
         hands_on: ["koan:author"]
         core: true
         status: planned
-      - n: "25"
+      # ADDED 2026-08-24, the second half of the academy's version-control hole. Series 1 · 47
+      # puts the project in a repo; this is the part that involves another person, and it is
+      # the act that most defines the job — an analytics engineer approves changes to numbers
+      # other people are paid to trust.
+      # AT 42, deliberately between testing strategy and CI/CD: you have to know what a good
+      # change looks like BY HAND before automating the check, or the pipeline is a ritual.
+      # WHAT A dbt PR DIFF ACTUALLY NEEDS, and none of it is obvious:
+      #   READ THE COMPILED SQL, not just the model file. A three-line change to a macro can
+      #     rewrite forty models, and the model diff shows you three lines.
+      #   THE QUESTION THAT OUTRANKS ALL OTHERS: does this change a NUMBER? A refactor that
+      #     must not (Series 2 · 42) and a fix that must are the same size on screen and could
+      #     not be more different, and only the author knows which this is — so the rule is
+      #     that they have to say, in the description.
+      #   WHO ELSE BREAKS: the DAG downstream, and the exposures at Series 3 · 35.
+      #   WHAT IS NOT WORTH A COMMENT: formatting, which sqlfluff already settled at
+      #     Series 2 · 40. Reviewers who argue about commas stop being read.
+      # `diagnose` on a planted PR that silently changes a total is the assertion, and it is a
+      # fair one — that is exactly the review this episode exists to make possible.
+      - n: "42"
+        slug: reviewing-a-model-change
+        title: "Reviewing a Model Change — Reading a Diff That Moves a Number"
+        hands_on: ["koan:diagnose", "koan:process:tool"]
+        core: true
+        status: planned
+      - n: "45"
         slug: ci-cd-for-dbt
         title: "CI/CD for dbt — Slim CI, State Comparison and dbt build in a Pipeline"
         hands_on: ["koan:process:tool"]
         core: true
         status: planned
-      # MERGED 2026-08-24 with the old 3 - 35 "Cross-Engine dbt". The two were near
-      # neighbours a reader could not tell apart: one said change your models for a
-      # columnar engine, the other said the same models run everywhere. That is one
-      # question with two halves, and splitting it cost an episode for no clarity.
-      # THE EPISODE: run the same project on PostgreSQL, DuckDB and ClickHouse. Most
-      # models are unchanged, which is the headline — then show the few that are not,
-      # and why: incremental strategy, the merge that ClickHouse does differently, and
-      # the wide-table shape a columnar engine rewards. Graded by `equivalent`, because
-      # the whole claim is that the numbers come out the same.
-      - n: "30"
-        slug: dbt-on-columnar-engines
-        title: "dbt on Columnar Engines — What Runs Unchanged, and What You Have to Rewrite"
-        hands_on: ["koan:equivalent", "koan:count:scanned", "duckdb", "clickhouse"]
-        status: planned
-      - n: "40"
+      # THE ONE EPISODE IN THE TRACK A READER CANNOT RUN, and the brief must say so in the
+      # prose rather than letting them find out: cross-project ref() needs dbt Enterprise or
+      # Enterprise+, the paid tiers of the dbt platform. Verified against the dbt docs on
+      # 2026-08-24 — do NOT write "dbt Cloud", which is a name dbt Labs is retiring under
+      # "One dbt". On dbt Core the honest approximation is importing the other project as a
+      # package, and it is worth showing, because it is what a reader without a licence will
+      # actually do.
+      # It stays because the DECISION is real and arrives whether or not the tooling does —
+      # one repo or several is an org-shape question every growing team hits. `koan:choose` is
+      # therefore the right and only rung: it grades the judgement, which is all there is here.
+      - n: "50"
         slug: dbt-mesh-and-multi-project
         title: "dbt Mesh & Multi-Project — When One Repo Stops Scaling"
         hands_on: ["koan:choose"]
         status: planned
-      - n: "45"
+      - n: "55"
         slug: project-staging-to-metrics
         title: "Project — A Production Northwind Project: Staging → Marts → Metrics"
         hands_on: ["koan:author", "koan:process:tool", "dbt"]

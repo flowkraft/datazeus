@@ -44,7 +44,7 @@ excludes:
 series:
   - slug: series1-linux-for-data
     title: Linux for Data
-    tagline: the terminal, and why you end up living in it
+    tagline: do real data work from the terminal, with shell tools alone
     level: beginner
     episodes:
       - n: "00"
@@ -137,7 +137,7 @@ series:
         status: planned
   - slug: series2-postgres-in-production
     title: Running PostgreSQL in Production
-    tagline: the database that has to stay up
+    tagline: run PostgreSQL yourself — backups, locks, migrations, users
     level: intermediate
     episodes:
       - n: "00"
@@ -213,7 +213,7 @@ series:
         status: planned
   - slug: series3-reliability
     title: Reliability
-    tagline: what happens when the nightly job dies at 3 a.m.
+    tagline: keep jobs running, and find out fast when one stops
     level: advanced
     episodes:
       - n: "00"

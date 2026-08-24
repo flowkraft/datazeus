@@ -5,7 +5,7 @@ import spock.lang.Stepwise
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════════╗
- * ║  KOANS — Analytics Engineering (dbt) · Series 1 · 30
+ * ║  KOANS — Analytics Engineering with dbt · Series 1 · 30
  * ╚══════════════════════════════════════════════════════════════════════════╝
  *
  * The Staging Layer — Clean Raw Northwind Once, Reuse It Everywhere
@@ -21,6 +21,9 @@ import spock.lang.Stepwise
  *   _internal/KoanBase.groovy       the ___ blank and the assertion helpers
  *   _internal/JvmKoanBase.groovy    process and counter helpers
  *   courses/dbt/curriculum.yaml   the track's decisions
+ *
+ * ── THE ENGINE FOR THIS SERIES ──────────────────────────────────────────
+ *   DuckDB, via dbt-duckdb. No server and no credentials — the file is the database.
  *
  * ── THE RULES ───────────────────────────────────────────────────────────
  *  1. THE BLANK IS A DATA DECISION, NEVER A SYNTAX FACT. If a blank can be answered by

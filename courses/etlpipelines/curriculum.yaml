@@ -25,7 +25,7 @@ excludes:
   - topic: "Designing the target schema"
     where: "covered in Data Modeling"
   - topic: "Doing the T as version-controlled, tested models"
-    where: "covered in Analytics Engineering (dbt) — this track owns Extract and Load"
+    where: "covered in Analytics Engineering with dbt — this track owns Extract and Load"
   - topic: "cron internals, monitoring, alerting and on-call"
     where: "covered in Data Ops — here a pipeline just gets handed to the scheduler"
 
@@ -48,7 +48,7 @@ excludes:
 series:
   - slug: series1-etl-fundamentals
     title: ETL Fundamentals
-    tagline: move data, without losing any of it
+    tagline: build a pipeline that loads data and is safe to run twice
     level: beginner
     episodes:
       - n: "00"
@@ -135,7 +135,7 @@ series:
         status: planned
   - slug: series2-maintainable-pipelines
     title: Pipelines You Can Maintain
-    tagline: build it to survive contact with reality
+    tagline: handle bad rows, late data and failures without hand-fixing
     level: intermediate
     episodes:
       - n: "00"
@@ -275,7 +275,7 @@ series:
         status: planned
   - slug: series3-production-data-flow
     title: Production Data Flow
-    tagline: ELT at volume, and the day you have to rerun a month
+    tagline: load a star schema, track changes, and re-run a whole month
     level: advanced
     episodes:
       - n: "00"

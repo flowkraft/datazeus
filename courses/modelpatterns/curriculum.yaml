@@ -97,7 +97,7 @@ excludes:
 series:
   - slug: series1-the-core-four
     title: The Core Four
-    tagline: the patterns under almost every business schema
+    tagline: the party model, roles, effective dating and contact details
     level: beginner
     episodes:
       # Deliberately first. It is the pattern with the highest ratio of "changes how you
@@ -139,7 +139,7 @@ series:
 
   - slug: series2-the-business-flows
     title: The Business Flows
-    tagline: order to cash, and the models it drags along
+    tagline: how products, orders, invoices and inventory get modelled
     level: intermediate
     episodes:
       - n: "00"
@@ -176,7 +176,7 @@ series:
 
   - slug: series3-abstraction-and-its-price
     title: Abstraction and Its Price
-    tagline: how far to generalize, and when to stop
+    tagline: how far to make a model generic, and when to stop
     level: advanced
     episodes:
       # Volume 3's real subject, and the episode this whole series exists to earn the right

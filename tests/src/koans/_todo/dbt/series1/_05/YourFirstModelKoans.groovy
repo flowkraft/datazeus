@@ -5,7 +5,7 @@ import spock.lang.Stepwise
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════════╗
- * ║  KOANS — Analytics Engineering (dbt) · Series 1 · 05
+ * ║  KOANS — Analytics Engineering with dbt · Series 1 · 05
  * ╚══════════════════════════════════════════════════════════════════════════╝
  *
  * Your First Model — A SELECT That Becomes a View (stg_orders)
@@ -22,6 +22,9 @@ import spock.lang.Stepwise
  *   _internal/JvmKoanBase.groovy    process and counter helpers
  *   courses/dbt/curriculum.yaml   the track's decisions
  *
+ * ── THE ENGINE FOR THIS SERIES ──────────────────────────────────────────
+ *   DuckDB, via dbt-duckdb. No server and no credentials — the file is the database.
+ *
  * ── THE RULES ───────────────────────────────────────────────────────────
  *  1. THE BLANK IS A DATA DECISION, NEVER A SYNTAX FACT. If a blank can be answered by
  *     reading the docs instead of the data, it is the wrong blank.
@@ -32,7 +35,6 @@ import spock.lang.Stepwise
  *
  * ── WHAT THIS EPISODE'S RUNGS OBLIGE YOU TO WRITE ───────────────────────
  *   AUTHOR — no scaffolding. They write the whole thing, graded on the result.
- *   SURFACE `dbt` — the dbt CLI (dbt run / build / test)
  *
  * ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
  * GOAL: TODO — one sentence.

@@ -47,7 +47,7 @@ excludes:
   - topic: "Designing the dimensional model — grain, SCD type, star vs snowflake"
     where: "covered in Data Modeling; here you build and query the model"
   - topic: "The pipelines that load it"
-    where: "covered in ETL & Data Pipelines and Analytics Engineering (dbt)"
+    where: "covered in ETL & Data Pipelines and Analytics Engineering with dbt"
   - topic: "Dashboards, metric definitions and delivery to business users"
     where: "covered in BI & Data Visualization"
 
@@ -68,7 +68,7 @@ excludes:
 series:
   - slug: series1-warehousing-fundamentals
     title: Warehousing Fundamentals
-    tagline: why a second copy of your data is worth it
+    tagline: build a warehouse, load it, and prove it matches the source
     level: beginner
     episodes:
       # SOURCE (kimball): The premise of the Toolkit: the reporting schema is a second, differently-shaped copy.
@@ -216,7 +216,7 @@ series:
         status: planned
   - slug: series2-columnar-engines-and-cubes
     title: Columnar Engines & Cubes
-    tagline: the machinery that makes it fast
+    tagline: make queries fast with columnar engines and cubes
     level: intermediate
     episodes:
       # SOURCE (stonebraker): The C-Store argument for column-oriented storage, which DuckDB and ClickHouse both descend from.
@@ -311,7 +311,7 @@ series:
         status: planned
   - slug: series3-advanced-warehousing
     title: Advanced Warehousing
-    tagline: scale, cost, and the modern stack
+    tagline: billions of rows, streaming loads, and controlling the cost
     level: advanced
     episodes:
       - n: "00"

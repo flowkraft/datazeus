@@ -111,7 +111,7 @@ excludes:
 series:
   - slug: series1-read-a-real-schema
     title: Read a Real Schema
-    tagline: open the repo, find the six tables that matter
+    tagline: read the database schemas of four real open-source apps
     level: beginner
     episodes:
       # Method first, deliberately. Without it every later episode has to re-explain how to
@@ -181,7 +181,7 @@ series:
 
   - slug: series3-rebuild-it
     title: Build Your Own
-    tagline: from what you read to what you ship
+    tagline: use what you read to design and build your own app
     level: intermediate
     episodes:
       - n: "00"

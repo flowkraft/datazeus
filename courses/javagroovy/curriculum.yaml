@@ -237,7 +237,7 @@ excludes:
 series:
   - slug: series1-jvm-fundamentals
     title: Java & Groovy for Data Fundamentals
-    tagline: from a main method to a script that moves data
+    tagline: write a Java or Groovy script that reads and reshapes data
     level: beginner
     episodes:
       # Groovy leads the track on purpose: a reader who has to create a Maven project
@@ -638,7 +638,7 @@ series:
   # controllers, no DI, no web layer.
   - slug: series4-frameworks
     title: Frameworks, Where They Earn It
-    tagline: what sits between your code and the database
+    tagline: use JPA, Hibernate and Spring to talk to a database
     level: advanced
     episodes:
       # JPA THE SPEC, on its own, because it is not a Spring thing — jakarta.persistence runs

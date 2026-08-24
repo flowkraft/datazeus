@@ -218,7 +218,7 @@ excludes:
   - topic: "Writing queries against these schemas"
     where: "covered in Learn SQL"
   - topic: "Loading the model — pipelines, SCD-2 loads, backfills"
-    where: "covered in ETL & Data Pipelines and Analytics Engineering (dbt)"
+    where: "covered in ETL & Data Pipelines and Analytics Engineering with dbt"
   - topic: "Running, tuning and migrating the live database"
     where: "covered in Data Ops — this track designs the change, that one ships it safely"
   # These three were only ever recorded in lesson comments, which is the wrong file: the
@@ -285,7 +285,7 @@ series:
   # artifact, so the series can be checked against its own promise.
   - slug: series1-modeling-fundamentals
     title: Modeling Fundamentals
-    tagline: read a schema, then rebuild it yourself
+    tagline: read a schema, then design and create tables yourself
     level: beginner
     episodes:
       - n: "00"
@@ -506,7 +506,7 @@ series:
   # both halves, and episodes 00 and 05 are what make the first half true.
   - slug: series2-modeling-for-the-real-world
     title: Modeling for the Real World
-    tagline: design one from scratch, then survive the change
+    tagline: design a schema from a brief, and change it safely later
     level: intermediate
     episodes:
       # NEW, and the gap that mattered most: 31 episodes and nobody ever designed anything.
@@ -771,7 +771,7 @@ series:
 
   - slug: series3-dimensional-modeling
     title: Dimensional Modeling
-    tagline: model it for the questions, not the transactions
+    tagline: design star schemas for reporting, not for transactions
     level: advanced
     episodes:
       # SOURCE (kimball): FACTS and DIMENSIONS — the core distinction the whole Toolkit is built on.

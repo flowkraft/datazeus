@@ -76,7 +76,7 @@ excludes:
 series:
   - slug: series1-ai-as-a-copilot
     title: AI as Your Data Copilot
-    tagline: get an answer, and know whether to trust it
+    tagline: use AI to write SQL, and check what it gives you
     level: beginner
     episodes:
       - n: "00"
@@ -141,7 +141,7 @@ series:
 
   - slug: series2-embeddings-and-retrieval
     title: Embeddings & Retrieval
-    tagline: teach it about your data, not the internet's
+    tagline: embeddings, vector search and RAG on your own data
     level: intermediate
     episodes:
       - n: "00"
@@ -221,7 +221,7 @@ series:
 
   - slug: series3-agents-and-production
     title: Agents, Evaluation & Production
-    tagline: ship it without regretting it later
+    tagline: give an AI tools, limit what it can touch, and test it
     level: advanced
     episodes:
       # CORE, added 2026-08-24: Series 3 - 10 (read-only contracts) is core and cannot
