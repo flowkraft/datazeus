@@ -1,0 +1,107 @@
+---
+title: "Text Cleaning — Trimming, Splitting and Matching Messy Strings"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-python"
+tags: []
+level: "intermediate"
+module: "series2-real-data"
+order: 27
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/python/curriculum.yaml       the track's decisions
+      datasets/README.md                   the three dataset tiers, and why
+      tests/src/koans/python/conftest.py   the koan rules and helpers
+
+    HOW THIS TRACK IS HANDS-ON
+      Jupyter is the EXPLORE surface, koans are the GRADED surface — exactly the
+      split Learn SQL has between CloudBeaver and its koans. DataPallas ships
+      JupyterLab; the koans run in Docker so nobody installs Python.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: make two spellings of the same thing join to each other, and get a number
+    out of a column that is currently text.
+    LIBRARIES: the .str accessor — strip, lower, replace, split(expand=True),
+    contains, extract — and `re` only where a pattern genuinely needs it.
+
+    DECISION — WHY THIS IS NOT PART OF 30. The track had no string episode until
+    2026-08-24, and folding it into "Cleaning & Validation" would have merged two
+    different questions that share a word:
+
+        HERE (27)   the value is REPAIRABLE. " ALFKI " and "alfki" are the same
+                    customer; normalise them so the join finds them.
+        AT 30       the value is NOT repairable. A quantity of -5, a date in 1899,
+                    a required field that is empty. Now decide: fix, quarantine, or
+                    fail the job.
+
+    The series therefore reads parse (25) → repair (27) → decide (30), which is the
+    order the work actually happens in. Getting these backwards is why people write
+    validation that rejects rows they could have fixed.
+
+    CORE, unlike Excel at 02: nobody escapes string cleaning, whatever their employer
+    sends them.
+
+    ── THE FIVE THINGS TO TEACH, IN THIS ORDER ─────────────────────────────
+      1. TRAILING WHITESPACE THAT BREAKS A JOIN. The most common and most invisible
+         bug in this episode: " ALFKI" and "ALFKI" look identical in a printed frame
+         and in a Jupyter cell, and merge on them silently drops the row. Teach the
+         diagnosis, not just the fix — comparing .nunique() before and after .str.strip()
+         is how you find it without knowing to look.
+      2. CASE AND ACCENT NORMALISATION for matching, and the warning that goes with it:
+         normalise a COPY used for joining, never the value you display back.
+      3. ONE COLUMN HOLDING TWO FIELDS — "Lastname, Firstname" — with split(expand=True),
+         and what happens on the row that has no comma.
+      4. EXTRACTING A VALUE FROM FREE TEXT — the invoice number inside a Notes field —
+         with .str.extract and one capture group. This is where `re` earns its place, and
+         where to say plainly: a regex you cannot read in six months is a bug waiting.
+      5. "1.234,56" → 1234.56. The European decimal comma, which is in the messy file
+         already and which is the one repair in this list that changes a number rather
+         than a label. Connects straight back to 15's encoding lesson: the same export,
+         the same locale, two different symptoms.
+
+    DATASET: messy/orders-export.csv — already carries the decimal commas and the quoted
+    field. If a defect on this list is not in the file yet, ADD IT THERE and record it in
+    datasets/messy/README.md against this episode. Do not invent a second file: the whole
+    value of that CSV is that one small file carries every text defect the track teaches.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:complete
+      koan:diagnose
+      dataset: messy
+      koan file: tests/src/koans/python/series2/_27/test_text_cleaning.py
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the code
+
+{/* BEAT 2 — the libraries, one at a time, each with something the reader types.
+    Show it in a notebook cell where a notebook is the honest place for it. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    Use the whitespace join: a merge that quietly matches 89 of 91 rows, a total
+    that is 2% light, and nothing anywhere that raises. The habit worth leaving
+    them with is the one from Series 1 · 35 — after any merge, did your key count
+    change? */}
+
+TODO

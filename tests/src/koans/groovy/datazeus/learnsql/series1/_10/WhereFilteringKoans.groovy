@@ -143,7 +143,7 @@ class WhereFilteringKoans extends KoanBase {
         ''')
     }
 
-    // 12) Capstone — no scaffolding. Write the WHOLE query: name and price of every
+    // 12) The whole query — no scaffolding. Write the WHOLE query: name and price of every
     //     product that costs more than 90. (Two luxury items, one of them a sausage.)
     def "write it yourself: the luxury shelf"() {
         expect:

@@ -1,0 +1,27 @@
+member,email,joined,member_status,title,author,author2,isbn,category,copy_note,notes,borrowed,returned,fine_paid,last_edited,edited_by
+Sarah Okonkwo,sarah.ok@example.com,2019-03-04,active,Dune,Frank Herbert,,9780441013593,Science Fiction,copy 1,,2026-06-02,2026-06-20,,2026-06-20,TB
+Sarah Okonkwo,sarah.ok@example.com,2019-03-04,active,The Silk Roads,Peter Frankopan,,9781408839997,History,,,2026-07-01,2026-07-19,,2026-07-19,TB
+Tom Béres,tberes@example.com,2020-11-12,active,Dune,Frank Herbert,,9780441013593,Science Fiction,copy 2,,2026-06-05,2026-07-02,2.40,2026-07-02,HP
+Tom Béres,tberes@example.com,2020-11-12,active,Dune Messiah,Frank Herbert,,9780575074354,Science Fiction,,"2nd in series",2026-07-10,,,2026-07-10,HP
+Aisha Rahman,a.rahman@example.com,2021-01-20,active,Good Omens,Terry Pratchett,Neil Gaiman,9780552137034,Fantasy,,,2026-05-14,2026-06-01,,2026-06-01,TB
+Aisha Rahman,a.rahman@example.com,2021-01-20,active,Dune,Frank Herbert,,9780441013593,Science Fiction,copy 1,,2026-07-08,,,2026-07-08,TB
+Aisha Rahman,a.rahman@example.com,2021-01-20,active,The Silk Roads,Peter Frankopan,,9781408839997,History,,,2026-07-08,,,2026-07-08,TB
+Marcus Lindqvist,marcus.l@example.com,2019-09-30,active,Riverside: A Local History,H. Pettifer,,,Local History,donated 1998,"no ISBN - donated; fragile spine",2026-04-11,2026-05-02,,2026-05-02,HP
+Marcus Lindqvist,marcus.l@example.com,2019-09-30,active,The Pragmatic Programmer,Andrew Hunt,David Thomas,9780135957059,Computing,2nd edition,"20th anniversary ed.",2026-06-18,2026-07-09,,2026-07-09,TB
+Priya Nair,p.nair@example.com,2022-06-15,active,The Pragmatic Programmer,Andrew Hunt,David Thomas,020161622X,Computing,1st edition,"ISBN-10; superseded by the 2nd ed.",2026-06-20,2026-07-14,0.60,2026-07-14,HP
+Priya Nair,p.nair@example.com,2022-06-15,active,Where the Wild Things Are,Maurice Sendak,,9780099408390,Picture Books 3-5,,"large print",2026-07-15,,,2026-07-15,TB
+Danny O'Shea,d.oshea@example.com,2023-02-02,lapsed,Dune,Frank Herbert,,9780441013593,Science Fiction,copy 3,,2026-05-30,2026-06-21,,2026-06-21,HP
+Danny O'Shea,d.oshea@example.com,2023-02-02,lapsed,Good Omens,Terry Pratchett,Neil Gaiman,9780552137034,Fantasy,,,2026-07-02,2026-07-20,,2026-07-20,TB
+Elena Fischer,e.fischer@example.com,2020-05-18,active,Riverside: A Local History,H. Pettifer,,,Local History,donated 1998,"no ISBN - donated",2026-06-25,,,2026-06-25,TB
+Elena Fischer,e.fischer@example.com,2020-05-18,active,The Silk Roads,Peter Frankopan,,9781408839997,History,,"trans. from the German",2026-03-09,2026-04-04,1.20,2026-04-04,HP
+Elena Fischer,e.fischer@example.com,2020-05-18,active,Dune,Frank Herbert,,9780441013593,Science Fiction,copy 4,,2026-07-11,,,2026-07-11,TB
+Kwame Mensah,k.mensah@example.com,2024-08-21,active,Where the Wild Things Are,Maurice Sendak,,9780099408390,Picture Books 3-5,,,2026-06-09,2026-06-27,,2026-06-27,HP
+Kwame Mensah,k.mensah@example.com,2024-08-21,active,The Very Hungry Caterpillar,Eric Carle,,9780241003008,Picture Books 3-5,,"board book; ages 0-3 really",2026-06-09,2026-06-27,,2026-06-27,HP
+Sarah Okonkwo,sarah.ok@example.com,2019-03-04,active,Good Omens,Terry Pratchett,Neil Gaiman,9780552137034,Fantasy,,,2026-07-16,,,2026-07-16,TB
+Tom Béres,tberes@example.com,2020-11-12,active,Sapiens,Yuval Noah Harari,,9780099590088,History,,"orig. Hebrew; trans. Harari + Purcell",2026-07-17,,,2026-07-17,TB
+Marcus Lindqvist,marcus.l@example.com,2019-09-30,active,Dune,Frank Herbert,,9780441013593,Science Fiction,copy 2,,2026-07-19,,,2026-07-19,HP
+Priya Nair,p.nair@example.com,2022-06-15,active,The Illustrated Riverside,H. Pettifer,J. Pettifer,,Local History,fragile - ref only,"no ISBN; reference only - do not lend",2026-05-05,2026-05-12,,2026-05-12,HP
+Jonah Whitfield,j.whitfield@example.com,2021-07-07,left,Sapiens,Yuval Noah Harari,,9780099590088,History,,,2026-02-03,2026-02-24,,2026-02-24,HP
+Jonah Whitfield,j.whitfield@example.com,2021-07-07,left,Dune,Frank Herbert,,9780441013593,Science Fiction,copy 3,,2026-03-01,2026-03-19,0.80,2026-03-19,TB
+Rosa Delgado,r.delgado@example.com,2025-01-14,active,The Very Hungry Caterpillar,Eric Carle,,9780241003008,Picture Books 3-5,,,2026-07-20,,,2026-07-20,TB
+Rosa Delgado,r.delgado@example.com,2025-01-14,active,Dune,Frank Herbert,,9780593099322,Science Fiction,copy 5,"2021 film tie-in reprint - different ISBN, same book",2026-07-21,,,2026-07-21,TB

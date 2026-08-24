@@ -1,0 +1,64 @@
+---
+title: "Batches and Transactions — Inserting Many Rows Quickly and Safely"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "intermediate"
+module: "series2-real-data"
+order: 35
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: load a lot of rows without a round trip per row, and leave nothing behind on failure.
+    CONSTRUCTS: addBatch/executeBatch, autoCommit(false), commit, rollback, batch size.
+    THE WORKED EXAMPLE for the counter-assertion shape — the koan file for this episode is
+    already written and is the reference for the whole track. Read it before writing any other.
+    MEASURED, and it decided the koan's numbers: 20,000 naive inserts take 27s, batched 3.5s.
+    So the naive koan uses 2,000 rows (the counter still says one trip per row, in 3 seconds).
+    A koan nobody waits for is a koan nobody runs.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:count:roundtrips
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series2/_35/BatchingAndTransactionsKoans.groovy
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here. */}
+
+TODO

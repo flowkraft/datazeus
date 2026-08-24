@@ -1,0 +1,106 @@
+---
+title: "Excel Files — Reading the Spreadsheets Your Business Sends You"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-python"
+tags: []
+level: "intermediate"
+module: "series2-real-data"
+order: 2
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/python/curriculum.yaml       the track's decisions
+      datasets/README.md                   the three dataset tiers, and why
+      tests/src/koans/python/conftest.py   the koan rules and helpers
+
+    HOW THIS TRACK IS HANDS-ON
+      Jupyter is the EXPLORE surface, koans are the GRADED surface — exactly the
+      split Learn SQL has between CloudBeaver and its koans. DataPallas ships
+      JupyterLab; the koans run in Docker so nobody installs Python.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: open a real .xlsx and get a DataFrame whose numbers and dates are actually
+    numbers and dates.
+    LIBRARIES: pd.read_excel with the openpyxl engine — sheet_name, header, skiprows,
+    usecols, dtype. Mention openpyxl directly only for the one thing pandas cannot do
+    for you: looking at a cell to find out where the real header starts.
+
+    DECISION — WHY THIS EPISODE EXISTS AT ALL. Java & Groovy has carried Series 2 · 05
+    "Excel with POI" from the start, on the grounds that the real list is .xlsx and a
+    reporting company that cannot read one is not credible. Python — the language where
+    this is one line — had nothing until 2026-08-24. Nobody defended that; it was an
+    oversight, and it is the episode most likely to be someone's first real day of work.
+
+    DECISION — NOT CORE, matching the Java call exactly: whether you need Excel is
+    decided by your employer, not by the craft. It sits at 02 rather than renumbering
+    the series, the same way Learn SQL carries 06 and 08.
+
+    ── THE FOUR DEFECTS, AND WHY THEY CANNOT LIVE IN A CSV ─────────────────
+    This is the whole reason the episode is worth writing and not a footnote on 00.
+    None of these is possible in a text file, so a reader who has done the CSV episodes
+    has met none of them:
+
+      1. A TITLE ROW ABOVE THE HEADER. "Q3 Orders — Confidential" in A1, the real
+         header on row 3. read_csv has no equivalent problem; here the default gives
+         you a frame whose columns are called `Unnamed: 1`.
+      2. MERGED CELLS. One "Customer" heading spanning two columns. openpyxl reports
+         the value once and NaN for the rest of the span.
+      3. A DATE THAT ARRIVES AS 45123. Excel stores dates as days since 1899-12-30.
+         Read the column as a number and you get a five-digit integer that is a
+         perfectly plausible order ID.
+      4. A NUMBER STORED AS TEXT. The leading apostrophe is invisible in Excel, and the
+         column comes through as object dtype — so .sum() concatenates instead of adding,
+         which is the worst failure in the file because it produces an answer.
+
+    DATASET: generated (tier 3), and the reasoning is worth keeping. An .xlsx is a zip of
+    XML, so committing one breaks tier 2's entire rationale — that a reviewer can see the
+    defect in a diff. Instead the four defects are AUTHORED in a generator script, which
+    is reviewable text, and the binary is built from it:
+        python datasets/generated/make_messy_excel.py
+    Same seed discipline as every other generator, so the koan's expected answers are
+    stable for every learner.
+
+    JUPYTER: honest here — .head() after each read_excel argument you change is exactly
+    how you find where the header really starts. This is the episode where poking beats
+    reading the docs.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:predict
+      koan:diagnose
+      dataset: generated
+      koan file: tests/src/koans/python/series2/_02/test_excel_files.py
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the code
+
+{/* BEAT 2 — the libraries, one at a time, each with something the reader types.
+    Show it in a notebook cell where a notebook is the honest place for it. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The strongest one in this episode is defect 4: a text column that sums to
+    "1200.00850.00475.00" — or, if every value happens to be an integer-looking
+    string, a total that is silently wrong rather than obviously broken. */}
+
+TODO

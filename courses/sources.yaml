@@ -1,0 +1,237 @@
+# ═══════════════════════════════════════════════════════════════════════════════════════
+#  THE SOURCE REGISTRY — every author this academy credits, in one place
+# ═══════════════════════════════════════════════════════════════════════════════════════
+#
+# WHY THIS FILE EXISTS. Attribution used to live in a `# SOURCE (kimball):` COMMENT, and a
+# comment cannot be enforced. Nothing stopped someone adding a Kimball episode and forgetting
+# it, which is the same honour system that had already failed three times in this repo. So
+# attribution is now a FIELD:
+#
+#     credits:
+#       - source: kimball        # -> the registry below: author, work, edition, ISBN, trademark
+#         concept: "Transaction, periodic snapshot and accumulating snapshot fact tables"
+#         where: "ch. 4"         # OPTIONAL — where in the work, so the writer can find it fast
+#
+# ONE FIELD, and everything needed to credit properly is reachable from it. The split is on
+# what REPEATS: the book details are identical for all thirty Kimball episodes and live once
+# in the registry, so verifying an ISBN is one edit and not thirty. `concept` and `where` vary
+# per episode and live on the episode. A fat `source:` object copied onto every episode would
+# put Kimball's ISBN in thirty places, and this repo has already been burned three times by
+# exactly that — a title in six places, hands_on in forty-two files, koan titles in nineteen.
+#
+# `credits` is EMPTY BY DEFAULT — most episodes teach textbook material with no owner and must
+# not be attributed to anyone. It is populated only where an episode teaches a named person's
+# named framework, and CurriculumSpec then enforces three things nobody has to remember:
+#   1. every `credits[].source` resolves to a key in this file
+#   2. an episode with credits carries the matching TAG, and an episode with an author tag
+#      carries the matching credit — the badge and the bibliography cannot drift apart
+#   3. `concept` is filled in, because "credited to Kimball" without saying WHAT is useless
+#      to the person who eventually writes the episode
+#
+# WHEN TO ADD A SOURCE — the test, and it is the whole discipline:
+#     WOULD A READER BENEFIT FROM BEING HANDED THAT AUTHOR'S BOOK?
+#   yes  a named thing with one canonical source — Kimball's accumulating snapshot, Evans'
+#        bounded context, Tufte's lie factor, Linstedt's hubs and links
+#   no   textbook material with no owner — joins, indexing, CDC, "choosing the right chart".
+#        Picking one author for those is arbitrary AND it dilutes the credits that are real
+#
+# ⚠ EDITIONS AND ISBNs BELOW ARE RECORDED FROM MEMORY AND MUST BE VERIFIED against the
+#   publisher before any article citing them is published. They are here so the article
+#   template has a slot to fill, not because they have been checked. Verify, then delete this
+#   warning for the entry you checked.
+#
+# The full rules on what may be reproduced, quoting, diagrams, book covers, trademarks and the
+# disclaimer line live in courses/learnsql/curriculum.yaml under "HOW TO CREDIT, AND STAY OUT
+# OF TROUBLE". Read them before writing an attributed episode.
+
+sources:
+  kimball:
+    author: "Ralph Kimball & Margy Ross"
+    work: "The Data Warehouse Toolkit"
+    edition: "3rd"
+    publisher: "Wiley"
+    year: 2013
+    isbn: "978-1118530801"
+    also: >-
+      Kimball & Caserta, "The Data Warehouse ETL Toolkit" (Wiley, 2004) for the loading
+      material used in ETL & Data Pipelines.
+    note: >-
+      "Kimball Group" is a business name, not a generic term. Say "Kimball's method", never
+      anything implying we are affiliated with or certified by the Kimball Group.
+
+  inmon:
+    author: "Bill Inmon"
+    work: "Building the Data Warehouse"
+    edition: "4th"
+    publisher: "Wiley"
+    year: 2005
+    isbn: "978-0764599446"
+    note: >-
+      Paired with Kimball in Data Warehousing Series 1 · 05. The academy takes no side; present
+      both positions and say what most teams actually run today.
+
+  linstedt:
+    author: "Dan Linstedt & Michael Olschimke"
+    work: "Building a Scalable Data Warehouse with Data Vault 2.0"
+    publisher: "Morgan Kaufmann"
+    year: 2015
+    isbn: "978-0128025109"
+    trademark: >-
+      Linstedt asserts a mark on "Data Vault 2.0" and runs a certification programme around it.
+      The episode must read as "here is Linstedt's Data Vault 2.0 method" and NEVER as anything
+      we are licensed, certified or partnered to deliver. Check the current position before
+      publishing; marks change. This is the one episode in the academy where this genuinely
+      bites.
+
+  codd:
+    author: "E. F. Codd"
+    work: "A Relational Model of Data for Large Shared Data Banks"
+    publisher: "Communications of the ACM 13(6)"
+    year: 1970
+    note: >-
+      A paper, not a book — cite it as one, with a DOI rather than an ISBN. Boyce-Codd Normal
+      Form is Raymond Boyce and Codd jointly; use the full name so a reader understands why
+      BCNF is not simply "3.5NF".
+
+  evans:
+    author: "Eric Evans"
+    work: "Domain-Driven Design: Tackling Complexity in the Heart of Software"
+    publisher: "Addison-Wesley"
+    year: 2003
+    isbn: "978-0321125217"
+    note: >-
+      BOUNDED CONTEXT and UBIQUITOUS LANGUAGE are his exact terms — the Data Modeling track has
+      a DataPallas tab named after the second one, so get the first use right.
+
+  ambler:
+    author: "Scott Ambler & Pramod Sadalage"
+    work: "Refactoring Databases: Evolutionary Database Design"
+    publisher: "Addison-Wesley"
+    year: 2006
+    isbn: "978-0321293534"
+    note: >-
+      The canonical source for schema-change patterns and, importantly, their NAMES. Use them.
+
+  tufte:
+    author: "Edward R. Tufte"
+    work: "The Visual Display of Quantitative Information"
+    edition: "2nd"
+    publisher: "Graphics Press"
+    year: 2001
+    isbn: "978-0961392147"
+    note: >-
+      LIE FACTOR, DATA-INK RATIO and CHARTJUNK are his. The lie factor is a number you can
+      actually compute, which is what makes the episode more than taste. Tufte self-publishes
+      and is protective of his images — draw every example yourself.
+
+  cleveland-mcgill:
+    author: "William S. Cleveland & Robert McGill"
+    work: "Graphical Perception: Theory, Experimentation, and Application to the Development of Graphical Methods"
+    publisher: "Journal of the American Statistical Association 79(387)"
+    year: 1984
+    note: >-
+      A paper, not a book. The perception ranking — position beats length beats angle beats
+      area beats colour — is their EXPERIMENT, not an opinion, and citing the evidence is what
+      lifts BI Series 1 · 05 above personal preference.
+
+  few:
+    author: "Stephen Few"
+    work: "Information Dashboard Design"
+    edition: "2nd"
+    publisher: "Analytics Press"
+    year: 2013
+    isbn: "978-1938377006"
+    note: >-
+      The one-screen argument, and what belongs top-left. His position, worth naming as his.
+
+  knaflic:
+    author: "Cole Nussbaumer Knaflic"
+    work: "Storytelling with Data"
+    publisher: "Wiley"
+    year: 2015
+    isbn: "978-1119002253"
+    note: >-
+      Annotation, narrative order and pre-attentive attention.
+
+  chen:
+    author: "Peter Chen"
+    work: "The Entity-Relationship Model — Toward a Unified View of Data"
+    publisher: "ACM Transactions on Database Systems 1(1)"
+    year: 1976
+    note: >-
+      The paper that gave us entities, attributes and relationships as a modelling language.
+      Every ER diagram a reader will ever open descends from it — worth one sentence saying so.
+
+  karwin:
+    author: "Bill Karwin"
+    work: "SQL Antipatterns: Avoiding the Pitfalls of Database Programming"
+    publisher: "Pragmatic Bookshelf"
+    year: 2010
+    isbn: "978-1934356555"
+    note: >-
+      The canonical catalogue of schema mistakes, and it NAMES them — Entity-Attribute-Value,
+      Jaywalking (the comma-separated list in a column), Naive Trees. Use his names; a reader
+      who has them can say "that is EAV" in a review instead of "that looks wrong".
+
+  celko:
+    author: "Joe Celko"
+    work: "Joe Celko's Trees and Hierarchies in SQL for Smarties"
+    edition: "2nd"
+    publisher: "Morgan Kaufmann"
+    year: 2012
+    isbn: "978-0123877338"
+    note: >-
+      The NESTED SETS model is the one people associate with him. Adjacency list and path
+      enumeration are older and unowned; credit him for nested sets specifically, not for the
+      whole episode.
+
+  snodgrass:
+    author: "Richard T. Snodgrass"
+    work: "Developing Time-Oriented Database Applications in SQL"
+    publisher: "Morgan Kaufmann"
+    year: 1999
+    isbn: "978-1558604360"
+    note: >-
+      VALID TIME vs TRANSACTION TIME, and bitemporal tables. The vocabulary for temporal data
+      is his, and it is the difference between "when was it true" and "when did we record it".
+      Free as a PDF from the author's site — say so, it is a genuinely useful pointer.
+
+  stonebraker:
+    author: "Mike Stonebraker et al."
+    work: "C-Store: A Column-oriented DBMS"
+    publisher: "VLDB 2005"
+    year: 2005
+    note: >-
+      The paper that made the case for column stores and started the line that runs through
+      Vertica, DuckDB and ClickHouse. A paper, not a book — cite it as one.
+
+  tukey:
+    author: "John W. Tukey"
+    work: "Exploratory Data Analysis"
+    publisher: "Addison-Wesley"
+    year: 1977
+    isbn: "978-0201076165"
+    note: >-
+      The BOX PLOT is his, and so is the phrase "exploratory data analysis". Credit him for the
+      box plot specifically; histograms are much older and unowned.
+
+  google-sre:
+    author: "Betsy Beyer, Chris Jones, Jennifer Petoff & Niall Richard Murphy (eds.)"
+    work: "Site Reliability Engineering: How Google Runs Production Systems"
+    publisher: "O'Reilly"
+    year: 2016
+    isbn: "978-1491929124"
+    note: >-
+      ERROR BUDGETS, TOIL, and the BLAMELESS POSTMORTEM. Free to read online at sre.google —
+      point there, it costs the reader nothing. "Site Reliability Engineering" and "SRE" are
+      Google-associated terms; describe the practices, never imply endorsement.
+
+  lewis-rag:
+    author: "Patrick Lewis et al."
+    work: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"
+    publisher: "NeurIPS 2020"
+    year: 2020
+    note: >-
+      The paper that NAMED RAG. Worth thirty seconds in the episode: the term everyone now uses
+      loosely started as a specific architecture, and knowing the original shape helps a reader
+      tell "RAG" from "we put some text in the prompt".

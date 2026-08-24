@@ -4,6 +4,121 @@
 # reads THIS file: the course page (/data-academy/learn-sql), the "you are here" roadmap
 # card in each Remotion composition, and the lesson/koan folder names.
 #
+# ── THE ACADEMY-WIDE RULE ABOUT TOOLS ────────────────────────────────────────────────
+# Every track teaches a SKILL and demonstrates it in a tool. Never the other way round.
+# Learn SQL is not a CloudBeaver course, Python for Data is not a Jupyter course, BI is not a
+# DataPallas course — even though DataPallas is what we demonstrate BI in, because it does the
+# job and a bundled third-party app should never be reached for when it does.
+#   TITLES name the skill, never a product's UI. Industry-standard library names (pandas, dbt,
+#     pgvector, Spring) are fine — they travel with the reader. Proprietary UI names do not.
+#   PROSE teaches the principle first, then shows it: "here is how you do that in <tool>".
+#   EVERY EPISODE must leave the reader something true away from our tools. If an episode is
+#     only true inside DataPallas, it is product documentation and belongs in content/docs.
+#
+# ── POINTING AT ANOTHER COURSE: NAME IT, EVERY TIME ──────────────────────────────────
+# `excludes` and `prerequisites` render VERBATIM on the course page, under "Not here, on
+# purpose" and "Where this leads". They are the only prose a learner reads that sends them to
+# another course, so a reader must never have to work out which course a number belongs to.
+#
+#   OURS      "In this course, Series 3 · 05 loads a star somebody has already designed"
+#   THEIRS    "covered in Data Modeling, Series 3 · 30"
+#   NEVER     "covered in Data Modeling, Series 3 — Series 3 · 05 here LOADS a star"
+#
+# The last one was real, and there were twenty like it. Every one resolved to the correct
+# episode and every one was unreadable: two courses' Series 3 in a sentence, with "here" doing
+# the disambiguating. It also hid a genuine wrong-pointer bug — Learn SQL's ROLLUP line named
+# Data Warehousing and then gave two BARE numbers, which therefore pointed at Learn SQL's own
+# GROUP BY and Dates & Times. Both existed, so the resolve check passed green.
+# CurriculumSpec now fails the build on a bare "Series N · MM" sitting beside another course's
+# name. Two rules, and you need both: one proves the episode exists, this one proves a person
+# can follow the sentence to it.
+#
+# ── CREDITING AN AUTHOR: THE TEST, THE TAG, THE COMMENT ──────────────────────────────
+# Some episodes teach a named person's named framework. Those get attributed — in a tag the
+# reader sees and a comment the writer reads. Most episodes do not, and should not.
+#
+# THE TEST, and it is the whole discipline:
+#     WOULD A READER BENEFIT FROM BEING HANDED THAT AUTHOR'S BOOK?
+#   yes  Kimball's accumulating snapshot, Linstedt's hubs and links, Evans' bounded context,
+#        Tufte's lie factor, Cleveland & McGill's perception ranking. Named thing, one source.
+#   no   normalization in general, joins, indexing, CDC, "choosing the right chart". Textbook
+#        material with no canonical owner — and picking one author for it is worse than
+#        picking none, because it is arbitrary AND it dilutes the tags that are real.
+#
+# TWO SIGNALS, DIFFERENT SHAPES, deliberately:
+#   TAG      tags: ["tufte"] — ONE WORD, lowercase. It renders as #tufte on the course page,
+#            so it must read well as a badge. Never `tufte:lie-factor`: the payoff is a source
+#            landing page ("show me every Kimball episode"), and that only works if the string
+#            is identical everywhere. Data Model Patterns chose this convention first.
+#   COMMENT  # SOURCE (tufte): <the author's OWN term for what this teaches, plus the book>
+#            One line, above the episode. The tag inside the parens is EXACTLY the tag value,
+#            so grep "# SOURCE (" lists every attributed episode and the two cannot drift.
+#            Authoring guidance, not biography — nobody writes a better episode for knowing
+#            where Tufte was born.
+#
+# WHY THE VOCABULARY MATTERS MORE THAN THE CREDIT. The reason to teach a named framework
+# instead of our own opinion is that it IS standard. Use the author's words — grain, bounded
+# context, chartjunk, hub — and explain each plainly on first use. Never swap one for a
+# plainer invented word, because the invented word exists nowhere else, and a reader who then
+# opens the book will not recognise what they were taught.
+#
+# ── HOW TO CREDIT, AND STAY OUT OF TROUBLE ───────────────────────────────────────────
+# Written down once so nobody has to re-reason it, and so nobody over-hedges either. The
+# equivalent rules for software live in the Schema Teardowns header; this is the same idea
+# applied to books and their authors.
+#
+# WHAT WE ARE ALLOWED TO DO, and why. A method, a process, a system or a fact is NOT
+# copyrightable — only the EXPRESSION of it is. Teaching the accumulating snapshot, the bus
+# matrix, hubs and links or the lie factor is teaching an idea, and ideas are free. That is
+# the whole legal basis for this academy and it is solid. What is NOT ours is the author's
+# particular words, their diagrams, their tables and their photographs.
+#
+#   DO    name the author and the book, in the prose, every time you use their term
+#   DO    a Sources block at the foot of the article: author, title, edition, publisher,
+#         year, ISBN. Link somewhere they can buy it
+#   DO    quote SHORT passages when you are discussing them — a sentence, attributed inline.
+#         That is commentary, and commentary is what makes a lesson worth reading
+#   DO    draw every diagram OURSELVES, in our own visual language and colours
+#   DO    use OUR datasets. Northwind, the library brief, our generated files — never the
+#         author's own worked case study, which is their expression
+#
+#   DON'T reproduce a diagram, a table, a figure, or their figure numbering
+#   DON'T quote at length. If a paragraph is doing the teaching, you have not written a
+#         lesson, you have retyped a page
+#   DON'T use the book COVER, the publisher's artwork, or a photo of the author. This is the
+#         easy one to trip over because it looks natural on a card
+#   DON'T follow their chapter order as if it were our syllabus
+#   DON'T let a paraphrase stay close enough that a reader could diff it against the original
+#
+# TRADEMARKS — descriptive use, never branding. Same one-question test the Teardowns track
+# uses: WOULD A READER THINK THE AUTHOR WROTE THIS, OR ENDORSED IT? If plainly no, naming
+# them to identify their own method is nominative use and it is fine.
+#
+#   DO    "This is Kimball's accumulating snapshot", "Linstedt's hubs and links"
+#   DON'T "The Official Kimball Course", "DataPallas Data Vault Edition", a
+#         kimball.datapallas.com subdomain, or their name in OUR product or track name
+#   DON'T imply certification, partnership or review by them
+#
+#   SPECIFICALLY: treat "Data Vault 2.0" as a mark — Dan Linstedt asserts one and runs a
+#   certification programme around it, so the episode must read as "here is Linstedt's Data
+#   Vault 2.0 method" and never as anything we are licensed or certified to deliver. Check
+#   the current position before publishing rather than trusting this line; marks change.
+#   "Kimball Group" is likewise a business name, not a generic term.
+#
+#   THE TAG PAGES have the same constraint. A future /tags/kimball page must read as "our
+#   episodes about Kimball's methods" — never as a Kimball resource. Our masthead, our
+#   typography, a disclaimer in the footer.
+#
+# DISCLAIMER — one line, in the article template of every attributed episode. Decided once:
+#
+#   "<Concept> is <Author>'s, from <Book> (<Publisher>, <Year>, ISBN <n>). This lesson is
+#    independent, unaffiliated and not endorsed by the author or publisher. All diagrams and
+#    examples here are our own."
+#
+# AND SAY WHERE THEY ARE NO LONGER RIGHT: an episode that pretends 1996 advice holds
+# everywhere is worse than one that never cited anybody. Disagreeing with a named author,
+# openly and with reasons, is also the clearest proof this is our writing and not theirs.
+#
 # course:  the topic slug — matches config/learning.ts AND each lesson's `topic` front-matter.
 # track:   the folder + slug token (no hyphen); courses/<track>/ and the koan package.
 # series:  ordered; `slug` is the folder name and the lesson's `module` front-matter.
@@ -26,9 +141,31 @@
 #           the width the card holds on one line. The Series 1 list is mirrored in the
 #           video's TOC slide (the `toc.episodes` array in the Remotion composition):
 #           change one and change the other.
+#   core    true on the shortest path to being productive at work: Series 1 entire, plus the
+#           Series 2 episodes you genuinely can't do the job without. Everything else is
+#           worth learning and none of it blocks you from starting. The flag exists because
+#           a 34-episode roadmap otherwise makes every learner guess which parts are
+#           optional, and the ones who guess wrong quit — see the course page, which renders
+#           it as "core", never as a gate and never by marking the rest "extra".
 #   status  published — the .mdx exists, is published, and the video is live
 #           planned   — on the roadmap, not built yet
-#   tags    only labels that are already TRUE of an unwritten episode — "capstone" today.
+#   tags    only labels that are already TRUE of an unwritten episode — "project" today,
+#           meaning the episode where a series' whole argument gets applied. (It was
+#           "capstone" until 2026-08-24; that is US-academia jargon, it renders as a
+#           #badge to learners, and this course does not speak that way anywhere else.)
+#
+#           THE SLUGS FOLLOWED on 2026-08-24, and the reasoning that had deferred them is
+#           worth keeping because it is what made the rename safe. A slug is an IDENTITY, not
+#           a label — every derived ID at the foot of this header is built from it — so the
+#           cost of churning one is not the URL, it is the mp4, the manifest key, the TTS
+#           assets and the `dp-slug:` tag on an uploaded video. That cost is real ONLY for a
+#           published episode. All fourteen were `status: planned`, so nothing downstream was
+#           bound to them and the rename cost nothing.
+#           They are now uniformly `project-*` — including the three that had carried the word
+#           as a SUFFIX (`copilot-capstone`, `rag-capstone`, `reliability-capstone`), which is
+#           why a plain find-and-replace would have produced `project-production-project`.
+#           THE RULE THAT REMAINS: never rename a slug on a PUBLISHED episode for cosmetics.
+#           Fix the label; leave the identity alone.
 #           Topical tags belong in the lesson's own front-matter once it exists; guessing
 #           them here just creates a second source of truth that drifts.
 #   seed    bulk — needs the larger dataset (datasets/bulk/), not the 79-row Northwind.
@@ -43,15 +180,33 @@ course: learn-sql
 track: learnsql
 title: Learn SQL
 
+# THE ENTRY POINT OF THE WHOLE ACADEMY — no prerequisites, deliberately, and the empty list
+# is here rather than absent so that it reads as a decision instead of an oversight.
+# Nothing before this: episode 00 assumes a person who has never written a query.
+#
+# What comes AFTER is Learn Data Modeling, which declares this track in its own
+# `prerequisites` block (Series 1 entire, plus INSERT from Series 2 · 40). The two compose in
+# that order: you get read access before you get DDL rights, in a career and in this academy.
+prerequisites: []
+
 # Scope decisions that a scanner would otherwise read as holes in the course. Rendered at
 # the foot of the course page, so "missing" reads as "deliberate, and it lives over there".
 excludes:
   - topic: "DDL, keys, constraints & normalization"
     where: "covered in Learn Data Modeling — it's schema design, not writing queries"
+  # The reciprocal halves of three subjects this track and Data Modeling BOTH touch. Each
+  # pair shares a keyword and is two different questions, which is precisely how a reader
+  # concludes we repeated ourselves. Data Modeling's excludes carries the mirror of each.
+  - topic: "Whether a column should be nullable at all"
+    where: "covered in Data Modeling, Series 1 · 37, which is the design decision. In this course, Series 1 · 45 is what NULL does to a query"
+  - topic: "Deciding to store JSON in the first place"
+    where: "covered in Data Modeling, Series 2 · 42. In this course, Series 3 queries JSON once that decision has been made"
+  - topic: "Choosing indexes while designing the schema"
+    where: "covered in Data Modeling, Series 2 · 45. In this course, Series 3 is EXPLAIN and the mechanics, on a query that already exists"
   - topic: "Isolation levels, locking & concurrency"
-    where: "covered in Data Ops, Series 2 — Running PostgreSQL in Production; COMMIT and ROLLBACK basics are in Series 2 here"
+    where: "covered in Data Ops, Series 2 — Running PostgreSQL in Production. In this course, Series 2 · 40 covers the COMMIT and ROLLBACK basics"
   - topic: "ROLLUP, CUBE, GROUPING SETS & OLAP cubes"
-    where: "covered in Learn Data Warehousing, where the star schema lives"
+    where: "covered in Data Warehousing, Series 1 · 30 for the subtotal operators, and Data Warehousing, Series 2 · 20 for cubes"
 
 series:
   - slug: series1-fundamentals
@@ -65,58 +220,93 @@ series:
         slug: start-here
         title: "Start Here: The SQL Thinking Loop — Your First Query, CloudBeaver & the Koans"
         short: "Start Here: The SQL Thinking Loop — your first query"
+        hands_on: ["koan:complete", "cloudbeaver"]
+        core: true
         status: published
       - n: "05"
         slug: meet-your-data-with-select
-        title: "SELECT, Column Lists & Data Types — Meet Your Data"
-        short: "SELECT, Column Lists & Data Types — meet your data"
+        title: "SELECT, Column Lists & Data Types — Seeing What a Table Holds"
+        short: "SELECT, Column Lists & Data Types — what a table holds"
+        hands_on: ["koan:complete", "cloudbeaver"]
+        core: true
         status: published
       - n: "10"
         slug: where-filtering
-        title: "WHERE, AND/OR/NOT, IN, BETWEEN — Throw Away the Rows You Don't Care About"
-        short: "WHERE, AND/OR/NOT, IN, BETWEEN — throw away the rest"
+        title: "WHERE, AND/OR/NOT, IN, BETWEEN — Keeping Only the Rows You Need"
+        short: "WHERE, AND/OR/NOT, IN, BETWEEN — keep the rows you need"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
         status: published
       - n: "15"
         slug: order-by-and-top-n
-        title: "ORDER BY, LIMIT & FETCH FIRST — Who's Your #1 Customer?"
-        short: "ORDER BY, LIMIT & FETCH FIRST — your #1 customer"
+        title: "ORDER BY, LIMIT & FETCH FIRST — Sorting Rows and Keeping the Top Few"
+        short: "ORDER BY, LIMIT & FETCH FIRST — sort and keep the top"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
         status: planned
       - n: "20"
         slug: distinct-aliases-expressions
         title: "Aliases, Expressions & DISTINCT — Make Messy Output Look Like a Report"
         short: "Aliases, Expressions & DISTINCT — output like a report"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
         status: planned
       - n: "25"
         slug: aggregate-functions
-        title: "COUNT, SUM, AVG, MIN, MAX — One Number That Runs the Business"
-        short: "COUNT, SUM, AVG, MIN, MAX — one number that runs it"
+        title: "COUNT, SUM, AVG, MIN, MAX — Turning Many Rows Into One Number"
+        short: "COUNT, SUM, AVG, MIN, MAX — many rows, one number"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
         status: planned
       - n: "30"
         slug: group-by
-        title: "GROUP BY — Turn 1,000 Rows into the Few Numbers Your Boss Wants"
-        short: "GROUP BY — 1,000 rows into a few numbers"
+        title: "GROUP BY — One Number per Customer, per Month, per Anything"
+        short: "GROUP BY — one number per group"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
         status: planned
       # Closes the aggregation arc inside Series 1 — grouping you can't filter is half a tool.
       - n: "35"
         slug: having-vs-where
         title: "HAVING vs WHERE — Why WHERE Can't Filter Your Totals"
         short: "HAVING vs WHERE — why WHERE can't filter totals"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
         status: planned
       - n: "40"
         slug: joins
-        title: "JOINs: INNER, LEFT, RIGHT, FULL — Glue Two Tables Together"
-        short: "JOINs: INNER, LEFT, RIGHT, FULL — glue two tables"
+        title: "JOINs: INNER, LEFT, RIGHT, FULL — Combining Rows From Two Tables"
+        short: "JOINs: INNER, LEFT, RIGHT, FULL — rows from two tables"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
         status: planned
+      # Sits AFTER the JOINs episode on purpose: the learner has just manufactured NULLs
+      # with a LEFT JOIN, so `WHERE col = NULL` returning nothing is demonstrable on data
+      # they made themselves rather than an abstract note next to the data types.
+      #
+      # MUST close the loop back to episode 25, which taught the aggregates twenty episodes
+      # earlier and therefore taught them NULL-unaware: COUNT(col) skips NULLs while
+      # COUNT(*) doesn't, and AVG divides by the non-NULL count, so it is NOT the SUM over
+      # the row count. That gap is a wrong-number-in-a-report bug, not a curiosity.
+      # SOURCE (codd): THREE-VALUED LOGIC — true, false, unknown — comes from Codd's relational model.
       - n: "45"
         slug: null-and-three-valued-logic
-        title: "NULL & Three-Valued Logic — The Invisible Trap That Wrecks Real Queries"
-        short: "NULL & Three-Valued Logic — the invisible trap"
+        title: "NULL & Three-Valued Logic — How Missing Values Change Your Results"
+        tags: ["codd"]
+        credits:
+          - source: codd
+            concept: "THREE-VALUED LOGIC — true, false, unknown — comes from Codd's relational model"
+        short: "NULL & Three-Valued Logic — how missing values count"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
         status: planned
       - n: "50"
         slug: your-first-real-report
-        title: "SELECT + JOIN + GROUP BY — Build a Report Your Boss Would Actually Use"
+        title: "SELECT + JOIN + GROUP BY — Building Your First Real Report"
         short: "SELECT + JOIN + GROUP BY — your first real report"
-        tags: ["capstone"]
+        hands_on: ["koan:author", "cloudbeaver"]
+        core: true
+        tags: ["project"]
         status: planned
 
   - slug: series2-intermediate
@@ -124,45 +314,90 @@ series:
     tagline: answer real business questions
     level: intermediate
     episodes:
+      # Opens the series by POSING the question that 05 and 06 answer: count the rows before
+      # the join and after it. When that number moves, every total built on top is already
+      # wrong. Without this beat the episode is just "the same JOIN, with more tables".
       - n: "00"
         slug: multi-table-joins
-        title: "Multi-Table JOINs — Follow the Data Across 3, 4, 5 Tables"
-        short: "Multi-Table JOINs — across 3, 4, 5 tables"
+        title: "Multi-Table JOINs — Following the Data Across Three or More Tables"
+        short: "Multi-Table JOINs — three or more tables"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
         status: planned
       - n: "05"
         slug: subqueries
-        title: "Subqueries & EXISTS — Answer 'Who's Above Average?'"
-        short: "Subqueries & EXISTS — who's above average?"
+        title: "Subqueries & EXISTS — Using One Query's Result Inside Another"
+        short: "Subqueries & EXISTS — one query inside another"
+        hands_on: ["koan:complete", "koan:choose"]
+        core: true
+        status: planned
+      # The trap JOINs create, paired with them the way NULL is paired with LEFT JOIN in
+      # Series 1. It lands HERE rather than beside episode 00 because the fix is a
+      # pre-aggregating subquery, and that is episode 05 — teach the bug where the cure is.
+      #
+      # Frame it as GRAIN ("one row per WHAT?"), not as a join gotcha. Grain is the idea
+      # behind correct numbers everywhere; "watch out for duplicate rows" teaches neither.
+      #
+      # THREE tracks collect on this later, and it is worth naming all three so nobody thinks
+      # it is a local trick: Data Modeling Series 1 · 10 teaches grain from the DESIGN side
+      # (what should one row be, before the table exists — the mirror of this episode, which
+      # is the QUERY side: what did one row become after you joined). Data Warehousing and
+      # Analytics Engineering (dbt) both build on it again for fact tables and model tests.
+      - n: "06"
+        slug: join-fan-out
+        title: "Join Fan-Out & Grain — When a Join Silently Multiplies Your Rows"
+        short: "Join Fan-Out & Grain — when a join multiplies rows"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # Moved up from Series 3. A CTE is a READABILITY tool, not an advanced feature, and
+      # holding it back meant every query in this series got written as a nested subquery
+      # the learner would later have to unlearn. From here on, everything uses WITH.
+      #
+      # The motivation is free at this point: the pre-aggregating subquery from 06 works and
+      # is unreadable. "Name it, then use the name" is the whole lesson.
+      - n: "08"
+        slug: ctes
+        title: "CTEs (WITH) — Breaking a Long Query Into Named Steps"
+        short: "CTEs (WITH) — a long query, in named steps"
+        hands_on: ["koan:equivalent", "koan:complete"]
+        core: true
         status: planned
       - n: "10"
         slug: self-joins-and-hierarchies
-        title: "Self-JOINs & Hierarchies — The Org Chart Hiding Inside One Table"
-        short: "Self-JOINs & Hierarchies — the org chart inside"
+        title: "Self-JOINs & Hierarchies — Relating Rows to Other Rows in the Same Table"
+        short: "Self-JOINs & Hierarchies — rows in the same table"
+        hands_on: ["koan:complete"]
         status: planned
       - n: "15"
         slug: case-expressions
         title: "CASE — SQL's If/Then for Labels & Buckets"
         short: "CASE — SQL's if/then for labels & buckets"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
         status: planned
       - n: "20"
         slug: dates-and-times
-        title: "Dates & Times — 'Last 30 Days' Is Harder Than It Looks"
-        short: "Dates & Times — 'last 30 days' is harder"
+        title: "Dates & Times — Getting Ranges and Boundaries Right"
+        short: "Dates & Times — ranges and boundaries"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
         status: planned
+      # One episode, not two: pattern matching and the string/number helpers are both
+      # "functions for data nobody cleaned", and both are reference material a working
+      # person looks up rather than memorises. Ships with a cheat sheet and covers the
+      # number side too — ROUND, CAST and the formatting a report actually needs.
       - n: "25"
-        slug: text-search-and-regex
-        title: "LIKE, ILIKE & Regex — Find It Even If It's Misspelled"
-        short: "LIKE, ILIKE & Regex — even if it's misspelled"
-        status: planned
-      - n: "30"
-        slug: string-and-number-functions
-        title: "String & Number Functions — Clean Up Messy Real-World Data"
-        short: "String & Number Functions — clean up messy data"
+        slug: string-functions-and-regex
+        title: "String Functions, LIKE & Regex — Clean Up Messy Real-World Data"
+        short: "String Functions, LIKE & Regex — clean up messy data"
+        hands_on: ["koan:complete"]
         status: planned
       - n: "35"
         slug: set-operations
-        title: "UNION, INTERSECT, EXCEPT — Stack Them or Subtract Them"
-        short: "UNION, INTERSECT, EXCEPT — stack or subtract"
+        title: "UNION, INTERSECT, EXCEPT — Combining and Subtracting Result Sets"
+        short: "UNION, INTERSECT, EXCEPT — combine or subtract"
+        hands_on: ["koan:predict", "koan:choose"]
         status: planned
       # The only episode that writes data — placed late, once filtering is second nature.
       # COMMIT/ROLLBACK basics live here; isolation levels belong to a future ops track.
@@ -170,91 +405,136 @@ series:
         slug: insert-update-delete
         title: "INSERT, UPDATE, DELETE & Transactions — Change the Data, Safely"
         short: "INSERT, UPDATE, DELETE & Transactions — safely"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
         status: planned
       - n: "45"
         slug: views
-        title: "VIEWs — Stop Pasting the Same Query"
-        short: "VIEWs — stop pasting the same query"
+        title: "VIEWs — Naming a Query So You Can Reuse It"
+        short: "VIEWs — name a query, reuse it"
+        hands_on: ["koan:equivalent"]
+        status: planned
+      # Moved down from Series 3, because "answer real business questions" is not true
+      # without them: running totals, month-over-month, rank-within-region and
+      # latest-row-per-customer ARE what business questions look like, and they are the
+      # table stakes of an analyst screen. They close the series rather than opening it
+      # because a window function reads badly without the CTEs from episode 08.
+      #
+      # ROW_NUMBER is named in the title on purpose. "The latest row per customer" is the
+      # single most-searched SQL task there is, and the keywords-lead title convention
+      # exists precisely so the person searching for it finds this line.
+      - n: "50"
+        slug: window-functions-i
+        title: "Window Functions I: OVER, PARTITION BY & ROW_NUMBER — The Latest Row per Customer"
+        short: "Window Functions I: OVER, PARTITION BY & ROW_NUMBER"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      - n: "55"
+        slug: window-functions-ii
+        title: "Window Functions II: LAG/LEAD, Running Totals & Frames — Month-over-Month Growth in One Query"
+        short: "Window Functions II: LAG/LEAD, Running Totals & Frames"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # SERIES 2 PROJECT. The academy-wide audit found this series walking nine core episodes
+      # with nothing that applied them — the same defect Python and Java & Groovy had.
+      # It closes the series' own promise: a question a person actually asked, answered with
+      # the multi-table joins, CTEs and window functions this series taught.
+      - n: "60"
+        slug: project-a-real-business-question
+        title: "Project — Answering a Real Business Question End to End"
+        short: "Project — a real business question, answered"
+        hands_on: ["koan:author", "cloudbeaver"]
+        core: true
+        tags: ["project"]
         status: planned
 
   - slug: series3-advanced
     title: Advanced SQL
-    tagline: production-grade + cross-vendor
+    tagline: the hard queries, and making them fast
     level: advanced
     episodes:
-      # Block A — advanced query-writing (the hands-on heart). CTEs come first: they're the
-      # simplest structural tool, and every query after this one is readable because of them.
+      # Block A — the question shapes that need real machinery. CTEs and both window-function
+      # episodes moved to Series 2; what stays here is the work that takes them as a
+      # prerequisite rather than teaching them.
       - n: "00"
-        slug: ctes
-        title: "CTEs (WITH) — Break a Monster Query into Readable Steps"
-        short: "CTEs (WITH) — a monster query, in readable steps"
-        status: planned
-      - n: "05"
-        slug: window-functions-i
-        title: "Window Functions I: OVER, PARTITION BY & Ranking — See the Total AND the Detail at Once"
-        short: "Window Functions I: OVER, PARTITION BY & Ranking"
-        status: planned
-      - n: "10"
-        slug: window-functions-ii
-        title: "Window Functions II: LAG/LEAD, Running Totals & Frames — Month-over-Month Growth in One Query"
-        short: "Window Functions II: LAG/LEAD, Running Totals & Frames"
-        status: planned
-      - n: "15"
         slug: recursive-ctes
         title: "Recursive CTEs — Walk an Org Chart to the Top"
         short: "Recursive CTEs — walk an org chart to the top"
+        hands_on: ["koan:predict", "koan:complete"]
         status: planned
         seed: bulk
-      - n: "20"
+      - n: "05"
         slug: pivot-and-unpivot
         title: "PIVOT & UNPIVOT — Turn Rows into a Cross-Tab Report, the Portable Way"
         short: "PIVOT & UNPIVOT — rows into a cross-tab report"
+        hands_on: ["koan:equivalent", "koan:complete"]
         status: planned
-      - n: "25"
+      - n: "10"
         slug: cohorts-and-repeat-purchase
-        title: "Cohorts & Repeat-Purchase Analysis — Who Comes Back?"
-        short: "Cohorts & Repeat-Purchase Analysis — who comes back?"
+        title: "Cohorts & Repeat-Purchase Analysis — Measuring Who Comes Back, and When"
+        short: "Cohorts & Repeat-Purchase Analysis — who comes back"
+        hands_on: ["koan:predict", "koan:complete"]
         status: planned
-      - n: "30"
+      - n: "15"
         slug: json-in-sql
         title: "JSON in SQL — Query Semi-Structured Data Without Leaving the Database"
         short: "JSON in SQL — semi-structured data, in place"
+        hands_on: ["koan:complete", "koan:diagnose"]
         status: planned
       # Block B — performance, reframed around "make THIS query fast". All three need a
       # dataset big enough for the planner to have real choices to make.
-      - n: "35"
+      - n: "20"
         slug: explain-query-plans
-        title: "EXPLAIN / EXPLAIN ANALYZE — Why Is This Query Slow? Read the Plan"
-        short: "EXPLAIN / EXPLAIN ANALYZE — read the plan"
+        title: "EXPLAIN / EXPLAIN ANALYZE — Reading the Plan to Find Out Why a Query Is Slow"
+        short: "EXPLAIN / EXPLAIN ANALYZE — why a query is slow"
+        hands_on: ["koan:count:scanned", "koan:diagnose"]
         status: planned
         seed: bulk
-      - n: "40"
+      - n: "25"
         slug: indexes
-        title: "Indexes — From 10 Seconds to 10 Milliseconds (and When NOT to Use Them)"
-        short: "Indexes — 10 seconds to 10 milliseconds"
+        title: "Indexes — Making a Query Faster, and What an Index Costs"
+        short: "Indexes — faster queries, and their cost"
+        hands_on: ["koan:count:scanned", "koan:choose"]
         status: planned
         seed: bulk
-      - n: "45"
+      - n: "30"
         slug: slow-to-fast
-        title: "Query Tuning Capstone — Fix a Real Slow Query, Live"
-        tags: ["capstone"]
-        short: "Query Tuning Capstone — fix a real slow query, live"
+        title: "Query Tuning — Making a Real Slow Query Fast"
+        short: "Query Tuning — making a slow query fast"
+        hands_on: ["koan:author", "koan:count:scanned", "koan:equivalent"]
+        tags: ["project"]
         status: planned
         seed: bulk
-      # Block C — the cross-vendor finale
-      - n: "50"
+
+  # Split out of Series 3, where it was episodes 50-60 and nobody was ever going to reach it.
+  # This is the most differentiated content in the course — no other SQL course teaches it,
+  # and running the same Northwind on five engines is the house specialty — but it also
+  # serves a DIFFERENT reader: the consultant, the ISV and the tool vendor, not the analyst
+  # who just wants to answer a question. Its own series says both things at once: this is
+  # not the tail of the course you gave up on, and it is not required to be good at SQL.
+  - slug: series4-cross-vendor
+    title: Cross-Vendor SQL
+    tagline: one query, five databases
+    level: advanced
+    episodes:
+      - n: "00"
         slug: ansi-sql-vs-dialects
-        title: "ANSI SQL vs Dialects — The Same SQL Breaks on Another Database, Here's Why"
-        short: "ANSI SQL vs Dialects — the same SQL breaks"
+        title: "ANSI SQL vs Dialects — Why SQL That Works Here Fails on Another Database"
+        short: "ANSI SQL vs Dialects — why the same SQL fails"
+        hands_on: ["koan:predict", "koan:diagnose"]
         status: planned
-      - n: "55"
+      - n: "05"
         slug: portable-sql
-        title: "Portable Paging, Strings, Dates & UPSERT — Write Once, Run Anywhere"
-        short: "Portable Paging, Strings, Dates & UPSERT — anywhere"
+        title: "Portable Paging, Strings, Dates & UPSERT — One Query That Runs on Every Engine"
+        short: "Portable Paging, Strings, Dates & UPSERT — every engine"
+        hands_on: ["koan:equivalent", "koan:complete"]
         status: planned
-      - n: "60"
+      - n: "10"
         slug: one-query-five-databases
         title: "Northwind on Postgres, Oracle, SQL Server, MySQL & Db2 — One Query, Five Databases"
         short: "Northwind on Postgres, Oracle, SQL Server, MySQL & Db2"
-        tags: ["capstone"]
+        hands_on: ["koan:author", "koan:equivalent"]
+        tags: ["project"]
         status: planned

@@ -1,0 +1,4 @@
+# Tier 3: generated, never committed. Only the generators live in git.
+*
+!.gitignore
+!make_*.py

@@ -1,0 +1,203 @@
+# The ordered episode list for Schema Teardowns. Field docs live in courses/learnsql/curriculum.yaml.
+#
+# The job this track teaches: read the schemas real teams actually shipped and judge them
+# against the patterns — where they hold, where they break, and what the trade bought —
+# then build your own model, better informed than any exercise could make you.
+#
+# THE WORDING MATTERS, EVERYWHERE THIS TRACK IS DESCRIBED. "Read their schema and rebuild
+# it" is the clone workflow written out, and it is not what this is. The skill being taught
+# is READING AND JUDGING a model; the rebuild is the exercise that proves you understood,
+# not the product. Lead every description with the analysis and let the build follow.
+#
+# It also decides how the upstream maintainers read us. "We rebuild Akaunting in
+# DataPallas" reads as a commercial vendor cloning them. "Here is what Akaunting's schema
+# gets right" is flattering, and they may well share it. These are projects we admire
+# enough to spend an episode on — every episode should be one they would be happy to see.
+#
+# WHY THIS TRACK IS DIFFERENT. Data Modeling is theory. Data Model Patterns is the agreed patterns.
+# This one is FIELD EVIDENCE, and half its value is the places where a shipped app did NOT
+# follow those patterns — and whether that cost them. An episode that only says "they did it by
+# the book" is a weak episode; find the divergence, then judge it fairly.
+#
+# ============================================================================
+# THE SHAPE OF AN EPISODE — four beats
+# ============================================================================
+#   1. THE APP        what it does, who uses it, how big the schema is. Thirty seconds.
+#   2. THE TEARDOWN   the tables that carry the domain. NOT all of them — pick the six or
+#                     eight that ARE the model and ignore the sessions/jobs/cache noise.
+#   3. THE JUDGEMENT  where it matches the agreed patterns (link the Data Model Patterns episode),
+#                     where it diverges, and what that bought or cost them. Be fair: most
+#                     divergences are a deliberate trade for speed or simplicity, not a
+#                     mistake. Say so when that is what it is.
+#   4. THE REBUILD    our own implementation in DataPallas, WRITTEN FROM THE UNDERSTANDING.
+#                     See REBUILD RULE below — this is the one rule that matters.
+#
+# ============================================================================
+# THE REBUILD RULE — write it, do not paste it
+# ============================================================================
+# Reading an open-source schema and explaining it is ordinary technical writing, and no
+# licence restricts it. What we ship is prose, video, and OUR OWN implementation.
+#
+#   DO    read their schema, understand it, close the tab, then write our DDL from the
+#         understanding. If the result resembles theirs, that is the domain talking.
+#   DO    quote short excerpts of their DDL in the article WHEN DISCUSSING IT — that is
+#         commentary and it is what makes the teardown legible.
+#   DO    link the upstream repo, name the licence, and send traffic their way. These are
+#         projects we admire enough to spend an episode on; act like it.
+#
+#   DON'T paste their schema dump into a DataPallas template and ship it as an artifact.
+#         Nothing from this track goes into the downloadable DataPallas — the reader
+#         follows the article and builds it themselves.
+#   DON'T copy their seed/demo DATA. Generate our own; theirs may carry its own terms.
+#
+# ============================================================================
+# NAMING AND TRADEMARK — descriptive use, never branding
+# ============================================================================
+# The test, in one question: would a reader think the app's authors made this, or approved
+# it? If plainly no, it is descriptive use and it is fine.
+#
+#   DO    "Schema Teardown: How Akaunting Models Double-Entry Accounting"
+#   DO    "InvoiceNinja's invoice schema — and the one decision I would change"
+#   DO    "Rebuilding Akaunting's chart of accounts in DataPallas"
+#   DO    their name as TEXT, in our own typography, in our own scheme colours.
+#
+#   DON'T "Akaunting for DataPallas" or "DataPallas Akaunting Edition" — that names OUR
+#         artifact with THEIR mark and reads as an official integration.
+#   DON'T "The Official <App> Data Model".
+#   DON'T a subdomain like akaunting.datapallas.com — reads as a partnership.
+#   DON'T their LOGO in our thumbnails. This is the easy one to trip over, because it
+#         looks natural in a card. The name identifies them; the logo adds nothing we need.
+#
+# DISCLAIMER — one line, in the article template, every episode. Decided once, then stop
+# thinking about it:
+#
+#   "<App> is a trademark of its owners. This teardown is independent, unaffiliated and
+#    not endorsed by them. It is published for study under fair use; the upstream project
+#    is at <repo url>, licensed <licence>."
+#
+# CHECK THE LICENCE BEFORE THE EPISODE, and record it in the article's front-matter — not
+# because it restricts the teardown (it does not), but because naming it is part of
+# crediting the project, and licences change. Akaunting and InvoiceNinja have both moved.
+#
+# ============================================================================
+# CHOOSING THE NEXT APP — the running shortlist
+# ============================================================================
+# Pick for SCHEMA INTEREST, not popularity. A good candidate has a domain a reader already
+# understands (invoicing, inventory, tickets), a schema small enough to read in one sitting,
+# and at least one decision worth arguing about.
+#
+#   strong    Akaunting (accounting), InvoiceNinja (invoicing), Dolibarr (ERP breadth),
+#             ERPNext (the ambitious one), Odoo (the abstraction-heavy one), Snipe-IT
+#             (assets), Chatwoot (conversations), Zammad / osTicket (ticketing),
+#             Medusa / Saleor (commerce), Cal.com (scheduling), Plane (projects)
+#   later     Discourse, Mastodon, Matomo — interesting, but the domain needs explaining
+#             before the schema does, which doubles the episode
+#   avoid     anything whose schema is mostly EAV or JSON blobs; there is nothing to read
+
+course: learn-schema-teardowns
+track: teardowns
+title: Schema Teardowns
+
+excludes:
+  - topic: "The patterns themselves, and the books they come from"
+    where: "covered in Data Model Patterns — this track judges real schemas against them"
+  - topic: "Keys, normalization and modelling from first principles"
+    where: "covered in Data Modeling — start there if a schema still reads as noise"
+  - topic: "The apps' application code, APIs and front ends"
+    where: "not covered; we read the schema and model the domain, nothing above it"
+  - topic: "Migrating a live instance off these apps onto DataPallas"
+    where: "not covered — these are study rebuilds, not a migration path"
+
+series:
+  - slug: series1-read-a-real-schema
+    title: Read a Real Schema
+    tagline: open the repo, find the six tables that matter
+    level: beginner
+    episodes:
+      # Method first, deliberately. Without it every later episode has to re-explain how to
+      # get from "1,400 migrations" to "here are the eight tables that are the model", and
+      # that is the transferable skill the whole track is selling.
+      - n: "00"
+        slug: how-to-read-a-schema-you-did-not-write
+        title: "How to Read a Schema You Didn't Write — Find the Model in 1,400 Tables"
+        short: "Read a Schema You Didn't Write — find the model"
+        status: planned
+        tags: ["foundational"]
+      - n: "05"
+        slug: invoiceninja-invoicing
+        title: "InvoiceNinja — Invoices, Line Items and the Client That Is Also a Vendor"
+        short: "InvoiceNinja — invoices, line items, clients"
+        status: planned
+      - n: "10"
+        slug: akaunting-double-entry
+        title: "Akaunting — Double-Entry Accounting Without a Ledger Table"
+        short: "Akaunting — double-entry, and no ledger table"
+        status: planned
+      - n: "15"
+        slug: snipe-it-assets
+        title: "Snipe-IT — Assets, Custody and Who Has the Laptop"
+        short: "Snipe-IT — assets, custody, who has the laptop"
+        status: planned
+      - n: "20"
+        slug: cal-com-scheduling
+        title: "Cal.com — Availability, Bookings and the Timezone Problem"
+        short: "Cal.com — availability, bookings, timezones"
+        status: planned
+
+  - slug: series2-where-they-diverge
+    title: Where They Diverge
+    tagline: the same domain, modelled three different ways
+    level: intermediate
+    episodes:
+      # The comparison episodes are the ones with no equivalent anywhere on the web, and
+      # the ones most worth the effort. Same domain, several schemas, side by side.
+      - n: "00"
+        slug: three-ways-to-model-a-customer
+        title: "Three Ways to Model a Customer — And Which One Survives Growth"
+        short: "Three Ways to Model a Customer — which survives"
+        status: planned
+        tags: ["project"]
+      - n: "05"
+        slug: erpnext-abstraction
+        title: "ERPNext — What Happens When Everything Is a DocType"
+        short: "ERPNext — when everything is a DocType"
+        status: planned
+        tags: ["deep-abstraction"]
+      - n: "10"
+        slug: odoo-vs-dolibarr
+        title: "Odoo vs Dolibarr — Two ERPs, Two Philosophies, One Domain"
+        short: "Odoo vs Dolibarr — two ERP philosophies"
+        status: planned
+      - n: "15"
+        slug: ticketing-schemas
+        title: "Zammad, osTicket, Chatwoot — Three Takes on a Conversation"
+        short: "Zammad, osTicket, Chatwoot — three takes"
+        status: planned
+      - n: "20"
+        slug: commerce-schemas
+        title: "Medusa and Saleor — Variants, Carts and the Price at Checkout"
+        short: "Medusa & Saleor — variants, carts, checkout price"
+        status: planned
+
+  - slug: series3-rebuild-it
+    title: Build Your Own
+    tagline: from what you read to what you ship
+    level: intermediate
+    episodes:
+      - n: "00"
+        slug: from-schema-to-datapallas
+        title: "From Their Schema to Your App — Reading, Judging, Then Building"
+        short: "From Their Schema to Your App — the workflow"
+        status: planned
+        tags: ["foundational"]
+      - n: "05"
+        slug: rebuild-invoicing
+        title: "Build an Invoicing App — Informed by the Three We Took Apart"
+        short: "Build an Invoicing App — informed by three"
+        status: planned
+        tags: ["project"]
+      - n: "10"
+        slug: what-they-got-right
+        title: "What They Got Right — Decisions Worth Adopting"
+        short: "What They Got Right — decisions worth adopting"
+        status: planned

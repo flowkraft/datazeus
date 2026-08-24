@@ -1,0 +1,71 @@
+---
+title: "Join Fan-Out & Grain — When a Join Silently Multiplies Your Rows"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-sql"
+tags: []
+level: "intermediate"
+module: "series2-intermediate"
+order: 6
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build.
+    Drop the _todo- prefix when it becomes a real lesson.
+
+    READ FIRST: courses/learnsql/curriculum.yaml's header — it is the field
+    documentation the whole academy points at, and it carries the title, short
+    and core conventions this episode has to follow.
+
+    THE HOUSE METHOD, from the three lessons already written:
+      - type the query yourself; copy-paste teaches your eyes only
+      - PREDICT the answer before running it, out loud, then run it
+      - every query runs on the Northwind that ships with DataPallas
+      - the koans mirror the lesson beat for beat
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: notice, and fix, the join that silently multiplies your totals.
+    SQL: COUNT(*) vs COUNT(DISTINCT), pre-aggregating in a subquery before joining.
+    NEW EPISODE, 2026-08-24, and the biggest gap the old roadmap had. Fan-out is the most common
+    SILENT bug in workplace SQL: join orders to order_items, SUM the order total, get 3x revenue,
+    and nobody notices until the number is wrong in a meeting. The query SUCCEEDS, which is why it
+    survives review.
+    FRAME IT AS GRAIN — "one row per WHAT?" — never as a join gotcha. Grain is the idea behind
+    correct numbers everywhere, and three other tracks collect on it: Data Modeling Series 1 · 10
+    teaches it from the DESIGN side (what should one row be), Data Warehousing and dbt build on it
+    again. "Watch out for duplicate rows" teaches none of that.
+    Java & Groovy Series 1 · 40 is the SAME bug in memory, where no database warns you.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:predict
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_06/JoinFanOutKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. The published lessons all open this way;
+    keep it. Never "SELECT is used to…". Always "your boss asks…". */}
+
+TODO
+
+## TODO — the SQL
+
+{/* BEAT 2 — the keywords, one at a time, each with a query the reader types.
+    Every query runs on Northwind. Predict, then run. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns its
+    place by preventing a number that is wrong and looks right. */}
+
+TODO

@@ -1,0 +1,65 @@
+---
+title: "Logging and Failure — What Someone Needs to See When the Job Breaks"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series3-jvm-that-ships"
+order: 25
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: make a failure readable by someone who was not there when it happened.
+    CONSTRUCTS: SLF4J, structured context (which record, which stage), logging an exception ONCE,
+    exit codes, and never logging a secret.
+    KOAN ORACLE (capture): inject a bad record mid-run and assert on what was printed —
+      MUST contain: the failing record's id, the stage name, the stack trace exactly once
+      MUST NOT contain: the secret, a second copy of the same trace
+    Captures the STREAMS rather than hooking a logging backend on purpose: the koans must not care
+    whether the learner used SLF4J or println, and a course that mandates a logging framework to
+    pass an exercise is teaching the wrong thing.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series3/_25/LoggingAndErrorsKoans.groovy
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here. */}
+
+TODO

@@ -1,0 +1,120 @@
+---
+title: "Threads for Slow API Calls — and Why They Do Not Speed Up pandas"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-python"
+tags: []
+level: "advanced"
+module: "series3-python-that-ships"
+order: 32
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/python/curriculum.yaml       the track's decisions
+      datasets/README.md                   the three dataset tiers, and why
+      tests/src/koans/python/conftest.py   the koan rules and helpers
+
+    HOW THIS TRACK IS HANDS-ON
+      Jupyter is the EXPLORE surface, koans are the GRADED surface — exactly the
+      split Learn SQL has between CloudBeaver and its koans. DataPallas ships
+      JupyterLab; the koans run in Docker so nobody installs Python.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: fetch 4,000 API pages in under a minute instead of twenty, and know when
+    that technique will do nothing at all.
+    LIBRARIES: concurrent.futures.ThreadPoolExecutor (as_completed), a requests or
+    httpx Session, and one paragraph naming asyncio as the other road.
+
+    DECISION — WHY THIS EPISODE EXISTS. Java & Groovy has Series 2 · 60, "Virtual
+    Threads and Parallel Streams — Running Slow Calls in Parallel". Python had no
+    answer to it until 2026-08-24, and the situation is completely ordinary: Series
+    2 · 20 fetches one page at a time, and 4,000 pages at 300ms each is twenty minutes
+    of a process doing nothing but waiting.
+
+    DECISION — HALF THIS EPISODE IS THE PART THAT DOES NOT WORK, which is exactly why
+    it is an episode and not a paragraph bolted onto 20. A reader who learns "threads
+    make things faster" will reach for them on a slow groupby and get nothing, or get
+    something slower. Say the real rule out loud and early:
+
+        threads help you WAIT in parallel. They do not help you COMPUTE in parallel,
+        because of the GIL.
+
+    So the decision table this episode leaves behind is:
+        waiting on a network or a disk   -> threads (this episode)
+        slow work on a DataFrame         -> vectorize it (Series 3 · 30)
+        still slow, still in memory      -> polars (Series 3 · 35)
+        bigger than memory               -> push it back to SQL (Series 2 · 05)
+        genuinely CPU-bound and parallel -> multiprocessing, named and not taught
+
+    DECISION — ThreadPoolExecutor, NOT asyncio, as the thing the reader types. asyncio
+    is the more powerful answer and the wrong first one: it colours every function it
+    touches, it needs an async HTTP client, and it turns a five-line change into a
+    rewrite. Name it in one honest paragraph — "if you are writing a service that holds
+    thousands of open connections, this is the road" — and move on. A track that gets
+    somebody productive does not hand them a concurrency model for a page loop.
+
+    DECISION — NOT core, matching the Java side. Plenty of data jobs never call an API
+    that is slow enough to matter.
+
+    ── THE KOAN, AND THE RULE IT MUST NOT BREAK ────────────────────────────
+    NEVER ASSERT WALL-CLOCK TIME — see conftest.py. It is machine-dependent, flaky in
+    CI, and eventually deleted by whoever the flake wakes up. This episode is the most
+    tempting place in the whole track to break that rule, and it does not need to,
+    because the countable proxies ARE the lesson:
+
+      1. CALLS ISSUED (the existing `counting` fixture). Threading a paginated fetch
+         must not change how many pages you asked for. A pool that re-requests page 1
+         four times is a real bug, and it is invisible to a stopwatch.
+      2. COMPLETENESS AND ORDER. as_completed returns results in whatever order they
+         finish, which is the single most common threading bug in data code: rows
+         arriving shuffled and quietly attributed to the wrong page. Assert the
+         collected set is complete AND correctly keyed.
+      3. THE NEGATIVE RESULT. A koan where the same DataFrame work is threaded and the
+         call count / row count does not improve at all — the reader proves the GIL to
+         themselves rather than being told about it. This is the best koan in the
+         episode; make it the last one.
+
+    DATASET: api-stub — the same local stdlib HTTP server Series 2 · 20 uses, with a
+    deliberate delay per request so a serial loop is genuinely slow. Add a per-page
+    counter to it so koan 1 can assert on what the server actually received rather than
+    on what the client thinks it sent.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:count:queries
+      koan:predict
+      dataset: api-stub
+      koan file: tests/src/koans/python/series3/_32/test_concurrency_for_io.py
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the code
+
+{/* BEAT 2 — the libraries, one at a time, each with something the reader types.
+    Show it in a notebook cell where a notebook is the honest place for it. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The failure here is not slowness, it is CORRECTNESS: results returned out of
+    order and stitched back onto the wrong keys, or a retry that double-counts a
+    page. Both produce a complete-looking dataset with wrong rows in it. */}
+
+TODO

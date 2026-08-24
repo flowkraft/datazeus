@@ -12,13 +12,34 @@ course: learn-data-ops
 track: dataops
 title: Data Ops
 
+# Assumes Learn SQL, and nothing else. Deliberately the shallowest prerequisite in the academy:
+# this is the track somebody reaches for when the nightly job is already broken, and a long
+# prerequisite list at that moment is just a reason to give up and restart the server.
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1"
+    why: >-
+      Series 2 is PostgreSQL under load — transactions, locks, MVCC. You need to be able to
+      write and read the queries you are watching block each other.
+
 excludes:
   - topic: "Writing and tuning the queries themselves"
-    where: "covered in Learn SQL, Series 3 — EXPLAIN, indexes and the tuning capstone"
+    where: "covered in Learn SQL, Series 3 — EXPLAIN, indexes and the query-tuning project"
   - topic: "Row-level data quality, dedup & conformance"
     where: "covered in Learn ETL & Data Pipelines — here we watch whether the pipeline ran at all"
   - topic: "Schema design & normalization"
     where: "covered in Learn Data Modeling; this track only migrates a schema safely"
+
+  # The wrong expectation somebody arrives with. "DataOps" reads like "DevOps" and it is not.
+  - topic: "Kubernetes, Terraform and cloud provisioning"
+    where: "not covered; this track is the machine, the database and the job — the things a data person is actually handed"
+  - topic: "Python as a language for writing the jobs"
+    where: "covered in Python for Data. In this course, Series 1 is the shell tools you reach for when there is no Python on the box"
+  - topic: "Building the pipeline's logic"
+    where: "covered in ETL & Data Pipelines — here it already exists and has to keep running"
+
+  - topic: "Expressing a pipeline as a DAG of dependent steps"
+    where: "covered in ETL & Data Pipelines, Series 2 · 45, which is how a pipeline expresses its own dependencies. In this course, Series 3 · 00 is choosing what runs it and keeping that thing alive"
 
 series:
   - slug: series1-linux-for-data
@@ -29,44 +50,91 @@ series:
       - n: "00"
         slug: why-the-terminal
         title: "The Terminal — Why One Pipe Answers a Data Question Faster Than a GUI"
+        hands_on: ["koan:capture", "terminal"]
+        core: true
         status: planned
       - n: "05"
         slug: files-and-navigation
         title: "Files, Paths & Navigation — Where Your Data Actually Lives"
+        hands_on: ["koan:complete", "terminal"]
+        core: true
         status: planned
       - n: "10"
         slug: look-at-data-without-a-database
         title: "cat, less, head, tail & wc — Look at Data Without a Database"
+        hands_on: ["koan:capture"]
+        core: true
         status: planned
       - n: "15"
-        slug: cut-grep-sort-uniq
-        title: "cut, grep, sort & uniq — Slice Columns and Rows on the Command Line"
-        status: planned
-      - n: "20"
-        slug: sed-and-awk
-        title: "sed & awk — Reshape CSV and TSV Text Streams"
-        status: planned
-      - n: "25"
         slug: pipes-and-redirection
         title: "Pipes & Redirection — Compose Tiny Tools into a Pipeline"
+        hands_on: ["koan:capture", "koan:author"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: cut-grep-sort-uniq
+        title: "cut, grep, sort & uniq — Slice Columns and Rows on the Command Line"
+        hands_on: ["koan:capture", "koan:complete"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: sed-and-awk
+        title: "sed & awk — Reshape CSV and TSV Text Streams"
+        hands_on: ["koan:capture", "koan:complete"]
+        core: true
         status: planned
       - n: "30"
         slug: ssh-scp-rsync
         title: "ssh, scp & rsync — Move Data Between Machines"
+        hands_on: ["koan:process:tool"]
+        status: planned
+      # ADDED 2026-08-24. THE most common thing a data person is actually blocked by, and Series 1
+      # taught ssh and cron without ever teaching it. Teaching how to schedule a job before
+      # teaching how to reach the database the job needs is backwards.
+      # THE SKILL: five failures that look identical from the application and are not —
+      # wrong host, closed port, firewall drop (hangs) vs refused (fails fast), bad
+      # credentials, TLS required. Read the error, then narrow it: ping, then the port, then
+      # psql, then the driver. Whoever can do this saves a team an afternoon a week.
+      # KOAN: `diagnose` on real error text — each message maps to exactly one cause, and
+      # `capture` because the skill IS reading what was printed.
+      # Placed at 32, right after ssh/scp/rsync (30), because it is the same subject:
+      # getting to a machine that is not yours.
+      - n: "32"
+        slug: when-you-cannot-connect
+        title: "Connection Failures — Host, Port, Firewall, Credentials and TLS"
+        hands_on: ["koan:diagnose", "koan:capture", "terminal"]
+        core: true
         status: planned
       - n: "35"
         slug: permissions-and-environment
         title: "Permissions, Users & Environment Variables — Secrets a Job Can Read"
+        hands_on: ["koan:capture", "koan:diagnose"]
+        core: true
         status: planned
       - n: "40"
         slug: cron-and-systemd-timers
         title: "cron & systemd Timers — Turn a Script into a Nightly Job"
+        hands_on: ["koan:process:tool", "rundeck"]
+        core: true
         status: planned
       - n: "45"
         slug: bash-glue
         title: "Bash Glue — Variables, Loops, Exit Codes & Logging for ETL"
+        hands_on: ["koan:author", "koan:capture"]
+        core: true
         status: planned
 
+      # SERIES 1 PROJECT, added 2026-08-24. The series had none: the core path
+      # walked ten episodes with nothing built at the end of them.
+      # cut/grep/sort/awk/cron, composed once. The point is not that you would ship this — it is that
+      # you can read and fix the one already running on the server you inherited.
+      - n: "50"
+        slug: project-nightly-job-in-shell
+        title: "Project — A Nightly Job Written Only With Shell Tools"
+        hands_on: ["koan:author", "koan:capture"]
+        core: true
+        tags: ["project"]
+        status: planned
   - slug: series2-postgres-in-production
     title: Running PostgreSQL in Production
     tagline: the database that has to stay up
@@ -75,45 +143,74 @@ series:
       - n: "00"
         slug: transactions-and-acid
         title: "Transactions & ACID — BEGIN, COMMIT, ROLLBACK and What They Guarantee"
+        hands_on: ["koan:concurrent", "koan:predict"]
+        core: true
         status: planned
       # The episode Learn SQL deliberately hands over — see that course's `excludes`.
       - n: "05"
         slug: isolation-levels
         title: "Isolation Levels: The ANSI Four — Dirty Reads, Phantoms & What Postgres Really Does"
+        hands_on: ["koan:concurrent", "koan:predict"]
+        core: true
         status: planned
       - n: "10"
         slug: mvcc-and-vacuum
         title: "MVCC, Bloat & VACUUM — Why Postgres Keeps Old Row Versions"
+        hands_on: ["koan:concurrent", "koan:diagnose"]
+        core: true
         status: planned
       - n: "15"
         slug: locks-and-deadlocks
         title: "Locks & Deadlocks — Why Your UPDATE Is Hanging"
+        hands_on: ["koan:concurrent", "koan:diagnose"]
+        core: true
         status: planned
       - n: "20"
         slug: connections-and-pooling
         title: "Connections & Pooling — PgBouncer and the Limit You Will Hit"
+        hands_on: ["koan:count:queries", "koan:diagnose"]
+        core: true
         status: planned
       - n: "25"
         slug: configuration-and-memory
         title: "Configuration & Memory — shared_buffers, work_mem and Defaults Worth Changing"
+        hands_on: ["koan:choose"]
         status: planned
       - n: "30"
         slug: backup-and-restore
         title: "Backup & Restore — pg_dump, PITR, and Proving It Actually Restores"
+        hands_on: ["koan:process:tool", "koan:rerun"]
+        core: true
         status: planned
       - n: "35"
         slug: zero-downtime-migrations
         title: "Schema Migrations Without Downtime — Locks, Defaults & the Safe Order"
+        hands_on: ["koan:concurrent", "koan:predict"]
+        core: true
         status: planned
       - n: "40"
         slug: roles-grants-and-rls
         title: "Roles, Grants & Row-Level Security — Least Privilege for Data Access"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
         status: planned
       - n: "45"
         slug: replication-and-upgrades
         title: "Replication & Upgrades — Read Replicas, Failover and Major-Version Moves"
+        hands_on: ["koan:process:tool"]
         status: planned
 
+      # SERIES 2 PROJECT, added 2026-08-24. The series had none: the core path
+      # walked ten episodes with nothing built at the end of them.
+      # The one exercise that needs everything in Series 2 at once: a transaction, a lock, an index
+      # build, and a second session that must keep working throughout. Graded by that session.
+      - n: "50"
+        slug: project-migrate-without-blocking
+        title: "Project — Migrate a Live Table Without Blocking Anyone"
+        hands_on: ["koan:concurrent", "koan:author"]
+        core: true
+        tags: ["project"]
+        status: planned
   - slug: series3-reliability
     title: Reliability
     tagline: what happens when the nightly job dies at 3 a.m.
@@ -121,42 +218,86 @@ series:
     episodes:
       - n: "00"
         slug: scheduling-at-scale
-        title: "Scheduling at Scale — cron, systemd Timers, or a Real Orchestrator?"
+        title: "Scheduling at Scale — Choosing Between cron, systemd Timers and an Orchestrator"
+        hands_on: ["koan:choose", "rundeck"]
+        core: true
         status: planned
       - n: "05"
         slug: logging-and-structured-output
         title: "Logging & Structured Output — Make a Failure Readable at 3 a.m."
+        hands_on: ["koan:capture"]
+        core: true
         status: planned
       - n: "10"
         slug: monitoring-and-metrics
         title: "Monitoring & Metrics — Watch Postgres, Disk and Job Health"
+        hands_on: ["koan:complete"]
         status: planned
+      # SOURCE (google-sre): ERROR BUDGETS and alerting on symptoms rather than causes.
       - n: "15"
         slug: alerting-and-on-call
         title: "Alerting & On-Call — Page a Human Only When It Matters"
+        tags: ["google-sre"]
+        credits:
+          - source: google-sre
+            concept: "ERROR BUDGETS and alerting on symptoms rather than causes"
+        hands_on: ["eyes"]
         status: planned
       - n: "20"
         slug: freshness-and-volume-checks
         title: "Freshness & Volume Checks — Catch a Pipeline That Silently Stopped"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
         status: planned
+      # SOURCE (google-sre): The BLAMELESS POSTMORTEM, and what a useful one contains.
       - n: "25"
         slug: incident-response
         title: "Incident Response & Postmortems — Diagnose, Fix, Write It Down"
+        tags: ["google-sre"]
+        credits:
+          - source: google-sre
+            concept: "The BLAMELESS POSTMORTEM, and what a useful one contains"
+        hands_on: ["koan:capture"]
         status: planned
       - n: "30"
         slug: containers-for-data-jobs
         title: "Containers for Data Jobs — Compose, Images & Runs You Can Reproduce"
+        hands_on: ["koan:process:tool", "koan:rerun"]
+        core: true
         status: planned
+      # ALSO OWNS THE DELETION REQUEST, which belongs beside retention because both are the
+      # same subject: data that has to go away, on a deadline.
+      #   RETENTION is the scheduled version — TTL, partition drops, "we keep 24 months".
+      #   A DELETION REQUEST is the unscheduled one: a named person asks to be removed, and
+      #   the clock is legal rather than operational.
+      #   WHY IT IS HARD, and this is the teaching point: the row is never in one place. It is
+      #   in the OLTP table, the staging copy, last night's extract, the warehouse fact, three
+      #   materialized views, a backup, and somebody's CSV on a laptop. Deleting the first one
+      #   and calling it done is the common failure.
+      #   WHAT ACTUALLY WORKS: know where personal columns live before you are asked (Data
+      #   Modeling, Series 2 - 27 classifies them), have a documented list of every copy, and
+      #   prefer ONE deletion procedure you rehearse over a heroic search each time.
+      #   BACKUPS ARE THE HONEST PROBLEM — you usually cannot surgically edit one. Say what
+      #   real teams do instead: age them out, and record that you did.
+      # NOT legal advice; name whoever owns compliance where the reader works.
       - n: "35"
         slug: capacity-and-retention
         title: "Capacity, Storage & Retention — Disk, Partitions and TTL"
+        hands_on: ["koan:count:scanned"]
         status: planned
       - n: "40"
         slug: cost-control
-        title: "Cost Control — Compute, Storage and the Bill Nobody Reads"
+        title: "Cost Control — Compute, Storage and Where the Money Goes"
+        hands_on: ["koan:choose"]
         status: planned
+      # Titled "Reliability Capstone — ..." until 2026-08-24. The Capstone -> Project rename
+      # swept titles across the academy and missed this one, because it was the only episode
+      # carrying the word in the MIDDLE of a title rather than as the "Capstone — " prefix the
+      # pass searched for. Found by the slug rename that followed.
       - n: "45"
-        slug: reliability-capstone
-        title: "Reliability Capstone — Put a Northwind Pipeline On Call"
-        tags: ["capstone"]
+        slug: project-pipeline-on-call
+        title: "Project — Put a Northwind Pipeline On Call"
+        hands_on: ["koan:author", "koan:capture", "rundeck"]
+        core: true
+        tags: ["project"]
         status: planned

@@ -9,6 +9,27 @@ course: learn-python
 track: python
 title: Python for Data
 
+# Assumes Learn SQL, and the track has always said so without declaring it: Series 1 · 25 is
+# titled "The SQL Ideas You Know, in Python Syntax", Series 1 · 30 is "GROUP BY Without the
+# Database", and Series 2 · 10 queries PostgreSQL. A dependency that is stated in episode
+# titles and nowhere a reader can see is how someone concludes they are not ready.
+#
+# Sibling of Data Modeling and Java & Groovy, not a sequence: all three start after Learn SQL
+# Series 1 and none of them needs the others.
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1"
+    why: >-
+      Half of this track is the same ideas in another syntax — filter, group, join — taught
+      against the same Northwind data, so the two reinforce each other instead of competing.
+      You are never asked to write clever SQL here, but from Series 2 onward you query a real
+      database from Python and have to know what the answer should be.
+
+# Reviewed 2026-08-24. The first three lines were accurate but this was the ONLY one of the
+# four tracks with no cross-reference to its siblings — and Python is the track that needs
+# them most, because "learn Python" is the vaguest phrase in the academy. Two readers arrive
+# here wanting completely different things (a web developer and an analyst), and the sibling
+# tracks share four subjects with this one under the same keyword.
 excludes:
   - topic: "Machine learning — features, training, model selection"
     where: "not covered; this track is about moving and shaping data. For LLM-era work see AI for Data"
@@ -16,6 +37,23 @@ excludes:
     where: "covered in BI & Data Visualization — here you plot only to see the data yourself"
   - topic: "Scheduling, cron and running jobs in production"
     where: "covered in Data Ops — this track gets the script ready to be scheduled"
+  # The wrong expectation somebody arrives with. Django and FastAPI are what most of the
+  # internet means by "learn Python", and a reader who wants them should find that out on
+  # this page rather than in Series 2.
+  - topic: "Web apps and web APIs — Django, Flask, FastAPI"
+    where: "not covered anywhere in the academy; this is Python for people who move data, not people who serve it"
+  # The question a reader in front of two sibling tracks actually asks. Saying nothing lets
+  # them conclude one is a lesser version of the other — they are the same job twice.
+  - topic: "Whether to learn this or Java & Groovy for Data"
+    where: "neither is a prerequisite for the other — same job, two languages. Pick the one your team already runs; the projects in both tracks are deliberately identical so the second one is short"
+  # Three reciprocal halves. Each shares a word with another track and is a different question,
+  # which is exactly how a reader concludes we repeated ourselves.
+  - topic: "Designing the schema you are loading into"
+    where: "covered in Data Modeling — here the tables already exist and your job is to fill them correctly"
+  - topic: "Writing the SQL itself — joins, window functions, tuning"
+    where: "covered in Learn SQL. In this course you only send SQL you already know, and Series 2 · 05 and Series 3 · 30 are about deciding what runs in the database rather than in pandas"
+  - topic: "Running the same job every night — watermarks, incremental loads, backfills, orchestration"
+    where: "covered in ETL & Data Pipelines, which is what happens when a job has to run for a year. In this course, Series 3 gets one correct, tested, repeatable run"
 
 series:
   - slug: series1-python-fundamentals
@@ -25,43 +63,79 @@ series:
     episodes:
       - n: "00"
         slug: your-first-script
-        title: "Your First Script — Read a CSV and Answer a Question in Ten Lines"
+        title: "Your First Script — Read a CSV File and Answer One Question About It"
+        hands_on: ["koan:author", "jupyter"]
+        dataset: messy
+        core: true
         status: planned
+      # "The Four Types Data Work Runs On" until 2026-08-24 — the last aphorism left in the
+      # track's titles. `Runs On` is a metaphor; the rule is plain English about data.
       - n: "05"
         slug: types-and-collections
-        title: "Strings, Numbers, Lists & Dicts — The Four Types You'll Use All Day"
+        title: "Strings, Numbers, Lists & Dicts — The Four Types You Use in Every Script"
+        hands_on: ["koan:complete", "jupyter"]
+        dataset: none
+        core: true
         status: planned
       - n: "10"
         slug: loops-conditionals-functions
-        title: "Loops, Conditionals & Functions — Stop Repeating Yourself"
+        title: "Loops, Conditionals & Functions — Doing the Same Work Over Many Rows"
+        hands_on: ["koan:complete", "koan:predict"]
+        dataset: none
+        core: true
         status: planned
       - n: "15"
         slug: files-and-encodings
-        title: "Files, Paths & Encodings — Read and Write Data Without Mangling It"
+        title: "Files, Paths & Encodings — Reading and Writing Text in the Right Encoding"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        dataset: messy
+        core: true
         status: planned
       - n: "20"
         slug: dataframes
         title: "DataFrames — pandas and polars, and Which to Reach For"
+        hands_on: ["koan:choose", "jupyter"]
+        dataset: northwind
+        core: true
         status: planned
       - n: "25"
         slug: select-filter-sort
         title: "Select, Filter & Sort — The SQL Ideas You Know, in Python Syntax"
+        hands_on: ["koan:complete", "jupyter"]
+        dataset: northwind
+        core: true
         status: planned
       - n: "30"
         slug: groupby-and-aggregate
         title: "groupby & Aggregate — GROUP BY Without the Database"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        dataset: northwind
+        core: true
         status: planned
       - n: "35"
         slug: merge-and-join
-        title: "merge & join — Glue Two DataFrames Together"
+        title: "merge & join — Combining Two DataFrames on a Key"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        dataset: northwind
+        core: true
         status: planned
       - n: "40"
         slug: missing-data-and-dtypes
-        title: "Missing Data & dtypes — NaN, None and the Casts That Bite"
+        title: "Missing Data & dtypes — NaN, None and Getting the Column Type Right"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        dataset: messy
+        core: true
         status: planned
+      # SERIES 1 PROJECT. The series had none until 2026-08-24, which meant the core path
+      # walked ten episodes and had nothing to show for them. Not a new exercise: everything
+      # from this series, on one messy file, checked against a number you can verify by hand.
       - n: "45"
         slug: first-end-to-end-script
-        title: "End to End — Messy CSV In, Clean Table Out"
+        title: "Project — From a Messy CSV to a Clean Table"
+        hands_on: ["koan:author"]
+        dataset: messy
+        core: true
+        tags: ["project"]
         status: planned
 
   - slug: series2-real-data
@@ -71,43 +145,125 @@ series:
     episodes:
       - n: "00"
         slug: csv-json-parquet
-        title: "CSV, JSON & Parquet — Pick the Right File Format (and Why Parquet Usually Wins)"
+        title: "CSV, JSON & Parquet — Choosing a File Format, and Why Parquet Usually Wins"
+        hands_on: ["koan:choose", "jupyter"]
+        dataset: generated
+        core: true
+        status: planned
+      # ADDED 2026-08-24. Java & Groovy has had Series 2 · 05 "Excel with POI" since the start,
+      # with the note "the real list is .xlsx, and a reporting company that cannot read one is
+      # not credible" — and Python, the language where reading one is a single line, had
+      # nothing. That asymmetry was indefensible in the track people will actually reach for
+      # when a spreadsheet lands in their inbox.
+      #
+      # NOT core, matching the same call on the Java side: whether you need Excel is decided by
+      # your employer, not by the craft. Numbered 02 rather than renumbering the series, the
+      # same way Learn SQL carries 06 and 08.
+      #
+      # DATASET: generated, not messy — and this is the interesting part. Excel's characteristic
+      # defects CANNOT be expressed in a CSV: merged header cells, a title row above the real
+      # header, a date stored as the serial number 45123, and a number stored as text with a
+      # leading apostrophe. So the defects are authored in a GENERATOR script (reviewable text,
+      # tier 3) and the .xlsx is built from it. Committing a binary .xlsx would have broken
+      # tier 2's whole rationale, which is that a reviewer can see the defect in a diff.
+      - n: "02"
+        slug: excel-files
+        title: "Excel Files — Reading the Spreadsheets Your Business Sends You"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        dataset: generated
         status: planned
       - n: "05"
         slug: duckdb-from-python
         title: "DuckDB from Python — Run SQL on Files and DataFrames, No Server"
+        hands_on: ["koan:complete"]
+        dataset: northwind
+        core: true
         status: planned
       - n: "10"
         slug: databases-from-python
-        title: "psycopg & SQLAlchemy — Query PostgreSQL from Python"
+        title: "psycopg & SQLAlchemy Core — Querying PostgreSQL from Python"
+        hands_on: ["koan:complete"]
+        dataset: northwind
+        core: true
         status: planned
       - n: "15"
         slug: parameterized-queries
-        title: "Parameterized Queries — Never Build SQL with f-Strings"
+        title: "Parameterized Queries — Passing Values Safely Into a Query"
+        hands_on: ["koan:predict", "koan:complete"]
+        dataset: northwind
+        core: true
         status: planned
       - n: "20"
         slug: apis-and-json
-        title: "HTTP APIs & JSON — Pull Data You Don't Own (Pagination, Retries, Rate Limits)"
+        title: "HTTP APIs & JSON — Fetching Data With Pagination, Retries and Rate Limits"
+        hands_on: ["koan:complete", "koan:count:queries"]
+        dataset: api-stub
+        core: true
         status: planned
       - n: "25"
         slug: dates-and-timezones
-        title: "Dates, Times & Time Zones — The Bugs That Only Appear in Production"
+        title: "Dates, Times & Time Zones — Storing and Comparing Moments Correctly"
+        hands_on: ["koan:predict"]
+        dataset: messy
+        core: true
+        status: planned
+      # ADDED 2026-08-24. The track had no episode on string work, which is a large and boring
+      # fraction of every real data job: trailing spaces that break a join, "GmbH" vs "gmbh",
+      # one column holding "Lastname, Firstname", an invoice number buried in a free-text note,
+      # and "1.234,56" that has to become a number.
+      #
+      # NOT the same episode as 30. Two different questions that both get called "cleaning":
+      #   here    the value is repairable — normalise it so it joins and sums correctly
+      #   at 30   the value is NOT repairable — decide whether to reject the row or fail the job
+      # Placed between parsing dates (25) and validation (30) so the series reads parse → repair
+      # → decide, which is the order the work actually happens in.
+      #
+      # CORE, unlike Excel: nobody escapes string cleaning, whatever their employer sends them.
+      - n: "27"
+        slug: text-cleaning
+        title: "Text Cleaning — Trimming, Splitting and Matching Messy Strings"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        dataset: messy
+        core: true
         status: planned
       - n: "30"
         slug: cleaning-and-validation
         title: "Cleaning & Validation — Types, Ranges and Rows You Should Reject"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        dataset: messy
+        core: true
         status: planned
       - n: "35"
         slug: reshaping
-        title: "pivot, melt & Reshape — Wide, Long, and Back Again"
+        title: "pivot, melt & Reshape — Moving Data Between Wide and Long"
+        hands_on: ["koan:complete", "jupyter"]
+        dataset: northwind
         status: planned
       - n: "40"
         slug: quick-plots
-        title: "Quick Plots — Look at Your Data Before Anyone Else Does"
+        title: "Quick Plots — Looking at Your Data While You Work"
+        hands_on: ["jupyter"]
+        dataset: northwind
         status: planned
       - n: "45"
         slug: notebooks-vs-scripts
-        title: "Notebooks vs Scripts — Explore in One, Ship the Other"
+        title: "Notebooks vs Scripts — Where Each One Belongs"
+        hands_on: ["jupyter", "koan:process:tool"]
+        dataset: northwind
+        core: true
+        status: planned
+      # SERIES 2 PROJECT, added with Series 1's. This series is the heart of the track —
+      # files, a database and an API — and it had no episode that assembled them.
+      # Deliberately the same shape as Java & Groovy Series 2's project: three sources, one
+      # answer, reconciled. A reader who has done both tracks should recognise it, and that
+      # recognition is the point — the job is the same, the language is not.
+      - n: "50"
+        slug: project-three-sources
+        title: "Project — One Answer From a CSV, a Database and an API"
+        hands_on: ["koan:author", "koan:count:rows-held"]
+        dataset: northwind
+        core: true
+        tags: ["project"]
         status: planned
 
   - slug: series3-python-that-ships
@@ -118,41 +274,86 @@ series:
       - n: "00"
         slug: environments-and-dependencies
         title: "venv, pip & uv — Environments That Still Work Next Month"
+        hands_on: ["koan:process:tool"]
+        dataset: none
+        core: true
         status: planned
       - n: "05"
         slug: project-structure
         title: "Project Structure & Imports — From One File to a Real Package"
+        hands_on: ["eyes"]
+        dataset: none
         status: planned
       - n: "10"
         slug: cli-scripts
-        title: "argparse & CLI Scripts — Turn a Notebook into a Job"
+        title: "argparse & CLI Scripts — Turning a Notebook Into a Job You Can Run"
+        hands_on: ["koan:process:tool"]
+        dataset: messy
+        core: true
         status: planned
       - n: "15"
         slug: config-and-secrets
-        title: "Config & Secrets — Environment Variables, and Nothing Hardcoded"
+        title: "Config & Secrets — Keeping Passwords Out of Your Code"
+        hands_on: ["koan:process:tool", "koan:capture"]
+        dataset: none
+        core: true
         status: planned
       - n: "20"
         slug: logging-and-errors
-        title: "Logging & Error Handling — Fail Loudly, Retry Sensibly"
+        title: "Logging & Error Handling — What to Log When a Job Fails"
+        hands_on: ["koan:capture"]
+        dataset: messy
+        core: true
         status: planned
       - n: "25"
         slug: testing-with-pytest
-        title: "pytest — Test the Transform, Not the Database"
+        title: "pytest — Testing the Transform Without a Database"
+        hands_on: ["koan:author"]
+        dataset: northwind
         status: planned
       - n: "30"
         slug: performance-and-memory
         title: "Performance & Memory — Chunking, Vectorizing, and When to Push It Back to SQL"
+        hands_on: ["koan:count:rows-held", "koan:diagnose"]
+        dataset: generated
+        status: planned
+      # ADDED 2026-08-24, to close the last gap against Java & Groovy, which has Series 2 · 60
+      # "Virtual Threads and Parallel Streams — Running Slow Calls in Parallel". Python had no
+      # answer to it, and the situation is completely ordinary: Series 2 · 20 fetches an API
+      # page at a time, and 4,000 pages at 300ms each is twenty minutes of doing nothing.
+      #
+      # HALF THIS EPISODE IS THE PART THAT DOES NOT WORK, which is why it is worth an episode
+      # rather than a paragraph. Threads help I/O and do nothing for a pandas groupby, and the
+      # reason is the GIL. A reader who learns "threads make things faster" will reach for them
+      # on the wrong problem; the honest version is: threads for waiting, and for CPU work
+      # either vectorize it (30), hand it to polars (35), or push it back to SQL.
+      #
+      # KOAN: the counter already exists — assert on calls issued and on results being complete
+      # and correctly attributed. Never on wall-clock time; see conftest.py.
+      # NOT core, matching the Java side.
+      - n: "32"
+        slug: concurrency-for-io
+        title: "Threads for Slow API Calls — and Why They Do Not Speed Up pandas"
+        hands_on: ["koan:count:queries", "koan:predict"]
+        dataset: api-stub
         status: planned
       - n: "35"
         slug: polars-and-lazy-evaluation
         title: "polars & Lazy Evaluation — When pandas Runs Out of Room"
+        hands_on: ["koan:count:rows-held", "koan:choose"]
+        dataset: generated
         status: planned
       - n: "40"
         slug: packaging-and-handoff
-        title: "Packaging & Hand-Off — Make It Runnable by Someone Who Isn't You"
+        title: "Packaging & Hand-Off — Making It Runnable by Someone Else"
+        hands_on: ["koan:process:tool"]
+        dataset: none
         status: planned
       - n: "45"
-        slug: capstone-python-pipeline
-        title: "Capstone — A Tested Python Job That Loads Northwind End to End"
-        tags: ["capstone"]
+        slug: project-python-pipeline
+        title: "Project — A Tested Python Job That Loads Northwind End to End"
+        hands_on: ["koan:author", "koan:process:tool"]
+        dataset: northwind
+        tags: ["project"]
+        core: true
         status: planned

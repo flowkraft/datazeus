@@ -4,6 +4,7 @@
 #
 #  Usage:  ./zeus.sh <command> [args]
 #    zeus koans [course] [series] [lesson]   walk the path (narrow with each token)
+#    zeus practice [reset|run [star]]        your Data Modeling sandbox (a private Northwind copy)
 #    zeus test                               run the verify gate (the *Spec tests; needs Docker)
 #    zeus update                             pull the latest courses & koans (keeps your edits)
 #    zeus help                               this help
@@ -33,6 +34,7 @@ zeus_help() {
 DataZeus - Master Everything Data, become a Data Zeus.
 
   zeus koans [course] [series] [lesson]   walk the path
+  zeus practice [reset|run [star]]        your Data Modeling sandbox (a private Northwind copy)
   zeus test                               run the verify gate (the *Spec tests; needs Docker)
   zeus update                             pull the latest courses & koans (keeps your edits)
   zeus help                               this help
@@ -117,7 +119,88 @@ zeus_update() {
   echo "DataZeus is up to date. Your in-progress edits were left untouched."
 }
 
+zeus_koans_python() {
+  # PYTHON KOANS RUN IN DOCKER, AND THE LEARNER NEVER TYPES A DOCKER COMMAND.
+  #
+  # The JVM tracks can assume a JDK and fetch Maven with the bundled wrapper. Python has no
+  # equivalent: assuming a working local Python means assuming their version, their PATH and
+  # their venv habits, and on Windows that is the likeliest thing to make somebody quit before
+  # koan one. Docker is already required by `zeus test`, CloudBeaver, PostgreSQL and Jupyter,
+  # so this asks for nothing new.
+  #
+  # The image is built here rather than pulled: it pins pytest, pandas, polars and duckdb
+  # exactly, so a koan's expected answer cannot shift under a library upgrade. `docker build`
+  # is a no-op after the first run - Docker's layer cache makes it about a second.
+  if ! command -v docker >/dev/null 2>&1 || ! docker info >/dev/null 2>&1; then
+    echo
+    echo "============================================================"
+    echo " DOCKER IS NOT RUNNING (or not installed)."
+    echo
+    echo " The Python koans run inside a container so you do not have"
+    echo " to install Python, pandas or pytest yourself. Docker is the"
+    echo " only thing you need - and DataPallas already uses it for"
+    echo " CloudBeaver, PostgreSQL and Jupyter."
+    echo
+    echo " Fix: start Docker, then run your command again."
+    echo "============================================================"
+    echo
+    exit 1
+  fi
+
+  KO="$DIR/tests/src/koans/python"
+  scope=""
+  for tok in "$2" "$3"; do
+    [ -z "$tok" ] && break
+    _s="${tok#series}"; _s="${_s#S}"; _s="${_s#s}"
+    _e="${tok#ep}"; _e="${_e#EP}"; _e="${_e#_}"
+    _hit=""
+    for _c in "$tok" "series$_s" "_$_e"; do
+      [ -n "$_c" ] && [ -d "$KO$scope/$_c" ] && { _hit="$_c"; break; }
+    done
+    if [ -z "$_hit" ]; then
+      echo
+      echo "=========================================================================="
+      echo "  \"$tok\" IS NOT IN YOUR COPY OF DATAZEUS."
+      echo
+      printf "  What you DO have there:
+      "
+      ls -1 "$KO$scope" 2>/dev/null | grep -v conftest | tr '
+' ' '; echo
+      echo
+      echo "  Nothing was run - your koans are fine. If it is spelled right, it was"
+      echo "  published after you downloaded DataZeus:   ./zeus.sh update"
+      echo "=========================================================================="
+      echo
+      return 1
+    fi
+    scope="$scope/$_hit"
+  done
+
+  echo "Building the Python koan runner (first run only, a few seconds)..."
+  if ! docker build -q -t datazeus-python "$DIR/tests/python" >/dev/null 2>&1; then
+    echo "Could not build the koan image. Is Docker running?"; exit 1
+  fi
+
+  # Git Bash hands out /c/... paths that the Docker daemon cannot resolve; cygpath -m fixes
+  # that and is a no-op everywhere else.
+  kmount="$KO"; dmount="$DIR/datasets"
+  if command -v cygpath >/dev/null 2>&1; then
+    kmount="$(cygpath -m "$KO")"; dmount="$(cygpath -m "$DIR/datasets")"
+  fi
+
+  echo "Walking the path...  (scope: python$scope)"
+  # MSYS_NO_PATHCONV: Git Bash rewrites any argument that looks like a Unix path, so the
+  # CONTAINER path /koans/series1/_15 arrives as C:/Program Files/Git/koans/... and pytest
+  # reports "file or directory not found". Harmless on macOS and Linux.
+  MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*" docker run --rm     -v "$kmount:/koans"     -v "$dmount:/datasets:ro"     datazeus-python -q --no-header "/koans$scope"
+}
+
 zeus_koans() {
+  # PYTHON IS NOT A JVM TRACK - hand it over before the java check below, so the same
+  # `zeus koans <course> <series> <lesson>` command works identically for every course.
+  case "$1" in
+    python|py|learn-python) shift 0; zeus_koans_python "$@"; return $? ;;
+  esac
   # Koans build with Maven: your installed Maven if you have one, otherwise the bundled
   # wrapper (./mvnw) fetches one automatically. Either way you only need a JDK 17+.
   if ! command -v java >/dev/null 2>&1 && [ -z "$JAVA_HOME" ]; then
@@ -246,6 +329,76 @@ zeus_koans() {
   fi
 }
 
+zeus_practice() {
+  # THE DATA MODELING SANDBOX.
+  #
+  # Learn SQL only ever READS, so its koans can open a throwaway copy and nobody needs a
+  # workspace. Data Modeling WRITES: the learner spends the whole of Series 1 growing a
+  # schema.sql that rebuilds Northwind's integrity layer. That needs somewhere to put it.
+  #
+  # Why a COPY of the database and not the shipped one: northwind.duckdb is read by the
+  # koans, by the verify gate, and by the e2e tests. A learner experimenting with CREATE and
+  # DROP inside it would break all three, and the breakage would look like their fault.
+  #
+  # Why a `practice` SCHEMA inside that copy rather than a bare database: their tables sit
+  # next to main.* so they can INSERT INTO practice.X SELECT * FROM main.X — which is the
+  # whole grading mechanism. Real rows either fit their model or they do not.
+  #
+  # Why RESET drops and recreates: DuckDB cannot ALTER TABLE ADD FOREIGN KEY / UNIQUE / CHECK
+  # (only ADD PRIMARY KEY and SET NOT NULL), so schema.sql has to be a REBUILD script with
+  # constraints declared inline. Rebuilds are only pleasant if they are idempotent, so
+  # DROP SCHEMA IF EXISTS ... CASCADE is baked into the template rather than left to memory.
+  #
+  # And the teardown is a lesson, not housekeeping: DROP SCHEMA practice CASCADE is the first
+  # genuinely destructive statement in the course, in the one place where it is safe to run.
+  WORK="$DIR/practice"
+  SRC="$DIR/datasets/northwind/northwind.duckdb"
+  DB="$WORK/northwind-practice.duckdb"
+  case "$1" in
+    reset|"")
+      mkdir -p "$WORK"
+      if [ ! -f "$SRC" ]; then echo "Northwind dataset not found at $SRC"; exit 1; fi
+      cp "$SRC" "$DB" || { echo "Could not create your practice database."; exit 1; }
+      # One working file per series, because each series leaves a different artifact behind:
+      # schema.sql is the Series 1 Northwind rebuild, star.sql is the Series 3 star schema.
+      # Series 2's library schema is the learner's own file - they name it, we do not.
+      # Never overwritten once created; your work survives every reset and every update.
+      TPLDIR="$DIR/courses/datamodeling/practice-template"
+      for f in schema.sql star.sql; do
+        if [ ! -f "$WORK/$f" ]; then
+          cp "$TPLDIR/$f" "$WORK/$f" 2>/dev/null && echo "Created $WORK/$f - your working file."
+        else
+          echo "Kept your existing $WORK/$f."
+        fi
+      done
+      echo "Fresh practice database: $DB"
+      echo "The shipped dataset was not touched."
+      ;;
+    run)
+      [ -f "$DB" ] || { echo "No practice database yet. Run:  ./zeus.sh practice reset"; exit 1; }
+      # `practice run` defaults to schema.sql; `practice run star` runs star.sql.
+      case "$2" in star) SQLFILE="star.sql" ;; *) SQLFILE="${2:-schema.sql}" ;; esac
+      [ -f "$WORK/$SQLFILE" ] || { echo "No $SQLFILE in $WORK."; exit 1; }
+      if command -v duckdb >/dev/null 2>&1; then
+        # Git Bash hands out /c/... paths that a native duckdb.exe cannot resolve, and the
+        # failure looks like a missing file rather than a path-format problem. Translate when
+        # cygpath is there; everywhere else these two are already the paths we had.
+        d="$DB"; f="$WORK/$SQLFILE"
+        if command -v cygpath >/dev/null 2>&1; then
+          d="$(cygpath -m "$DB")"; f="$(cygpath -m "$WORK/$SQLFILE")"
+        fi
+        duckdb "$d" -c ".read $f" && echo "$SQLFILE ran clean."
+      else
+        echo "The DuckDB CLI is not installed - which is fine, it is optional."
+        echo "Open this file in CloudBeaver instead and run it there:"
+        echo "    $DB"
+        echo "(Or let the koans run it for you:  ./zeus.sh koans datamodeling)"
+      fi
+      ;;
+    *) echo "Usage: ./zeus.sh practice [reset|run]" ;;
+  esac
+}
+
 zeus_test() {
   # Run the VERIFY GATE (the *Spec tests), NOT the koans. Same Maven logic as zeus_koans
   # (your Maven if present, else the bundled wrapper). Needs a JDK 17+ AND Docker — the gate
@@ -282,6 +435,7 @@ case "$1" in
   help|-h|--help) zeus_help ;;
   "")             zeus_help ;;
   koans)          shift; zeus_koans "$@" ;;
+  practice)       shift; zeus_practice "$@" ;;
   test)           zeus_test ;;
   *)              zeus_koans "$@" ;;   # bare form: treat as koans args
 esac

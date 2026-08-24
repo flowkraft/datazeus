@@ -4,20 +4,86 @@
 # One track, not two: choosing a chart and defining a metric are the same job — getting a
 # decision made. Series 1 is charts that tell the truth, Series 2 is richer analysis and the
 # metric definitions behind it, Series 3 is dashboards, delivery and getting it adopted.
+#
+# ╔════════════════════════════════════════════════════════════════════════════════════╗
+# ║  THIS IS A BI COURSE. DATAPALLAS IS THE TOOL WE DEMONSTRATE IN.                     ║
+# ╚════════════════════════════════════════════════════════════════════════════════════╝
+# The subject is BI and visualization — general principles a reader takes to Looker, Power BI,
+# Tableau or a hand-rolled page. What changes is only WHERE we demonstrate: for all BI and
+# visualization needs we use DataPallas itself, never Metabase or any other bundled
+# third-party app when DataPallas can do it.
+#
+# NEVER PRETEND THIS IS A DATAPALLAS COURSE. Same rule as everywhere in the academy: Learn SQL
+# is not a CloudBeaver course, Python for Data is not a Jupyter course. Concretely:
+#   TITLES name the SKILL, never the product's UI. "Building a Chart Without SQL", not "The
+#     Data Canvas". "When Point-and-Click Runs Out", not "Finetune". Library names that are
+#     industry-standard anywhere (pandas, dbt, pgvector) are fine; proprietary UI names are not.
+#   PROSE teaches the principle first, then shows it — "here is how you do that in DataPallas".
+#   EVERY EPISODE must leave the reader something true of BI generally. If an episode is only
+#     true of DataPallas, it is product documentation and belongs in content/docs, not here.
+#
+# THE FOUR SURFACES we demonstrate on, all documented in
+# content/docs/bi-analytics/dashboards.mdx. Read that before editing this file.
+#   canvas          the Data Canvas. Drop a cube, tick fields, "Visualize as" SUGGESTS the
+#                   shape from the data (one value -> Number, a time series -> Line, grouped
+#                   values -> Bar), Finetune when ticking cannot express it, Display for the
+#                   label and format, Publish Dashboard for a page with its own address.
+#   cube            the cube designer. Shared with Data Warehousing on purpose: that track
+#                   BUILDS cubes, this one CONSUMES them. Same object, two ends, and the
+#                   reciprocal excludes say so.
+#   report-config   the data script, HTML template and per-component config on disk.
+#   web-components  rb-value, rb-chart, rb-tabulator, rb-pivot-table, rb-parameters, rb-report.
+#
+# A DASHBOARD IS CODE — the general principle behind Series 3 · 12, and true of every serious
+# BI tool: Looker has LookML, Power BI has PBIP, Tableau has its XML, dbt has exposures. A
+# dashboard clicked into existence and never written down cannot be reviewed, diffed, rolled
+# back or rebuilt. DataPallas happens to make the point unusually cleanly, because its two
+# ways of building — visual and hand-configured — produce the SAME files on disk, so they are
+# two doors into one room rather than beginner mode and expert mode. That gives the reader the
+# working habit to take anywhere: prototype visually in minutes, then open what it wrote and
+# finish the job in files you can commit.
+#
+# THREE EPISODES ADDED 2026-08-24 so the track is built, not just read:
+#   1 · 12   building a chart without SQL, right after "choosing the chart", so everything
+#            after it is something the reader makes.
+#   2 · 47   what to do when point-and-click runs out — and the best koan in the track.
+#   3 · 12   dashboards as files, i.e. the principle above.
+#
+# AND THE SUGGESTED CHART IS A TEACHING POINT, not a convenience. A good tool reads the shape
+# of the data and proposes an encoding — one value as a number, a time series as a line,
+# grouped values as bars — which is Series 1 · 10's whole subject, demonstrated instead of
+# asserted. Say out loud, every time, that the suggestion is a head start and never a rule: a
+# reader who believes the tool decided will not overrule it, and overruling it is the skill.
 
 course: learn-bi
 track: bi
 title: BI & Data Visualization
 
+# Assumes Learn SQL, because every widget is a query and the most expensive mistake in this
+# track is a chart that is beautiful and wrong. Series 2 · 06 (join fan-out) is the specific
+# episode: a dashboard that double-counts is the same bug, drawn.
+prerequisites:
+  - course: learn-sql
+    needs: "Series 2"
+    why: >-
+      A chart is a GROUP BY you can see. Series 2 · 06 in particular — a widget built on a
+      fanned-out join shows a number that is confidently, plausibly too big.
+
 excludes:
   - topic: "Writing the queries behind the widgets"
     where: "covered in Learn SQL"
-  - topic: "Building the warehouse and the cubes themselves"
-    where: "covered in Data Warehousing; here you consume them"
+  - topic: "Building the warehouse and designing the cubes themselves"
+    where: "covered in Data Warehousing, which is where a cube gets designed and built. In this course, Series 1 · 12 uses one that already exists"
   - topic: "Natural-language questions and AI-assisted analysis"
     where: "covered in AI for Data"
   - topic: "Plotting for your own exploration in Python"
     where: "covered in Python for Data — this track is about charts other people read"
+
+  # The reciprocal half of the near-collision, stated on both sides on purpose.
+  - topic: "Implementing the metric as version-controlled, tested code"
+    where: "covered in Analytics Engineering (dbt), Series 3 · 10, which writes the agreed definition as code. In this course, Series 2 · 40 is the earlier job of agreeing what it should mean"
+  - topic: "Getting the dashboard's data there on time"
+    where: "covered in ETL & Data Pipelines and Data Ops — here the numbers are assumed to have arrived"
 
 series:
   - slug: series1-charts-that-tell-the-truth
@@ -27,45 +93,88 @@ series:
     episodes:
       - n: "00"
         slug: why-visualize
-        title: "Why Visualize — From Rows to Insight in One Look"
+        title: "Why Visualize — What a Chart Shows That a Table Does Not"
+        hands_on: ["eyes"]
+        core: true
         status: planned
+      # SOURCE (cleveland-mcgill): The PERCEPTION RANKING — position beats length beats angle beats area beats colour — is Cleveland & McGill's 1984 experiment, not an opinion. Cite the evidence; it is what makes this episode more than taste.
       - n: "05"
         slug: visual-encoding
         title: "Visual Encoding — Position, Length, Colour and What the Eye Reads First"
+        credits:
+          - source: cleveland-mcgill
+            concept: "The PERCEPTION RANKING — position beats length beats angle beats area beats colour — is Cleveland & McGill's 1984 experiment, not an opinion"
+        tags: ["cleveland-mcgill"]
+        hands_on: ["koan:choose"]
+        core: true
         status: planned
       - n: "10"
         slug: choosing-the-right-chart
         title: "Choosing the Right Chart — Match the Chart to the Question"
+        hands_on: ["koan:choose"]
+        core: true
+        status: planned
+      # ADDED 2026-08-24, and it belongs HERE — right after "choosing the right chart" — so every
+      # episode after it (bar, line, part-to-whole, KPI) is something the reader BUILDS rather
+      # than reads about.
+      # THE SKILL: pick the data, then pick the shape — the loop every modern BI tool gives you.
+      # DEMONSTRATED IN DataPallas: drop a cube on the Canvas, tick fields, let "Visualize as"
+      # suggest the encoding, set the label in Display. Teach the loop, name the buttons once,
+      # and say plainly that the suggestion is a head start and never a rule.
+      - n: "12"
+        slug: chart-without-sql
+        title: "Building a Chart Without SQL — Pick the Data, Pick the Shape"
+        hands_on: ["koan:author", "canvas", "cube"]
+        core: true
         status: planned
       - n: "15"
         slug: bar-and-column
         title: "Bar & Column — Comparing Categories (Revenue by Category)"
+        hands_on: ["koan:complete", "canvas"]
+        core: true
         status: planned
       - n: "20"
         slug: line-and-area
         title: "Line & Area — Trends Over Time (Monthly Orders)"
+        hands_on: ["koan:complete", "canvas"]
+        core: true
         status: planned
       - n: "25"
         slug: part-to-whole
         title: "Pie, Donut & Part-to-Whole — And Why to Use Them Sparingly"
+        hands_on: ["koan:choose"]
         status: planned
       - n: "30"
         slug: kpis-gauges-and-numbers
         title: "KPIs, Gauges & Big Numbers — When a Number Beats a Chart"
+        hands_on: ["koan:complete", "canvas"]
+        core: true
         status: planned
       - n: "35"
         slug: colour-and-accessibility
         title: "Colour — Meaning, Scales and Accessibility"
+        hands_on: ["koan:diagnose"]
         status: planned
+      # SOURCE (tufte): Edward Tufte — the LIE FACTOR, DATA-INK RATIO and CHARTJUNK. "The Visual Display of Quantitative Information" (1983). His words, and the lie factor is a number you can compute.
       - n: "40"
         slug: honest-charts
         title: "Honest Charts — Axes, Scales and How Not to Mislead"
+        credits:
+          - source: tufte
+            concept: "Edward Tufte — the LIE FACTOR, DATA-INK RATIO and CHARTJUNK"
+        tags: ["tufte"]
+        hands_on: ["koan:diagnose"]
+        core: true
         status: planned
+      # PROJECT, tagged 2026-08-24. Was "Your First Chart — Query to Widget, Hands-On": same call as Data Warehousing 1/45 —
+      # project-shaped already. "Someone else can read" is the series' actual promise.
       - n: "45"
         slug: your-first-chart
-        title: "Your First Chart — Query to Widget, Hands-On"
+        title: "Project — From a Query to a Chart Someone Else Can Read"
+        hands_on: ["koan:author", "canvas"]
+        core: true
+        tags: ["project"]
         status: planned
-
   - slug: series2-from-charts-to-answers
     title: From Charts to Answers
     tagline: richer encodings, and agreeing what the numbers mean
@@ -74,95 +183,208 @@ series:
       - n: "00"
         slug: aggregation-and-granularity
         title: "Aggregation & Granularity — What One Mark Actually Represents"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
         status: planned
       - n: "05"
         slug: multi-series-and-small-multiples
         title: "Multi-Series & Small Multiples — Compare Without Clutter"
+        hands_on: ["koan:choose", "canvas"]
         status: planned
+      # SOURCE (tukey): The BOX PLOT, and 'exploratory data analysis' as a phrase — histograms are older and unowned.
       - n: "10"
         slug: distributions
         title: "Distributions — Histograms & Box Plots, Beyond the Average"
+        tags: ["tukey"]
+        credits:
+          - source: tukey
+            concept: "The BOX PLOT, and 'exploratory data analysis' as a phrase — histograms are older and unowned"
+        hands_on: ["koan:predict"]
+        core: true
         status: planned
       - n: "15"
         slug: geospatial
         title: "Geospatial — Choropleth Maps (Sales by ShipCountry)"
+        hands_on: ["koan:complete", "canvas"]
         status: planned
       - n: "20"
         slug: flows-and-correlation
         title: "Sankey & Scatter — Flows, Relationships and Two Measures at Once"
+        hands_on: ["koan:complete"]
         status: planned
       - n: "25"
         slug: time-intelligence
         title: "Time Intelligence — MTD, YTD, YoY, Moving Averages & Sparklines"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
         status: planned
       - n: "30"
         slug: pivot-tables
         title: "Pivot Tables — Cross-Tab Analysis (Category × Quarter)"
+        hands_on: ["koan:equivalent", "web-components"]
+        core: true
         status: planned
       - n: "35"
         slug: metrics-and-kpis
         title: "Metrics & KPIs — Defining What 'Good' Means, Once"
+        hands_on: ["koan:equivalent"]
+        core: true
         status: planned
       - n: "40"
         slug: the-semantic-layer
         title: "The Semantic Layer — One Definition of Revenue the Whole Org Uses"
+        hands_on: ["koan:equivalent", "cube"]
+        core: true
         status: planned
       - n: "45"
         slug: filters-and-drill-down
         title: "Filters, Drill-Down & Cross-Filtering — Let People Ask the Next Question"
+        hands_on: ["koan:predict", "web-components"]
+        core: true
         status: planned
 
+      # SERIES 2 PROJECT, added 2026-08-24. The series had none: the core path
+      # walked ten episodes with nothing built at the end of them.
+      # Series 2 ends on the semantic layer, and the failure it prevents is three widgets disagreeing
+      # about revenue. Graded by equivalence: every surface returns the same number.
+      # ADDED 2026-08-24. THE SKILL: every BI tool has a ceiling, and knowing where it is — and
+      # how to drop below it for one widget without abandoning the tool — is what separates
+      # someone who can finish a dashboard from someone who gives up on it. Ticking fields
+      # covers most widgets; it cannot express a ratio across ranked rows — "what share of
+      # revenue comes from the top twenty percent of customers".
+      # DEMONSTRATED IN DataPallas: the widget's Finetune tab takes a query or a Groovy script
+      # for that ONE widget without leaving the Canvas.
+      # Placed at the END of Series 2, on purpose: you have to meet the limit before the
+      # escape hatch means anything. It is also the best koan in the track — the cube's answer
+      # and the query's answer are both plausible, and only one is right.
+      - n: "47"
+        slug: when-clicking-runs-out
+        title: "Custom SQL for One Widget — What to Do When Point-and-Click Runs Out"
+        hands_on: ["koan:author", "koan:diagnose", "canvas"]
+        core: true
+        status: planned
+      - n: "50"
+        slug: project-one-metric-everywhere
+        title: "Project — One Metric, Defined Once, Correct Everywhere"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        tags: ["project"]
+        status: planned
   - slug: series3-dashboards-and-delivery
     title: Dashboards, Delivery & Adoption
     tagline: make it land, and keep it trusted
     level: advanced
     episodes:
+      # SOURCE (few): Stephen Few, "Information Dashboard Design" — a dashboard fits on ONE SCREEN, and what belongs top-left. His argument, worth naming.
       - n: "00"
         slug: dashboard-layout
         title: "Dashboard Layout — Information Hierarchy and What Belongs at the Top"
+        credits:
+          - source: few
+            concept: "Stephen Few, 'Information Dashboard Design' — a dashboard fits on ONE SCREEN, and what belongs top-left"
+        tags: ["few"]
+        hands_on: ["koan:choose"]
+        core: true
         status: planned
       - n: "05"
         slug: exploratory-vs-explanatory
         title: "Exploratory vs Explanatory — Design for Who's Looking"
+        hands_on: ["koan:choose"]
         status: planned
       - n: "10"
         slug: build-a-dashboard
-        title: "Build a Multi-Widget Dashboard — Hands-On on the Canvas"
+        title: "Build a Multi-Widget Dashboard — Layout, Filters and One Story"
+        hands_on: ["koan:author", "canvas"]
+        core: true
+        status: planned
+      # ADDED 2026-08-24. THE SKILL, and it is general: a dashboard clicked into existence and
+      # never written down cannot be reviewed, diffed, rolled back or rebuilt. Every serious
+      # tool has an answer — LookML, PBIP, Tableau XML, dbt exposures — and a reader who has
+      # never opened one will eventually lose a dashboard nobody can reconstruct.
+      # DEMONSTRATED IN DataPallas, which makes the point unusually cleanly: its visual and
+      # hand-configured paths produce the SAME files — a data script, an HTML template,
+      # per-component config — so this is not "advanced mode", it is the other door into one
+      # room. The habit to leave behind: prototype visually, then commit what it wrote.
+      # NOT core: plenty of people ship good dashboards without ever opening them.
+      - n: "12"
+        slug: dashboards-as-files
+        title: "Dashboards as Files — Version Control, Review and Rebuilding From Scratch"
+        hands_on: ["koan:author", "report-config"]
         status: planned
       - n: "15"
         slug: linked-views
         title: "Linked Views & Cross-Widget Drill-Down — Click a Bar, Filter the Page"
+        hands_on: ["koan:predict", "canvas"]
         status: planned
       - n: "20"
         slug: operational-reporting
         title: "Operational & Pixel-Perfect Reporting — When the Layout Is the Requirement"
+        hands_on: ["koan:complete"]
+        core: true
+        status: planned
+      # ADDED 2026-08-24, and the gap it fills is the commonest reason a correct dashboard stops
+      # being used. Series 3 is adoption; nothing is adopted that takes forty seconds to load.
+      # THE SKILL: find which widget is slow, and know the four fixes in order of what they
+      # cost you — narrow the query, pre-aggregate, cache the result, or push it to a
+      # columnar engine. The order matters: people reach for caching first and then cannot
+      # explain why a number is stale.
+      # KOAN: `count:scanned`, never a stopwatch — the same page, an order of magnitude less
+      # data read. Placed after 3 · 20's pixel-perfect reporting because a report you are
+      # generating on a schedule has the same problem and a different answer.
+      # Cross-refs Data Warehousing 1 · 35 (pre-aggregation) rather than re-teaching it.
+      - n: "22"
+        slug: dashboard-performance
+        title: "Dashboard Performance — Why It Takes Forty Seconds, and What to Cache"
+        hands_on: ["koan:count:scanned", "koan:diagnose"]
+        core: true
         status: planned
       - n: "25"
         slug: report-bursting
         title: "Report Bursting — One Report, Many Recipients, Each Seeing Only Theirs"
+        hands_on: ["koan:process:tool"]
+        core: true
         status: planned
       - n: "30"
         slug: scheduled-delivery
         title: "Scheduled Delivery — Email, Portals and Files, on a Schedule"
+        hands_on: ["koan:process:tool", "rundeck"]
+        core: true
         status: planned
       - n: "35"
         slug: self-service-portals
         title: "Self-Service Portals — Secure, Personalized Access Without a Ticket"
+        hands_on: ["koan:predict"]
         status: planned
       - n: "40"
         slug: governance-and-row-level-security
-        title: "Governance & Row-Level Security — One Version of the Truth, Safely Shared"
+        title: "Governance & Row-Level Security — Same Numbers for Everyone, and Only Their Rows"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
         status: planned
+      # SOURCE (knaflic): Cole Nussbaumer Knaflic, "Storytelling with Data" (2015) — the source for annotation, narrative order and pre-attentive attention.
       - n: "45"
         slug: data-storytelling
         title: "Data Storytelling — Annotation, Narrative and Sequence"
+        credits:
+          - source: knaflic
+            concept: "Cole Nussbaumer Knaflic, 'Storytelling with Data' (2015) — the source for annotation, narrative order and pre-attentive attention"
+        tags: ["knaflic"]
+        hands_on: ["eyes"]
         status: planned
       - n: "50"
         slug: embedded-analytics
         title: "Embedded Analytics — BI Inside Your Own Application"
+        hands_on: ["koan:complete", "web-components"]
         status: planned
+      # THE TRACK'S FINAL PROJECT. cube -> dashboards -> delivery is the DataPallas path end
+      # to end.
+      # All four surfaces in one exercise: build the cube, assemble on the Canvas, own the
+      # exported config, burst and schedule it. Graded by equivalence — every surface reports
+      # the same revenue — because three widgets disagreeing is what this track exists to stop.
       - n: "55"
-        slug: capstone-executive-suite
-        title: "Capstone — A Northwind Executive Suite: Cube → Dashboards → Delivery"
-        tags: ["capstone"]
+        slug: project-executive-suite
+        title: "Project — A Northwind Executive Suite: Cube → Dashboards → Delivery"
+        hands_on: ["koan:author", "koan:equivalent", "canvas", "report-config"]
+        core: true
+        tags: ["project"]
         status: planned

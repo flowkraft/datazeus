@@ -40,6 +40,7 @@ if /I "%cmd%"=="-h"      goto :help
 if /I "%cmd%"=="--help"  goto :help
 if /I "%cmd%"=="/?"      goto :help
 if /I "%cmd%"=="test"    goto :test
+if /I "%cmd%"=="practice" goto :practice
 if "%cmd%"==""           goto :help
 
 REM "zeus koans <a> <b> <c>" OR the bare "zeus <course> <series> <lesson>"
@@ -48,12 +49,15 @@ if /I "%cmd%"=="koans" (
 ) else (
   set "C=%~1" & set "S=%~2" & set "E=%~3"
 )
+if /I "%C%"=="python" goto :koans_python
+if /I "%C%"=="py" goto :koans_python
 goto :koans
 
 :help
 echo DataZeus - Master Everything Data, become a Data Zeus.
 echo.
 echo   zeus koans [course] [series] [lesson]   walk the path
+echo   zeus practice [reset^|run [star]]        your Data Modeling sandbox ^(a private Northwind copy^)
 echo   zeus test                               run the verify gate ^(the *Spec tests; needs Docker^)
 echo   zeus update                             pull the latest courses ^& koans ^(keeps your edits^)
 echo   zeus help                               this help
@@ -61,6 +65,116 @@ echo.
 echo   e.g.  zeus koans learnsql series1 _00
 echo Short aliases: sql=learnsql, S1=series1. Courses: sql modeling etl warehousing dbt viz bi.
 endlocal & exit /b 0
+
+:practice
+REM THE DATA MODELING SANDBOX - mirror of zeus_practice() in zeus.sh; keep the two in step.
+REM
+REM Learn SQL only READS, so its koans open a throwaway copy and no workspace is needed.
+REM Data Modeling WRITES: Series 1 is the learner growing a schema.sql that rebuilds
+REM Northwind^'s integrity layer, and that needs somewhere to live.
+REM
+REM A COPY, not the shipped file: northwind.duckdb is read by the koans, the verify gate
+REM and the e2e tests. A learner experimenting with CREATE/DROP inside it would break all
+REM three, and the breakage would look like their fault.
+REM
+REM A `practice` SCHEMA inside that copy, not a bare database: their tables sit beside
+REM main.* so they can INSERT INTO practice.X SELECT * FROM main.X - which IS the grading
+REM mechanism. The real rows either fit their model or they do not.
+REM
+REM RESET drops and recreates because DuckDB cannot ALTER TABLE ADD FOREIGN KEY / UNIQUE /
+REM CHECK. Integrity cannot be bolted on in place, so schema.sql is a rebuild - and a
+REM rebuild is only pleasant if it is idempotent.
+set "WORK=%DIR%practice"
+set "SRC=%DIR%datasets\northwind\northwind.duckdb"
+set "DB=%WORK%\northwind-practice.duckdb"
+set "TPLDIR=%DIR%courses\datamodeling\practice-template"
+set "SUB=%~2"
+if "%SUB%"=="" set "SUB=reset"
+if /I "%SUB%"=="run" goto :practice_run
+if not exist "%SRC%" (echo Northwind dataset not found at %SRC% ^& endlocal ^& exit /b 1)
+if not exist "%WORK%" mkdir "%WORK%" >nul 2>nul
+copy /y "%SRC%" "%DB%" >nul || (echo Could not create your practice database. ^& endlocal ^& exit /b 1)
+REM One working file per series: schema.sql is the Series 1 Northwind rebuild, star.sql the
+REM Series 3 star schema. Series 2's library schema is the learner's own file - they name it.
+REM Never overwritten once created; your work survives every reset and every update.
+for %%F in (schema.sql star.sql) do (
+  if exist "%WORK%\%%F" (
+    echo Kept your existing %WORK%\%%F.
+  ) else (
+    copy /y "%TPLDIR%\%%F" "%WORK%\%%F" >nul ^& echo Created %WORK%\%%F - your working file.
+  )
+)
+echo Fresh practice database: %DB%
+echo The shipped dataset was not touched.
+endlocal & exit /b 0
+
+:practice_run
+if not exist "%DB%" (echo No practice database yet. Run:  zeus practice reset ^& endlocal ^& exit /b 1)
+REM "practice run" defaults to schema.sql; "practice run star" runs star.sql.
+set "SQLFILE=schema.sql"
+if /I "%~3"=="star" set "SQLFILE=star.sql"
+if not exist "%WORK%\%SQLFILE%" (echo No %SQLFILE% in %WORK%. ^& endlocal ^& exit /b 1)
+where duckdb >nul 2>nul && (
+  duckdb "%DB%" -c ".read %WORK%\%SQLFILE%" ^& echo %SQLFILE% ran clean.
+) || (
+  echo The DuckDB CLI is not installed - which is fine, it is optional.
+  echo Open this file in CloudBeaver instead and run it there:
+  echo     %DB%
+  echo ^(Or let the koans run it for you:  zeus koans datamodeling^)
+)
+endlocal & exit /b 0
+
+:koans_python
+REM PYTHON KOANS RUN IN DOCKER - mirror of zeus_koans_python() in zeus.sh; keep in step.
+REM
+REM The JVM tracks assume a JDK and fetch Maven with the bundled wrapper. Python has no
+REM equivalent: assuming a local Python means assuming their version, PATH and venv habits,
+REM and on Windows that is the likeliest thing to make somebody quit before koan one.
+REM Docker is already required by `zeus test`, CloudBeaver, PostgreSQL and Jupyter.
+REM
+REM The image is BUILT, not pulled: it pins pytest, pandas, polars and duckdb exactly, so a
+REM koan answer cannot shift under a library upgrade. After the first run docker build is a
+REM no-op thanks to the layer cache.
+docker info >nul 2>nul
+if errorlevel 1 (
+  echo.
+  echo ============================================================
+  echo  DOCKER IS NOT RUNNING ^(or not installed^).
+  echo.
+  echo  The Python koans run inside a container so you do not have
+  echo  to install Python, pandas or pytest yourself. Docker is the
+  echo  only thing you need - and DataPallas already uses it for
+  echo  CloudBeaver, PostgreSQL and Jupyter.
+  echo.
+  echo  Fix: start Docker, then run your command again.
+  echo ============================================================
+  echo.
+  endlocal ^& exit /b 1
+)
+set "KO=%DIR%tests\src\koans\python"
+set "SCOPE="
+if not "%S%"=="" call :py_resolve "%S%"
+if not "%E%"=="" call :py_resolve "%E%"
+echo Building the Python koan runner ^(first run only, a few seconds^)...
+docker build -q -t datazeus-python "%DIR%tests\python" >nul 2>nul
+if errorlevel 1 (echo Could not build the koan image. Is Docker running? ^& endlocal ^& exit /b 1)
+echo Walking the path...  ^(scope: python%SCOPE%^)
+docker run --rm -v "%KO%:/koans" -v "%DIR%datasets:/datasets:ro" datazeus-python -q --no-header "/koans%SCOPE:\=/%"
+endlocal & exit /b 0
+
+:py_resolve
+REM Accept "1" / "S1" / "series1" and "05" / "_05" / "ep05", the same tokens the JVM path takes.
+set "T=%~1"
+set "TS=%T:series=%" & set "TS=%TS:S=%" & set "TS=%TS:s=%"
+set "TE=%T:ep=%" & set "TE=%TE:_=%"
+if exist "%KO%%SCOPE%\%T%"        (set "SCOPE=%SCOPE%\%T%"        & goto :eof)
+if exist "%KO%%SCOPE%\series%TS%" (set "SCOPE=%SCOPE%\series%TS%" & goto :eof)
+if exist "%KO%%SCOPE%\_%TE%"      (set "SCOPE=%SCOPE%\_%TE%"      & goto :eof)
+echo.
+echo   "%T%" IS NOT IN YOUR COPY OF DATAZEUS.
+echo   Nothing was run - your koans are fine.  Try:  zeus update
+echo.
+endlocal & exit /b 1
 
 :koans
 REM Koans build with Maven: your installed Maven if you have one, otherwise the bundled

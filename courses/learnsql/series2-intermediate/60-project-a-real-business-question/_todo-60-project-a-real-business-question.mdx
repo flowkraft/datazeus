@@ -1,0 +1,95 @@
+---
+title: "Project — Answering a Real Business Question End to End"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-sql"
+tags: ["project"]
+level: "intermediate"
+module: "series2-intermediate"
+order: 60
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build.
+    Drop the _todo- prefix when it becomes a real lesson.
+
+    READ FIRST: courses/learnsql/curriculum.yaml's header — it is the field
+    documentation the whole academy points at, and it carries the title, short
+    and core conventions this episode has to follow.
+
+    THE HOUSE METHOD, from the three lessons already written:
+      - type the query yourself; copy-paste teaches your eyes only
+      - PREDICT the answer before running it, out loud, then run it
+      - every query runs on the Northwind that ships with DataPallas
+      - the koans mirror the lesson beat for beat
+
+    WHY THIS FILE EXISTS: it was the ONE episode in Learn SQL with neither a
+    lesson brief nor a koan brief — 34 of 35 had both. The gap was invisible
+    until the track declared `hands_on` on 2026-08-24 and something finally
+    compared the two lists. That it was the SERIES PROJECT is the worst place
+    for it: the episode where everything gets applied is the one a reader most
+    needs written well.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: take one question a person would actually be asked at work and answer it
+    correctly, end to end — not a drill, and not a question that hands you its own
+    answer.
+    SQL: NOTHING NEW, and say so out loud in the article. Multi-table joins (00), a
+    subquery or EXISTS (05), a CTE to name the steps (08), CASE for the buckets (15),
+    a date range with the right boundaries (20), a window function for the rank or the
+    running total (50/55). A project introduces no syntax; that is what makes it one.
+
+    ── PICK A QUESTION THAT HAS A WRONG ANSWER THAT LOOKS RIGHT ────────────
+    This is the whole design of the episode. Without it, "end to end" just means
+    "longer", and a longer drill is still a drill. Two candidates that have the
+    property:
+      - revenue per customer per quarter, ranked, over a date range. Walks straight
+        into the fan-out from 06 (an order-level column summed once per LINE) and the
+        boundary bug from 20 (a range that quietly drops the last day).
+      - customers who bought in Q1 and not since — where a LEFT JOIN and a NOT EXISTS
+        give different answers and only one is right.
+    The article must NAME the number a careful person gets wrong, and the koans must be
+    able to tell the two apart. If the wrong answer and the right answer produce the same
+    rows, it is the wrong question for this episode.
+
+    ── END ON THE HABIT, NOT THE QUERY ─────────────────────────────────────
+    The last beat is the check, not the answer: after the join, did the number of
+    distinct customers change? Three lines, transferable to every tool, and it is what
+    would have caught the wrong answer above. Java & Groovy Series 1 · 40 and Python
+    Series 1 · 35 close on the same check on purpose — a reader who does two of these
+    tracks should recognise it and know why it followed them.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:author
+      cloudbeaver
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_60/ProjectARealBusinessQuestionKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. The published lessons all open this way;
+    keep it. Never "SELECT is used to…". Always "your boss asks…". */}
+
+TODO
+
+## TODO — the SQL
+
+{/* BEAT 2 — build the query in steps, each one runnable on its own, so a reader who
+    stalls knows WHICH step broke. Every query runs on Northwind. Predict, then run. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above. This episode's rung is `koan:author`:
+    no scaffolding, one blank for the whole query, graded on the row set. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it. Name it
+    explicitly: this is the beat the whole episode was designed around. */}
+
+TODO

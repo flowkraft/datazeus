@@ -15,3 +15,7 @@ node_modules/
 __pycache__/
 *.pyc
 .DS_Store
+
+# Your Data Modeling sandbox: a private copy of Northwind plus the schema.sql you grow
+# across Series 1. Created by `zeus practice reset`. Yours, never ours - never committed.
+practice/

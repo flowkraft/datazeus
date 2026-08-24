@@ -4,10 +4,44 @@
 # The job this track teaches: build the place the questions get answered fast. Series 1 is
 # why a warehouse exists and how you query one, Series 2 is the columnar engines and cubes
 # that make it quick, Series 3 is scale, cost and the modern lakehouse.
+#
+# ╔════════════════════════════════════════════════════════════════════════════════════╗
+# ║  CUBES: THE CONCEPT IS GENERAL, THE DEMO IS DATAPALLAS.                             ║
+# ╚════════════════════════════════════════════════════════════════════════════════════╝
+# Series 2 · 20-30 is the semantic layer, and it is a general idea: name the business's
+# metrics once, in a reviewed place, so a report, a dashboard and an AI question all resolve
+# to the same number. Cube.dev, the dbt semantic layer and DataPallas all do it, and all three
+# resolve a cube to SQL.
+#
+# WE DEMONSTRATE IN DATAPALLAS'S OWN CUBE DSL, because it does the job and reaching for a
+# third-party tool to teach a feature we ship would be daft. Read these first:
+#   content/docs/semantic-layer/index.mdx           what a cube is here, and when NOT to use one
+#   content/docs/semantic-layer/dsl-reference.mdx   dimensions, measures, joins, segments,
+#                                                   hierarchies — the five parts, with examples
+#   content/docs/semantic-layer/quickstart.mdx      a working cube on Northwind in five minutes
+# Sample cubes ship with the product (Customer Management, HR, Inventory, Sales Analysis,
+# Sales Warehouse), so Series 2 · 25 reads real ones before Series 2 · 30 queries them.
+#
+# MDX WAS IN A TITLE HERE AND IS GONE. It is Microsoft SSAS / Mondrian's query language,
+# nothing in this academy uses it, and teaching it would have taught a legacy vendor dialect
+# as though it were "how you query a cube". The general skill is: pick dimensions and measures
+# instead of writing the join and the GROUP BY, then READ THE GENERATED SQL — because that is
+# the only way to know the layer did not double-count. DataPallas's Show SQL button is where
+# the reader sees it; the habit transfers to any semantic layer they meet later.
 
 course: learn-data-warehousing
 track: datawarehousing
 title: Data Warehousing
+
+# Assumes Learn SQL, and assumes Data Modeling's dimensional series for anyone who wants to
+# DESIGN rather than query — which is why that one is listed as helpful, not required. This
+# track reads and builds a model; that one decides what the model should be.
+prerequisites:
+  - course: learn-sql
+    needs: "Series 2"
+    why: >-
+      Everything here is a GROUP BY over a join, then the same query made to read less data.
+      Series 2 is where multi-table joins and CTEs stop being an obstacle.
 
 excludes:
   - topic: "Designing the dimensional model — grain, SCD type, star vs snowflake"
@@ -17,99 +51,264 @@ excludes:
   - topic: "Dashboards, metric definitions and delivery to business users"
     where: "covered in BI & Data Visualization"
 
+  - topic: "Writing the analytical queries themselves — window functions, CTEs, tuning"
+    where: "covered in Learn SQL — here the query is given and the question is how much data it had to read"
+  - topic: "Running the server — backups, replication, upgrades, on-call"
+    where: "covered in Data Ops"
+
+  # The reciprocal of BI's line about cubes. BI already said it; this side did not, and one
+  # subject named in only one direction is how a reader concludes we repeated ourselves.
+  - topic: "Reading a cube from a dashboard, and the charts built on it"
+    where: "covered in BI & Data Visualization, which consumes a cube. In this course, Series 2 designs and builds one"
+  # Four tracks touch the star schema and each does a different thing to it. Said here because
+  # Data Warehousing is where a reader is most likely to meet the third or fourth one.
+  - topic: "Deciding the star's grain, its SCD type and star vs snowflake"
+    where: "covered in Data Modeling, Series 3. In this course, Series 1 · 20 loads a design somebody has already made and Series 1 · 10 queries it"
+
 series:
   - slug: series1-warehousing-fundamentals
     title: Warehousing Fundamentals
     tagline: why a second copy of your data is worth it
     level: beginner
     episodes:
+      # SOURCE (kimball): The premise of the Toolkit: the reporting schema is a second, differently-shaped copy.
       - n: "00"
         slug: oltp-vs-olap
-        title: "OLTP vs OLAP — Two Workloads, Two Designs, One Business"
+        title: "OLTP vs OLAP — Two Workloads That Need Different Table Designs"
+        credits:
+          - source: kimball
+            concept: "The premise of the Toolkit: the reporting schema is a second, differently-shaped copy"
+        tags: ["kimball"]
+        hands_on: ["koan:choose"]
+        core: true
         status: planned
+      # ALSO NAME KIMBALL vs INMON HERE, in a paragraph. It is vocabulary a reader will be
+      # asked about in an interview and will otherwise meet as an argument with no context.
+      # This academy does not take a side.
+      #   INMON    top-down. One normalised, integrated enterprise warehouse first, then
+      #            dimensional marts spun off it. Slower to first value, stronger on
+      #            enterprise consistency.
+      #   KIMBALL  bottom-up. A dimensional mart per business process, kept joinable by
+      #            sharing CONFORMED dimensions (Data Modeling, Series 3 - 32). Faster to
+      #            first value, and the bus matrix is what stops it fragmenting.
+      #   TODAY    most teams run something closer to Kimball on a lakehouse, and dbt's
+      #            staging/marts split is the same shape. Say both names, then move on.
+      # THE HONEST LINE: whichever one they inherited, the reader's job is identical — find
+      # the grain, find the conformed dimensions, check the numbers reconcile.
+      # SOURCE (kimball): KIMBALL vs INMON — name both, take no side. See the beat above.
+      # SOURCE (inmon): Bill Inmon, "Building the Data Warehouse" — the top-down, normalised, enterprise-first position. Paired with Kimball here; take no side.
       - n: "05"
         slug: what-a-warehouse-is
         title: "Warehouse, Lake & Lakehouse — What Each One Actually Is"
+        credits:
+          - source: kimball
+            concept: "KIMBALL vs INMON — name both, take no side"
+          - source: inmon
+            concept: "Bill Inmon, 'Building the Data Warehouse' — the top-down, normalised, enterprise-first position"
+        tags: ["kimball", "inmon"]
+        hands_on: ["koan:choose"]
+        core: true
         status: planned
+      # SOURCE (kimball): THE STAR SCHEMA from the query side — designed in Data Modeling, Series 3 - 05; read here.
       - n: "10"
         slug: star-schema-for-analytics
         title: "The Star Schema from the Query Side — Why Analysts Like It"
+        credits:
+          - source: kimball
+            concept: "THE STAR SCHEMA from the query side — designed in Data Modeling, Series 3 - 05; read here"
+        tags: ["kimball"]
+        hands_on: ["koan:complete", "cloudbeaver"]
+        core: true
         status: planned
+      # SOURCE (kimball): FACTS, DIMENSIONS and GRAIN — his vocabulary, applied to a warehouse somebody else built.
       - n: "15"
         slug: facts-dimensions-grain-in-practice
         title: "Facts, Dimensions & Grain in Practice — Reading Someone Else's Warehouse"
+        credits:
+          - source: kimball
+            concept: "FACTS, DIMENSIONS and GRAIN — his vocabulary, applied to a warehouse somebody else built"
+        tags: ["kimball"]
+        hands_on: ["koan:diagnose"]
+        core: true
         status: planned
+      # SOURCE (kimball): The load his method implies: dimensions first, surrogate keys assigned, then facts.
       - n: "20"
         slug: loading-the-warehouse
         title: "Loading the Warehouse — From Northwind OLTP to fact_sales"
+        credits:
+          - source: kimball
+            concept: "The load his method implies: dimensions first, surrogate keys assigned, then facts"
+        tags: ["kimball"]
+        hands_on: ["koan:author", "koan:rerun"]
+        core: true
+        status: planned
+      # SOURCE (kimball): SLICE, DICE, DRILL DOWN and DRILL UP — the analytical moves a star exists to make cheap.
+      # ADDED 2026-08-24. THE most repeated conversation anyone who owns a warehouse has, and it
+      # was only implicit in the Series 3 project. "Finance says revenue is 1.2M, the dashboard
+      # says 1.18M, which is right?" — and until you can answer that, nobody trusts the warehouse.
+      # THE SKILL: reconcile a warehouse figure back to the operational system, and know the
+      # SIX reasons they legitimately differ before you go looking for a bug:
+      #   1. TIMING       the load ran at 02:00; the app has moved since. Always compare
+      #                   as-of the same instant, never "now" against "now".
+      #   2. GRAIN        the app counts orders, the fact counts order LINES. Series 1 - 15.
+      #   3. FILTERS      the warehouse excludes cancelled/test/internal rows and the app does
+      #                   not, or the other way round. Usually the real answer.
+      #   4. LATE ARRIVALS rows that landed after the cut-off (ETL & Data Pipelines, Series 2 - 20).
+      #   5. TYPE AND ROUNDING  money summed as float, or rounded per-row instead of at the end.
+      #   6. AN ACTUAL BUG  which is the LAST thing to suspect, not the first.
+      # THE DELIVERABLE is a reconciliation QUERY you keep and re-run, not a one-off
+      # investigation — that is what turns this from firefighting into a control.
+      # KOAN: `equivalent` on the two totals, then `diagnose` on a discrepancy planted as one
+      # of the six causes above. Placed at 22, right after Series 1 - 20 loads the warehouse:
+      # the first thing you do after loading is prove it is right.
+      - n: "22"
+        slug: reconciling-with-the-source
+        title: "Reconciling With the Source — Proving the Warehouse Agrees With the App"
+        hands_on: ["koan:equivalent", "koan:diagnose", "cloudbeaver"]
+        core: true
         status: planned
       - n: "25"
         slug: slice-dice-rollup-drilldown
         title: "Slice, Dice, Roll-Up & Drill-Down — The Four Analytical Moves"
+        credits:
+          - source: kimball
+            concept: "SLICE, DICE, DRILL DOWN and DRILL UP — the analytical moves a star exists to make cheap"
+        tags: ["kimball"]
+        hands_on: ["koan:complete"]
+        core: true
         status: planned
       - n: "30"
         slug: rollup-cube-grouping-sets
         title: "ROLLUP, CUBE & GROUPING SETS — Subtotals the Standard Way"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
         status: planned
+      # SOURCE (kimball): AGGREGATE FACT TABLES and SHRUNKEN DIMENSIONS — his terms for summary tables done correctly.
       - n: "35"
         slug: pre-aggregation
         title: "Pre-Aggregation — Summary Tables and Materialized Views"
+        credits:
+          - source: kimball
+            concept: "AGGREGATE FACT TABLES and SHRUNKEN DIMENSIONS — his terms for summary tables done correctly"
+        tags: ["kimball"]
+        hands_on: ["koan:equivalent", "koan:count:scanned"]
+        core: true
         status: planned
+      # SOURCE (kimball): THE DATE DIMENSION doing real work — the attributes he argues for (fiscal periods, holiday flags, day-of-week names).
       - n: "40"
         slug: date-dimension-in-practice
         title: "Time-Based Analysis — The Date Dimension Doing Real Work"
+        credits:
+          - source: kimball
+            concept: "THE DATE DIMENSION doing real work — the attributes he argues for (fiscal periods, holiday flags, day-of-week names)"
+        tags: ["kimball"]
+        hands_on: ["koan:complete"]
+        core: true
         status: planned
+      # PROJECT, tagged 2026-08-24. Was "Your First Warehouse — Build It, Load It, Query It": already the series project in
+      # everything but the tag, so it got the tag and the academy's title shape.
       - n: "45"
         slug: your-first-warehouse
-        title: "Your First Warehouse — Build It, Load It, Query It"
+        title: "Project — One Star Schema, Loaded and Queried"
+        hands_on: ["koan:author", "duckdb"]
+        core: true
+        tags: ["project"]
         status: planned
-
   - slug: series2-columnar-engines-and-cubes
     title: Columnar Engines & Cubes
     tagline: the machinery that makes it fast
     level: intermediate
     episodes:
+      # SOURCE (stonebraker): The C-Store argument for column-oriented storage, which DuckDB and ClickHouse both descend from.
       - n: "00"
         slug: columnar-storage
         title: "Columnar Storage — Why Analytics Loves Columns"
+        tags: ["stonebraker"]
+        credits:
+          - source: stonebraker
+            concept: "The C-Store argument for column-oriented storage, which DuckDB and ClickHouse both descend from"
+        hands_on: ["koan:count:scanned"]
+        core: true
         status: planned
       - n: "05"
         slug: duckdb
-        title: "DuckDB — An Embedded Analytical Warehouse, Hands-On"
+        title: "DuckDB — An Analytical Warehouse That Runs Inside Your Process"
+        hands_on: ["koan:complete", "duckdb"]
+        core: true
         status: planned
       - n: "10"
         slug: clickhouse-mergetree
-        title: "ClickHouse & MergeTree — Columnar at Scale, Hands-On"
+        title: "ClickHouse & MergeTree — Columnar Storage on a Server, at Scale"
+        hands_on: ["koan:complete", "clickhouse"]
+        core: true
         status: planned
       - n: "15"
         slug: partitioning-and-sort-keys
         title: "Partitioning, Sort Keys & Data Skipping — Read Less, Answer Sooner"
+        hands_on: ["koan:count:scanned", "koan:diagnose"]
+        core: true
         status: planned
+      # THE SKILL: name the business's metrics ONCE, in one reviewed place, instead of
+      # re-deriving them in every query. That is what a semantic layer is, and it is the same
+      # idea wherever you meet it.
+      # DEMONSTRATED IN DataPallas's Cube DSL, whose five parts ARE the syllabus of this
+      # episode: dimensions (what you slice by, named the way the business talks), measures
+      # (what you aggregate), joins (so nobody retypes the foreign keys), segments (reusable
+      # named filters — "last 30 days"), hierarchies (country -> region -> city, the drill path).
+      # See content/docs/semantic-layer/dsl-reference.mdx before writing this.
       - n: "20"
         slug: olap-cubes
-        title: "OLAP Cubes — Dimensions, Measures & Hierarchies in cube.xml"
+        title: "The Semantic Layer — Dimensions, Measures and Hierarchies, Declared Once"
+        hands_on: ["koan:complete", "cube"]
+        core: true
         status: planned
       - n: "25"
         slug: the-northwind-cubes
-        title: "The Northwind Cubes — Sales, Inventory, Customers, Warehouse"
+        title: "Reading Cubes Somebody Else Built — Sales, Inventory, Customers and HR"
+        hands_on: ["koan:author", "cube"]
         status: planned
+      # WAS "MDX & Pivot Analysis" until 2026-08-24, and MDX was simply wrong: it is
+      # Microsoft SSAS / Mondrian's query language, nothing here uses it, and no current
+      # semantic layer does either — Cube.dev, the dbt semantic layer and DataPallas all
+      # resolve a cube to SQL. It taught a legacy vendor dialect as "how you query a cube".
+      # THE SKILL: tick dimensions and measures instead of writing the join and the GROUP BY,
+      # then READ THE GENERATED SQL — which is the only way to know the layer did not
+      # double-count through a one-to-many join. Series 1 · 15's grain lesson collects here.
+      # THE KOAN is `equivalent` for exactly that reason: the cube's answer and a hand-written
+      # query must return the same rows, and when they do not, the SQL tells you why.
       - n: "30"
-        slug: mdx-and-pivot-analysis
-        title: "MDX & Pivot Analysis — Querying a Cube Instead of a Table"
+        slug: querying-a-cube
+        title: "Querying a Cube — Pick the Fields, Then Read the SQL It Wrote for You"
+        hands_on: ["koan:equivalent", "cube"]
         status: planned
       - n: "35"
         slug: materialized-views
         title: "Materialized Views & Incremental Aggregation — Compute Once, Read Often"
+        hands_on: ["koan:rerun", "koan:count:scanned"]
+        core: true
         status: planned
       - n: "40"
         slug: star-vs-one-big-table
-        title: "Star vs One Big Table on Columnar Engines — Benchmarked, Not Argued"
+        title: "Star vs One Big Table on Columnar Engines — Measured on the Same Data"
+        hands_on: ["koan:count:scanned", "koan:choose"]
         status: planned
       - n: "45"
         slug: compression-and-encoding
         title: "Compression & Encoding — Why the Same Table Is Ten Times Smaller Here"
+        hands_on: ["koan:count:scanned"]
         status: planned
 
+      # SERIES 2 PROJECT, added 2026-08-24. The series had none: the core path
+      # walked ten episodes with nothing built at the end of them.
+      # Series 2 is the machinery that makes a warehouse fast, and every episode in it is really the
+      # same question: did it read less? Graded on rows scanned, never on elapsed time.
+      - n: "50"
+        slug: project-read-less-data
+        title: "Project — The Same Question, Reading a Tenth of the Data"
+        hands_on: ["koan:author", "koan:count:scanned"]
+        core: true
+        tags: ["project"]
+        status: planned
   - slug: series3-advanced-warehousing
     title: Advanced Warehousing
     tagline: scale, cost, and the modern stack
@@ -118,41 +317,59 @@ series:
       - n: "00"
         slug: columnar-query-performance
         title: "Query Performance on Columnar Engines — Reading the Plan Again"
+        hands_on: ["koan:count:scanned", "koan:diagnose"]
+        core: true
         status: planned
       - n: "05"
         slug: clickhouse-matviews-and-projections
-        title: "Aggregating Materialized Views & Projections — ClickHouse Answering Before You Ask"
+        title: "Aggregating Materialized Views & Projections — ClickHouse Computing the Total at Insert Time"
+        hands_on: ["koan:count:scanned", "clickhouse"]
         status: planned
+      # SOURCE (kimball): Querying SLOWLY CHANGING DIMENSIONS correctly — the Type 2 as-of join his design implies.
       - n: "10"
         slug: scd-in-the-warehouse
         title: "Slowly Changing Dimensions in the Warehouse — Querying History Correctly"
+        credits:
+          - source: kimball
+            concept: "Querying SLOWLY CHANGING DIMENSIONS correctly — the Type 2 as-of join his design implies"
+        tags: ["kimball"]
+        hands_on: ["koan:predict"]
+        core: true
         status: planned
       - n: "15"
         slug: billions-of-rows
         title: "Billions of Rows — Partitions, Sharding & Distribution"
+        hands_on: ["koan:count:scanned"]
         status: planned
       - n: "20"
         slug: lakehouse
         title: "Lakehouse — Parquet, Iceberg and DuckDB Straight on Files"
+        hands_on: ["koan:complete", "duckdb"]
         status: planned
       - n: "25"
         slug: streaming-ingestion
         title: "Streaming Ingestion — Minutes Behind Instead of a Day"
+        hands_on: ["koan:rerun"]
         status: planned
       - n: "30"
         slug: cost-storage-and-tiering
         title: "Cost & Storage — Compression, TTL and Tiering"
+        hands_on: ["koan:count:scanned"]
         status: planned
       - n: "35"
         slug: benchmark-duckdb-vs-clickhouse
         title: "Benchmark — The Same Star Schema on DuckDB vs ClickHouse"
+        hands_on: ["koan:count:scanned", "koan:equivalent"]
         status: planned
       - n: "40"
         slug: warehouse-to-bi
         title: "From Warehouse to BI — Feeding Dashboards, Cubes and Extracts"
+        hands_on: ["koan:complete", "canvas"]
         status: planned
       - n: "45"
-        slug: capstone-full-warehouse
-        title: "Capstone — Build, Load and Query the Full Northwind Warehouse"
-        tags: ["capstone"]
+        slug: project-full-warehouse
+        title: "Project — The Whole Northwind Warehouse, on Two Engines, Reconciled"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        tags: ["project"]
         status: planned

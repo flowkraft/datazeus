@@ -9,6 +9,21 @@ course: learn-dbt
 track: dbt
 title: Analytics Engineering (dbt)
 
+# Two real prerequisites, and dbt is the one track in the academy where a second one is honest:
+# dbt is SQL plus a project structure, and it starts AFTER the raw data has landed. Someone who
+# has never loaded a table has nothing for dbt to build on.
+prerequisites:
+  - course: learn-sql
+    needs: "Series 2"
+    why: >-
+      A dbt model IS a SELECT. CTEs especially — the staging/marts split is CTEs promoted to
+      files, and Series 2 · 08 is where you learn to read one.
+  - course: learn-etl-pipelines
+    needs: "Series 1"
+    why: >-
+      dbt does the T and neither the E nor the L. Series 1 there is what puts raw Northwind in
+      front of it; without that this track has nothing to transform.
+
 excludes:
   - topic: "Extract and Load — dbt does neither"
     where: "covered in ETL & Data Pipelines; dbt starts once the raw data has landed"
@@ -16,6 +31,14 @@ excludes:
     where: "covered in Data Warehousing"
   - topic: "Dimensional design decisions — grain, SCD type, star vs snowflake"
     where: "covered in Data Modeling; here you implement the model you already chose"
+
+  - topic: "Writing the SQL inside a model"
+    where: "covered in Learn SQL — a dbt model is a SELECT, and this track is the project around it"
+  # The near-collision worth naming: dbt 3 · 10 and BI 2 · 40 are both called the semantic layer.
+  - topic: "Agreeing with the business what a metric MEANS, and governing it"
+    where: "covered in BI & Data Visualization, Series 2 · 40, which is where the business agrees what a metric means. In this course, Series 3 · 10 expresses that agreed definition as code"
+  - topic: "Dashboards themselves"
+    where: "covered in BI & Data Visualization — exposures here only record that a dashboard depends on a model"
 
 series:
   - slug: series1-dbt-fundamentals
@@ -25,45 +48,74 @@ series:
     episodes:
       - n: "00"
         slug: what-dbt-is
-        title: "What dbt Is (and Isn't) — The T in ELT, and Why It Earned a Name"
+        title: "What dbt Is and Is Not — The T in ELT, as a Real Project"
+        hands_on: ["koan:choose"]
+        core: true
         status: planned
       - n: "05"
-        slug: project-anatomy
-        title: "Project Anatomy — profiles.yml, dbt_project.yml and the models Folder"
-        status: planned
-      - n: "10"
         slug: your-first-model
         title: "Your First Model — A SELECT That Becomes a View (stg_orders)"
+        hands_on: ["koan:author", "dbt"]
+        core: true
         status: planned
-      - n: "15"
-        slug: ref-and-source
-        title: "ref() & source() — How dbt Works Out What to Build First"
-        status: planned
-      - n: "20"
-        slug: materializations
-        title: "Materializations — view, table, ephemeral, and When Each Wins"
-        status: planned
-      - n: "25"
-        slug: the-staging-layer
-        title: "The Staging Layer — Clean Raw Northwind Once, Reuse It Everywhere"
-        status: planned
-      - n: "30"
-        slug: marts
-        title: "Marts — Build dim_customer and fct_sales on Top of Staging"
-        status: planned
-      - n: "35"
-        slug: seeds
-        title: "Seeds — Version-Controlled CSV Reference Data"
-        status: planned
-      - n: "40"
+      - n: "10"
         slug: run-build-compile
         title: "dbt run, build & compile — The Everyday Loop"
+        hands_on: ["koan:process:tool", "dbt"]
+        core: true
+        status: planned
+      - n: "15"
+        slug: project-anatomy
+        title: "Project Anatomy — profiles.yml, dbt_project.yml and the models Folder"
+        hands_on: ["koan:complete", "dbt"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: ref-and-source
+        title: "ref() & source() — How dbt Works Out What to Build First"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: materializations
+        title: "Materializations — view, table, ephemeral, and When Each Wins"
+        hands_on: ["koan:choose", "koan:count:scanned"]
+        core: true
+        status: planned
+      - n: "30"
+        slug: the-staging-layer
+        title: "The Staging Layer — Clean Raw Northwind Once, Reuse It Everywhere"
+        hands_on: ["koan:complete"]
+        core: true
+        status: planned
+      - n: "35"
+        slug: marts
+        title: "Marts — Build dim_customer and fct_sales on Top of Staging"
+        hands_on: ["koan:author"]
+        core: true
+        status: planned
+      - n: "40"
+        slug: seeds
+        title: "Seeds — Version-Controlled CSV Reference Data"
+        hands_on: ["koan:complete"]
         status: planned
       - n: "45"
         slug: docs-and-lineage
         title: "Generated Docs & Lineage — The Northwind DAG, Drawn For You"
+        hands_on: ["eyes", "dbt"]
         status: planned
 
+      # SERIES 1 PROJECT, added 2026-08-24. The series had none: the core path
+      # walked ten episodes with nothing built at the end of them.
+      # sources -> staging -> marts, with the DAG dbt draws for you as the proof. Not a new subject;
+      # the first ten episodes assembled once.
+      - n: "50"
+        slug: project-raw-to-mart
+        title: "Project — Raw Northwind to a Mart You Can Query"
+        hands_on: ["koan:author", "koan:process:tool"]
+        core: true
+        tags: ["project"]
+        status: planned
   - slug: series2-trustworthy-dbt
     title: Trustworthy dbt
     tagline: make the numbers provable, not just repeatable
@@ -72,44 +124,73 @@ series:
       - n: "00"
         slug: built-in-tests
         title: "Built-in Tests — not_null, unique, relationships, accepted_values"
+        hands_on: ["koan:process:tool", "koan:complete"]
+        core: true
         status: planned
       - n: "05"
         slug: custom-tests
         title: "Singular & Custom Tests — Assert the Business Rule, Not Just the Column"
+        hands_on: ["koan:author"]
+        core: true
         status: planned
       - n: "10"
         slug: sources-and-freshness
         title: "Sources & Freshness — Declare Raw Tables and Catch a Stale Feed"
+        hands_on: ["koan:diagnose"]
+        core: true
         status: planned
       - n: "15"
         slug: incremental-models
         title: "Incremental Models — Build Only the New Orders"
+        hands_on: ["koan:rerun"]
+        core: true
         status: planned
       - n: "20"
         slug: snapshots
         title: "Snapshots — SCD Type 2 History Without Writing the Merge"
+        hands_on: ["koan:rerun", "koan:predict"]
+        core: true
         status: planned
       - n: "25"
         slug: jinja-and-variables
         title: "Jinja & Variables — DRY SQL That's Still Readable"
+        hands_on: ["koan:complete"]
+        core: true
         status: planned
       - n: "30"
         slug: macros
         title: "Macros & dbt_utils — Reusable SQL Logic"
+        hands_on: ["koan:author"]
         status: planned
       - n: "35"
         slug: descriptions-and-contracts
         title: "Descriptions & Contracts — Documentation People Actually Trust"
+        hands_on: ["koan:process:tool"]
         status: planned
       - n: "40"
         slug: project-structure
         title: "Project Structure — staging / intermediate / marts, and Why the Split Holds"
+        hands_on: ["koan:choose"]
+        core: true
         status: planned
       - n: "45"
         slug: environments-and-targets
         title: "Environments & Targets — dev vs prod, and Multiple Warehouses"
+        hands_on: ["koan:complete"]
+        core: true
         status: planned
 
+      # SERIES 2 PROJECT, added 2026-08-24. The series had none: the core path
+      # walked ten episodes with nothing built at the end of them.
+      # The series' whole argument is that dbt makes numbers PROVABLE. So the grading is inverted:
+      # a deliberately broken row is loaded, and your tests either catch it or they do not.
+      - n: "50"
+        slug: project-tests-that-catch-it
+        title: "Project — A Model Set Whose Tests Catch a Bad Load"
+        hands_on: ["koan:author", "koan:process:tool"]
+        core: true
+        tags: ["project"]
+        status: planned
   - slug: series3-analytics-engineering-at-scale
     title: Analytics Engineering at Scale
     tagline: a project a whole team can live in
@@ -118,41 +199,59 @@ series:
       - n: "00"
         slug: packages
         title: "Packages — Reuse Community Code (dbt_utils, codegen)"
+        hands_on: ["koan:complete"]
         status: planned
       - n: "05"
         slug: incremental-strategies
         title: "Incremental Strategies — merge, insert_overwrite, append"
+        hands_on: ["koan:rerun", "koan:choose"]
         status: planned
       - n: "10"
         slug: semantic-layer-and-metrics
         title: "The Semantic Layer & Metrics — One Definition of Revenue, in Code"
+        hands_on: ["koan:equivalent"]
+        core: true
         status: planned
       - n: "15"
         slug: exposures
         title: "Exposures — Lineage All the Way to the Dashboard"
+        hands_on: ["koan:complete"]
         status: planned
       - n: "20"
         slug: testing-strategy
         title: "Testing Strategy — Unit Tests, Contracts and Quality at Scale"
+        hands_on: ["koan:author"]
+        core: true
         status: planned
       - n: "25"
         slug: ci-cd-for-dbt
         title: "CI/CD for dbt — Slim CI, State Comparison and dbt build in a Pipeline"
+        hands_on: ["koan:process:tool"]
+        core: true
         status: planned
+      # MERGED 2026-08-24 with the old 3 - 35 "Cross-Engine dbt". The two were near
+      # neighbours a reader could not tell apart: one said change your models for a
+      # columnar engine, the other said the same models run everywhere. That is one
+      # question with two halves, and splitting it cost an episode for no clarity.
+      # THE EPISODE: run the same project on PostgreSQL, DuckDB and ClickHouse. Most
+      # models are unchanged, which is the headline — then show the few that are not,
+      # and why: incremental strategy, the merge that ClickHouse does differently, and
+      # the wide-table shape a columnar engine rewards. Graded by `equivalent`, because
+      # the whole claim is that the numbers come out the same.
       - n: "30"
-        slug: modeling-for-columnar-warehouses
-        title: "Modeling for Columnar Warehouses — dbt on ClickHouse and DuckDB"
-        status: planned
-      - n: "35"
-        slug: cross-engine-dbt
-        title: "Cross-Engine dbt — The Same Models on PostgreSQL, DuckDB and ClickHouse"
+        slug: dbt-on-columnar-engines
+        title: "dbt on Columnar Engines — What Runs Unchanged, and What You Have to Rewrite"
+        hands_on: ["koan:equivalent", "koan:count:scanned", "duckdb", "clickhouse"]
         status: planned
       - n: "40"
         slug: dbt-mesh-and-multi-project
         title: "dbt Mesh & Multi-Project — When One Repo Stops Scaling"
+        hands_on: ["koan:choose"]
         status: planned
       - n: "45"
-        slug: capstone-production-project
-        title: "Capstone — A Production Northwind Project: Staging → Marts → Metrics"
-        tags: ["capstone"]
+        slug: project-staging-to-metrics
+        title: "Project — A Production Northwind Project: Staging → Marts → Metrics"
+        hands_on: ["koan:author", "koan:process:tool", "dbt"]
+        core: true
+        tags: ["project"]
         status: planned

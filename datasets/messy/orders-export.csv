@@ -1,0 +1,14 @@
+OrderID;OrderDate;Customer;Country;Freight;Qty;Notes
+10248;2026-07-04;Vins et alcools Chevalier;France;32,38;12;
+10249;04/07/2026;Toms Spezialitäten;Germany;11,61;9;shipped early
+10250;2026-07-08;Hanari Carnes;Brazil;65,83;10;
+10251;2026-07-08;Victuailles en stock;France;41,34;6;"contains ; a semicolon"
+10252;2026-07-09;Suprêmes délices;Belgium;51,30;40;
+10253;2026-07-10;Hanari Carnes;Brazil;58,17;;missing qty
+10254;2026-07-11;Chop-suey Chinese;Switzerland;22,98;15;;extra column
+10255;2026-07-12;Richter Supermarkt;Switzerland;148,33;20;
+10256;;Wellington Importadora;Brazil;13,97;4;no date at all
+10257;2026-07-15;HILARIÓN-Abastos;Venezuela;81,91;25;
+10258;2026-07-15;Ernst Handel;Austria;1.140,51;50;thousands separator
+10259;2026-07-16;Centro comercial Moctezuma;Mexico;3,25;2;
+10248;2026-07-04;Vins et alcools Chevalier;France;32,38;12;duplicate of row 1

@@ -1,0 +1,67 @@
+---
+title: "Foreign Keys & Referential Integrity — Stopping Rows That Point at Nothing"
+description: "TODO — one sentence, written from THE SITUATION beat below, not from the topic."
+topic: "learn-data-modeling"
+tags: []
+level: "beginner"
+module: "series1-modeling-fundamentals"
+order: 15
+published: false
+---
+
+{/* ==========================================================================
+    BOILERPLATE — not written yet. Everything below is the brief for whoever
+    writes it. Delete these comments as each beat is filled in.
+
+    The track-level method (why koans are predict-and-decide, which DataPallas
+    tab does what, why Northwind is recovered and the library is invented) lives
+    in courses/datamodeling/curriculum.yaml. Read that header first — it is the
+    argument this lesson is one instance of.
+
+    WHY THIS EPISODE, SPECIFICALLY
+    GOAL: make a row that points at nothing impossible.
+    MODELS: FOREIGN KEY, REFERENCES, orphan rows, referential actions (Postgres only).
+
+    Split out of the old combined keys episode, which carried four topics at once.
+    Northwind's relationships are REAL but nothing enforces them — the learner adds the FKs to
+    schema.sql and only then does a bad insert bounce. Verified: the shipped data is
+    referentially clean (0 orphan order lines, customers, suppliers), so every FK they declare
+    loads successfully. The payoff is the NEXT insert, not a failure on existing rows.
+    DuckDB has no ON DELETE CASCADE (tested) — name that as a portability fact, do not hide it.
+
+    HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
+      koan:predict
+      build:schema.sql
+      dataset: northwind:rebuild
+      koan file: series1/_15/ForeignKeysAndReferentialIntegrityKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work where this bites. Never a definition.
+    The hook in the episode title is the one-line version of this paragraph. */}
+
+TODO
+
+## TODO — the decision
+
+{/* BEAT 2 — the modeling choice itself, on Northwind.
+    NAME THE ALTERNATIVES YOU DID NOT PICK, and why. The alternatives are the lesson;
+    a single option presented as obvious teaches a rule instead of judgement. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The learner proves it, via the hands_on above.
+    If this beat cannot be written, the episode is not ready to be written. */}
+
+TODO
+
+## What it costs you
+
+{/* BEAT 4 — every modeling choice is a trade. What does this buy, and what will
+    it cost in eighteen months? An episode that presents a choice as free is the
+    academic reflex this track exists to avoid. */}
+
+TODO

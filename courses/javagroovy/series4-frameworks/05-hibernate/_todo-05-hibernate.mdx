@@ -1,0 +1,72 @@
+---
+title: "Hibernate — The Library That Turns Your JPA Code Into SQL"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series4-frameworks"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: know what actually runs your JPA code, and what it costs on a data job.
+    CONSTRUCTS: SessionFactory/Session, dirty checking, the first-level cache, flush timing,
+    StatelessSession, hibernate.jdbc.batch_size, @BatchSize.
+    GET THE RELATIONSHIP RIGHT IN THE FIRST SENTENCE: Hibernate is NOT an alternative to JPA — it
+    IMPLEMENTS it, and it is Spring Boot's default provider. It also predates JPA and keeps its own
+    native API (Session, StatelessSession, HQL) that is not in the spec. "JPA, plus more", never
+    "instead of". That extra surface is why this episode exists: StatelessSession is the single
+    most useful thing here for a data job and a reader thinking in pure JPA will never find it.
+    TEACH WHAT IT DOES FIRST, then what it costs. The title used to name only the cost, which read
+    as though memory management were Hibernate's job.
+    This is where the track's central claim stops being an assertion and becomes a demonstration:
+    the session is built to track a graph of objects you are EDITING; a data job is MOVING ROWS, so
+    every service the session provides is overhead you did not ask for.
+    KOAN: the same load with and without StatelessSession — round trips, and a rows-held sink
+    showing what the session was holding on your behalf.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:count:rows-held
+      koan:count:roundtrips
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series4/_05/HibernateKoans.groovy
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here. */}
+
+TODO

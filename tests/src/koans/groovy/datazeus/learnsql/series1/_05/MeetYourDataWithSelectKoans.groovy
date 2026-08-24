@@ -93,7 +93,7 @@ class MeetYourDataWithSelectKoans extends KoanBase {
         '''
     }
 
-    // 8) Capstone — no scaffolding. Write the WHOLE query: first name, surname and title
+    // 8) The whole query — no scaffolding. Write the WHOLE query: first name, surname and title
     //    of every employee, in that column order.
     def "write it yourself: the staff list"() {
         expect:

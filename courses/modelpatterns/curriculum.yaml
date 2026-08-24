@@ -1,0 +1,211 @@
+# The ordered episode list for Data Model Patterns. Field docs live in courses/learnsql/curriculum.yaml.
+#
+# The job this track teaches: the patterns that turn up in almost every business schema —
+# Party and roles, effective dating, order-to-cash, work effort. What each one solves, why
+# it holds up, and what it looks like BUILT and running rather than drawn on a slide.
+#
+# THE WORDING MATTERS, EVERYWHERE THIS TRACK IS DESCRIBED. "The models from these books,
+# served to you" is not what this is, and describing it that way invites the reading that
+# we repackage other people's books. Three things are true and all three belong in any
+# description we write about ourselves:
+#   - the PATTERNS are ideas, and ideas are free. Nobody owns the Party model.
+#   - the BUILD is ours. It is the part no book has, and the reason the track exists.
+#   - the BOOKS are a doorway, not a source we are reselling. Point at them generously and
+#     mean it — a reader who buys Volume 1 because of an episode is the best outcome this
+#     track can produce.
+# Say "with pointers to the literature behind it", never "the contents of these books".
+# An individual article can be bolder; the top-level description cannot.
+#
+# WHY THIS IS NOT Learn Data Modeling. That track teaches you how to DECIDE what the tables
+# should be. This one hands you the decisions the industry already made and stopped
+# re-litigating. Read in order they are: theory, then the agreed patterns, then (in Schema Teardowns)
+# field evidence of what real teams actually shipped.
+#
+# ============================================================================
+# THE SHAPE OF AN EPISODE — one pattern, four beats, every time
+# ============================================================================
+#   1. THE PAIN     the naive schema, and the day it breaks. Always concrete: the customer
+#                   who is also a supplier, the price that changed last March.
+#   2. THE PATTERN  the model itself, named, in the words its author used.
+#   3. THE SOURCE   which book, which chapter. Said out loud, not buried in a footnote —
+#                   see CITATION below; it is the thing that makes this track defensible.
+#   4. THE BUILD    the same pattern standing up in DataPallas, clickable. This is the beat
+#                   nobody else in this genre has, and it is why the track exists.
+#
+# ============================================================================
+# TAGGING — two axes, kept separate on purpose
+# ============================================================================
+# Topical tags live in the lesson's own .mdx front-matter (see the learnsql field docs);
+# what follows is the CONVENTION for this track, not a second source of truth.
+#
+#   BY SOURCE   #silverston  #hay  #fowler  #blaha  #simsion  #hoberman  #kimball
+#               Exactly one per episode — the book the pattern is TAKEN from. Where two
+#               authors describe the same pattern, tag the one being followed and name the
+#               other in the prose ("Fowler calls this Accountability").
+#               These earn their own landing pages: a reader who finds one Silverston
+#               episode should be able to walk the rest of the volume from it. That turns a
+#               pattern catalogue into a guided tour of the literature, which is a thing
+#               nobody has built and people would link to.
+#
+#   BY SUBJECT  #party  #roles  #effective-dating  #hierarchy  #classification  #money
+#               #order-to-cash  #inventory  #scheduling  #accounting  #abstraction
+#               One to three per episode. This is the axis people SEARCH on — nobody
+#               googles "Silverston chapter 4", plenty of people google "party model".
+#
+#   BY DEPTH    #foundational | #intermediate | #deep-abstraction
+#               Volume 3's argument is that abstraction has a cost. Tag the trade-off so a
+#               reader can stop before the fully generic Thing-relates-to-Thing model.
+#
+# ============================================================================
+# CITATION — how to credit, and why it is not optional
+# ============================================================================
+# This material is closely derived from named living authors. Cite generously; it costs
+# nothing and it is the difference between a tour of the literature and a quiet rip-off.
+#
+#   DO    "This is Silverston's Party model — Volume 1, chapter 2."
+#   DO    a Sources block at the foot of every article, with the ISBN.
+#   DO    "Hay reaches the same place from a different direction, and calls it …"
+#   DO    send people to buy the books. A reader who buys Volume 1 because of an episode
+#         is the best possible outcome: it proves the track is a doorway, not a substitute.
+#
+#   DON'T reproduce a book's diagrams, tables or figures. Describe the model and DRAW IT
+#         YOURSELF in our own visual language — the pattern is an idea and ideas are free;
+#         the author's particular rendering of it is their expression and is not.
+#   DON'T reproduce a chapter's entity list wholesale, in order. Teach the pattern, not
+#         the book's table of contents.
+#   DON'T let "universal data models" become our tagline. It is Silverston's phrase.
+
+course: learn-data-model-patterns
+track: modelpatterns
+title: Data Model Patterns
+
+excludes:
+  - topic: "Keys, normalization and how to decide what the tables should be"
+    where: "covered in Data Modeling — this track starts after that decision, from patterns already proven"
+  - topic: "How real shipped apps modelled it, and where they diverged"
+    where: "covered in Schema Teardowns — that track is evidence from apps people actually shipped; this one is the patterns the industry already agreed on"
+  # Points at Data MODELING, not Data Warehousing. It used to say Warehousing, but that
+  # track's own excludes send dimensional DESIGN back here-ward ("covered in Data Modeling;
+  # here you build and query the model") — so a reader following the pointer landed on a
+  # course that told them to go somewhere else. Design lives in Data Modeling Series 3;
+  # building and querying the result lives in Data Warehousing.
+  - topic: "Star schemas, slowly changing dimensions and the analytics reshape"
+    where: "designed in Data Modeling, Series 3; built and queried in Data Warehousing — these patterns are operational models, not reporting ones"
+  - topic: "The DataPallas app-building mechanics themselves"
+    where: "each episode builds one, but the how-to lives in the DataPallas docs; here the app is the proof, not the subject"
+
+series:
+  - slug: series1-the-core-four
+    title: The Core Four
+    tagline: the patterns under almost every business schema
+    level: beginner
+    episodes:
+      # Deliberately first. It is the pattern with the highest ratio of "changes how you
+      # see every schema you will ever read" to "minutes to explain", and every later
+      # episode leans on it.
+      - n: "00"
+        slug: party-model
+        title: "The Party Model — One Table for People and Companies, and Why"
+        short: "The Party Model — people and companies, one table"
+        status: planned
+        tags: ["foundational"]
+      - n: "05"
+        slug: party-roles
+        title: "Roles, Not Tables — When a Customer Is Also a Supplier"
+        short: "Roles, Not Tables — customer and supplier at once"
+        status: planned
+        tags: ["foundational"]
+      - n: "10"
+        slug: party-relationships
+        title: "Party Relationships — Employment, Ownership and Who Reports to Whom"
+        short: "Party Relationships — employment, ownership, hierarchy"
+        status: planned
+      - n: "15"
+        slug: effective-dating
+        title: "Effective Dating — Keeping the Price That Was True Last March"
+        short: "Effective Dating — the price that was true last March"
+        status: planned
+        tags: ["foundational"]
+      - n: "20"
+        slug: type-and-status
+        title: "Type and Status Tables — The Enum That Grows Without a Migration"
+        short: "Type & Status Tables — the enum that grows"
+        status: planned
+      - n: "25"
+        slug: contact-mechanisms
+        title: "Contact Mechanisms — Addresses, Emails and Phones Without Twelve Columns"
+        short: "Contact Mechanisms — one model for every address"
+        status: planned
+
+  - slug: series2-the-business-flows
+    title: The Business Flows
+    tagline: order to cash, and the models it drags along
+    level: intermediate
+    episodes:
+      - n: "00"
+        slug: products-and-features
+        title: "Products, Variants and Features — Modelling What You Actually Sell"
+        short: "Products & Variants — what you actually sell"
+        status: planned
+      - n: "05"
+        slug: pricing
+        title: "Price Components — Discounts, Tiers and the Price That Depends"
+        short: "Price Components — discounts, tiers, it depends"
+        status: planned
+      - n: "10"
+        slug: order-to-cash
+        title: "Order to Cash — Order, Shipment, Invoice, Payment as One Chain"
+        short: "Order to Cash — the whole chain, one model"
+        status: planned
+        tags: ["project"]
+      - n: "15"
+        slug: invoicing
+        title: "Invoicing — Line Items That Point at Anything"
+        short: "Invoicing — line items that point at anything"
+        status: planned
+      - n: "20"
+        slug: inventory-and-locations
+        title: "Inventory and Locations — Where the Thing Physically Is"
+        short: "Inventory & Locations — where the thing is"
+        status: planned
+      - n: "25"
+        slug: work-effort
+        title: "Work Effort — Tasks, Time and What Anyone Actually Did"
+        short: "Work Effort — tasks, time, what got done"
+        status: planned
+
+  - slug: series3-abstraction-and-its-price
+    title: Abstraction and Its Price
+    tagline: how far to generalize, and when to stop
+    level: advanced
+    episodes:
+      # Volume 3's real subject, and the episode this whole series exists to earn the right
+      # to make. Everything before it is a worked example of the trade-off argued here.
+      - n: "00"
+        slug: levels-of-abstraction
+        title: "Levels of Abstraction — The Same Model, Four Ways"
+        short: "Levels of Abstraction — the same model, four ways"
+        status: planned
+        tags: ["deep-abstraction"]
+      - n: "05"
+        slug: hierarchies
+        title: "Hierarchies — Org Charts, Categories and Bills of Materials"
+        short: "Hierarchies — org charts, categories, BOMs"
+        status: planned
+      - n: "10"
+        slug: classification
+        title: "Classification — Categories That Change Without a Migration"
+        short: "Classification — categories that change"
+        status: planned
+      - n: "15"
+        slug: the-generic-model
+        title: "The Fully Generic Model — Why Everything-Is-a-Thing Fails"
+        short: "The Fully Generic Model — and why it fails"
+        status: planned
+        tags: ["deep-abstraction"]
+      - n: "20"
+        slug: choosing-a-level
+        title: "Choosing a Level — A Decision Rule You Can Defend in Review"
+        short: "Choosing a Level — a rule you can defend"
+        status: planned
+        tags: ["project"]

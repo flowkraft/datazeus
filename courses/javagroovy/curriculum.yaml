@@ -1,0 +1,790 @@
+# The ordered episode list for Java & Groovy for Data. Field docs live in courses/learnsql/curriculum.yaml.
+#
+# The job this track teaches: do the data half of the job in the language your company
+# already runs. Read a file nobody cleaned, pull a result set without melting the heap,
+# reshape it, and leave behind something a colleague can run next month — in Java, with
+# Groovy for the parts where Java makes you type too much.
+#
+# ============================================================================
+# THE FRAMEWORK QUESTION — settled here so it is not re-argued per episode
+# ============================================================================
+# Do we teach Spring Data, JPA, GORM? PARTLY, LATE, AND WITH AN OPINION.
+#
+# The sibling track answers this. Python for Data is library-heavy — pandas, polars,
+# DuckDB — but for databases it stops at the DRIVER (databases-from-python,
+# parameterized-queries) and has no episode on the ORM layer. (Its episode is titled
+# "psycopg & SQLAlchemy"; if that means SQLAlchemy Core rather than the ORM, that title
+# should say Core — as written, this paragraph's evidence reads as contradicting it.)
+# The reason is not
+# squeamishness about libraries; it is that an ORM is an OBJECT-GRAPH tool and data work
+# is SET-BASED. Loading rows into entities to aggregate them is the slow way to write a
+# GROUP BY.
+#
+# So the spine of this track is: the language, JDBC, and SQL-first tools.
+#   - JDK for shaping: streams, records, collections, java.time
+#   - Groovy where Java is too verbose: GDK collection methods, groovy.sql.Sql,
+#     JsonSlurper, @Grab. This is the scripting layer that makes the JVM feel like Python,
+#     and it is what DataPallas report scripts are written in — so it is not decoration.
+#   - JDBC and jOOQ for the database. jOOQ gets a full episode and JPA does not, which is
+#     a deliberate inversion of what most Java developers reach for first.
+#
+# Frameworks then come LAST, in Series 4, on their own terms — after Series 3 has already
+# shipped a working job without one. That order is the argument: a reader can only judge
+# what a framework buys them once they have seen what it replaces.
+#
+# UPDATED 2026-08-24 — THIS USED TO SAY "ONE EPISODE, AT 3/40". The paragraph below set the
+# condition for changing it ("series 3 should grow a framework series of its own"), and the
+# condition was met — not by a reader survey, but by the product. DataPallas custom apps are
+# Grails and DataPallas ships a Spring Boot playground, so anyone extending it meets GORM and
+# Spring Boot whether or not they came here for frameworks. One episode naming Spring Data,
+# GORM and JPA together was a list, not a skill. See the Series 4 header for the full reversal.
+#
+# The SPINE IS UNCHANGED, and that is the part worth defending: Series 1-3 are the language,
+# JDBC, jOOQ and a job you can hand over, with no framework in sight. Series 4 is scoped to
+# the DATA HALF only — no controllers, no DI tutorial, no web layer.
+#
+# WHAT WOULD CHANGE THIS AGAIN: if Series 4 starts needing episodes about the web layer,
+# security or DI to make sense, it has stopped being a data series and belongs in a track of
+# its own. Decide from the questions people actually ask, not up front.
+#
+# ============================================================================
+# THE ORDER — follow the life of a row, not the shape of the JDK
+# ============================================================================
+# Reordered 2026-08-24. The rule: each episode should only need what came before it, and the
+# sequence should read like the actual job. Four things moved, and each was a real bug:
+#
+#   S1: ENCODINGS, DATES AND NULLS moved UP, ahead of grouping and joining. You are reading
+#       files from episode 00, so learning that text arrives corrupted at episode 30 was
+#       backwards — and a wrong date or an unhandled null silently corrupts a total, so the
+#       three parsing traps have to land BEFORE anything computes a total. The series now
+#       runs: read it -> hold it -> transform it -> get it in correctly -> summarise ->
+#       combine -> build the whole thing.
+#
+#   S2: TEXT BLOCKS now come before groovy.sql.Sql. Finish the Java story, then show the
+#       Groovy shortcut — the same order Series 1 uses for streams and Groovy collections.
+#       Showing the shortcut first makes the long way look like a punishment.
+#
+#   S2: jOOQ MOVED HERE FROM SERIES 3. Series 2 is "how you talk to a database from the JVM"
+#       and jOOQ is one of the ways; Series 3 is about shipping, and jOOQ is not a shipping
+#       topic. It sits last in the database block because it is the most machinery for the
+#       most safety, after the reader has seen the five simpler options. (This does NOT
+#       reopen the Series 4 question — see that episode's own comment: it is a library, not
+#       a framework.)
+#
+#   S4: ORDERED BY VENDOR, FOUNDATIONS FIRST. Two things were wrong here, and the second
+#       took a second look to see.
+#
+#       The dependency bug: "Spring Data Repositories — Declare an Interface, Get the Query" was
+#       being taught BEFORE the reader had been told what JPA is.
+#
+#       Then a draft opened the series with Spring JdbcTemplate, on the grounds that it
+#       depends on neither and is the gentlest step out of Series 3. True, but it made the
+#       series zigzag between vendors — Spring, Jakarta, Hibernate, Spring, Grails — and the
+#       reader crosses into Spring, leaves for Jakarta, and comes back. Nothing structural
+#       required it: JdbcTemplate has no dependency in either direction, so the only real
+#       constraints are JPA-before-Spring-Data-JPA and Hibernate-before-GORM.
+#
+#       So it runs foundations first, then one vendor at a time: the SPEC (JPA), then how it
+#       actually behaves (Hibernate), then the SPRING pair that wraps them, then GRAILS
+#       (GORM is Hibernate underneath, so it needs both), then migrations across both, then
+#       the project. Opening on JPA's N+1 problem also serves the track's SQL-first thesis
+#       better than a convenience wrapper does — the series starts by showing what goes
+#       wrong, which is the argument Series 1-3 spent thirty episodes making.
+#
+# ============================================================================
+# TITLES — plain English, about data, no cleverness
+# ============================================================================
+# Rewritten 2026-08-24, all 41. The old ones were trying to sound smart, which made them
+# harder to grasp and pushed the actual subject out of the way. The worst offender read
+# "Hibernate for Bulk Work — StatelessSession, flush/clear and the Heap You Just Ate":
+# three fragments of jargon and a joke, and nowhere does it say what you will be able to do.
+# It is now "Hibernate — The Library That Turns Your JPA Code Into SQL".
+#
+# The rules, so this does not creep back:
+#   - the topic half NAMES THE THING, so someone scanning the roadmap can find it
+#   - the hook half is a PLAIN STATEMENT of what the episode teaches. Not a slogan, not a
+#     comparison, not a joke. If you would not say it out loud to a colleague who asked
+#     "what is that episode about?", it is wrong.
+#
+#   - NO RHETORICAL DEVICES. This is the rule that kept getting broken, one title at a time,
+#     because each individual case looked harmless. Banned, with the actual examples:
+#         contrast/negation   "Not in the Jar, Not in Git"       -> "Keeping Passwords Out of Your Code"
+#         number play         "Four Lines Instead of Twenty"     -> "Running Queries With Much Less Code"
+#         repetition          "Typesafe SQL, Written as SQL"     -> "Writing SQL in Java That the Compiler Checks"
+#         imperative pairs    "Declare an Interface, Get the Query" -> "Queries Generated From an Interface"
+#         jokes               "the Heap You Just Ate"            -> deleted
+#     A device makes the reader decode before they can understand. That is a cost, and it
+#     buys nothing.
+#
+#   - THE HOOK SAYS WHAT THE THING IS, NOT WHAT IT IS MADE OF. "Hibernate — The Session,
+#     the Cache, and the Cost on Big Loads" listed Hibernate's INTERNALS, which mean nothing
+#     to a reader who does not already know Hibernate — and a title is read by exactly that
+#     person. Same for "JPA — Entities, the Persistence Context" and "JDBC — Connection,
+#     Statement, ResultSet". A reader should finish the title knowing what the thing IS and
+#     roughly what it does with data. WHEN and HOW to use it is the article's job and the
+#     video's job, not the title's.
+#     The thing's own NAME in the topic half is fine and expected — JdbcTemplate, jOOQ,
+#     DuckDB, Liquibase. Its parts and its annotations are not.
+#
+#   - NEVER DEFINE A TECHNOLOGY BY ITS MOST FAMOUS GOTCHA, above all when it is the only
+#     episode about that technology. "Hibernate — Loading Millions of Rows Without Running
+#     Out of Memory" described a SYMPTOM Hibernate causes; a reader scanning would conclude
+#     Hibernate is a bulk-loading tool. "JPA — ... and the N+1 Problem" and "GORM — ... and
+#     Where It Runs Too Many Queries" had the same shape. NAME THE MECHANISM IN THE TOPIC
+#     HALF; let the cost or the consequence be the hook, not the definition. The gotcha still
+#     gets taught — it just is not what the thing IS.
+#
+#   - NO VAGUE NOUNS OR DANGLING REFERENCES. "One Changelog, Both Apps" made the reader ask
+#     "which two apps?"; "Fetching Many Things at Once" never says what the things are. If a
+#     word in the hook sends the reader looking for its antecedent, the hook has cost them
+#     attention instead of buying them any. Name it, or say what you can DO instead.
+#
+#   - if a hook could be swapped into another episode without anyone noticing, it says
+#     nothing and needs rewriting
+#
+#   THE TEST, applied to all 41 at once rather than one at a time: read the title aloud. If
+#   any part of it exists to sound good rather than to inform, delete that part.
+#
+# ============================================================================
+# JAVA OR GROOVY, PER EPISODE
+# ============================================================================
+# Not alternating for variety. The rule: JAVA is the default, and Groovy appears when it
+# removes real ceremony — a throwaway script, a SQL loop, JSON parsing, a test. Show both
+# only where the comparison teaches something; otherwise pick the one a working engineer
+# would actually use and say why in one line.
+#
+# Assume Java 21+ (records, sealed types, pattern matching, text blocks for SQL). Text
+# blocks matter more than they look: they are what makes embedding real SQL in Java stop
+# being painful, which is the whole premise of a SQL-first track.
+
+# ============================================================================
+# HOW THIS TRACK IS HANDS-ON — decided 2026-08-24
+# ============================================================================
+# ONE MECHANISM: THE KOAN. Only the assertion target changes. An earlier design had four
+# named mechanisms for the episodes koans "could not" reach — budget / handover /
+# failure-injection / mutation. That was over-engineering: four ordinary tests dressed up as
+# a framework. Rejected. The implementation is one base class and three small helpers
+# (tests/src/koans/groovy/datazeus/_internal/JvmKoanBase.groovy — read its header).
+#
+#   koan:predict | diagnose | choose | complete | author
+#                            the same five rungs as the Data Modeling koans, because the
+#                            reader's competence is assumed and JUDGEMENT is what is tested
+#   koan:count:roundtrips    assert on how many times you went to the database
+#   koan:count:rows-held     assert on the most rows held in memory at once
+#   koan:capture             assert on what the code PRINTED — stdout, stderr, the log
+#   koan:process:tool        call the tool's entry point in-process; assert exit code + output
+#   koan:process:jar         build a real jar and run it; only where assembly IS the subject
+#   eyes                     no automated check, ON PURPOSE. At most one per series, and it
+#                            must say why. Anything else is a lecture wearing a label.
+#
+# NEVER ASSERT WALL-CLOCK TIME. This is the rule that makes the rest work, and the one a
+# future addition is most likely to break. Timing assertions are machine-dependent, flaky,
+# and eventually deleted by whoever the flake wakes up. Every performance lesson here has a
+# countable proxy that is also the actual lesson: batching counts round trips, streaming
+# counts rows held. If you think you need a stopwatch, you need a counter.
+#
+# THE BLANK IS A DATA DECISION, NEVER A LANGUAGE FACT. Every famous koan set — Ruby, Groovy,
+# Scala — is a language tutorial (`assert 1 + 1 == ___`), and the format pulls hard that way.
+# This track must not go there: the reader already knows the language, and the title says FOR
+# DATA. A koan that teaches map() insults them; one that hands them a wrong number does not.
+#
+# ONE FILE HOLDS BOTH LANGUAGES — verified on Groovy 4.0.22, not assumed. Records, var,
+# List.of, method references, Collectors, text blocks and java.time all run verbatim inside a
+# Groovy Spock spec. So no src/koans/java and no second source root, and one koan can show
+# the Java version beside the Groovy one-liner, both green — which demonstrates this track's
+# thesis instead of asserting it. The one trap: Groovy's == is equals(), not identity.
+
+course: learn-java-groovy
+track: javagroovy
+title: Java & Groovy for Data
+
+# Assumes Learn SQL and NOT Data Modeling — the two are siblings after SQL, not a sequence.
+# This track's own excludes already said "the SQL is assumed"; a stated dependency that is
+# never declared is how a reader concludes they are not ready, rather than that we forgot to
+# say so.
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1"
+    why: >-
+      Series 1 of Learn SQL is the whole prerequisite: SELECT, WHERE, JOIN and GROUP BY.
+      Once you start running queries from Java here, you check the answers against the same
+      Northwind numbers the SQL koans use. You are never asked to write clever SQL — but you
+      do need to read a query and know what it should come back with, because that is how you
+      tell a JVM bug from a SQL one.
+
+excludes:
+  # Re-scoped 2026-08-24. This used to exclude Spring Boot outright, which stopped being true
+  # when Series 4 arrived — but the line that matters is unchanged, and it is the DATA HALF.
+  - topic: "Controllers, dependency injection, security and the web layer"
+    where: "not covered; Series 4 teaches Spring and Grails only where they read and write rows"
+  - topic: "Hibernate internals and JPA entity mapping in depth"
+    where: "not covered by design. In this course, Series 4 · 00 teaches JPA as the vocabulary and Series 4 · 05 the one Hibernate behaviour that costs you memory on a bulk load"
+  # The three-way split on schema change, stated because one subject across three tracks is
+  # exactly how a reader concludes we repeated ourselves.
+  - topic: "Deciding what the schema change should be"
+    where: "covered in Data Modeling, Series 2 · 50. In this course, Series 3 · 20 applies a change that has already been designed"
+  - topic: "Running a migration against a live database under load — locks, zero downtime"
+    where: "covered in Data Ops — here the question is only how the change gets versioned and shipped from your build"
+  - topic: "Machine learning — features, training, model selection"
+    where: "not covered; this track moves and shapes data. For LLM-era work see AI for Data"
+  - topic: "Charts other people read, and dashboards"
+    where: "covered in BI & Data Visualization — here you plot only to see the data yourself"
+  - topic: "Scheduling, cron and running jobs in production"
+    where: "covered in Data Ops — this track gets the job ready to be scheduled"
+  - topic: "Writing the SQL itself"
+    where: "covered in Learn SQL — here the SQL is assumed and the question is how to run it from the JVM"
+
+series:
+  - slug: series1-jvm-fundamentals
+    title: Java & Groovy for Data Fundamentals
+    tagline: from a main method to a script that moves data
+    level: beginner
+    episodes:
+      # Groovy leads the track on purpose: a reader who has to create a Maven project
+      # before printing a row will quit. One file, one command, real data — then earn the
+      # build tooling in series 3 once there is something worth packaging.
+      - n: "00"
+        slug: your-first-script
+        title: "Your First Script — Read a CSV File and Answer One Question About It"
+        hands_on: ["koan:author"]
+        short: "Your First Script — read a CSV, answer a question"
+        core: true
+        status: planned
+        tags: ["foundational"]
+      - n: "05"
+        slug: records-and-collections
+        title: "Records and Collections — Holding Rows and Tables in Memory"
+        hands_on: ["koan:complete"]
+        short: "Records & Collections — rows and tables in memory"
+        core: true
+        status: planned
+      - n: "10"
+        slug: streams
+        title: "Streams — Transforming Rows With map, filter and collect"
+        hands_on: ["koan:complete", "koan:predict"]
+        short: "Streams — transforming rows with map and filter"
+        core: true
+        status: planned
+        tags: ["foundational"]
+      - n: "15"
+        slug: groovy-collections
+        title: "Groovy Collections — Filtering, Transforming and Grouping in Less Code"
+        hands_on: ["koan:complete"]
+        short: "Groovy Collections — the same work, less code"
+        status: planned
+      - n: "20"
+        slug: files-and-encodings
+        title: "Files and Encodings — Reading Text Files in the Right Character Set"
+        hands_on: ["koan:predict"]
+        short: "Files & Encodings — the right character set"
+        core: true
+        status: planned
+      - n: "25"
+        slug: dates-and-time
+        title: "java.time — Working With Dates, Times and Time Zones Correctly"
+        hands_on: ["koan:predict"]
+        short: "java.time — dates, times and time zones"
+        core: true
+        status: planned
+      - n: "30"
+        slug: nulls-and-optional
+        title: "Nulls and Optional — Handling Data That Is Missing"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        short: "Nulls & Optional — handling missing data"
+        core: true
+        status: planned
+      - n: "35"
+        slug: grouping-and-aggregating
+        title: "Grouping and Aggregating — Summarising Rows With groupingBy"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        short: "Grouping & Aggregating — summarising rows"
+        core: true
+        status: planned
+      - n: "40"
+        slug: joining-datasets
+        title: "Joining Two Datasets in Memory — Combining Rows Without Doubling Totals"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        short: "Joining in Memory — without doubling totals"
+        core: true
+        status: planned
+      - n: "45"
+        slug: first-end-to-end-script
+        title: "Your First End-to-End Script — From a File to a Finished Answer"
+        hands_on: ["koan:author"]
+        short: "First End-to-End Script — file to finished answer"
+        core: true
+        status: planned
+        tags: ["project"]
+
+  - slug: series2-real-data
+    title: Working With Real Data
+    tagline: files, databases and APIs — nothing pre-cleaned
+    level: intermediate
+    episodes:
+      - n: "00"
+        slug: csv-json-parquet
+        title: "CSV, JSON and Parquet — Reading the Three Formats You Will Meet Most"
+        hands_on: ["koan:complete"]
+        short: "CSV, JSON & Parquet — the three you'll meet most"
+        core: true
+        status: planned
+      # The format the modern trio leaves out, and the one a business actually sends you.
+      # CSV/JSON/Parquet is the right list for a data platform; in a finance department the
+      # real list is .xlsx, and a reporting company that cannot read one is not credible.
+      #
+      # POI earns a full episode rather than a paragraph because it is fiddly in ways that
+      # produce WRONG NUMBERS rather than exceptions — which is this track's whole selection
+      # rule for what deserves an episode:
+      #   - dates are floating-point day counts, and the 1900 leap-year bug is still in there
+      #   - a cell holds a FORMULA or its cached VALUE, and you get to pick wrong
+      #   - merged cells report the value once and blank for the rest of the range
+      #   - the streaming reader (SXSSF/event API) and the DOM one behave differently on
+      #     exactly the files big enough to matter
+      # Not core: whether you need it is decided by your employer, not by the craft.
+      - n: "05"
+        slug: excel
+        title: "Excel with POI — Reading the Spreadsheets Your Business Sends You"
+        short: "Excel with POI — reading the spreadsheets you get"
+        hands_on: ["koan:predict", "koan:complete"]
+        status: planned
+      - n: "10"
+        slug: jdbc-basics
+        title: "JDBC — Talking to a Database From Java: Connection, Statement, ResultSet"
+        hands_on: ["koan:complete"]
+        short: "JDBC — talking to a database from Java"
+        core: true
+        status: planned
+        tags: ["foundational"]
+      - n: "15"
+        slug: parameterized-queries
+        title: "PreparedStatement — Passing Values Safely Into a Query"
+        hands_on: ["koan:predict", "koan:complete"]
+        short: "PreparedStatement — passing values safely"
+        core: true
+        status: planned
+      - n: "20"
+        slug: text-blocks-for-sql
+        title: "Text Blocks — Writing Multi-Line SQL Inside Java Code"
+        hands_on: ["koan:complete"]
+        short: "Text Blocks — multi-line SQL inside Java"
+        status: planned
+      - n: "25"
+        slug: groovy-sql
+        title: "groovy.sql.Sql — Running Queries With Much Less Code"
+        hands_on: ["koan:complete"]
+        short: "groovy.sql.Sql — queries with less code"
+        core: true
+        status: planned
+      # jOOQ STAYS IN SERIES 3. Asked directly whether it belongs in Frameworks — no, twice
+      # over, and the reasons are worth keeping because it is a reasonable thing to wonder:
+      #
+      #   1. It is a LIBRARY, not a framework. You call it; it does not call you. No
+      #      container, no lifecycle, no inversion of control. A jOOQ job is plain Java with
+      #      a dependency, which is exactly what "Java That Ships" means.
+      #   2. More importantly, it is the SQL-FIRST POSITION — the thing Series 4 is measured
+      #      against. Filing it beside Spring Data, JPA and GORM would imply it is the same
+      #      KIND of answer, when it is the alternative to them. This file's own header calls
+      #      it part of the spine: "jOOQ gets a full episode and JPA does not, which is a
+      #      deliberate inversion of what most Java developers reach for first."
+      #
+      # And the ORDER is the argument. A reader has to see what typesafe SQL actually looks
+      # like before they can judge what an ORM is buying them. Series 4 · 15's choose-koan
+      # then puts jOOQ back in the comparison, which is where the head-to-head belongs.
+      #
+      # (This comment has outlived two moves. It once described "the opinionated pair, 35 and
+      # 40" in Series 3. Episode 40 became Series 4; this episode then moved to Series 2,
+      # because talking to a database is what Series 2 is FOR and shipping is what Series 3
+      # is for. It is the last of the six ways this course shows you to run a query.)
+      - n: "30"
+        slug: sql-first-with-jooq
+        title: "jOOQ — Writing SQL in Java That the Compiler Checks"
+        hands_on: ["koan:complete"]
+        short: "jOOQ — SQL in Java the compiler checks"
+        status: planned
+      - n: "35"
+        slug: batching-and-transactions
+        title: "Batches and Transactions — Inserting Many Rows Quickly and Safely"
+        hands_on: ["koan:predict", "koan:count:roundtrips"]
+        short: "Batches & Transactions — many rows, safely"
+        core: true
+        status: planned
+      - n: "40"
+        slug: streaming-large-results
+        title: "Streaming Large Results — Reading Millions of Rows Without Filling Memory"
+        hands_on: ["koan:count:rows-held"]
+        short: "Streaming Large Results — without running out of memory"
+        core: true
+        status: planned
+      - n: "45"
+        slug: duckdb-from-java
+        title: "DuckDB from Java — An Analytics Engine Inside Your Process"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        short: "DuckDB from Java — analytics in your process"
+        status: planned
+      - n: "50"
+        slug: apis-and-json
+        title: "HTTP and JSON — Reading Data From an API With HttpClient and Jackson"
+        hands_on: ["koan:complete", "koan:predict"]
+        short: "HTTP & JSON — reading data from an API"
+        core: true
+        status: planned
+      # Episode 40 gets you a 200 response. This is every other response.
+      # Splitting it out rather than swelling 40 is deliberate: the happy path is a page of
+      # code and the failure path is the job, and an episode that teaches both teaches the
+      # first one properly and the second one in a footnote.
+      #
+      # The oracle is a counter, reusing the machinery from 2/30 — count the ATTEMPTS.
+      # "Retried forever" and "gave up immediately" are both wrong and both look identical
+      # from the outside; the attempt count separates them, and a fixed-delay retry against a
+      # rate limiter is countably worse than exponential backoff.
+      # The stub server is the JDK's own com.sun.net.httpserver — no dependency, and it can
+      # serve a 500, a 429 with Retry-After, and a paginated sequence on demand.
+      - n: "55"
+        slug: retries-and-pagination
+        title: "Retry, Backoff and Pagination — Fetching From an API Reliably"
+        short: "Retry, Backoff & Pagination — fetching reliably"
+        hands_on: ["koan:complete", "koan:count:roundtrips"]
+        status: planned
+      # Placed in Series 2 rather than Series 3 because the motivating case is real-data work
+      # — four hundred API calls, or fifty files — not performance tuning. It is also the
+      # Java 21 feature this track assumes and never used: the header calls out records,
+      # sealed types and text blocks, then leaves the headline out.
+      #
+      # The lesson is which KIND of work you have. Virtual threads are for I/O-bound waiting
+      # (the whole of Series 2), parallel streams are for CPU-bound work, and using either on
+      # the other's problem makes things worse. A parallel stream over blocking JDBC calls is
+      # the mistake this episode exists to prevent.
+      - n: "60"
+        slug: concurrency-and-virtual-threads
+        title: "Virtual Threads and Parallel Streams — Running Slow Calls in Parallel"
+        short: "Virtual Threads & Parallel Streams — in parallel"
+        hands_on: ["koan:predict", "koan:complete"]
+        status: planned
+      - n: "65"
+        slug: cleaning-and-validation
+        title: "Cleaning and Validating — Checking Data Before You Load It"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        short: "Cleaning & Validating — check data before loading"
+        core: true
+        status: planned
+      # SERIES 2 PROJECT — the series had none, and it is the heart of the track: ten
+      # episodes of files, databases and APIs with no episode that assembles them.
+      # One job, all three sources, and the reconciliation habit that makes it trustworthy:
+      # the number you loaded must equal the number you read, and the job says so out loud.
+      - n: "70"
+        slug: project-three-sources
+        title: "Project — One Answer From a CSV, a Database and an API"
+        short: "Project — one answer from three sources"
+        hands_on: ["koan:author", "koan:count:rows-held"]
+        tags: ["project"]
+        core: true
+        status: planned
+
+  - slug: series3-jvm-that-ships
+    title: Java That Ships
+    tagline: code someone else can run next month
+    level: advanced
+    episodes:
+      - n: "00"
+        slug: build-and-dependencies
+        title: "Maven, Gradle and @Grab — Dependencies for Apps and for Scripts"
+        hands_on: ["koan:process:jar"]
+        short: "Maven, Gradle & @Grab — deps for apps and scripts"
+        core: true
+        status: planned
+      - n: "05"
+        slug: project-structure
+        title: "Project Structure — Where the Data Code Goes"
+        hands_on: ["eyes"]
+        short: "Project Structure — where data code goes"
+        status: planned
+      - n: "10"
+        slug: cli-tools
+        title: "Command-Line Tools — Arguments, Exit Codes and picocli"
+        hands_on: ["koan:process:tool"]
+        short: "Command-Line Tools — arguments and exit codes"
+        core: true
+        status: planned
+      - n: "15"
+        slug: config-and-secrets
+        title: "Configuration and Secrets — Keeping Passwords Out of Your Code"
+        hands_on: ["koan:process:jar", "koan:capture"]
+        short: "Configuration & Secrets — passwords out of code"
+        core: true
+        status: planned
+      # MIGRATIONS, and deliberately FRAMEWORK-FREE here: the Maven/Gradle plugin, run from
+      # your build, on plain JDBC. Series 4 then shows the same changelog wired into Spring
+      # Boot and into Grails. Tool first, framework integration after — the same order this
+      # whole track uses, and the reason it stays in "Java That Ships" rather than moving out.
+      #
+      # LIQUIBASE, DECIDED — 2026-08-24, on evidence rather than preference. An earlier draft
+      # said Flyway. That was wrong twice over:
+      #   1. DataPallas has already standardised on Liquibase WITH THE GROOVY DSL, in both
+      #      playgrounds. bkend-boot-groovy-playground: spring-boot-starter-liquibase +
+      #      liquibase-groovy-dsl 4.0.1, changelog at db/migration/changelog.groovy, gated on
+      #      ENABLE_LIQUIBASE_GROOVY_MIGRATIONS. grails-playground:
+      #      grails-data-hibernate5-dbmigration + liquibase-core 4.31.1 + the same Groovy DSL.
+      #   2. Grails' official migration plugin IS Liquibase; there is no first-party Flyway
+      #      plugin. And this house ships against Postgres, Oracle, SQL Server, MySQL AND Db2,
+      #      which is precisely the shape Flyway has historically charged for — its Community
+      #      edition has no undo/rollback, no dry run, and a tiered database matrix.
+      #
+      # AND THE EPISODE IS ALREADY WRITTEN FOR US: both changelog.groovy files exist and are
+      # EMPTY. "Here is the file scaffolded in your own product, and nothing is in it. Fill it
+      # in." Real, in-house, and the learner writes migrations in Groovy — the language this
+      # track teaches, which makes the Groovy DSL a genuine fit rather than a novelty.
+      #
+      # Keep Flyway as an honest paragraph — simpler, plain-SQL-native, the common choice for
+      # single-database greenfield — so this is a decision episode and not a tool tutorial.
+      # (Verify Flyway's current licensing before publishing; Redgate has moved it more than
+      # once.) Liquibase avoids XML three ways: formatted SQL changelogs, sqlFile/sql changes,
+      # and the Groovy DSL.
+      - n: "20"
+        slug: schema-migrations
+        title: "Liquibase — Database Changes Kept in Version Control, Written in Groovy"
+        short: "Liquibase — database changes in version control"
+        hands_on: ["koan:complete", "koan:process:tool"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: logging-and-errors
+        title: "Logging and Failure — What Someone Needs to See When the Job Breaks"
+        hands_on: ["koan:capture"]
+        short: "Logging & Failure — what to log when a job breaks"
+        core: true
+        status: planned
+      - n: "30"
+        slug: testing-with-spock
+        title: "Testing Data Code — JUnit and Spock, and What Is Worth Testing"
+        hands_on: ["koan:author"]
+        short: "Testing Data Code — JUnit, Spock, what to test"
+        status: planned
+      - n: "35"
+        slug: performance-and-memory
+        title: "Performance and Memory — Measure Before You Change Anything"
+        hands_on: ["koan:diagnose"]
+        short: "Performance & Memory — measure before you change"
+        status: planned
+      # Series 3 ENDS framework-free, on purpose. What used to be episode 40 — one episode
+      # covering Spring Data, GORM and JPA at once — became Series 4. See that series' header
+      # for why, and for the header trigger it satisfies.
+      - n: "40"
+        slug: project-jvm-pipeline
+        title: "Project — A Job That Reads, Transforms, Loads and Reports"
+        hands_on: ["koan:author", "koan:process:jar"]
+        short: "Project — read, transform, load, report"
+        core: true
+        status: planned
+        tags: ["project"]
+
+  # ============================================================================
+  # WHY THIS SERIES EXISTS — added 2026-08-24, and it is a REVERSAL. Read this.
+  # ============================================================================
+  # The header of this file settled the framework question as "PARTLY, LATE, AND WITH AN
+  # OPINION — one episode, at 3/40". It also wrote down the condition for changing that:
+  # "if the track's readers turn out to be Spring application developers rather than people
+  # doing data work on the JVM, series 3 should grow a framework series of its own."
+  #
+  # The condition is met, though not by the route it predicted. Not a survey of readers — the
+  # PRODUCT. DataPallas custom apps are Grails, and DataPallas ships a Spring Boot playground
+  # too. Anyone extending DataPallas meets GORM and Spring Boot whether or not they came here
+  # for frameworks, and one episode covering Spring Data, GORM and JPA together was always
+  # going to be a list of names rather than a skill.
+  #
+  # It was also becoming incoherent in practice: JdbcTemplate, migrations wiring and the ORM
+  # question were all being drafted INTO Series 3, a series called "Java That Ships" whose
+  # whole point is plain Java. Three framework episodes inside it would have quietly inverted
+  # the track's thesis. Better to name the seam than to smuggle things across it.
+  #
+  # THE SCOPE IS THE DATA HALF ONLY. This is not "learn Spring Boot" and not "learn Grails" —
+  # both remain excluded at the top of this file. No controllers, no DI tutorial, no web
+  # layer. Only the part that reads and writes rows, which is what the track is about.
+  #
+  # JPA AND HIBERNATE GET AN EPISODE EACH — revised, having first written "one episode, not
+  # two". That was wrong, and the reasoning that fixed it is worth keeping:
+  #
+  # They are not two names for one thing. JPA (jakarta.persistence) is a SPEC — entities, the
+  # persistence context, JPQL, lazy loading, and the N+1 that hides inside it. It is the
+  # vocabulary, and it is what transfers between jobs. Hibernate is the IMPLEMENTATION you
+  # will actually be running (Spring Boot's default provider, and what GORM is built on), and
+  # everything about it that matters for DATA work is absent from the spec:
+  #   - StatelessSession — not in JPA at all, and the right answer for a load job
+  #   - the first-level cache filling on a bulk load, and flush()/clear() to survive it
+  #   - hibernate.jdbc.batch_size, and why it silently does nothing with IDENTITY ids
+  #   - @BatchSize and fetch strategy, which is how you actually kill an N+1
+  #
+  # "One episode" was a decision about a track that does not teach frameworks. This one now
+  # does, and squeezing the spec and the runtime into one slot would have taught the spec and
+  # footnoted the part that OOMs your job at 500,000 entities — which is the half a DATA
+  # reader is here for. Spec first, then what actually happens when you run it.
+  #
+  # STILL EXCLUDED: entity mapping in depth, inheritance strategies, the criteria API, second
+  # level caching. Those are application-development topics and they stay out.
+  #
+  # EVERY TITLE IN THIS SERIES NAMES ITS FRAMEWORK, in the topic half, before the em dash.
+  # "JdbcTemplate & @Transactional" is a Spring episode and its title said so nowhere — a
+  # reader scanning the roadmap to find the Spring content could not. The convention costs a
+  # word and it is the difference between a roadmap and a list of jargon.
+  #
+  # AND THE ORDER STILL HOLDS. Series 2 taught JDBC, Series 3 taught jOOQ and shipped a job
+  # without a framework in sight. Only now, having seen what the alternatives actually look
+  # like, is a reader equipped to judge what a framework is buying them. That was the reason
+  # the original single episode sat at the very end, and it survives the reversal intact.
+
+  # TAGLINE FIXED 2026-08-24. It read "Spring and Grails, the data half only", which was
+  # true when the series opened with JdbcTemplate and stopped being true the moment JPA and
+  # Hibernate moved to the front — neither is Spring and neither is Grails. The scope note
+  # that matters is unchanged and now lives in the excludes: the DATA HALF only, no
+  # controllers, no DI, no web layer.
+  - slug: series4-frameworks
+    title: Frameworks, Where They Earn It
+    tagline: what sits between your code and the database
+    level: advanced
+    episodes:
+      # JPA THE SPEC, on its own, because it is not a Spring thing — jakarta.persistence runs
+      # in plain Java SE with no framework at all, and a reader who only ever meets it through
+      # Spring Data never learns what belongs to which.
+      #
+      # The data-relevant content: the persistence context and what "managed" actually means,
+      # the entity lifecycle, JPQL versus SQL, and above all the N+1 that HIDES inside lazy
+      # loading — a loop that looks like field access and is one query per iteration.
+      # Diagnose-koan with the round-trip counter from Series 2 · 35: the code looks innocent, the
+      # counter says 1,001. That is the whole lesson and it needs no new machinery.
+      #
+      # NOT core: this track's spine is SQL-first, and marking the ORM path core would
+      # undercut the argument the first three series spend thirty episodes making.
+      - n: "00"
+        slug: jpa
+        title: "JPA — Java's Standard Way to Turn Rows Into Objects"
+        short: "JPA — Java's standard for rows into objects"
+        hands_on: ["koan:diagnose", "koan:count:roundtrips"]
+        status: planned
+      # GET THE RELATIONSHIP RIGHT, IN THE FIRST SENTENCE. Hibernate is NOT an alternative to
+      # JPA — it is an IMPLEMENTATION of it, and the one Spring Boot uses by default. JPA is
+      # the specification (jakarta.persistence); Hibernate is the library that runs it and
+      # turns what you wrote into SQL. Other providers exist (EclipseLink, OpenJPA); Hibernate
+      # is simply the one you will meet.
+      #
+      # The nuance worth one paragraph, not a title: Hibernate predates JPA and keeps its own
+      # NATIVE API — Session, StatelessSession, HQL — which is not in the spec. So it is "JPA,
+      # plus more", never "instead of JPA". That extra surface is exactly why this episode
+      # exists: StatelessSession, the single most useful thing here for a data job, is
+      # Hibernate-only and a reader who thinks in pure JPA will never find it.
+      #
+      # HIBERNATE THE IMPLEMENTATION. The episode teaches WHAT HIBERNATE DOES first — the
+      # session, dirty checking, the first-level cache, when it flushes — and only then what
+      # those cost on data work. That order matters and the title had it backwards.
+      #
+      # The title used to read "Loading Millions of Rows Without Running Out of Memory". That
+      # is a SYMPTOM Hibernate causes, not what Hibernate is, and it was the only Hibernate
+      # episode in the course — so a reader scanning the roadmap would have concluded that
+      # Hibernate is a bulk-loading tool, or that memory management is its job. Neither is
+      # true. Name the mechanism; let the cost be the hook.
+      #
+      # This is also where the track's central claim stops being an assertion and becomes a
+      # demonstration: an ORM is an OBJECT-GRAPH tool and data work is SET-BASED. The session
+      # is built to track changes to a graph of objects you are editing. A data job is not
+      # editing a graph — it is moving rows — so every service the session provides is
+      # overhead it is charging you for something you did not ask for.
+      #
+      # THEN the escape hatches, all absent from the JPA spec and present in every real job:
+      #   - StatelessSession: no persistence context, no dirty checking, no first-level cache.
+      #     The right tool for a load job, and not in JPA at all.
+      #   - the first-level cache filling on a bulk insert, and flush()/clear() to survive it
+      #   - hibernate.jdbc.batch_size, and why it silently does nothing with IDENTITY ids —
+      #     a batching setting that appears to work and does not is worse than none
+      #   - @BatchSize and fetch strategy, which is how you actually kill the N+1 from 05
+      # Counter-assertion again: the same load, with and without StatelessSession, and a
+      # rows-held sink showing what the session was holding on your behalf.
+      #
+      # ONE EPISODE IS THE RIGHT AMOUNT. Asked whether Hibernate needs more: no. The session
+      # model plus the escape hatches is what a data reader needs, and a second episode would
+      # tip this into being a Hibernate course, which the top of this file refuses. Mapping,
+      # inheritance strategies, the criteria API and second-level caching stay excluded.
+      - n: "05"
+        slug: hibernate
+        title: "Hibernate — The Library That Turns Your JPA Code Into SQL"
+        short: "Hibernate — turns your JPA code into SQL"
+        hands_on: ["koan:count:rows-held", "koan:count:roundtrips"]
+        status: planned
+      # The framework layer most aligned with everything before it: you still write the SQL,
+      # it removes the try/finally. It is the honest answer to "what should I use at work"
+      # for a large share of JVM data jobs, and it is why this series is not an argument
+      # against Spring — only against reaching for an ORM by reflex.
+      #
+      # It sits THIRD rather than first. An earlier draft opened the series here, because it
+      # depends on neither JPA nor Hibernate and is the smallest step out of Series 3. That
+      # made the series cross into Spring, leave for Jakarta, and come back — see the ORDER
+      # note in this file's header. Foundations first, then one vendor at a time.
+      #
+      # It also closes the CONNECTION POOLING gap, which had no home anywhere in the track:
+      # Series 2 · 10 teaches Connection -> Statement -> ResultSet -> close, and every real job uses a
+      # pool. Opening a connection per query is the classic production bug, and Spring Boot
+      # auto-configures HikariCP, so this is where the fix lands.
+      #
+      # It lands here for CONVENIENCE, not because pooling belongs to Spring. If Series 2 ever
+      # grows a pooling episode of its own, move it there and leave a pointer — this episode
+      # should not be the only place a reader can learn that connections are expensive.
+      - n: "10"
+        slug: spring-jdbc-template
+        title: "Spring JdbcTemplate — Running Your Own SQL From a Spring Application"
+        short: "Spring JdbcTemplate — your own SQL, from Spring"
+        hands_on: ["koan:complete", "koan:count:roundtrips"]
+        core: true
+        status: planned
+      # Spring Data is a REPOSITORY abstraction, and it comes in two flavours that are not
+      # variations of each other: Spring Data JDBC maps rows and stops, Spring Data JPA hands
+      # you an entity graph and a persistence context. Choosing between them IS the episode,
+      # and it is a choice most teams make by accident.
+      #
+      # This is where the old 3/40's real question survives — when is an object graph the
+      # right model for your data, and when are you loading rows into entities to do a
+      # GROUP BY the slow way? Choose-koan: one requirement, FOUR implementations —
+      # JdbcTemplate, Spring Data JDBC, Spring Data JPA, and jOOQ from Series 2 · 30. jOOQ
+      # belongs in the comparison even though it lives in another series; this is the one
+      # place the SQL-first position and the framework positions meet head to head, and
+      # leaving it out would rig the answer.
+      #
+      # The winner genuinely changes with the requirement. That is the point, and a single
+      # right answer would be a lie.
+      - n: "15"
+        slug: spring-data-repositories
+        title: "Spring Data Repositories — Your Method Name Becomes the Query"
+        short: "Spring Data Repositories — method name to query"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # GORM gets its own episode because DataPallas custom apps are Grails, so a reader WILL
+      # meet it. Dynamic finders and `Book.findAllByAuthor(...)` are genuinely pleasant; the
+      # episode earns its keep by also showing the extra queries it runs — and by pointing out
+      # that GORM is Hibernate underneath, so every word of 05 and 10 applies here too. That
+      # through-line is why GORM comes after them and not before.
+      - n: "20"
+        slug: gorm
+        title: "GORM — Grails' Data Layer, and the Hibernate Underneath It"
+        short: "GORM — Grails' data layer, on Hibernate"
+        hands_on: ["koan:diagnose", "koan:count:roundtrips"]
+        status: planned
+      # The other half of Series 3 · 20. That episode ran Liquibase from the build, framework
+      # free; this one wires the SAME changelog into the two runtimes DataPallas actually
+      # ships — spring.liquibase.change-log for Boot, the dbmigration plugin for Grails.
+      # Both playgrounds are already scaffolded and both changelogs are empty, so the exercise
+      # is a real file in a real product rather than a toy.
+      - n: "25"
+        slug: migrations-in-spring-and-grails
+        title: "Liquibase in Spring Boot and Grails — Migrations That Run at Startup"
+        short: "Liquibase in Spring Boot & Grails — run at startup"
+        hands_on: ["koan:process:jar", "koan:complete"]
+        status: planned
+      # The project only this series can offer: not a toy app, but a data feature added to
+      # the Grails playground that ships with the product — domain class, migration, query,
+      # test. A reader who finishes this can extend DataPallas, which is the most concrete
+      # "productive at work" outcome anywhere in the academy.
+      - n: "30"
+        slug: project-datapallas-feature
+        title: "Project — Add a Data Feature to the DataPallas Grails App"
+        short: "Project — add a data feature to DataPallas"
+        hands_on: ["koan:author", "koan:process:jar"]
+        core: true
+        tags: ["project"]
+        status: planned
+

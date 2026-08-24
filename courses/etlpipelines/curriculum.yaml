@@ -9,6 +9,16 @@ course: learn-etl-pipelines
 track: etlpipelines
 title: ETL & Data Pipelines
 
+# Assumes Learn SQL, and always has without saying so: Series 1 · 20 is "Transform with SQL",
+# and every load in the track is checked by counting rows. Data Modeling is NOT required — you
+# load into a schema somebody else designed, which is the normal case.
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1"
+    why: >-
+      Every transform here is a SELECT and every check is a COUNT. You do not need clever SQL,
+      but you need to know what the right answer looks like before a pipeline tells you.
+
 excludes:
   - topic: "The SQL inside the transforms"
     where: "covered in Learn SQL"
@@ -19,6 +29,22 @@ excludes:
   - topic: "cron internals, monitoring, alerting and on-call"
     where: "covered in Data Ops — here a pipeline just gets handed to the scheduler"
 
+  # The language the pipeline is written in. Series 2 · 00 uses Groovy, but the track is about
+  # the SHAPE of a load, not the syntax — and a reader who wants the language should be sent.
+  - topic: "Learning the language you write the pipeline in"
+    where: "covered in Python for Data and Java & Groovy for Data — either one; the pipeline shape here is the same in both"
+  - topic: "The warehouse the data lands in — engines, partitions, compression"
+    where: "covered in Data Warehousing — here it is a destination you load into"
+  # Three tracks build a star schema and each is a different question. Said out loud because
+  # meeting the third one is how a reader concludes we repeated ourselves.
+  - topic: "Deciding what the star schema should be — grain, SCD type, star vs snowflake"
+    where: "covered in Data Modeling, Series 3. In this course, Series 3 · 05 loads a star that somebody has already designed"
+
+  # ETL 2 · 45 and Data Ops 3 · 00 are both about orchestrators, and a reader who meets the
+  # second one needs to be told these are two questions, not one subject twice.
+  - topic: "Choosing and running the scheduler itself — cron vs systemd vs an orchestrator"
+    where: "covered in Data Ops, Series 3 · 00, which is choosing and running the scheduler. In this course, Series 2 · 45 is expressing your pipeline as a DAG, whatever ends up running it"
+
 series:
   - slug: series1-etl-fundamentals
     title: ETL Fundamentals
@@ -28,44 +54,85 @@ series:
       - n: "00"
         slug: etl-vs-elt
         title: "ETL vs ELT — What Moves, What Transforms, and Where"
+        hands_on: ["koan:choose"]
+        core: true
         status: planned
       - n: "05"
-        slug: sources-and-sinks
-        title: "Sources & Sinks — Files, APIs and Databases as Connections"
-        status: planned
-      - n: "10"
         slug: your-first-pipeline
         title: "Your First Pipeline — Load a CSV into a Table"
+        hands_on: ["koan:author", "cloudbeaver"]
+        core: true
+        status: planned
+      # ALSO NAME THE SPREADSHEET, because a surprising share of real pipelines start with one
+      # and this episode is the catalogue of what a source can be.
+      #   Python for Data, Series 2 - 02 and Java & Groovy for Data, Series 2 - 05 both teach
+      #   READING .xlsx properly — do not re-teach it. What is new here is that a spreadsheet
+      #   is an unreliable INTERFACE, not just an awkward format: the columns move, someone
+      #   inserts a row above the header, the file is open and locked at 09:00, and the
+      #   "monthly" one arrives on the 3rd or the 9th.
+      #   THE RULE WORTH LEAVING THEM WITH: validate the header row before trusting a single
+      #   value, and fail loudly when it has changed rather than loading the wrong column.
+      - n: "10"
+        slug: sources-and-sinks
+        title: "Sources & Sinks — Files, APIs and Databases as Connections"
+        hands_on: ["koan:complete"]
+        core: true
         status: planned
       - n: "15"
         slug: staging
         title: "Staging — Land Raw Before You Transform Anything"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
         status: planned
       - n: "20"
-        slug: transform-with-sql
-        title: "Transform with SQL — SELECT-Driven Reshaping"
-        status: planned
-      - n: "25"
-        slug: idempotency
-        title: "Idempotency — Re-Runnable Loads with TRUNCATE+INSERT and MERGE"
-        status: planned
-      - n: "30"
-        slug: incremental-loads-and-watermarks
-        title: "Incremental Loads & Watermarks — Only What Changed"
-        status: planned
-      - n: "35"
         slug: types-and-casting-across-sources
         title: "Types & Casting Across Sources — When 'Y', 'yes' and 1 All Mean True"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: transform-with-sql
+        title: "Transform with SQL — Reshaping the Data on Its Way In"
+        hands_on: ["koan:complete"]
+        core: true
+        status: planned
+      - n: "30"
+        slug: idempotency
+        title: "Idempotency — Re-Runnable Loads with TRUNCATE+INSERT and MERGE"
+        hands_on: ["koan:rerun"]
+        core: true
+        status: planned
+      - n: "35"
+        slug: incremental-loads-and-watermarks
+        title: "Incremental Loads & Watermarks — Only What Changed"
+        hands_on: ["koan:rerun", "koan:diagnose"]
+        core: true
         status: planned
       - n: "40"
         slug: row-counts-and-logging
-        title: "Row Counts & Logging — Answer 'Did It Actually Work?'"
+        title: "Row Counts & Logging — Proving the Load Did What You Think"
+        hands_on: ["koan:capture"]
+        core: true
         status: planned
       - n: "45"
         slug: from-script-to-scheduled-job
         title: "From Script to Scheduled Job — Hand a Pipeline to the Scheduler"
+        hands_on: ["koan:process:tool", "rundeck"]
+        core: true
         status: planned
 
+      # SERIES 1 PROJECT, added 2026-08-24. The series had none: the core path
+      # walked ten episodes with nothing built at the end of them.
+      # Everything in Series 1 on one load: stage it, transform it, log the row counts, then run it
+      # again and prove nothing changed. Idempotency (25) is the property the whole series was
+      # building toward and the only one a single run cannot demonstrate.
+      - n: "50"
+        slug: project-safe-to-rerun
+        title: "Project — A Load That Is Safe to Run Twice"
+        hands_on: ["koan:author", "koan:rerun"]
+        core: true
+        tags: ["project"]
+        status: planned
   - slug: series2-maintainable-pipelines
     title: Pipelines You Can Maintain
     tagline: build it to survive contact with reality
@@ -73,45 +140,139 @@ series:
     episodes:
       - n: "00"
         slug: scripted-pipelines
-        title: "Scripted Pipelines — Groovy Seed Scripts with dbSql, vendor and params"
+        title: "Scripting a Pipeline — When a Script Beats a Chain of SQL Files"
+        hands_on: ["koan:author"]
+        core: true
         status: planned
       - n: "05"
         slug: parameterized-and-reusable-jobs
         title: "Parameterized & Reusable Jobs — One Script, Many Tables"
+        hands_on: ["koan:complete"]
+        core: true
         status: planned
       - n: "10"
         slug: data-quality-gates
         title: "Data Quality Gates — Nulls, Ranges and Referential Gaps, Before They Land"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
         status: planned
       - n: "15"
         slug: deduplication-and-conformance
         title: "Deduplication & Conformance — One Customer, One Row"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
         status: planned
+      # ALSO OWNS LATE-ARRIVING DIMENSIONS, a DIFFERENT problem from late-arriving facts with
+      # a different fix. Both belong in this episode; do not split them.
+      #   LATE FACT       yesterday's sale turns up today, after you already reported. Fix:
+      #                   reprocess the affected period (Series 3 - 25 does the backfill).
+      #   LATE DIMENSION  the fact arrives first and references a customer the dimension has
+      #                   never seen. You cannot drop the fact and you must not NULL the key.
+      #                   Fix: insert an INFERRED MEMBER — a placeholder row carrying only the
+      #                   business key and flagged as inferred — then let the real attributes
+      #                   overwrite it when they arrive.
+      #   THE TRAP WORTH A KOAN: if the placeholder is created by a Type 2 process it gets an
+      #   effective-date range, and when the real row lands you must UPDATE that row rather
+      #   than open a second version — otherwise every fact loaded in between points at a
+      #   version that never really existed.
+      # SOURCE (kimball): LATE-ARRIVING FACTS and LATE-ARRIVING DIMENSIONS, and the INFERRED MEMBER that fixes the second. See the beat above.
       - n: "20"
         slug: late-and-out-of-order-data
-        title: "Late & Out-of-Order Data — When Yesterday Arrives Tomorrow"
+        title: "Late & Out-of-Order Data — Rows That Arrive After You Reported"
+        credits:
+          - source: kimball
+            concept: "LATE-ARRIVING FACTS and LATE-ARRIVING DIMENSIONS, and the INFERRED MEMBER that fixes the second"
+        tags: ["kimball"]
+        hands_on: ["koan:rerun", "koan:predict"]
+        core: true
+        status: planned
+      # ADDED 2026-08-24, and it closes the one genuine mainstream gap a full sweep of all twelve
+      # tracks found: NOTHING anywhere mentioned PII, masking, anonymisation, retention or
+      # deletion. Access CONTROL is taught twice (Data Ops 2 - 40 and BI 3 - 40 both cover
+      # row-level security) but the DATA ITSELF was never addressed.
+      # THE DAILY QUESTION, and it has a wrong answer that ends careers: "can I copy production
+      # onto my laptop to debug this?" Everyone asks it, most teams answer it badly, and the
+      # honest answer is "not like that — here is how".
+      # WHAT THE EPISODE OWES:
+      #   FIND IT       which columns are personal is a decision, not a guess. Names, emails,
+      #                 phone numbers, addresses — and the ones people miss: free-text notes,
+      #                 IP addresses, and an ID that is a national insurance number.
+      #                 Data Modeling, Series 2 - 27 is where they get CLASSIFIED; this is
+      #                 where the classification gets used.
+      #   THREE OPTIONS, and when each is right: MASK (same shape, fake value), SYNTHESISE
+      #                 (generated rows, no real person involved), SUBSET (fewer real rows,
+      #                 still real — usually the wrong answer, say so).
+      #   THE HARD PART, and this is the koan: MASKING MUST BE CONSISTENT OR THE JOINS BREAK.
+      #                 If ALFKI becomes X7QP2 in Customers it must become X7QP2 in Orders too.
+      #                 A deterministic mask keyed on the value is how; a random one per row
+      #                 quietly destroys every foreign key, and the data still LOOKS fine.
+      #                 `rerun` is the assertion: mask twice, get the same output both times.
+      #   THE HONEST WARNING: a masked copy of production is still a copy. Fewer rules apply,
+      #                 not none. Say that plainly rather than implying masking makes it free.
+      # NOT legal advice, and the episode must not pretend to be — name GDPR/CCPA as the reason
+      # the question exists and point at whoever owns compliance where the reader works.
+      - n: "22"
+        slug: personal-data-and-masking
+        title: "Personal Data — Masking, Synthetic Rows and a Safe Copy of Production"
+        hands_on: ["koan:diagnose", "koan:rerun", "koan:count:queries"]
+        core: true
         status: planned
       - n: "25"
         slug: errors-retries-dead-letters
         title: "Errors, Retries & Dead Letters — Fail Without Losing Rows"
+        hands_on: ["koan:capture", "koan:diagnose"]
+        core: true
         status: planned
+      # SOURCE (kimball): THE SURROGATE KEY PIPELINE — his name for swapping business keys to warehouse keys at load.
+      # CORE, added 2026-08-24: Series 2 - 35 (load order) is core and depends on
+      # this — you cannot load dimensions-before-facts without the key lookup that
+      # makes the ordering necessary. A core episode resting on a non-core one is a
+      # hole in the shortest path, and this is also just what anyone loading a
+      # warehouse does every day.
       - n: "30"
         slug: surrogate-keys-and-lookups
         title: "Surrogate Keys & Dimension Lookups — Business Keys to Warehouse IDs"
+        core: true
+        credits:
+          - source: kimball
+            concept: "THE SURROGATE KEY PIPELINE — his name for swapping business keys to warehouse keys at load"
+        tags: ["kimball"]
+        hands_on: ["koan:complete"]
         status: planned
+      # SOURCE (kimball): Dimensions before facts, and why. A direct consequence of the surrogate key pipeline.
       - n: "35"
         slug: load-order
         title: "Load Order — Dimensions First, Then Facts, and What Breaks Otherwise"
+        credits:
+          - source: kimball
+            concept: "Dimensions before facts, and why"
+        tags: ["kimball"]
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
         status: planned
       - n: "40"
         slug: cross-database-pipelines
         title: "Cross-Database Pipelines — Northwind PostgreSQL → ClickHouse"
+        hands_on: ["koan:equivalent", "clickhouse"]
         status: planned
       - n: "45"
         slug: orchestration-and-dags
-        title: "Orchestration & DAGs — Dependencies, Not a Pile of Cron Entries"
+        title: "Orchestration & DAGs — Expressing Dependencies Instead of Chaining Cron Jobs"
+        hands_on: ["koan:process:tool", "rundeck"]
+        core: true
         status: planned
 
+      # SERIES 2 PROJECT, added 2026-08-24. The series had none: the core path
+      # walked ten episodes with nothing built at the end of them.
+      # Series 2 is maintainability, and the thing that breaks first is order: dimensions before
+      # facts, a quality gate before either, a dead-letter path for the rows that fail.
+      - n: "50"
+        slug: project-five-tables-in-order
+        title: "Project — One Job That Loads Five Tables in the Right Order"
+        hands_on: ["koan:author", "koan:rerun"]
+        core: true
+        tags: ["project"]
+        status: planned
   - slug: series3-production-data-flow
     title: Production Data Flow
     tagline: ELT at volume, and the day you have to rerun a month
@@ -120,41 +281,78 @@ series:
       - n: "00"
         slug: elt-push-down
         title: "ELT — Push the Transform Down into the Warehouse"
+        hands_on: ["koan:equivalent", "koan:count:scanned"]
         status: planned
+      # SOURCE (kimball): Loading a star designed by Kimball's method — see Data Modeling, Series 3.
       - n: "05"
         slug: building-the-star-schema
-        title: "Building the Star Schema — SQLite → DuckDB and ClickHouse, Hands-On"
+        title: "Building the Star Schema — Loading One From SQLite Into DuckDB and ClickHouse"
+        credits:
+          - source: kimball
+            concept: "Loading a star designed by Kimball's method — see Data Modeling, Series 3"
+        tags: ["kimball"]
+        hands_on: ["koan:author", "duckdb"]
+        core: true
         status: planned
+      # SOURCE (kimball): The TYPE 2 load: close the current row, open a new one, keep the durable key stable.
       - n: "10"
         slug: scd2-loads-in-practice
         title: "SCD Type 2 Loads — Keep History Without Duplicating It"
+        credits:
+          - source: kimball
+            concept: "The TYPE 2 load: close the current row, open a new one, keep the durable key stable"
+        tags: ["kimball"]
+        hands_on: ["koan:rerun", "koan:predict"]
+        core: true
         status: planned
       - n: "15"
         slug: change-data-capture
         title: "Change Data Capture — Stream the Deltas Instead of Reloading"
-        status: planned
-      - n: "20"
-        slug: incremental-models-and-snapshots
-        title: "Incremental Models & Snapshots — The Pattern dbt Later Formalized"
+        hands_on: ["koan:predict"]
         status: planned
       - n: "25"
         slug: backfills-and-reprocessing
         title: "Backfills & Reprocessing — Rewrite History Without Breaking Downstream"
+        hands_on: ["koan:rerun", "koan:diagnose"]
+        core: true
         status: planned
       - n: "30"
         slug: idempotent-merge-at-scale
-        title: "Idempotent MERGE at Scale — and the Vendor Differences That Bite"
+        title: "Idempotent MERGE at Scale — and the Vendor Differences That Break It"
+        hands_on: ["koan:rerun", "koan:count:scanned"]
         status: planned
+      # ALSO OWNS THE AUDIT DIMENSION, folded in because the SKILL is daily even though
+      # Kimball's particular implementation is only one way to get it.
+      #   THE SKILL: every row can answer "where did you come from?". Which run loaded it,
+      #   from which source file or extract window, under which version of the job, and
+      #   whether any value in it was estimated, allocated or defaulted.
+      #   KIMBALL'S SHAPE: a real dimension table of ETL runs, with the fact carrying an audit
+      #   key — so you can filter a report to "rows loaded by last night's run" or slice a
+      #   quality score exactly like any other dimension. That is the part people miss: it
+      #   makes lineage QUERYABLE instead of only greppable in a log.
+      #   THE MODERN EQUIVALENT, name it: _loaded_at / _batch_id / _source_file columns, and
+      #   dbt's invocation_id. Same idea, cheaper, and usually enough.
+      #   WHY IT EARNS ITS PLACE: "why is this number wrong?" is answered by finding which run
+      #   produced the row. Without a stamp, the answer is a guess.
+      # SOURCE (kimball): THE AUDIT DIMENSION — his answer to 'which run produced this row?'. See the beat above.
       - n: "35"
         slug: contracts-lineage-observability
-        title: "Data Contracts, Lineage & Observability — Know What Broke, and Who Cares"
+        title: "Data Contracts, Lineage & Observability — Know What Broke, and Who Depends On It"
+        credits:
+          - source: kimball
+            concept: "THE AUDIT DIMENSION — his answer to 'which run produced this row?'"
+        tags: ["kimball"]
+        hands_on: ["koan:diagnose", "koan:capture"]
         status: planned
       - n: "40"
         slug: bulk-loading-and-parallelism
         title: "Bulk Loading & Parallelism — COPY, Partitions and Throughput"
+        hands_on: ["koan:count:scanned"]
         status: planned
       - n: "45"
-        slug: capstone-orchestrate-northwind
-        title: "Capstone — Orchestrate the Full Northwind Pipeline End to End"
-        tags: ["capstone"]
+        slug: project-orchestrate-northwind
+        title: "Project — Orchestrate the Full Northwind Pipeline End to End"
+        hands_on: ["koan:author", "koan:rerun", "rundeck"]
+        core: true
+        tags: ["project"]
         status: planned

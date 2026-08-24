@@ -72,7 +72,7 @@ class StartHereKoans extends KoanBase {
         ''')
     }
 
-    // 5) Capstone — no scaffolding. Write the WHOLE query yourself, the one Leo typed
+    // 5) The whole query — no scaffolding. Write the WHOLE query yourself, the one Leo typed
     //    in the video: "How many orders did we get in June 2024?" (you should get 4).
     def "write the hero query from scratch: orders in June 2024"() {
         expect:

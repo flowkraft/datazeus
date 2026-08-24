@@ -31,7 +31,7 @@ import java.nio.file.StandardCopyOption
  *             '''
  *         }
  *
- *         // whole-query capstone: write all of it; a row-set is fake-resistant
+ *         // the whole query, unscaffolded: write all of it; a row-set is fake-resistant
  *         def "first five customers (company, country)"() {
  *             expect:
  *             shouldReturn([ ["Alfreds Futterkiste", "Germany"], ...four more rows... ], '''

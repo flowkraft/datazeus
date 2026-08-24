@@ -4,10 +4,57 @@
 # The job this track teaches: use AI on data you're responsible for, and be able to prove
 # the answer is right. Series 1 is AI as a copilot (what most people need first), Series 2
 # teaches it about your data, Series 3 ships a feature you'd defend in an audit.
+#
+# ╔════════════════════════════════════════════════════════════════════════════════════╗
+# ║  THE VECTOR STORE: NOTHING NEW GETS SHIPPED. Decided 2026-08-24, on evidence.       ║
+# ╚════════════════════════════════════════════════════════════════════════════════════╝
+# The question was whether Series 2 needs a dedicated vector database — a Qdrant, a Weaviate,
+# a Milvus, shipped as a ninth app next to CloudBeaver and Jupyter. The answer is no, and it
+# is not a close call.
+#
+# WHAT IS ALREADY ON THE MACHINE, verified by inspecting the image rather than assuming:
+#   pgvector 0.8.0, with BOTH ivfflat and hnsw index types, inside supabase/postgres:15.8.1.085
+#     — the container DataPallas already ships as `rb-northwind-supabase`, whose database is
+#     already called Northwind. Same rows, same numbers, same database as everything else.
+#   pg_trgm, unaccent, fuzzystrmatch, rum — the keyword half of Series 2 · 35 (hybrid search),
+#     in the same engine, so hybrid retrieval is one query and not a join across two systems.
+#   DuckDB's `vss` extension — `INSTALL vss` on the DuckDB the academy already uses, which is
+#     what makes Series 2 · 10's title honest for the reader who has no server running.
+#
+# WHY A DEDICATED VECTOR DB WOULD BE THE WRONG CALL HERE, and this is the teaching point as
+# much as the infrastructure one:
+#   1. IT WOULD BREAK THE ONE PROPERTY THE ACADEMY IS BUILT ON. Every track uses the same
+#      Northwind. Embeddings in a second system means the products you search are not joined
+#      to the orders you report on, and "semantic search found it" stops being checkable
+#      against a number the reader already knows.
+#   2. FILTERED SEARCH IS THE REAL WORKLOAD. Nobody asks for "the nearest vectors". They ask
+#      for the nearest vectors WHERE category = 4 AND discontinued = false. In pgvector that
+#      is one query with one plan. Across two systems it is over-fetch, ship, filter, and hope.
+#   3. IT IS THE HONEST PROFESSIONAL ADVICE. At Northwind's scale — and at most companies'
+#      scale — "put the vectors next to the rows" is what a good engineer actually does. A
+#      course that installs a distributed vector database to embed 77 products is teaching the
+#      wrong instinct in the first week.
+#   4. ONE MORE 3GB IMAGE, for a capability already present, is a cost with no benefit.
+#
+# WHAT SERIES 2 THEREFORE OWES THE READER: the episode where a dedicated store IS the right
+# answer — billions of vectors, or a team that needs the index to scale separately from the
+# database. Name it, size it honestly, and say that this is not that. See Series 2 · 10.
 
 course: learn-ai
 track: ai
 title: AI for Data
+
+# Assumes Learn SQL, and this is the least optional prerequisite in the academy. The entire
+# premise of Series 1 is that you READ what the model wrote before you trust it, and someone
+# who cannot read a join cannot do that. Without it this track teaches you to believe a
+# confident stranger.
+prerequisites:
+  - course: learn-sql
+    needs: "Series 2"
+    why: >-
+      Every episode in Series 1 ends with you checking a generated query. A model that invents
+      a column or writes the wrong join produces a plausible number, and multi-table joins are
+      exactly where it goes wrong — so Series 2, not Series 1.
 
 excludes:
   - topic: "Classical machine learning — features, training, model selection"
@@ -17,6 +64,15 @@ excludes:
   - topic: "Dashboards and metric governance"
     where: "covered in BI & Data Visualization"
 
+  # Named because "AI" is the vaguest word on the roadmap and two readers arrive wanting
+  # completely different things.
+  - topic: "Training or fine-tuning a model of your own"
+    where: "not covered; Series 3 · 30 tells you why RAG is almost always the cheaper answer, and stops there"
+  - topic: "Chatbots, agents and prompt engineering in general"
+    where: "not covered as a subject in itself — everything here is pointed at data you are responsible for"
+  - topic: "Running the vector store — sizing, backups, index rebuilds"
+    where: "covered in Data Ops; here pgvector is switched on inside the PostgreSQL DataPallas already ships"
+
 series:
   - slug: series1-ai-as-a-copilot
     title: AI as Your Data Copilot
@@ -25,44 +81,62 @@ series:
     episodes:
       - n: "00"
         slug: what-an-llm-can-and-cant-do
-        title: "What an LLM Can and Can't Do With Your Data — A Realistic Baseline"
+        title: "What an LLM Can and Cannot Do With Your Data — Where It Helps and Where It Guesses"
+        hands_on: ["koan:choose"]
+        core: true
         status: planned
       - n: "05"
         slug: text-to-sql
         title: "Text-to-SQL — Ask in English, Then Read the Query It Wrote"
+        hands_on: ["koan:equivalent", "chat2db"]
+        core: true
         status: planned
       - n: "10"
-        slug: schema-context
-        title: "Schema Context — Why the Model Needs Your Tables, Not Just Your Question"
+        slug: verify-the-sql
+        title: "Verify the Answer — Checking the Generated Query Returns the Right Rows"
+        hands_on: ["koan:equivalent", "koan:diagnose"]
+        core: true
         status: planned
       - n: "15"
-        slug: prompt-patterns-for-data
-        title: "Prompt Patterns for Data — Few-Shot, Constraints and Guardrails"
+        slug: schema-context
+        title: "Schema Context — Why the Model Needs Your Tables, Not Just Your Question"
+        hands_on: ["koan:equivalent", "koan:diagnose", "chat2db"]
+        core: true
         status: planned
       - n: "20"
-        slug: verify-the-sql
-        title: "Verify the Answer — Does the Generated Query Actually Return the Right Rows?"
+        slug: prompt-patterns-for-data
+        title: "Prompt Patterns for Data — Few-Shot, Constraints and Guardrails"
+        core: true
+        hands_on: ["koan:equivalent"]
         status: planned
       - n: "25"
         slug: failure-modes
         title: "Failure Modes — Invented Columns, Silent Wrong Joins, Confident Nonsense"
+        hands_on: ["koan:diagnose"]
+        core: true
         status: planned
       - n: "30"
         slug: ai-in-the-query-editor
         title: "AI in the Query Editor — Explain, Refactor and Optimize an Existing Query"
+        hands_on: ["koan:equivalent", "chat2db"]
         status: planned
       - n: "35"
         slug: privacy-and-local-models
         title: "Privacy & Local Models — Keeping Your Data Off Someone Else's Server"
+        hands_on: ["koan:choose"]
+        core: true
         status: planned
       - n: "40"
         slug: documenting-with-ai
         title: "Documenting With AI — Schemas, Lineage and Runbooks You'll Actually Keep"
+        hands_on: ["eyes"]
         status: planned
       - n: "45"
-        slug: copilot-capstone
-        title: "Capstone — Answer a Real Northwind Question With AI, and Prove It's Right"
-        tags: ["capstone"]
+        slug: project-copilot
+        title: "Project — Answer a Real Northwind Question With AI, and Prove It's Right"
+        hands_on: ["koan:equivalent", "koan:eval"]
+        core: true
+        tags: ["project"]
         status: planned
 
   - slug: series2-embeddings-and-retrieval
@@ -73,43 +147,76 @@ series:
       - n: "00"
         slug: what-is-an-embedding
         title: "Embeddings — Turning Rows and Text into Vectors"
+        hands_on: ["koan:predict"]
+        core: true
         status: planned
       - n: "05"
         slug: similarity-and-distance
         title: "Similarity & Distance — Cosine, Euclidean and Approximate Nearest Neighbours"
+        hands_on: ["koan:predict", "koan:complete"]
         status: planned
+      # THE EPISODE THAT CARRIES THE HEADER DECISION. It must do three things, in this order:
+      #   1. Switch pgvector on in the Northwind the reader already has — CREATE EXTENSION,
+      #      a vector column, an hnsw index. Verified present: pgvector 0.8.0 in the shipped
+      #      supabase/postgres image, so this is one SQL statement and no install.
+      #   2. Show the same thing in DuckDB (`INSTALL vss`) for the reader with no server up.
+      #   3. NAME THE CASE WHERE A DEDICATED VECTOR DATABASE IS RIGHT — billions of vectors,
+      #      or an index that has to scale separately from the database — and say plainly that
+      #      this is not that. An episode that pretends the specialist tools have no purpose
+      #      is as useless as one that installs Qdrant to embed 77 products.
+      # The koan is filtered search: nearest neighbours WHERE category = 4. That is the real
+      # workload, it is one query here, and it is the argument for this design in one line.
       - n: "10"
         slug: vector-storage
         title: "Vector Storage Where Your Data Already Lives — pgvector and DuckDB vss"
+        hands_on: ["koan:complete", "supabase"]
+        core: true
         status: planned
       - n: "15"
         slug: semantic-search
         title: "Semantic Search Over Northwind — Find Products by Meaning, Not LIKE"
+        hands_on: ["koan:complete", "supabase"]
+        core: true
         status: planned
       - n: "20"
         slug: chunking-and-metadata
-        title: "Chunking & Metadata — The Boring Choices That Decide Retrieval Quality"
+        title: "Chunking & Metadata — The Settings That Decide Whether Retrieval Works"
+        hands_on: ["koan:eval", "koan:choose"]
         status: planned
+      # SOURCE (lewis-rag): RETRIEVAL-AUGMENTED GENERATION — the paper that named it, and the architecture it originally meant.
       - n: "25"
         slug: rag-fundamentals
         title: "RAG — Retrieve First, Then Generate"
+        tags: ["lewis-rag"]
+        credits:
+          - source: lewis-rag
+            concept: "RETRIEVAL-AUGMENTED GENERATION — the paper that named it, and the architecture it originally meant"
+        hands_on: ["koan:complete"]
+        core: true
         status: planned
       - n: "30"
         slug: rag-on-your-warehouse
         title: "RAG on Your Warehouse — Ground the Model in Your Schema and Docs"
+        hands_on: ["koan:author", "supabase"]
+        core: true
         status: planned
       - n: "35"
         slug: hybrid-search
         title: "Hybrid Search — Combining Keyword and Vector Retrieval"
+        hands_on: ["koan:eval", "koan:complete"]
         status: planned
       - n: "40"
         slug: evaluating-retrieval
         title: "Evaluating Retrieval — Recall, Precision and a Test Set You Trust"
+        hands_on: ["koan:eval"]
+        core: true
         status: planned
       - n: "45"
-        slug: rag-capstone
-        title: "Capstone — A Question-Answering Layer Over Your Own Data"
-        tags: ["capstone"]
+        slug: project-rag-layer
+        title: "Project — A Question-Answering Layer Over Your Own Data"
+        hands_on: ["koan:author", "koan:eval", "supabase"]
+        core: true
+        tags: ["project"]
         status: planned
 
   - slug: series3-agents-and-production
@@ -117,44 +224,63 @@ series:
     tagline: ship it without regretting it later
     level: advanced
     episodes:
+      # CORE, added 2026-08-24: Series 3 - 10 (read-only contracts) is core and cannot
+      # be understood without this — you cannot bound what an agent may touch before
+      # knowing how it touches anything. This is the mechanism the whole series rests
+      # on, and it gives S3 a coherent core spine: 00 -> 10 -> 15 -> 35 -> 45.
       - n: "00"
         slug: tools-and-function-calling
         title: "Tools & Function Calling — Let the Model Run a Query, Under Supervision"
+        core: true
+        hands_on: ["koan:complete"]
         status: planned
       - n: "05"
         slug: agents-over-the-warehouse
         title: "Agents Over the Warehouse — Multi-Step Questions, Bounded Permissions"
+        hands_on: ["koan:count:queries"]
         status: planned
       - n: "10"
         slug: read-only-contracts
         title: "Read-Only Contracts & Least Privilege — What an Agent Must Never Touch"
+        core: true
+        hands_on: ["koan:predict", "koan:diagnose"]
         status: planned
       - n: "15"
         slug: eval-harnesses
         title: "Eval Harnesses — Score Generated SQL Against Known-Good Answers"
+        core: true
+        hands_on: ["koan:eval", "koan:author"]
         status: planned
       - n: "20"
         slug: regression-testing-prompts
         title: "Regression-Testing Prompts — Keep Quality When the Model Changes Under You"
+        hands_on: ["koan:eval"]
         status: planned
       - n: "25"
         slug: cost-and-latency
         title: "Cost & Latency — Context Size, Caching and What to Precompute"
+        hands_on: ["koan:count:queries"]
         status: planned
       - n: "30"
         slug: fine-tuning-vs-rag
         title: "Fine-Tuning vs RAG vs Prompting — The Cheapest Thing That Actually Works"
+        hands_on: ["koan:choose"]
         status: planned
       - n: "35"
         slug: structured-output
         title: "Structured Output — JSON, Schemas and Parsing You Can Rely On"
+        core: true
+        hands_on: ["koan:complete", "koan:diagnose"]
         status: planned
       - n: "40"
         slug: observability-for-ai
         title: "Observability for AI Features — Log the Prompt, the Query and the Answer"
+        hands_on: ["koan:capture"]
         status: planned
       - n: "45"
-        slug: capstone-ai-feature
-        title: "Capstone — Ship an AI Data Feature: Grounded, Evaluated, Auditable"
-        tags: ["capstone"]
+        slug: project-ai-feature
+        title: "Project — Ship an AI Data Feature: Grounded, Evaluated, Auditable"
+        hands_on: ["koan:author", "koan:eval"]
+        core: true
+        tags: ["project"]
         status: planned
