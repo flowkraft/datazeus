@@ -14,6 +14,19 @@ The lessons run on **DataPallas** — it bundles the Northwind sample database o
 CloudBeaver to query it with, so there is nothing else to install and nothing to sign up for.
 Everything runs on your own machine.
 
+## News (Just Shipped)
+
+<!-- Newest first, five at most. Edit by hand when you publish an episode, or run
+     `node tools/resync-readme-news.js` to rebuild this list from the lessons' own
+     front-matter (it rewrites only what is between the markers). -->
+<!-- news:begin -->
+- **2026-08-03** — [WHERE, AND/OR/NOT, IN, BETWEEN — Keeping Only the Rows You Need](https://datapallas.com/data-academy/learn-sql/where-filtering)  ·  *SQL Fundamentals*
+- **2026-07-27** — [SELECT, Column Lists & Data Types — Seeing What a Table Holds](https://datapallas.com/data-academy/learn-sql/meet-your-data-with-select)  ·  *SQL Fundamentals*
+- **2026-06-23** — [Start Here: The SQL Thinking Loop — Your First Query, CloudBeaver & the Koans](https://datapallas.com/data-academy/learn-sql/start-here)  ·  *SQL Fundamentals*
+<!-- news:end -->
+
+⭐ **Star this repo** so you don't miss new lessons.
+
 ## How a lesson works
 
 **1. Watch it, or read it — whichever you prefer.** Every episode ships as both a video and a
@@ -103,8 +116,6 @@ tells you what it returned versus what it should have — so you debug SQL, not 
 **Hundreds of episodes planned across all courses.** Being straight with you about where
 that stands: **Learn SQL Series 1 is publishing now** — the rest is written as roadmaps and is
 being turned into lessons one at a time. Star the repo and you will see them as they land.
-
-⭐ **Star this repo** so you don't miss new lessons.
 
 ## Get started
 
