@@ -31,8 +31,11 @@ file cannot leak into anything:
 
 ### Promoting one
 
-- **Lesson:** write it, then drop the `_todo-` prefix. Contentlayer picks it up; set
-  `published: true` when the video is live.
+- **Lesson:** write it, then drop the `_todo-` prefix. **Careful — that publishes it.**
+  `published` defaults to `true` in the `Lesson` type, and the course pages filter on it
+  (`app/(marketing)/data-academy/…`), so a renamed file with no `published` line goes live on
+  the next build. Add `published: false` to the front-matter while it is still a draft, and
+  remove that line when the video is up.
 - **Koan:** write the koans, then move the file from `src/koans/_todo/<track>/…` into
   `src/koans/groovy/datazeus/<track>/…` at the same series/episode path. Check the `package`
   line matches its new folder.
@@ -47,7 +50,11 @@ classification pass got this wrong and promoted 31 briefs by mistake.
 
 ## The roadmap gate
 
-`zeus test` runs `CurriculumSpec`, which checks every `courses/*/curriculum.yaml` against the
+`zeus test` runs `mvn test` — **every `*Spec` under `src/verify`**, not just the roadmap one.
+That includes each published lesson's own spec, which re-runs its queries against a throwaway
+PostgreSQL and the bundled DuckDB, so a lesson whose numbers stopped being true fails here.
+
+The roadmap one is `CurriculumSpec`, which checks every `courses/*/curriculum.yaml` against the
 rules its own header states: unique slugs, ascending `n`, every title has a hook, `short` fits
 and scans the same, prerequisites resolve, each series' project is on the core path, and
 **every lesson file's front-matter title matches the curriculum** — `_todo-` files included,

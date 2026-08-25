@@ -85,9 +85,20 @@ tells you what it returned versus what it should have — so you debug SQL, not 
 
 ## The courses
 
-Learn SQL · Python for Data · Java & Groovy for Data · Data Modeling · Data Model Patterns ·
-Schema Teardowns · ETL & Data Pipelines · Analytics Engineering with dbt · Data Warehousing ·
-Data Ops · BI & Data Visualization · AI for Data
+| Course | What you learn |
+|---|---|
+| **[Learn SQL](https://datapallas.com/data-academy/learn-sql)** | Query one table, then join two — `SELECT` through window functions, on five different databases |
+| **[Python for Data](https://datapallas.com/data-academy/learn-python)** | The half of the job SQL cannot do — read a file nobody cleaned, call an API, reshape it |
+| **[Java & Groovy for Data](https://datapallas.com/data-academy/learn-java-groovy)** | The data half of the job, in the language your company already runs |
+| **[Data Modeling](https://datapallas.com/data-academy/learn-data-modeling)** | Decide what the tables should be, before anyone writes a query against them |
+| **[Data Model Patterns](https://datapallas.com/data-academy/learn-data-model-patterns)** | The patterns under almost every business schema — Party and roles, effective dating, order to cash |
+| **[Schema Teardowns](https://datapallas.com/data-academy/learn-schema-teardowns)** | Read the schemas real teams actually shipped, and judge them against the patterns |
+| **[ETL & Data Pipelines](https://datapallas.com/data-academy/learn-etl-pipelines)** | Get data from where it is to where it is useful — repeatedly, without losing or duplicating a row |
+| **[Analytics Engineering with dbt](https://datapallas.com/data-academy/learn-dbt)** | Turn a folder of ad-hoc SELECTs into a version-controlled, tested, documented project |
+| **[Data Warehousing](https://datapallas.com/data-academy/learn-data-warehousing)** | Build the place the questions get answered fast — star schemas, columnar engines, cubes |
+| **[Data Ops](https://datapallas.com/data-academy/learn-data-ops)** | Keep it running — the terminal, PostgreSQL in production, and the job that dies at 3 a.m. |
+| **[BI & Data Visualization](https://datapallas.com/data-academy/learn-bi)** | Pick the right chart, agree what a metric means, and build a dashboard people act on |
+| **[AI for Data](https://datapallas.com/data-academy/learn-ai)** | Use AI on data you are responsible for — and be able to prove the answer is right |
 
 **Hundreds of episodes planned across all courses.** Being straight with you about where
 that stands: **Learn SQL Series 1 is publishing now** — the rest is written as roadmaps and is
