@@ -72,8 +72,9 @@ class StartHereKoans extends KoanBase {
         ''')
     }
 
-    // 5) The whole query — no scaffolding. Write the WHOLE query yourself, the one Leo typed
-    //    in the video: "How many orders did we get in June 2024?" (you should get 4).
+    // 5) The whole query — no scaffolding. Write the WHOLE query yourself, the one from the
+    //    lesson: "How many orders did we get in June 2024?" (you should get 4).
+    //    GET, not SHIP: "Orders" also has a "ShippedDate", which is a different question.
     def "write the hero query from scratch: orders in June 2024"() {
         expect:
         shouldReturn 4, '''

@@ -6,8 +6,15 @@ import spock.lang.Unroll
 import java.sql.SQLException
 
 /**
- * VERIFIED spec = the PUBLISH GATE for Series 1 · lesson _00 "Write Your First Query".
- * These are the real answers the blog + video show (the hero number is june_orders = 4).
+ * VERIFIED spec = the PUBLISH GATE for Series 1 · lesson _00, "Start Here: The SQL Thinking
+ * Loop". These are the real answers the blog + video show (the hero number is june_orders = 4).
+ *
+ * GET, NOT SHIP. The hero question is "how many orders did we GET in June", and the query
+ * filters "OrderDate". Northwind's "Orders" also carries a "ShippedDate", so "shipped in June"
+ * is a DIFFERENT question with a different answer — and this lesson's whole subject is
+ * translating a question into the right query. The article and this spec both said "ship"
+ * while the video said "get", and the SQL answered the video. Fixed 2026-08-25; if any of the
+ * three ever drifts again, they are wrong, not the data.
  *
  * Each feature runs on BOTH engines (see NorthwindGateSpec): the bundled DuckDB and a real
  * Postgres — so we prove the learner gets the SAME result whether they use the DuckDB CLI or
@@ -21,7 +28,7 @@ import java.sql.SQLException
 class StartHereSpec extends NorthwindGateSpec {
 
     @Unroll
-    def "[#engine] the hero query: June shipped exactly four orders"() {
+    def "[#engine] the hero query: June received exactly four orders"() {
         expect:
         sqlFor(engine).firstRow(script("june-orders")).values().first() == 4
 
