@@ -16,14 +16,13 @@ Everything runs on your own machine.
 
 ## News (Just Shipped)
 
-<!-- Newest first, five at most. Edit by hand when you publish an episode, or run
-     `node tools/resync-readme-news.js` to rebuild this list from the lessons' own
-     front-matter (it rewrites only what is between the markers). -->
-<!-- news:begin -->
+<!-- Newest first, five at most. Add a line when you publish an episode; drop the oldest.
+     The URL is https://datapallas.com/data-academy/<course>/<slug> and the title is the
+     one in that course's curriculum.yaml — a wrong one here is a dead link in the most
+     visible part of the page. -->
 - **2026-08-03** — [WHERE, AND/OR/NOT, IN, BETWEEN — Keeping Only the Rows You Need](https://datapallas.com/data-academy/learn-sql/where-filtering)  ·  *SQL Fundamentals*
 - **2026-07-27** — [SELECT, Column Lists & Data Types — Seeing What a Table Holds](https://datapallas.com/data-academy/learn-sql/meet-your-data-with-select)  ·  *SQL Fundamentals*
 - **2026-06-23** — [Start Here: The SQL Thinking Loop — Your First Query, CloudBeaver & the Koans](https://datapallas.com/data-academy/learn-sql/start-here)  ·  *SQL Fundamentals*
-<!-- news:end -->
 
 ⭐ **Star this repo** so you don't miss new lessons.
 
