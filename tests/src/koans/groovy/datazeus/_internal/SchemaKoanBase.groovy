@@ -51,8 +51,8 @@ package datazeus._internal
  * The practice schema lives inside that copy and dies with it.
  *
  * DO NOT "FIX" THE SHIPPED DATASET so these koans have constraints to inspect. Its lack of
- * declared PKs and FKs is the entire premise of Series 1 — see datasets/northwind/README.md
- * and the header of courses/datamodeling/curriculum.yaml.
+ * declared PKs and FKs is the entire premise of Series 1 — see the "TWO DATASETS, TWO JOBS"
+ * block in the header of courses/datamodeling/curriculum.yaml.
  */
 abstract class SchemaKoanBase extends KoanBase {
 

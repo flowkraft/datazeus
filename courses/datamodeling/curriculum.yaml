@@ -160,8 +160,8 @@
 # constraints at all — no PKs, no FKs, nothing (the JPA entities upstream have them; the
 # DuckDB export flattened them away). That absence is the COURSE, not a defect: Series 1 is
 # the learner rebuilding Northwind's integrity layer into their own `practice` schema, one
-# episode at a time, graded by whether the real rows still load. DO NOT "FIX" THE DATASET —
-# see datasets/northwind/README.md, which says the same thing louder.
+# episode at a time, graded by whether the real rows still load. DO NOT "FIX" THE DATASET:
+# adding the constraints back deletes thirteen episodes in one commit.
 #
 #   The script is a REBUILD, never an ALTER: DuckDB supports ALTER TABLE ADD PRIMARY KEY and
 #   ALTER COLUMN SET NOT NULL, but NOT ADD FOREIGN KEY, ADD UNIQUE or ADD CHECK (tested,
