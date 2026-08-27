@@ -87,6 +87,22 @@ class StartHereSpec extends NorthwindGateSpec {
         sqlFor("duckdb").firstRow('SELECT OrderDate FROM "Orders" LIMIT 1') != null
     }
 
+    // The two assertions above prove the MECHANISMS separately — a folded table name, a
+    // folded column name. The lesson makes a stronger, composed claim about the block it
+    // prints: "In DuckDB … this works fine". A reader takes that as "and I still get 4",
+    // which is the whole point — the ONLY difference between the quoted and unquoted forms
+    // is the folding, not the answer. That is what this pins, on the article's query as
+    // printed (no alias, so the value is read positionally).
+    def "[duckdb] and the whole unquoted query still answers 4 — only the folding differs"() {
+        expect:
+        sqlFor("duckdb").firstRow('''
+            SELECT count(*)
+            FROM orders
+            WHERE OrderDate >= DATE '2024-06-01'
+              AND OrderDate <  DATE '2024-07-01'
+        ''')[0] == 4
+    }
+
     def "[postgres] folds unquoted 'orders' to lowercase — the table is \"Orders\", so it fails"() {
         when:
         sqlFor("postgres").firstRow('SELECT count(*) FROM orders')

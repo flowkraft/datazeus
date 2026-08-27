@@ -1,11 +1,11 @@
 ---
-title: "Aliases, Expressions & DISTINCT — Make Messy Output Look Like a Report"
+title: "Data Types — What a Column Can Hold, and Why Results Surprise You"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
 topic: "learn-sql"
 tags: []
 level: "beginner"
 module: "series1-fundamentals"
-order: 20
+order: 7
 published: false
 ---
 
@@ -25,31 +25,44 @@ published: false
       - the koans mirror the lesson beat for beat
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
-    GOAL: make query output look like something you would hand to a person.
-    SQL: AS aliases, arithmetic and string expressions in the SELECT list, DISTINCT, ROUND.
-    DISTINCT is in this episode because it is an OUTPUT concern, not a filtering one — a reader
-    who learns it beside WHERE reaches for it to fix duplicates that a wrong join created, which
-    is the habit Series 2 · 06 has to undo.
+    GOAL: a reader who can say what kind of thing a column holds, and who is no longer
+    surprised by a result that "looks wrong".
+    SQL: no new clause. The type families (whole numbers, decimals, text, dates, true/false),
+    why text needs 'single quotes' and numbers do not, and information_schema.columns as
+    "ask the database what it is holding".
+
+    IT SITS BEFORE WHERE ON PURPOSE. Episode 10 currently improvises half of this — it has to
+    explain "'single quotes' for text, double quotes for names, numbers bare" before it can
+    teach a single comparison. Teach it here and 10 gets to be about WHERE.
+
+    WHERE and ORDER BY are still untaught at this point, so show the catalog query WITHOUT
+    them. They only ever made its output tidier.
 
     ── INHERITED FROM EPISODE 05, 2026-08-26 ───────────────────────────────
-    ROUND arrives here, and it brings its own motivation with it. Episode 05 used to show
-    `SELECT "ProductName", ROUND("UnitPrice", 2) FROM "Products" LIMIT 5` and then point at
-    the column heading the engine invents for it — DuckDB calls it `round(UnitPrice, 2)`,
-    PostgreSQL just `round`. That ugly auto-name IS the argument for an alias, and 05 even
-    said so out loud ("naming it yourself is an alias, and that gets its own lesson soon").
-    That whole beat was cut from 05 and belongs to this episode: show the expression, let the
-    engine name it badly, then fix it with AS. The script that held this query,
-    `products-rounded-price.sql`, was DELETED from lesson 05 (now
-    `05-select-fetch-your-data/`) when the data-types arc was cut on 2026-08-26 — the
-    query is written out above, which is now the only copy.
+    This episode exists because 05 tried to carry data types and could not. What was cut:
 
-    Do NOT re-import 05's other cut material here (information_schema, the DuckDB-vs-Postgres
-    type names). Those went to Series 1 · 07 (Data Types) and Series 4 · 00 respectively.
+      "why does a price of 18 come back as 18.0000?" — a good hook that DOES NOT FIRE in
+      CloudBeaver, the client this course tells the reader to open: it trims trailing zeros
+      and shows 18. psql shows 18.0000. Both are right — the column is numeric(19,4) on
+      PostgreSQL and DECIMAL(10,4) on DuckDB. Do NOT rebuild the beat around a value the
+      reader's own screen will not show. Either use a client-independent example, or make the
+      disagreement itself the lesson — but that version belongs in Series 4 · 00.
+
+      information_schema.columns — kept, and it is the heart of this episode.
+
+    ROUND went to Series 1 · 20 (it is an expression, and the engine's auto-generated column
+    name is the argument for aliases). The DuckDB-vs-PostgreSQL type vocabulary went to
+    Series 4 · 00.
+
+    WATCH OUT: the shipped DuckDB and the shipped PostgreSQL DO NOT have identical schemas
+    (as of 2026-08-26: Categories 3 vs 4 columns, Employees 18 vs 20, and a different column
+    order). Verify every claim against BOTH engines before writing a number down — the gate
+    only does that when PGHOST points at a real DataPallas Northwind.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:predict
       koan:complete
-      koan:diagnose
-      koan file: tests/src/koans/groovy/datazeus/learnsql/series1/_20/DistinctAliasesExpressionsKoans.groovy
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series1/_07/DataTypesKoans.groovy
    ========================================================================== */}
 
 ## The situation this lesson prepares you for

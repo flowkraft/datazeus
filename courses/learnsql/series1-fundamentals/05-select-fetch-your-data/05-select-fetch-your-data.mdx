@@ -1,0 +1,185 @@
+---
+title: "SELECT & Column Lists — Fetching a Table's Data"
+description: "Open a database you have never seen and find out what is in it. Ask a table for everything, then ask it for exactly the columns you want, and read what the database says each column is made of."
+topic: "learn-sql"
+tags: ["sql", "fundamentals", "select"]
+level: "beginner"
+module: "series1-fundamentals"
+order: 5
+date: "2026-07-27"
+published: true
+videoId: "learnsql-series1-05-select-fetch-your-data"
+---
+
+## The situation this lesson prepares you for
+
+Someone gives you access to a database and asks you to "have a look at the products". You open it and see a list of table names. That is all you have.
+
+Two commands get you from there to understanding the data:
+
+- `SELECT *` — asks for **every column**: to see what a table holds.
+- `SELECT "Col1", "Col2"` — asks for **only those columns**: to read the data.
+
+You will also learn to read what type each column is, because that explains results that otherwise look wrong.
+
+Every query below runs on the Northwind sample database that ships with DataPallas.
+
+**Open the koans before you read on.** There is a koan for every idea in this lesson — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _05
+```
+
+## Ask a table for everything
+
+`SELECT *` means "give me every column". Start with a small table:
+
+```sql file=./scripts/categories-all.sql
+SELECT *
+FROM "Categories";
+```
+
+| CategoryID | CategoryName | Description | Picture |
+| ---------: | ------------ | ----------- | ------- |
+| 1 | Beverages | Soft drinks, coffees, teas, beers, and ales | NULL |
+| 2 | Condiments | Sweet and savory sauces, relishes, spreads, and seasonings | NULL |
+| 3 | Confections | Desserts, candies, and sweet breads | NULL |
+| 4 | Dairy Products | Cheeses | NULL |
+| 5 | Grains/Cereals | Breads, crackers, pasta, and cereal | NULL |
+| 6 | Meat/Poultry | Prepared meats | NULL |
+| 7 | Produce | Dried fruit and bean curd | NULL |
+| 8 | Seafood | Seaweed and fish | NULL |
+
+Type it into CloudBeaver yourself and hit Run — resist the copy-paste, typing is part of how it sticks. You should get this:
+
+That is the entire table: eight rows, four columns. Nothing is hidden, and now you know what this business means by a "category".
+
+`Picture` is empty for every row, and that is perfectly normal — a column exists whether or not anybody has filled it in. An empty cell like this is called `NULL`, which is how CloudBeaver and most other tools show it.
+
+Three words for what you are looking at, because you will use them constantly:
+
+- A **table** holds all the records of one kind. `"Categories"` holds every category.
+- A **column** is one named piece of information that every row carries. `CategoryName` holds each category's name.
+- A **row** is one complete record. Row 1 is the Beverages category — its id, its name, its description and its (empty) picture together.
+
+## The same query on a wider table
+
+`SELECT *` works on any table. Run it on the staff:
+
+```sql file=./scripts/employees-all.sql
+SELECT *
+FROM "Employees";
+```
+
+Every row comes back with **twenty columns** — `EmployeeID`, `LastName`, `FirstName`, `Title`, `TitleOfCourtesy`, `BirthDate`, `HireDate`, `Address`, `City`, `Region`, `PostalCode`, `Country`, and eight more.
+
+The order you see them in is the table's own, and it is not something SQL guarantees: run this on a different engine and the same twenty columns can come back arranged differently. That is fine, and it is exactly why the next section matters — when the order counts, you state it yourself.
+
+`"Categories"` fitted on one screen. This did not, and it handed back everything the business stores about each person. That is the normal experience with real tables, and it is the reason for the second command.
+
+### The cost is not only on screen
+
+Unreadable output is the part you notice. There is a second cost you do not see:
+
+- The database **reads** every column you asked for, including the ones you ignore.
+- All of them are **serialized and sent over the network** to whatever asked — your application, your BI tool, your script.
+- Wide columns are the expensive ones — `Notes` and `Photo` are exactly the sort that hold a paragraph of text or an image. In this sample they are empty, which is why nothing here feels slow; on a real employees table they are the columns `SELECT *` quietly ships every time.
+
+On a three-row table you will never notice. On a wide table with millions of rows, inside an application that runs the query thousands of times a day, the columns nobody needed are a measurable share of the time users spend waiting.
+
+So here is the rule worth remembering: use `SELECT *` to **discover which columns a table has**. Once you know them, **name the columns you want** — that is how you read the data itself.
+
+## Ask for only the columns you want
+
+Instead of `*`, list the columns you actually need, separated by commas:
+
+```sql file=./scripts/employees-named-columns.sql
+SELECT "FirstName", "LastName", "Title"
+FROM "Employees";
+```
+
+| FirstName | LastName | Title |
+| --------- | -------- | ----- |
+| Nancy | Davolio | Sales Representative |
+| Andrew | Fuller | Vice President, Sales |
+| Janet | Leverling | Sales Representative |
+
+Three columns instead of twenty. That list between `SELECT` and `FROM` is called the **select list**, and choosing what goes in it is most of what writing a query is.
+
+Remember the double quotes around each column name: they tell the database to take the name exactly as you typed it. That is the rule from the previous lesson, and it applies to every query you write against this database.
+
+## Limiting the rows
+
+And here, at last, is the table you were asked to look at. The select list controls the columns. A separate keyword, `LIMIT`, controls how many rows come back. `"Products"` holds twenty rows; this asks for five of them:
+
+```sql file=./scripts/products-name-and-price.sql
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+LIMIT 5;
+```
+
+| ProductName | UnitPrice |
+| ----------- | --------: |
+| Chai | 18 |
+| Chang | 19 |
+| Aniseed Syrup | 10 |
+| Chef Antons Cajun Seasoning | 22 |
+| Scottish Longbreads | 12.5 |
+
+Use `LIMIT` whenever you are exploring an unfamiliar table. It costs nothing and protects you from asking a ten-million-row table to print itself.
+
+Two separate controls, then: **the select list chooses the columns**, and **`LIMIT` chooses how many rows** — not *which* ones. Until you say what to sort by, the database picks. While you are only looking at a table's shape any five will do, and that keyword gets a lesson of its own later in the series.
+
+## Your turn, before we go on
+
+Run both of these in CloudBeaver against the Northwind database, then try the same pair on `"Customers"`:
+
+```sql
+SELECT * FROM "Employees";
+
+SELECT "FirstName", "LastName", "Title"
+FROM "Employees";
+```
+
+How many columns does `"Customers"` have? Which three would you keep? Answering that yourself is the whole skill this lesson teaches.
+
+## Two kinds of quotes
+
+One last thing, and you have been using half of it since your first query — the two kinds of quotes:
+
+- `"CategoryName"` in **double** quotes is the **name of a column**. That is what you have been typing all lesson.
+- `'Beverages'` in **single** quotes is a text **value** — the contents of a column, never its name.
+
+They are not interchangeable, and putting a column name in single quotes is among the most common errors beginners make. You will use single quotes properly in the next lesson, with `WHERE`.
+
+## What you can do now
+
+Someone hands you a database and asks you to have a look at the products. You would not freeze now. You would open the table, see what it holds, and hand back the columns they asked for — and given any table in any database:
+
+1. `SELECT * FROM "TheTable" LIMIT 5;` to see what it holds.
+2. `SELECT "the", "columns", "you", "want" FROM "TheTable";` to read the data you actually need.
+Next lesson: **data types** — what each column can actually hold, and why a result sometimes surprises you.
+
+## The koans: now you write the queries
+
+So far the queries were handed to you. The koans are where you write them. Each koan is a tiny fill-in-the-blank exercise: a failing test with a `___` where the answer belongs. Fill it in, run it, watch red turn green — and the next one unlocks.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _05
+```
+
+On macOS or Linux, run `./zeus.sh koans learnsql series1 _05` from the same folder. The three arguments are course, series and episode.
+
+> **Says the lesson isn't there?** Your copy of DataZeus predates this lesson — run `.\zeus.bat update` (or `./zeus.sh update`) once to fetch the latest lessons, then run the command again. Koans you have already solved are kept.
+
+The file you edit is:
+
+```
+c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_05\SelectFetchYourDataKoans.groovy
+```
+
+Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
+
+Six koans, one per idea in this lesson and in the same order: ask for every column, name one, name two, choose their order, limit the rows, then write a whole query from scratch. They run on DuckDB — a single file, no server to start.

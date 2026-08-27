@@ -21,7 +21,7 @@ Everything runs on your own machine.
      one in that course's curriculum.yaml — a wrong one here is a dead link in the most
      visible part of the page. -->
 - **2026-08-03** — [WHERE, AND/OR/NOT, IN, BETWEEN — Keeping Only the Rows You Need](https://datapallas.com/data-academy/learn-sql/where-filtering)  ·  *SQL Fundamentals*
-- **2026-07-27** — [SELECT, Column Lists & Data Types — Seeing What a Table Holds](https://datapallas.com/data-academy/learn-sql/meet-your-data-with-select)  ·  *SQL Fundamentals*
+- **2026-07-27** — [SELECT & Column Lists — Fetching a Table's Data](https://datapallas.com/data-academy/learn-sql/select-fetch-your-data)  ·  *SQL Fundamentals*
 - **2026-06-23** — [Start Here: The SQL Thinking Loop — Your First Query, CloudBeaver & the Koans](https://datapallas.com/data-academy/learn-sql/start-here)  ·  *SQL Fundamentals*
 
 ⭐ **Star this repo** so you don't miss new lessons.

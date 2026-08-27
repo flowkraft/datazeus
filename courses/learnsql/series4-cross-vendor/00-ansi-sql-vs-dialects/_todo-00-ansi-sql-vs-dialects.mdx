@@ -33,6 +33,32 @@ published: false
     was going to reach it there — and because it is the most differentiated content in the course.
     DataPallas runs Northwind on five engines, so this is the house specialty, not a survey.
 
+    ── INHERITED FROM SERIES 1 · 05, 2026-08-26 ────────────────────────────
+    Two concrete, verified examples were cut from Learn SQL 05 and belong here.
+
+    1. THE SAME COLUMN, TWO VOCABULARIES. Northwind's "Products" on the shipped databases:
+
+         column          DuckDB           PostgreSQL
+         UnitPrice       DECIMAL(10,4)    numeric          (numeric(19,4) with precision)
+         ProductName     VARCHAR          character varying
+         UnitsInStock    SMALLINT         smallint         (these two AGREE)
+         Discontinued    SMALLINT         boolean          (these do not)
+
+       Same data, different names — and a reader who has not seen this reads it as a bug in
+       their own query. Verified against a live Northwind on 2026-08-26; re-verify before use.
+
+    2. THE CLIENT IS NOT THE DATABASE — and this is the better half. Run
+       `SELECT "ProductName", "UnitPrice" FROM "Products" LIMIT 5` on PostgreSQL:
+
+         psql          ->  18.0000
+         CloudBeaver   ->  18
+
+       Nothing is wrong. The column is numeric(19,4), so the four decimals are real;
+       CloudBeaver's grid trims trailing zeros for display. This is the moment a reader stops
+       treating a GUI as ground truth, and it is only teachable once they know types exist
+       (Series 1 · 07) and that engines differ (this episode). It was tried at lesson 2 and
+       failed for exactly that reason.
+
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:predict
       koan:diagnose

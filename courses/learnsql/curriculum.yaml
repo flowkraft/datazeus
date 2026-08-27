@@ -224,12 +224,33 @@ series:
         core: true
         status: published
       - n: "05"
-        slug: meet-your-data-with-select
-        title: "SELECT, Column Lists & Data Types — Seeing What a Table Holds"
-        short: "SELECT, Column Lists & Data Types — what a table holds"
+        slug: select-fetch-your-data
+        title: "SELECT & Column Lists — Fetching a Table's Data"
+        short: "SELECT & Column Lists — fetching a table's data"
         hands_on: ["koan:complete", "cloudbeaver"]
         core: true
         status: published
+      # ADDED 2026-08-26, and it sits BEFORE WHERE on purpose. Episode 05 used to carry a
+      # data-types arc — why a price prints as 18.0000, ROUND, information_schema, and the
+      # DuckDB-vs-PostgreSQL type names. It was cut: the hook depends on trailing zeros that
+      # CloudBeaver (the client this course tells you to open) trims away, and the catalog
+      # query needs WHERE and ORDER BY, neither taught at lesson 2.
+      #
+      # But types are not a footnote to skip — they are the cause of the confusions beginners
+      # actually hit, and episode 10 already improvises half of this ("'single quotes' for
+      # text, numbers bare") because it has to. Teaching it here arms 10 instead.
+      #
+      # WHERE/ORDER BY are still untaught at 07, so the catalog query is shown without them —
+      # they only ever made its output tidier.
+      # The engine vocabulary (DECIMAL(10,4) vs numeric) stays in Series 4 · 00, and so does
+      # the client-rendering trap: psql prints 18.0000, CloudBeaver shows 18. Same value.
+      - n: "07"
+        slug: data-types
+        title: "Data Types — What a Column Can Hold, and Why Results Surprise You"
+        short: "Data Types — what a column can hold"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
       - n: "10"
         slug: where-filtering
         title: "WHERE, AND/OR/NOT, IN, BETWEEN — Keeping Only the Rows You Need"

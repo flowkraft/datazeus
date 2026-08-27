@@ -49,7 +49,7 @@ That's step one, the plain-language question. For step two, you can almost trans
 - It asks "how many," which is `count(*)`.
 - It's only about June, so you filter the date with `WHERE`.
 
-```sql
+```sql file=./scripts/june-orders.sql
 SELECT count(*)
 FROM "Orders"
 WHERE "OrderDate" >= DATE '2024-06-01'
@@ -86,7 +86,7 @@ Why PostgreSQL? It starts quickly, it's light to run, and its SQL stays close to
 
 No `foo`, no `bar` here. These are real customers in real countries, so go ahead and ask who they are:
 
-```sql
+```sql file=./scripts/customers.sql
 SELECT "CompanyName", "Country"
 FROM "Customers"
 ORDER BY "CompanyName"
@@ -115,6 +115,8 @@ From a terminal:
 cd c:/DataPallas/db/datazeus
 .\zeus.bat koans learnsql series1 _00
 ```
+
+On macOS or Linux, run `./zeus.sh koans learnsql series1 _00` from the same folder. The three arguments are course, series and episode.
 
 > **Says the lesson isn't there?** Your copy of DataZeus predates this lesson — run `.\zeus.bat update` (or `./zeus.sh update`) once to fetch the latest lessons, then run the command again. Koans you have already solved are kept.
 
@@ -145,7 +147,7 @@ You may have caught the quotes around the table names: `"Orders"`, `"Customers"`
 
 Northwind's tables were created with quoted, capitalized names, so the table really is called `"Orders"`, capital O and all. The query quotes them to match:
 
-```sql
+```sql file=./scripts/june-orders.sql
 SELECT count(*)
 FROM "Orders"
 WHERE "OrderDate" >= DATE '2024-06-01'
@@ -172,10 +174,3 @@ A good default, then: write standard SQL, and when two engines genuinely disagre
 ## What's next
 
 Next up is SELECT, where you meet your tables, rows, and columns by actually querying them. (The rest of the series lives on the [Learn SQL](/data-academy/learn-sql) course page.)
-
----
-
-## 🧪 Practice & remember
-
-- **Koans** — fill in the blanks and watch the tests turn green. From the datazeus folder, run `./zeus.sh koans learnsql series1 _00` (or `.\zeus.bat koans learnsql series1 _00` on Windows). That's course · series · episode, the package `datazeus.learnsql.series1._00`.
-- **Scripts** — the SQL from this lesson lives in `…/00-start-here/scripts/` as `june-orders.sql` and `customers.sql`.
