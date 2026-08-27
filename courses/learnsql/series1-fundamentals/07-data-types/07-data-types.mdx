@@ -68,8 +68,6 @@ WHERE table_name = 'Products';
 
 The `WHERE table_name = 'Products'` line is a filter — you will write those properly next lesson. For now, read it as "only the Products table". And notice `'Products'` is in **single** quotes, because it is a text value, not the name of a column. That is the rule from last lesson, doing real work.
 
-Your rows may arrive in a different order than the ones above. SQL does not promise an order until you ask for one, and asking is a later lesson.
-
 <Callout>
 Different databases spell the same families differently. PostgreSQL says `character varying` where DuckDB says `VARCHAR`, and `numeric` where DuckDB says `DECIMAL(19,4)`. Same promise, different word. Learn the **families** below and the spellings stop mattering.
 </Callout>
