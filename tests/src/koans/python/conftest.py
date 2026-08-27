@@ -46,38 +46,25 @@ the wrong blank, in Series 1 as much as in Series 3.
 SAME NORTHWIND AS EVERY OTHER TRACK. The `northwind` fixture opens a throwaway COPY of the
 same database the SQL and JVM koans use. A learner who found 11 German customers with WHERE
 should find 11 with a DataFrame filter. Two tools, one skill, same numbers.
+
+WHERE THE NON-FIXTURE PIECES LIVE: koanlib.py, not here. `___`, CountingConnection, RowSink
+and run_tool are plain Python objects that other conftests and the koans themselves import,
+and "conftest" is not a unique module name — see the note at the top of koanlib.py for what
+that cost us. They are re-exported below so `from conftest import ___` keeps working in koans
+that already say it.
 """
 
 import os
+import re
 import shutil
-import subprocess
-import sys
 import tempfile
 
 import duckdb
 import pytest
 
-
-class _Blank:
-    """The unfilled blank. Any comparison against it fails with a readable nudge.
-
-    Mirrors KoanBase's `___`: a koan you have not answered should say so, not fail with
-    something that looks like a bug in your code.
-    """
-
-    def __repr__(self):
-        return "___ (you have not filled this in yet)"
-
-    def __eq__(self, other):
-        pytest.fail(
-            f"you haven't filled in the blank yet — replace ___ with your answer.\n"
-            f"the koan expected it to equal: {other!r}"
-        )
-
-    __ne__ = __eq__
-
-
-___ = _Blank()
+# Re-exported on purpose: the koans say `from conftest import ___`, and a learner who has
+# already edited one keeps that line through `zeus update`. koanlib is where they now live.
+from koanlib import ___, CountingConnection, RowSink, run_tool  # noqa: F401
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -120,88 +107,10 @@ def nw_df(northwind):
     return load
 
 
-# ══════════════════════════════════════════════════════════════════════════
-#  ASSERT ON A COUNTER — "the answer is right either way; the lesson is how you got it"
-# ══════════════════════════════════════════════════════════════════════════
-
-class CountingConnection:
-    """Wraps a DuckDB connection and counts how many times you went to the database.
-
-    Series 2 and 3 have episodes where the naive and the sensible version both produce the
-    right answer — chunking, pushing work back to SQL, a query inside a loop. Correctness
-    cannot separate them; the count can, and the count IS the lesson.
-
-    `queries` is what a koan asserts on: "your version asked 1,001 times; one join asks once."
-    """
-
-    def __init__(self, con):
-        self._con = con
-        self.queries = 0
-
-    def sql(self, q, *a, **k):
-        self.queries += 1
-        return self._con.sql(q, *a, **k)
-
-    def execute(self, q, *a, **k):
-        self.queries += 1
-        return self._con.execute(q, *a, **k)
-
-    def __getattr__(self, name):
-        return getattr(self._con, name)
-
-    def reset(self):
-        self.queries = 0
-
-    def __repr__(self):
-        return f"{self.queries} queries"
-
-
 @pytest.fixture
 def counting(northwind):
     """`counting()` -> a Northwind connection that counts every query you send it."""
     return lambda: CountingConnection(northwind)
-
-
-class RowSink:
-    """Counts the most rows held in memory AT ONCE.
-
-    Series 3 · 30 is chunking. Reading a large file whole and reading it in chunks produce the
-    identical, correct total, so the koan asserts on the high-water mark instead: streaming
-    gives a small peak, `read_csv` of the whole thing gives the row count.
-
-    Rejected alternative, same as on the JVM side: running the container under a memory cap so
-    the naive version is OOM-killed. It works, it is dramatic, and it proves nothing this
-    counter does not — while turning a two-second koan into a slow one. An OOM tells you that
-    you ran out of memory; this tells you what you did wrong.
-
-    `seen` is the other jaw of the pincer: hold few rows AND still see all of them, so a small
-    peak cannot be bought by quietly dropping data.
-    """
-
-    def __init__(self):
-        self.held = 0
-        self.peak_held = 0
-        self.seen = 0
-
-    def accept(self, n=1):
-        self.seen += n
-        self.held += n
-        self.peak_held = max(self.peak_held, self.held)
-
-    def release(self, n=1):
-        self.held = max(0, self.held - n)
-
-    def consume(self, chunk):
-        """Take a chunk, count it, let it go. Chunked code falls into this naturally."""
-        n = len(chunk)
-        self.accept(n)
-        try:
-            return chunk
-        finally:
-            self.release(n)
-
-    def __repr__(self):
-        return f"saw {self.seen} rows, held at most {self.peak_held} at once"
 
 
 @pytest.fixture
@@ -210,20 +119,272 @@ def sink():
 
 
 # ══════════════════════════════════════════════════════════════════════════
-#  ASSERT ON A PROCESS — Series 3 · 10 and the project
+#  THE PATH TO ENLIGHTENMENT — the same screen the JVM koans print
 # ══════════════════════════════════════════════════════════════════════════
+#
+#  A learner does not think of themselves as "on the pytest track" or "on the Spock track".
+#  They are doing the koans. So walking the path has to LOOK the same wherever they are, and
+#  this is the Python half of PathToEnlightenment.groovy — same sections, same wording, same
+#  progress bar, same zen line. Keep the two in step.
+#
+#  Two things this has to solve that the JVM side does not:
+#
+#  1. THE PATHS ARE CONTAINER PATHS. These koans run in Docker so nobody has to install
+#     Python, and the learner neither knows nor should care. Every path pytest reports is
+#     therefore a location inside that container, which is not where their file lives and
+#     cannot be pasted into an editor. `zeus koans python` passes the real host directory in
+#     as DATAZEUS_KOANS_HOST_DIR and we translate back to it.
+#
+#  2. PYTEST'S OWN OUTPUT IS THE WRONG OUTPUT. Tracebacks, F characters and "4 failed in
+#     0.9s" are a test-runner's report to an engineer; the koans are a lesson. The launchers
+#     run pytest with `-p no:terminalreporter`, so pytest prints nothing at all and this
+#     writes the whole screen. That also means collection errors would be SILENT unless we
+#     print them ourselves — see _screen(), which is what a learner's syntax error hits.
 
-def run_tool(module: str, *args):
-    """Run a learner's CLI script and collect its exit code and output.
+MOUNT = "/koans"
 
-    Invoked as `python -m <module>` in a subprocess rather than imported, because the thing
-    being taught is that it behaves correctly as a COMMAND — argparse parsing, a non-zero exit
-    when something is wrong, and a message that names what is missing.
+_ESC = "\033"
+_GREEN = _ESC + "[32m"
+_RED = _ESC + "[31m"
+_DIM = _ESC + "[90m"
+_BOLD = _ESC + "[1m"
+_CYAN = _ESC + "[36m"
+_RESET = _ESC + "[0m"
 
-    Returns (exit_code, stdout+stderr).
+_ZEN = [
+    "Real data, real questions. Become the Data Zeus.",
+    "Don't go hunting for the answer — write a query and ask for it.",
+    "A query you typed is worth a thousand you watched.",
+    "You became a legendary Data Zeus!",
+    "Small data, fits in your head. Real enough to ask anything.",
+    "The rows you keep tell the truth. WHERE is your discipline.",
+]
+
+_results = []          # [rel, koan_name, passed, hint_lines, def_line]
+_seen = set()
+_collect_errors = []   # [where, text]
+
+
+def pytest_collectreport(report):
+    if report.failed:
+        _collect_errors.append((report.nodeid or "?", report.longreprtext))
+
+
+def pytest_runtest_logreport(report):
+    # "call" is the koan itself; a "setup" failure never reaches call, and losing it would
+    # silently drop a koan from the roster.
+    if report.when not in ("call", "setup"):
+        return
+    if report.when == "setup" and not report.failed:
+        return
+    if report.nodeid in _seen:
+        return
+    _seen.add(report.nodeid)
+    rel = report.nodeid.split("::")[0]
+    name = report.nodeid.split("::")[-1]
+    def_line = (report.location[1] or 0) + 1
+    _results.append([rel, name, report.passed, _hint(report), def_line])
+
+
+def _hint(report):
+    """The koan's own message, without the traceback around it.
+
+    pytest puts the raised message on the `E ` lines. `___` raises through pytest.fail with
+    exactly the two lines a learner needs ("you haven't filled in the blank yet" / "the koan
+    expected it to equal: 12"), so lifting those gives the JVM track's hint section for free.
     """
-    proc = subprocess.run(
-        [sys.executable, "-m", module, *args],
-        capture_output=True, text=True,
-    )
-    return proc.returncode, proc.stdout + proc.stderr
+    text = getattr(report, "longreprtext", "") or ""
+    out = []
+    for line in text.splitlines():
+        if line.startswith("E "):
+            cleaned = line[1:].strip()
+            if not out and cleaned.startswith("Failed: "):
+                cleaned = cleaned[len("Failed: "):]
+            if cleaned:
+                out.append(cleaned)
+    return out[:6]
+
+
+def _koan_name(test_name):
+    """test_utf8_is_not_a_safe_default -> "utf8 is not a safe default"."""
+    base = test_name[5:] if test_name.startswith("test_") else test_name
+    return base.replace("_", " ")
+
+
+def _lesson_title(rel):
+    """series1/_15/test_files_and_encodings.py -> "series1 _15 Files And Encodings"."""
+    parts = rel.split("/")
+    stem = parts[-1]
+    if stem.startswith("test_"):
+        stem = stem[5:]
+    if stem.endswith(".py"):
+        stem = stem[:-3]
+    pretty = " ".join(w.capitalize() for w in stem.split("_") if w)
+    tag = " ".join(p for p in parts[:-1] if p)
+    tag = tag.replace("/", " ")
+    return (tag + " " + pretty).strip()
+
+
+def _find_blank(rel, start_line):
+    """From the koan's def line, the line actually holding the ___ — the blank to fill.
+
+    Bounded to this koan (stop at the next `def test_`) so a filled-but-wrong koan never
+    points at a later koan's blank. Same rule as blankLine() on the JVM side.
+    """
+    try:
+        with open(os.path.join(MOUNT, rel), encoding="utf-8") as fh:
+            lines = fh.read().splitlines()
+    except OSError:
+        return None
+    for i in range(max(1, start_line), min(len(lines), start_line + 60) + 1):
+        text = lines[i - 1]
+        if "___" in text:
+            return i, text.strip()
+        if i > start_line and text.lstrip().startswith("def test_"):
+            break
+    return None
+
+
+def _host_path(rel, host_root):
+    """A container-relative koan path -> that same file on the learner's own machine."""
+    if not host_root:
+        return os.path.join(MOUNT, rel)
+    windows = "\\" in host_root or (len(host_root) > 1 and host_root[1] == ":")
+    sep = "\\" if windows else "/"
+    return host_root.rstrip("/\\") + sep + rel.replace("/", sep)
+
+
+_MOUNT_RE = re.compile(re.escape(MOUNT) + r"/([^\s\"']+)")
+
+
+def _to_host(text, host_root):
+    """Rewrite any /koans/... path INSIDE a message to the learner's own path.
+
+    Python's own errors quote the file they choked on — `File "/koans/series1/_15/x.py",
+    line 49` — and that path is inside a container the learner does not know exists.
+    """
+    if not host_root or not text:
+        return text
+    return _MOUNT_RE.sub(lambda m: _host_path(m.group(1), host_root), text)
+
+
+def _error_lines(text):
+    """The part of a collection failure a learner can act on.
+
+    pytest's report is a full import traceback: a dozen frames through importlib and pytest's
+    own assertion rewriter, then — on the `E ` lines at the very end — the actual SyntaxError,
+    the offending line and a caret under it. Only that last part is about their edit.
+    """
+    lines = (text or "").splitlines()
+    flagged = [ln[1:].rstrip() for ln in lines if ln.startswith("E ")]
+    return flagged or lines[-12:]
+
+
+def _bar(done, total):
+    width = min(total, 50) if total else 0
+    fill = 0 if not total else round(done / total * width)
+    if done > 0 and fill == 0:
+        fill = 1
+    if done == total:
+        fill = width
+    return "[" + _GREEN + "#" * fill + _RESET + _DIM + "." * (width - fill) + _RESET + "]"
+
+
+def _screen(host_root):
+    o = ["", ]
+
+    if _collect_errors:
+        # The Python twin of "YOUR KOANS DID NOT COMPILE": the lesson is there, the learner's
+        # own edit will not import. Never say "update" here — nothing is missing.
+        o.append("=" * 74)
+        o.append("  " + _BOLD + "YOUR KOANS DID NOT LOAD." + _RESET)
+        o.append("")
+        o.append("  The lesson is present - this is an error in the code you edited,")
+        o.append("  usually a typo where the ___ used to be (a missing quote, comma")
+        o.append("  or bracket). You do NOT need to update; fix the edit and re-run.")
+        o.append("")
+        o.append("  Python said:")
+        o.append("=" * 74)
+        for where, text in _collect_errors:
+            rel = where.split("::")[0]
+            o.append("")
+            if rel.endswith(".py"):
+                o.append("      Your koans file is  " + _BOLD + _CYAN +
+                         os.path.basename(rel) + _RESET)
+                o.append("      Its location is     " + _CYAN +
+                         _host_path(rel, host_root) + _RESET)
+                o.append("")
+            for line in _error_lines(text):
+                o.append("  " + _to_host(line, host_root))
+        o.append("")
+        return "\n".join(o)
+
+    if not _results:
+        return None
+
+    total = len(_results)
+    done = sum(1 for r in _results if r[2])
+
+    # One "Forging" group per lesson file, in the order the koans ran.
+    by_file = []
+    for rel, name, passed, hint, line in _results:
+        if not by_file or by_file[-1][0] != rel:
+            by_file.append((rel, []))
+        by_file[-1][1].append((name, passed, hint, line))
+
+    for rel, koans in by_file:
+        o.append("  " + _CYAN + _BOLD + "Forging '" + _lesson_title(rel) + "'" + _RESET)
+        o.append("")
+        for name, passed, _hints, _line in koans:
+            if passed:
+                o.append("      " + _GREEN + "You mastered '" + _koan_name(name) +
+                         "' which expanded +1 your awareness." + _RESET)
+            else:
+                o.append("      " + _RED + "'" + _koan_name(name) +
+                         "' has damaged your karma." + _RESET)
+                break   # the rest of this lesson waits — one koan at a time
+        o.append("")
+
+    if done == total:
+        o.append("  " + _GREEN + _BOLD + "You have reached enlightenment." + _RESET)
+        o.append("  " + _GREEN + "Every koan is green - " + str(total) + " of " +
+                 str(total) + ". Well done." + _RESET)
+        o.append("")
+        o.append("  " + _CYAN + _ZEN[done % len(_ZEN)] + _RESET)
+        o.append("")
+        return "\n".join(o)
+
+    current = next((r for r in _results if not r[2]), None)
+    o.append("  " + _BOLD + "You have not yet reached enlightenment ..." + _RESET)
+    if current:
+        rel, name, _passed, hint, def_line = current
+        for line in (hint or ["The koan \"" + _koan_name(name) + "\" is not yet true."]):
+            o.append("      " + _to_host(line, host_root))
+        o.append("")
+        o.append("  " + _BOLD + "Please meditate on the following code:" + _RESET)
+        o.append("      Your koans file is  " + _BOLD + _CYAN + os.path.basename(rel) + _RESET)
+        o.append("      Its location is     " + _CYAN + _host_path(rel, host_root) + _RESET)
+        blank = _find_blank(rel, def_line)
+        if blank:
+            o.append("")
+            o.append("      Fix line " + _BOLD + str(blank[0]) + _RESET + ":")
+            o.append("      " + str(blank[0]) + ":   " + blank[1])
+    o.append("")
+    o.append("      your path thus far  " + _bar(done, total) + "  " +
+             _BOLD + str(done) + _RESET + " of " + _BOLD + str(total) + _RESET + " koans")
+    o.append("")
+    o.append("  " + _CYAN + _ZEN[done % len(_ZEN)] + _RESET)
+    o.append("")
+    return "\n".join(o)
+
+
+def pytest_unconfigure(config):
+    # unconfigure, not pytest_terminal_summary: with the terminal reporter switched off there
+    # is no terminalreporter to write through, and this runs after the session is finished
+    # either way.
+    try:
+        screen = _screen(os.environ.get("DATAZEUS_KOANS_HOST_DIR"))
+    except Exception:                                    # never let the report kill the run
+        return
+    if screen:
+        print(screen)

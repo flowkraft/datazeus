@@ -43,10 +43,17 @@ import pathlib
 
 import pytest
 
-# Reuse the Python track's blank and Northwind fixtures — one harness, not two.
-import sys
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from conftest import ___, northwind, nw_df, CountingConnection, counting  # noqa: F401,E402
+# Reuse the Python track's blank — one harness, not two.
+#
+# The fixtures (northwind, nw_df, counting) are NOT imported, because importing them was never
+# necessary: fixtures declared in the parent conftest.py are inherited by every directory below
+# it automatically. It was also fatal. The import used to read `from conftest import ...` after
+# putting the parent directory on sys.path, and sys.path is not what decides: `import` checks
+# sys.modules first, and while THIS file is being loaded sys.modules["conftest"] is this very
+# file, half-executed. So it imported itself and died as a circular import - during collection,
+# which aborts the whole session. Any run that reached this directory, `zeus koans python` with
+# no lesson among them, ran no koans at all. koanlib is a name nothing else claims.
+from koanlib import ___, CountingConnection  # noqa: F401,E402
 
 FIXTURES = pathlib.Path("/datasets/ai-fixtures")
 

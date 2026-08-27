@@ -24,8 +24,17 @@ import org.spockframework.runtime.model.SpecInfo
  *       The query returned 4, but the koan still says ___ .
  *
  *   Please meditate on the following code:
- *       <relative path to the .groovy koan>:<line>
+ *       Your koans file is  <the bare file name, e.g. StartHereKoans.groovy>
+ *       Its location is     <the ABSOLUTE path to that file>
+ *
+ *       Fix line <n>:
  *       <line>:   <the actual source line with the ___>
+ *
+ * The name and the absolute path are given separately and on their own lines because this
+ * is the one thing the learner has to act on: they are about to leave the terminal, find
+ * that file in an editor and change it. A path relative to the Maven module ("src/koans/...")
+ * cannot be pasted anywhere useful - it does not even resolve from the datazeus folder the
+ * command was run in, which is one level up from it.
  *
  *       your path thus far  [####......]  N of M koans
  *
@@ -200,16 +209,20 @@ class PathToEnlightenment implements IGlobalExtension {
                 String specName = entries.find { it[0] == currentKey }?.getAt(2)
                 String path = sourcePath(specName)
                 Integer ln = lineNos[currentKey]
-                if (path && ln) {
-                    // A multi-line koan reports its start line; show the line that
-                    // actually holds the ___ (the blank you must fill).
-                    def blank = blankLine(path, ln)
-                    int showNo = (blank ? blank[0] : ln) as int
-                    String src = (blank ? blank[1] : sourceLine(path, ln))
-                    o << "      " + CYAN + path + ":" + showNo + RESET + "\n"
-                    if (src) o << "      " + showNo + ":   " + src + "\n"
-                } else if (path) {
-                    o << "      " + CYAN + path + RESET + "\n"
+                if (path) {
+                    // Name first, then where it lives - the learner is about to go and open
+                    // this file, and the absolute path is the part they can actually use.
+                    o << "      Your koans file is  " + BOLD + CYAN + fileName(path) + RESET + "\n"
+                    o << "      Its location is     " + CYAN + fullPath(path) + RESET + "\n"
+                    if (ln) {
+                        // A multi-line koan reports its start line; show the line that
+                        // actually holds the ___ (the blank you must fill).
+                        def blank = blankLine(path, ln)
+                        int showNo = (blank ? blank[0] : ln) as int
+                        String src = (blank ? blank[1] : sourceLine(path, ln))
+                        o << "\n      Fix line " + BOLD + showNo + RESET + ":\n"
+                        if (src) o << "      " + showNo + ":   " + src + "\n"
+                    }
                 }
             }
             o << "\n      your path thus far  " + bar(done, total) + "  " +
@@ -260,6 +273,30 @@ class PathToEnlightenment implements IGlobalExtension {
         String cls = specClassNames[specName]
         if (!cls) return null
         return KOANS_ROOT + "/" + cls.replace('.', '/') + ".groovy"
+    }
+
+    /** Just the file name - the thing to search for in an editor's file picker. */
+    private static String fileName(String path) {
+        try {
+            return new File(path).name
+        } catch (ignored) { return path }
+    }
+
+    /**
+     * The koan's ABSOLUTE path, so it can be pasted straight into an editor.
+     *
+     * KOANS_ROOT is relative to the Maven module dir, which is the CWD the koans run in -
+     * exactly the assumption sourceLine() and blankLine() already make when they read the
+     * file. So whenever the file really is there, the absolute form is right by construction.
+     * When it is not, fall back to the relative path rather than print a confidently wrong
+     * absolute one.
+     */
+    private static String fullPath(String path) {
+        try {
+            File f = new File(path)
+            if (f.exists()) return f.canonicalPath
+        } catch (ignored) {}
+        return path
     }
 
     private static String sourceLine(String path, int line) {

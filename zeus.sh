@@ -185,17 +185,33 @@ zeus_koans_python() {
       [ -n "$_c" ] && [ -d "$KO$scope/$_c" ] && { _hit="$_c"; break; }
     done
     if [ -z "$_hit" ]; then
+      # The Python twin of the miss report in zeus_koans() - same message, same running
+      # order, same reasoning, and word-for-word in step with :nolesson_python in zeus.bat.
+      # A learner who hits this on one track and then the other must not be told two
+      # different stories.
       echo
       echo "=========================================================================="
       echo "  \"$tok\" IS NOT IN YOUR COPY OF DATAZEUS."
       echo
-      printf "  What you DO have there:
-      "
-      ls -1 "$KO$scope" 2>/dev/null | grep -v conftest | tr '
-' ' '; echo
+      echo "  MOST LIKELY YOUR DATAZEUS IS OUT OF DATE - this lesson was published"
+      echo "  after you downloaded it. Fetch the latest - safe to run at any time:"
       echo
-      echo "  Nothing was run - your koans are fine. If it is spelled right, it was"
-      echo "  published after you downloaded DataZeus:   ./zeus.sh update"
+      echo "      ./zeus.sh update"
+      echo
+      echo "  Koans you have already solved are KEPT - update never overwrites"
+      echo "  an exercise you have edited."
+      echo
+      echo "  Then run your command again:"
+      echo
+      echo "      ./zeus.sh koans $1 $2 $3"
+      echo
+      echo "  Nothing was run - your koans are fine."
+      echo
+      printf "  What you DO have there:\n      "
+      ls -1 "$KO$scope" 2>/dev/null | grep -v conftest | tr '\n' ' '; echo
+      echo
+      echo "  (Still not there after updating? Then \"$tok\" is a typo -"
+      echo "   compare what you typed against the list above.)"
       echo "=========================================================================="
       echo
       return 1
@@ -211,15 +227,33 @@ zeus_koans_python() {
   # Git Bash hands out /c/... paths that the Docker daemon cannot resolve; cygpath -m fixes
   # that and is a no-op everywhere else.
   kmount="$KO"; dmount="$DIR/datasets"
+  khost="$KO"
   if command -v cygpath >/dev/null 2>&1; then
     kmount="$(cygpath -m "$KO")"; dmount="$(cygpath -m "$DIR/datasets")"
+    # -w, not -m: khost is never handed to Docker, it is SHOWN to the learner, so it wants
+    # the notation they would type themselves - C:\DataPallas\... , not C:/DataPallas/... .
+    khost="$(cygpath -w "$KO")"
   fi
 
   echo "Walking the path...  (scope: python$scope)"
   # MSYS_NO_PATHCONV: Git Bash rewrites any argument that looks like a Unix path, so the
   # CONTAINER path /koans/series1/_15 arrives as C:/Program Files/Git/koans/... and pytest
   # reports "file or directory not found". Harmless on macOS and Linux.
-  MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*" docker run --rm     -v "$kmount:/koans"     -v "$dmount:/datasets:ro"     datazeus-python -q --no-header "/koans$scope"
+  # -p no:terminalreporter: pytest prints NOTHING and conftest.py writes the whole screen, so
+  # walking the path looks identical on this track and the JVM one. A test runner's tracebacks
+  # and "4 failed in 0.9s" are a report to an engineer; the koans are a lesson.
+  # DATAZEUS_KOANS_HOST_DIR: every path pytest knows is a path INSIDE the container, which is
+  # not where the learner's file lives and cannot be pasted into their editor. conftest.py uses
+  # this to report the real location on their own machine. See the notes there.
+  MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL="*" docker run --rm     -v "$kmount:/koans"     -v "$dmount:/datasets:ro"     -e "DATAZEUS_KOANS_HOST_DIR=$khost"     datazeus-python -p no:terminalreporter "/koans$scope"
+  # An unsolved koan is the ASSIGNMENT, not a failure, so walking the path always reports
+  # success - exactly as the JVM track does. pytest exits 1 while any blank is still blank,
+  # which on lesson one is every learner: letting that escape makes VS Code's terminal put a
+  # red cross beside the command and turns most modern prompts red, telling somebody who did
+  # everything right that they broke something. Throughout zeus a non-zero code means "I
+  # could not do what you asked" - no Docker, image will not build, lesson not in this copy -
+  # and every one of those is already reported above, before we ever get here.
+  return 0
 }
 
 zeus_koans() {
@@ -288,23 +322,20 @@ zeus_koans() {
   # know exactly which word is wrong - and the directory it failed in gives us the
   # real alternatives for that same word. No level ever has to be named or guessed,
   # which is what keeps this correct for both 3-level and 2-level courses.
+  #
+  # THE FIX LEADS AND THE TYPO HYPOTHESIS TRAILS, deliberately. Somebody who watched a
+  # freshly published episode and pasted its command into an older download did NOT
+  # mistype it, and that is overwhelmingly who lands here. Opening with "check your
+  # spelling" sends exactly that person hunting a typo which is not there, so the update
+  # they actually need is the first thing on screen and spelling is the fallback at the
+  # bottom, where it belongs for the minority who really did fat-finger a token.
   if [ -n "$badval" ]; then
     echo
     echo "=========================================================================="
     echo "  \"$badval\" IS NOT IN YOUR COPY OF DATAZEUS."
     echo
-    echo "  Looked in:  ${badparent#$DIR/}"
-    echo
-    printf "  What you DO have there:\n      "
-    ls -1 "$badparent" 2>/dev/null | grep -v '^_internal$' | tr '\n' ' '; echo
-    echo
-    echo "  Nothing was compiled and nothing was run - your koans are fine."
-    echo "  This is not an error in anything you typed into a koan."
-    echo
-    echo "  If \"$badval\" is misspelled, correct it against the list above."
-    echo
-    echo "  If it is spelled right, it was published after you downloaded"
-    echo "  DataZeus. Fetch the latest - safe to run at any time:"
+    echo "  MOST LIKELY YOUR DATAZEUS IS OUT OF DATE - this lesson was published"
+    echo "  after you downloaded it. Fetch the latest - safe to run at any time:"
     echo
     echo "      ./zeus.sh update"
     echo
@@ -315,8 +346,16 @@ zeus_koans() {
     echo
     echo "      ./zeus.sh koans $1 $2 $3"
     echo
-    echo "  (Then run your command again.)"
-
+    echo "  Nothing was compiled and nothing was run - your koans are fine."
+    echo "  This is not an error in anything you typed into a koan."
+    echo
+    echo "  Looked in:  ${badparent#$DIR/}"
+    echo
+    printf "  What you DO have there:\n      "
+    ls -1 "$badparent" 2>/dev/null | grep -v '^_internal$' | tr '\n' ' '; echo
+    echo
+    echo "  (Still not there after updating? Then \"$badval\" is a typo -"
+    echo "   compare what you typed against the list above.)"
     echo "=========================================================================="
     echo
     return 1

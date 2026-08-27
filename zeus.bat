@@ -153,13 +153,34 @@ if errorlevel 1 (
 )
 set "KO=%DIR%tests\src\koans\python"
 set "SCOPE="
+set "PYBAD="
+REM Stop at the FIRST token that will not resolve, exactly as the JVM path does, so the
+REM message can name the one word that is wrong instead of guessing at a level.
 if not "%S%"=="" call :py_resolve "%S%"
-if not "%E%"=="" call :py_resolve "%E%"
+if not defined PYBAD if not "%E%"=="" call :py_resolve "%E%"
+REM The miss has to be handled HERE, by the caller: `exit /b` inside a `call`ed label ends
+REM only the CALL and returns to this line. Reporting the miss down in :py_resolve therefore
+REM printed the message and then built the image and ran the koans anyway - on whatever
+REM scope had resolved so far - burying the message under a full run of the WRONG lesson.
+if defined PYBAD goto :nolesson_python
 echo Building the Python koan runner ^(first run only, a few seconds^)...
 docker build -q -t datazeus-python "%DIR%tests\python" >nul 2>nul
 if errorlevel 1 (echo Could not build the koan image. Is Docker running? ^& endlocal ^& exit /b 1)
 echo Walking the path...  ^(scope: python%SCOPE%^)
-docker run --rm -v "%KO%:/koans" -v "%DIR%datasets:/datasets:ro" datazeus-python -q --no-header "/koans%SCOPE:\=/%"
+REM -p no:terminalreporter: pytest prints NOTHING and conftest.py writes the whole screen, so
+REM walking the path looks identical on this track and the JVM one. A test runner's tracebacks
+REM and "4 failed in 0.9s" are a report to an engineer; the koans are a lesson.
+REM DATAZEUS_KOANS_HOST_DIR: every path pytest knows is a path INSIDE the container, which is
+REM not where the learner's file lives and cannot be pasted into their editor. conftest.py uses
+REM this to report the real location on their own machine. See the notes there. %KO% is already
+REM a native Windows path, which is exactly the notation they would type themselves.
+REM Build the container path in two steps rather than inline. `%SCOPE:\=/%` is batch string
+REM REPLACEMENT, and on an UNDEFINED variable it does not collapse to nothing - it expands to
+REM the literal text `\=/`. So the no-lesson form, `zeus koans python`, asked pytest for
+REM "/koans\=/" and died with "file or directory not found" - the whole track, unrunnable.
+set "PYARG=/koans"
+if defined SCOPE set "PYARG=/koans%SCOPE:\=/%"
+docker run --rm -v "%KO%:/koans" -v "%DIR%datasets:/datasets:ro" -e "DATAZEUS_KOANS_HOST_DIR=%KO%" datazeus-python -p no:terminalreporter "%PYARG%"
 endlocal & exit /b 0
 
 :py_resolve
@@ -170,9 +191,46 @@ set "TE=%T:ep=%" & set "TE=%TE:_=%"
 if exist "%KO%%SCOPE%\%T%"        (set "SCOPE=%SCOPE%\%T%"        & goto :eof)
 if exist "%KO%%SCOPE%\series%TS%" (set "SCOPE=%SCOPE%\series%TS%" & goto :eof)
 if exist "%KO%%SCOPE%\_%TE%"      (set "SCOPE=%SCOPE%\_%TE%"      & goto :eof)
+REM Record the miss and hand back; :koans_python acts on it. See the note there.
+set "PYBAD=%T%"
+goto :eof
+
+:nolesson_python
+REM The Python twin of :nolesson - same message, same running order, same reasoning, and
+REM word-for-word in step with zeus_koans_python() in zeus.sh. A learner who hits this on
+REM one track and then the other must not be told two different stories.
+REM Dot-directories are skipped so pytest's own .pytest_cache - which the container writes
+REM into the bind-mounted koans tree - never gets offered as if it were a lesson. That
+REM matches `ls -1` in zeus.sh, which hides them for free.
+set "LIST="
+for /d %%D in ("%KO%%SCOPE%\*") do (
+  set "n=%%~nxD"
+  if not "!n:~0,1!"=="." set "LIST=!LIST! !n!"
+)
 echo.
-echo   "%T%" IS NOT IN YOUR COPY OF DATAZEUS.
-echo   Nothing was run - your koans are fine.  Try:  zeus update
+echo ==========================================================================
+echo   "%PYBAD%" IS NOT IN YOUR COPY OF DATAZEUS.
+echo.
+echo   MOST LIKELY YOUR DATAZEUS IS OUT OF DATE - this lesson was published
+echo   after you downloaded it. Fetch the latest - safe to run at any time:
+echo.
+echo       .\zeus.bat update
+echo.
+echo   Koans you have already solved are KEPT - update never overwrites
+echo   an exercise you have edited.
+echo.
+echo   Then run your command again:
+echo.
+echo       .\zeus.bat koans %C% %S% %E%
+echo.
+echo   Nothing was run - your koans are fine.
+echo.
+echo   What you DO have there:
+echo      !LIST!
+echo.
+echo   ^(Still not there after updating? Then "%PYBAD%" is a typo -
+echo    compare what you typed against the list above.^)
+echo ==========================================================================
 echo.
 endlocal & exit /b 1
 
@@ -287,6 +345,13 @@ REM The resolver stopped at the FIRST token it could not match, so !badval! is t
 REM exact word that is wrong and !badparent! is the directory that holds the real
 REM alternatives for that same word. No level ever has to be named or guessed, which
 REM is what keeps this correct for 3-level AND 2-level courses alike.
+REM
+REM THE FIX LEADS AND THE TYPO HYPOTHESIS TRAILS, deliberately. Somebody who watched a
+REM freshly published episode and pasted its command into an older download did NOT
+REM mistype it, and that is overwhelmingly who lands here. Opening with "check your
+REM spelling" sends exactly that person hunting a typo which is not there, so the update
+REM they actually need is the first thing on screen and spelling is the fallback at the
+REM bottom, where it belongs for the minority who really did fat-finger a token.
 set "LIST="
 for /d %%D in ("!badparent!\*") do if /I not "%%~nxD"=="_internal" set "LIST=!LIST! %%~nxD"
 set "REL=!badparent:%DIR%=!"
@@ -294,18 +359,8 @@ echo.
 echo ==========================================================================
 echo   "!badval!" IS NOT IN YOUR COPY OF DATAZEUS.
 echo.
-echo   Looked in:  !REL!
-echo.
-echo   What you DO have there:
-echo      !LIST!
-echo.
-echo   Nothing was compiled and nothing was run - your koans are fine.
-echo   This is not an error in anything you typed into a koan.
-echo.
-echo   If "!badval!" is misspelled, correct it against the list above.
-echo.
-echo   If it is spelled right, it was published after you downloaded
-echo   DataZeus. Fetch the latest - safe to run at any time:
+echo   MOST LIKELY YOUR DATAZEUS IS OUT OF DATE - this lesson was published
+echo   after you downloaded it. Fetch the latest - safe to run at any time:
 echo.
 echo       .\zeus.bat update
 echo.
@@ -316,7 +371,15 @@ echo   Then run your command again:
 echo.
 echo       .\zeus.bat koans %C% %S% %E%
 echo.
-echo   ^(Still the same after updating? Then it is a spelling mistake -
+echo   Nothing was compiled and nothing was run - your koans are fine.
+echo   This is not an error in anything you typed into a koan.
+echo.
+echo   Looked in:  !REL!
+echo.
+echo   What you DO have there:
+echo      !LIST!
+echo.
+echo   ^(Still not there after updating? Then "!badval!" is a typo -
 echo    compare what you typed against the list above.^)
 echo ==========================================================================
 echo.
