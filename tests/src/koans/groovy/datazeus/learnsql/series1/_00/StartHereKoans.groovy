@@ -23,6 +23,32 @@ import spock.lang.Stepwise
  *
  * Tip: every query here also runs in CloudBeaver against the real Northwind —
  * try it there first, then come back and fill in the blank.
+ *
+ * ── RELEVANT SCHEMA ─────────────────────────────────────────────────────────
+ *
+ * Every table and column these koans touch, so you can write a query without leaving
+ * this file. When a koan says "fill in the column holding the country", it is asking
+ * you to FIND the name below — not to have memorised it. The book is meant to be open.
+ *
+ * Types are DuckDB's, because that is what the koans run on; CloudBeaver against
+ * PostgreSQL reports the same tables and the same columns.
+ *
+ *   "Orders" — 79 rows, 14 columns
+ *     "OrderID"        INTEGER        "CustomerID"     VARCHAR
+ *     "EmployeeID"     INTEGER        "OrderDate"      TIMESTAMP
+ *     "RequiredDate"   TIMESTAMP      "ShippedDate"    TIMESTAMP
+ *     "ShipVia"        INTEGER        "Freight"        DECIMAL(19,4)
+ *     "ShipName"       VARCHAR        "ShipAddress"    VARCHAR
+ *     "ShipCity"       VARCHAR        "ShipRegion"     VARCHAR
+ *     "ShipPostalCode" VARCHAR        "ShipCountry"    VARCHAR
+ *
+ *   "Customers" — 25 rows, 12 columns
+ *     "CustomerID"   VARCHAR  "CompanyName"  VARCHAR
+ *     "ContactName"  VARCHAR  "ContactTitle" VARCHAR
+ *     "Address"      VARCHAR  "City"         VARCHAR
+ *     "Region"       VARCHAR  "PostalCode"   VARCHAR
+ *     "Country"      VARCHAR  "Phone"        VARCHAR
+ *     "Fax"          VARCHAR  "Email"        VARCHAR
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait (the path to enlightenment)
 class StartHereKoans extends KoanBase {

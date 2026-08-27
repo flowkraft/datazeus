@@ -5,7 +5,7 @@ import spock.lang.Stepwise
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════════╗
- * ║  SQL KOANS — Learn SQL · Series 1 · 05 Meet Your Data With SELECT         ║
+ * ║  SQL KOANS — Learn SQL · Series 1 · 05 SELECT & Column Lists             ║
  * ╚══════════════════════════════════════════════════════════════════════════╝
  *
  * Replace each `___`, then run
@@ -17,6 +17,42 @@ import spock.lang.Stepwise
  *
  * These run on DuckDB. Every one of them returns the same rows in CloudBeaver against
  * PostgreSQL, so run them wherever you prefer.
+ *
+ * ── RELEVANT SCHEMA ─────────────────────────────────────────────────────────
+ *
+ * Every table and column these koans touch, so you can write a query without leaving
+ * this file. When a koan asks which column "holds the surname", it is asking you to
+ * FIND the name below — not to have memorised it. The book is meant to be open.
+ *
+ * Types are DuckDB's, because that is what the koans run on; CloudBeaver against
+ * PostgreSQL reports the same tables and the same columns.
+ *
+ *   "Shippers" — 3 rows, 3 columns
+ *     "ShipperID"   INTEGER  "CompanyName" VARCHAR
+ *     "Phone"       VARCHAR
+ *
+ *   "Categories" — 8 rows, 4 columns
+ *     "CategoryID"   INTEGER  "CategoryName" VARCHAR
+ *     "Description"  VARCHAR  "Picture"      BLOB
+ *
+ *   "Employees" — 3 rows, 20 columns
+ *     "EmployeeID"      INTEGER  "LastName"        VARCHAR
+ *     "FirstName"       VARCHAR  "Title"           VARCHAR
+ *     "TitleOfCourtesy" VARCHAR  "BirthDate"       DATE
+ *     "HireDate"        DATE     "Address"         VARCHAR
+ *     "City"            VARCHAR  "Region"          VARCHAR
+ *     "PostalCode"      VARCHAR  "Country"         VARCHAR
+ *     "HomePhone"       VARCHAR  "Extension"       VARCHAR
+ *     "Photo"           BLOB     "Notes"           VARCHAR
+ *     "ReportsTo"       INTEGER  "PhotoPath"       VARCHAR
+ *     "Mobile"          VARCHAR  "Email"           VARCHAR
+ *
+ *   "Products" — 20 rows, 10 columns
+ *     "ProductID"       INTEGER        "ProductName"     VARCHAR
+ *     "SupplierID"      INTEGER        "CategoryID"      INTEGER
+ *     "QuantityPerUnit" VARCHAR        "UnitPrice"       DECIMAL(19,4)
+ *     "UnitsInStock"    SMALLINT       "UnitsOnOrder"    SMALLINT
+ *     "ReorderLevel"    SMALLINT       "Discontinued"    BOOLEAN
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait (the path to enlightenment)
 class SelectFetchYourDataKoans extends KoanBase {
