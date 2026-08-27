@@ -28,7 +28,7 @@ import spock.lang.Stepwise
  *
  * Every table and column these koans touch, so you can write a query without leaving
  * this file. When a koan says "fill in the column holding the country", it is asking
- * you to FIND the name below — not to have memorised it. The book is meant to be open.
+ * you to FIND the name below — not to have memorised it.
  *
  * Types are DuckDB's, because that is what the koans run on; CloudBeaver against
  * PostgreSQL reports the same tables and the same columns.

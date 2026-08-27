@@ -30,8 +30,7 @@ import spock.lang.Stepwise
  *
  * Every table and column these koans touch, so you can write a query without leaving
  * this file. When the last koan asks for "name and price of every product", it is
- * asking you to FIND those two columns below — not to have memorised them. The book
- * is meant to be open.
+ * asking you to FIND those two columns below — not to have memorised them.
  *
  * Types are DuckDB's, because that is what the koans run on; CloudBeaver against
  * PostgreSQL reports the same tables and the same columns.
