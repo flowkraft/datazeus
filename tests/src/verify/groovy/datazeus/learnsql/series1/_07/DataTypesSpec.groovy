@@ -5,31 +5,31 @@ import spock.lang.Unroll
 
 /**
  * VERIFIED spec = the PUBLISH GATE for Series 1 · lesson _07 "Data Types".
- * These are the real answers the blog + video show. The lesson runs SIX queries and every
- * one of them is asserted here, on both engines:
  *
- *   1. products-types   — the catalog: ten columns, and the families they fall into
- *   2. orders-dates     — OrderDate is a real date/time, not text
- *   3. price-times-two  — arithmetic works on a number: Chai 18 doubles to 36
- *   4. name-times-two   — and is REFUSED on text (this one is asserted to FAIL)
- *   5. postal-codes     — eight German customers; Leipzig is 04179, leading zero intact
- *   6. text-vs-number   — the trap: '9' > '10' is TRUE, 9 > 10 is FALSE
+ * Every figure the video, the article and the koans put in front of a learner is asserted
+ * here, on BOTH engines. The lesson's eight scripts:
  *
- * WHY TYPE NAMES ARE NOT ASSERTED LITERALLY. The two engines spell the same family
- * differently — DuckDB says VARCHAR / DECIMAL(19,4) / BOOLEAN, PostgreSQL says
- * "character varying" / numeric / boolean. Asserting one spelling would fail the other
- * and teach the wrong thing besides: the lesson is explicit that families are what
- * matter and spellings vary. So these assert the FAMILY, via the matchers at the foot
- * of this file. The one place a literal spelling IS pinned is koan 2, which runs on
- * DuckDB only — gated separately below.
+ *   1. products-types        — the catalog: ten columns, and the families they fall into
+ *   2. unit-price            — Chai's price, and the scale its type promises
+ *   3. orders-dates          — OrderDate is a real point in time, not text
+ *   4. price-times-two       — arithmetic works on a number: 18 doubles to 36
+ *   5. name-times-two        — and is REFUSED on text (asserted to FAIL)
+ *   6. postal-codes          — eight German customers; Leipzig is 04179, leading zero intact
+ *   7. text-vs-number        — the trap: '9' > '10' is TRUE, 9 > 10 is FALSE
+ *   8. products-discontinued — a boolean column, and what the first four products say
  *
- * The learner-facing version, with the queries blanked to ___, is DataTypesKoans.
- * Its own data dependencies are gated at the foot of this file: they appear in no
- * script/, so nothing else here would catch a drift and the failure would surface to a
- * student instead of to us.
+ * WHY TYPE NAMES ARE NOT ASSERTED LITERALLY ACROSS ENGINES. DuckDB says VARCHAR /
+ * DECIMAL(19,4) / TIMESTAMP / BOOLEAN where PostgreSQL says character varying / numeric /
+ * timestamp without time zone / boolean. Pinning one spelling would fail the other and
+ * teach the wrong thing besides — the lesson is explicit that families are what matter.
+ * So these assert the FAMILY, via the matchers at the foot of this file.
  *
- * Convention: the spec runs the SAME *.sql files the lesson/video show, so the SQL is
- * authored in exactly one place (the lesson's scripts/) and verified here — no drift.
+ * The DuckDB spellings ARE pinned, separately, at the end: the koans run on DuckDB only and
+ * expect those exact strings, so if DuckDB ever renames one the koans break for students
+ * and nothing else here would notice.
+ *
+ * Convention: the spec runs the SAME *.sql files the lesson and the video show, so the SQL
+ * is authored in exactly one place (the lesson's scripts/) and verified here — no drift.
  */
 class DataTypesSpec extends NorthwindGateSpec {
 
@@ -45,6 +45,11 @@ class DataTypesSpec extends NorthwindGateSpec {
 
         and: "every row names a column and gives its type"
         rows.every { it.column_name && it.data_type }
+
+        and: "the ten the lesson prints, whatever order they arrive in"
+        rows*.column_name.toSet() == ["ProductID", "ProductName", "SupplierID", "CategoryID",
+                                      "QuantityPerUnit", "UnitPrice", "UnitsInStock",
+                                      "UnitsOnOrder", "ReorderLevel", "Discontinued"].toSet()
 
         where:
         engine << ENGINES
@@ -74,7 +79,30 @@ class DataTypesSpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
-    // --- 2. Dates are their own family, not text -----------------------------------------
+    // --- 2. The price, and the scale its type promises -----------------------------------
+
+    @Unroll
+    def "[#engine] Chai costs 18, and the column promises four decimal places"() {
+        given:
+        def row = sqlFor(engine).rows(script("unit-price")).first()
+
+        expect:
+        row.ProductName == "Chai"
+
+        and: "the VALUE is 18 — how many decimals get PRINTED is the client's business"
+        // The article says this explicitly: CloudBeaver trims the zeros and shows 18, while
+        // the DuckDB CLI and psql print 18.0000. Asserting the rendered string would gate a
+        // detail that changes with the tool; asserting the SCALE gates the claim itself.
+        (row.UnitPrice as BigDecimal).compareTo(18 as BigDecimal) == 0
+
+        and: "and the type carries a scale of 4, which is WHY 18.0000 is what it really is"
+        (row.UnitPrice as BigDecimal).scale() == 4
+
+        where:
+        engine << ENGINES
+    }
+
+    // --- 3. Dates are their own family, not text -----------------------------------------
 
     @Unroll
     def "[#engine] OrderDate is a real point in time, and the first three orders are March, April, May 2024"() {
@@ -104,7 +132,7 @@ class DataTypesSpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
-    // --- 3. Arithmetic works on a number -------------------------------------------------
+    // --- 4. Arithmetic works on a number -------------------------------------------------
 
     @Unroll
     def "[#engine] doubling a price: Chai is 18, and twice Chai is 36"() {
@@ -113,23 +141,19 @@ class DataTypesSpec extends NorthwindGateSpec {
 
         expect:
         rows.size() == 3
-        rows.first().ProductName == "Chai"
-
-        and: "the VALUES are 18 and 36 — how many decimal places get PRINTED is the client's business"
-        // Asserted as numbers, deliberately, for the same reason lesson 05 does it: the column
-        // is numeric(19,4), the driver hands back "18.0000", and CloudBeaver trims to 18.
-        (rows.first().UnitPrice as BigDecimal).compareTo(18 as BigDecimal) == 0
-        (rows.first().values().last() as BigDecimal).compareTo(36 as BigDecimal) == 0
-
-        and: "the other two the lesson prints"
         rows*.ProductName == ["Chai", "Chang", "Aniseed Syrup"]
+
+        and: "the doubled column is the LAST one, whatever the engine auto-names it"
         rows.collect { (it.values().last() as BigDecimal).intValue() } == [36, 38, 20]
+
+        and: "and it really is the price doubled, row by row"
+        rows.every { (it.values().last() as BigDecimal) == (it.UnitPrice as BigDecimal) * 2 }
 
         where:
         engine << ENGINES
     }
 
-    // --- 4. ...and is REFUSED on text ----------------------------------------------------
+    // --- 5. ...and is REFUSED on text ----------------------------------------------------
 
     @Unroll
     def "[#engine] multiplying a product NAME is refused — the type system doing its job"() {
@@ -138,7 +162,7 @@ class DataTypesSpec extends NorthwindGateSpec {
 
         then: "the database stops you rather than inventing an answer"
         // The MESSAGE differs per engine ("operator does not exist" on PostgreSQL, "Binder
-        // Error" on DuckDB), so only the refusal is asserted. The lesson prints the
+        // Error" on DuckDB), so only the refusal is asserted. The article prints the
         // PostgreSQL wording, because CloudBeaver is what it tells learners to open.
         thrown(Exception)
 
@@ -146,7 +170,7 @@ class DataTypesSpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
-    // --- 5. Text that looks like a number ------------------------------------------------
+    // --- 6. Text that looks like a number ------------------------------------------------
 
     @Unroll
     def "[#engine] eight postal codes, and Leipzig keeps its leading zero"() {
@@ -181,30 +205,70 @@ class DataTypesSpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
-    // --- 6. THE TRAP — the wrong answer that looks right ---------------------------------
+    // --- 7. THE TRAP — the wrong answer that looks right ---------------------------------
 
     @Unroll
     def "[#engine] as TEXT nine beats ten; as NUMBERS it does not"() {
         given:
-        def row = sqlFor(engine).rows(script("text-vs-number")).first().values() as List
+        // READ POSITIONALLY, not by column name. Neither comparison is aliased — the lesson
+        // shows them exactly as a learner types them — so BOTH columns come back named
+        // "?column?" on PostgreSQL, and Groovy's map-backed row keeps only the last of two
+        // identically-named columns. The first version of this test asserted `row[0] == true`
+        // and got false, because row[0] WAS the second comparison. A raw ResultSet has
+        // positions, not names, so it cannot collapse.
+        def vals = []
+        sqlFor(engine).query(script("text-vs-number")) { rs ->
+            rs.next()
+            vals = [rs.getBoolean(1), rs.getBoolean(2)]
+        }
 
         expect: "'9' > '10' — true, because text compares like a dictionary"
-        row[0] == true
+        vals[0] == true
 
         and: "9 > 10 — false, because numbers compare by value"
-        row[1] == false
+        vals[1] == false
+
+        where:
+        engine << ENGINES
+    }
+
+    // --- 8. A boolean column, and the counts around it -----------------------------------
+
+    @Unroll
+    def "[#engine] the first four products are all still sold"() {
+        given:
+        def rows = sqlFor(engine).rows(script("products-discontinued"))
+
+        expect:
+        rows.size() == 4
+        rows*.ProductName == ["Chai", "Chang", "Aniseed Syrup", "Chef Antons Cajun Seasoning"]
+        rows*.UnitsInStock == [39, 17, 13, 53]
+        rows*.Discontinued == [false, false, false, false]
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] exactly two of the twenty products are discontinued — the caption says so"() {
+        given:
+        def sql = sqlFor(engine)
+
+        expect:
+        sql.firstRow('SELECT count(*) AS n FROM "Products"').n == 20
+        sql.firstRow('SELECT count(*) AS n FROM "Products" WHERE "Discontinued" = true').n == 2
 
         where:
         engine << ENGINES
     }
 
     // --- What the KOANS stand on ---------------------------------------------------------
-    // The koans query things this lesson's scripts/ never touch, so nothing above would
-    // notice if that data shifted — and the break would land on a student mid-exercise,
-    // with a green gate behind it.
+    // The koans ask things the scripts above never touch, so nothing here would notice if
+    // that data shifted — and the break would land on a student mid-exercise, with a green
+    // gate behind it. One assertion per koan that has its own dependency.
 
     @Unroll
-    def "[#engine] koan 1 and 7: Products has 10 columns and Orders has 14"() {
+    def "[#engine] koans 1 and 10: Products has 10 columns and Orders has 14"() {
         given:
         def sql = sqlFor(engine)
 
@@ -228,12 +292,26 @@ class DataTypesSpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
-    def "koan 2 expects DuckDB's own spelling, because the koans run on DuckDB"() {
-        // NOT @Unroll'd across ENGINES on purpose: this is the one assertion in the file that
-        // pins a literal type name, and it is correct for exactly one engine. PostgreSQL would
-        // answer "character varying" and the koan would be wrong to expect it.
+    @Unroll
+    def "[#engine] koan 8: twice Chai's price is 36"() {
+        expect:
+        (sqlFor(engine).firstRow('SELECT "UnitPrice" * 2 AS n FROM "Products" LIMIT 1').n as BigDecimal)
+                .compareTo(36 as BigDecimal) == 0
+
+        where:
+        engine << ENGINES
+    }
+
+    def "the koans pin DuckDB's own spelling, because that is the engine they run on"() {
+        // NOT @Unroll'd across ENGINES on purpose: koans 2, 3 and 5 expect these exact
+        // strings, and they are correct for exactly one engine. PostgreSQL would answer
+        // "character varying", "numeric" and "timestamp without time zone" — all right, all
+        // wrong for a koan. If DuckDB ever renames one of these, students see a red koan and
+        // nothing else in this file would have caught it.
         expect:
         typeOf("duckdb", "Products", "ProductName") == "VARCHAR"
+        typeOf("duckdb", "Products", "UnitPrice") == "DECIMAL(19,4)"
+        typeOf("duckdb", "Orders", "OrderDate") == "TIMESTAMP"
     }
 
     // --- helpers ---------------------------------------------------------------

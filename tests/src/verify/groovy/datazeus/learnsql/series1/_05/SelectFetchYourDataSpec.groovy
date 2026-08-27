@@ -109,10 +109,19 @@ class SelectFetchYourDataSpec extends NorthwindGateSpec {
         given:
         def rows = sqlFor(engine).rows(script("employees-named-columns"))
 
-        expect:
-        rows*.FirstName == ["Nancy", "Andrew", "Janet"]
-        rows*.LastName == ["Davolio", "Fuller", "Leverling"]
-        rows[1].Title == "Vice President, Sales"
+        expect: "the same three people, in whatever order the engine hands them back"
+        // ORDER-INDEPENDENT, and it has to be. The query carries no ORDER BY, so row order is
+        // unspecified — and the two engines genuinely differ: DuckDB returns Nancy, Andrew,
+        // Janet; the live DataPallas PostgreSQL returns Andrew, Janet, Nancy (verified
+        // 2026-08-27). This assertion used to pin the DuckDB order and passed anyway, because
+        // the containerised PostgreSQL is SEEDED FROM the DuckDB file and inherits its
+        // insertion order. Running with PGHOST against the real database is what exposed it —
+        // which is exactly what NorthwindEngines says PGHOST is for.
+        rows*.FirstName.toSet() == ["Nancy", "Andrew", "Janet"].toSet()
+        rows*.LastName.toSet() == ["Davolio", "Fuller", "Leverling"].toSet()
+
+        and: "and Andrew is the VP, whichever row he lands in"
+        rows.find { it.FirstName == "Andrew" }.Title == "Vice President, Sales"
 
         where:
         engine << ENGINES

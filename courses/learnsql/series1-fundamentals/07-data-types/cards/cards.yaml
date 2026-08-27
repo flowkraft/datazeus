@@ -41,7 +41,7 @@ cards:
 
   - basic:
       front: "A query returns a comparison result you did not expect. What do you check first?"
-      back: "The type, before the logic. A column of amounts that arrived as text will answer 'everything over 100' instantly, confidently and wrongly — the query is fine, the type is wrong."
+      back: "The type, before the logic. A column of amounts that arrived as text will answer 'everything over 100' with something that looks correct and most likely is not — the query is fine, the type is wrong."
 
   # The single-vs-double-quotes card is NOT duplicated here. Lesson 05 teaches that rule and
   # keeps the card; this lesson only puts it to work in the catalog query's WHERE line.
@@ -51,15 +51,39 @@ cards:
       back: "It fails: `operator does not exist: character varying * integer`. That error is the type system doing its job — multiplying a name is meaningless, so the database refuses instead of inventing an answer."
 
   - basic:
+      front: "Chai costs 18. Why does `\"UnitPrice\"` come back as 18.0000 in some clients and 18 in others?"
+      back: "The column is DECIMAL(19,4) — up to 19 digits, exactly 4 after the point — so the value really is 18.0000. Whether you SEE the zeros is the client's choice: CloudBeaver trims them, the DuckDB CLI and psql print them. Same value, same type."
+
+  - cloze: "In `DECIMAL(19,4)` the 19 is the {{c1::total number of digits}} and the 4 is how many come {{c2::after the decimal point}}."
+
+  - basic:
       front: "PostgreSQL says a column is `character varying`; DuckDB says `VARCHAR`. Which is right?"
       back: "Both. They are the same family — text — spelled differently by different engines. Learn the five families and the spellings stop mattering."
 
+  # ── COMPLEMENTARY TO THE VIDEO AND THE KOANS ───────────────────────────────────────
+  # The three below do what a video cannot and a koan does only once: PRODUCTION (write the
+  # query from memory, no editor open) and DISCRIMINATION (decide between look-alikes). Both
+  # are what spaced repetition is actually good at, and neither repeats a koan — the koans
+  # fill blanks in a query that is already on screen.
+
+  - basic:
+      front: "From memory, with nothing on screen: write the query that asks a database what columns `\"Orders\"` holds, and what type each one is."
+      back: "`SELECT \"column_name\", \"data_type\" FROM information_schema.columns WHERE table_name = 'Orders';` — note the single quotes around the table NAME, because there it is a text value being matched, not an identifier."
+
+  - basic:
+      front: "Number or text? (a) quantity in stock (b) phone number (c) unit price (d) invoice reference (e) year of birth"
+      back: "Numbers: quantity in stock, unit price, year of birth — you may want to add, average or compare them. Text: phone number and invoice reference — you would never do arithmetic on either, and both can carry leading zeros, spaces or letters."
+
+  - cloze: "A column's type decides three things: whether you {{c1::quote}} the value, whether you can do {{c2::arithmetic}} on it, and how it {{c3::sorts and compares}}."
+
   - basic:
       front: "What does NULL mean, and what does it NOT mean?"
-      back: "It means nobody knows. It is not zero and not an empty word: a price of 0 is a giveaway, a price of NULL was never recorded. SQL keeps those apart on purpose."
+      back: "It means the value is MISSING — nobody ever recorded it. It is not zero and not empty text: a price of 0 is a real price, a price of NULL was never written down. SQL keeps those apart on purpose."
 
-  - cloze: "`Discontinued` holds {{c1::true}} or {{c1::false}} — a boolean, written {{c2::bare}} like a number, never as 'true' in quotes."
+  # The "never as 'true' in quotes" half of this was WRONG and was cut on 2026-08-27:
+  # both PostgreSQL and DuckDB accept the quoted form.
+  - cloze: "The `Discontinued` column is a {{c1::boolean}} — it answers a {{c2::yes-or-no}} question, so every row is either true or false."
 
   - basic:
       front: "Why is `OrderDate` better stored as a date than as the text \"2024-03-15\"?"
-      back: "Because a date is a point in time the database understands, so it knows March comes before April without comparing letters. Store dates as text and you lose ordering, arithmetic and ranges — permanently."
+      back: "Because a date is a point in time the database understands. Store it as text and you can no longer add days to it, and the database will happily accept the 31st of February. (Sorting survives only by luck: ISO text sorts right, 15/03/2024-style text does not.)"

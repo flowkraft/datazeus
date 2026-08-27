@@ -25,9 +25,14 @@ cards:
 
   - cloze: "Two separate controls: the {{c1::select list}} decides which COLUMNS come back, and {{c2::LIMIT}} decides how many ROWS."
 
+  # The premise used to be "Employees stores LastName before FirstName". That is true of the
+  # DuckDB file and FALSE on PostgreSQL, where FirstName is column 6 and LastName is 11 —
+  # verified 2026-08-27. SelectFetchYourDataSpec dropped the matching assertion for the same
+  # reason (JPA does not guarantee column order, so no schema fix settles it). The card now
+  # teaches the part that is true everywhere.
   - basic:
-      front: "\"Employees\" stores LastName before FirstName. You run `SELECT \"FirstName\", \"LastName\" FROM \"Employees\"`. Which column comes first in the result?"
-      back: "FirstName — the select list decides the column order, not the table. The database rearranges nothing; you described the answer you wanted."
+      front: "You run `SELECT \"FirstName\", \"LastName\" FROM \"Employees\"`. What decides which column comes first in the result?"
+      back: "Your select list. The order you name columns in is the order you get them back — whatever order the table stores them in, which SQL does not guarantee anyway."
 
   # THREE CARDS WERE REMOVED HERE on 2026-08-27, and they were all data-types cards left
   # behind when that arc was cut from this lesson on 2026-08-26: "why does 18 print as
@@ -43,7 +48,10 @@ cards:
       front: "Define table, column and row."
       back: "A table holds all the records of one kind (every category). A column is one named piece of information every row carries (CategoryName). A row is one complete record — row 1 is the Beverages category, id, name and description together."
 
-  - cloze: "The same column is reported as {{c1::DECIMAL(10,4)}} by DuckDB and {{c2::numeric}} by PostgreSQL; text is {{c1::VARCHAR}} on one, {{c2::text}} on the other. Same data, different vocabulary."
+  # A per-engine TYPE VOCABULARY card was removed here on 2026-08-27. It was wrong twice: it
+  # said DuckDB reports DECIMAL(10,4) when the column is DECIMAL(19,4), and it taught data
+  # types, which left this lesson when that arc moved to Series 1 - 07. Lesson 07's deck
+  # carries the corrected version.
 
   - basic:
       front: "Besides unreadable output, what does SELECT * cost you?"
