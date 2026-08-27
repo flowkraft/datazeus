@@ -1,0 +1,65 @@
+# Flashcards for Learn SQL · Series 1 · 07 — Data Types
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
+# tools/build-anki.py turns it into a .apkg with genanki.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds update the same deck (no duplicates).
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# FOUR OF THESE CARDS USED TO LIVE IN LESSON 05's DECK — the 18.0000 one, the
+# information_schema one, the DECIMAL/numeric vocabulary one and the single-vs-double
+# quotes one. They were written when 05 still carried the data-types arc, and stayed
+# behind when it was cut on 2026-08-26. They are here now, rewritten for what this
+# lesson actually shows; 05's deck no longer claims them.
+
+deck: "DataZeus::Learn SQL::Series 1::07 Data Types"
+guid: "datazeus-learn-sql-series1-07-data-types"
+tags: ["datazeus", "learn-sql", "series-1", "sql"]
+
+cards:
+  - basic:
+      front: "You open a database you have never seen. What is the first query to run against a table, before you write anything else?"
+      back: "The catalog: `SELECT \"column_name\", \"data_type\" FROM information_schema.columns WHERE table_name = 'TheTable';` — standard tables that describe your tables. It works on PostgreSQL, MySQL, SQL Server and DuckDB."
+
+  - cloze: "A data type is a {{c1::promise}} about what a column can hold. It is decided once, when the {{c2::table is created}}, and every row obeys it."
+
+  - basic:
+      front: "Name the five type families you actually meet in day-to-day work."
+      back: "Whole numbers (ids, counts), decimals (money), text, dates & times, and true/false. Everything else is a variation you can look up when you meet it."
+
+  - basic:
+      front: "`SELECT '9' > '10';` — what does it return, and why?"
+      back: "true. The quotes make them TEXT, and text compares character by character like a dictionary: '9' beats '1' on the very first character. `SELECT 9 > 10;` returns false, because numbers compare by value."
+
+  - cloze: "Text compares like a {{c1::dictionary}} — character by character. Numbers compare by {{c2::value}}. That is why the same two digits can give opposite answers."
+
+  - basic:
+      front: "Northwind's `PostalCode` column is every digit. Why is it text and not a number?"
+      back: "Leipzig's postal code is 04179. Stored as a number the leading zero is gone, and 4179 is a different place. The general rule: if you will never do arithmetic on it, it is not a number — postal codes, phone numbers, order references, product codes."
+
+  - basic:
+      front: "A query returns a comparison result you did not expect. What do you check first?"
+      back: "The type, before the logic. A column of amounts that arrived as text will answer 'everything over 100' instantly, confidently and wrongly — the query is fine, the type is wrong."
+
+  # The single-vs-double-quotes card is NOT duplicated here. Lesson 05 teaches that rule and
+  # keeps the card; this lesson only puts it to work in the catalog query's WHERE line.
+
+  - basic:
+      front: "What happens if you run `SELECT \"ProductName\" * 2 FROM \"Products\";`?"
+      back: "It fails: `operator does not exist: character varying * integer`. That error is the type system doing its job — multiplying a name is meaningless, so the database refuses instead of inventing an answer."
+
+  - basic:
+      front: "PostgreSQL says a column is `character varying`; DuckDB says `VARCHAR`. Which is right?"
+      back: "Both. They are the same family — text — spelled differently by different engines. Learn the five families and the spellings stop mattering."
+
+  - basic:
+      front: "What does NULL mean, and what does it NOT mean?"
+      back: "It means nobody knows. It is not zero and not an empty word: a price of 0 is a giveaway, a price of NULL was never recorded. SQL keeps those apart on purpose."
+
+  - cloze: "`Discontinued` holds {{c1::true}} or {{c1::false}} — a boolean, written {{c2::bare}} like a number, never as 'true' in quotes."
+
+  - basic:
+      front: "Why is `OrderDate` better stored as a date than as the text \"2024-03-15\"?"
+      back: "Because a date is a point in time the database understands, so it knows March comes before April without comparing letters. Store dates as text and you lose ordering, arithmetic and ranges — permanently."

@@ -1,0 +1,233 @@
+---
+title: "Data Types — What a Column Can Hold, and Why Results Surprise You"
+description: "Every column has a type, and the type decides what you can do with it. Ask the database what it is holding, learn the five families you will actually meet, and see why a postal code must never be a number."
+topic: "learn-sql"
+tags: ["sql", "fundamentals", "data-types"]
+level: "beginner"
+module: "series1-fundamentals"
+order: 7
+date: "2026-08-27"
+published: true
+videoId: "learnsql-series1-07-data-types"
+---
+
+## The situation this lesson prepares you for
+
+You ran `SELECT *` last lesson and the results came back mixed: ids were whole numbers, prices had decimals, names were words, and one column was empty on every row. Nobody chose that per row. It was decided once, when the table was made.
+
+That decision is the column's **data type**, and it is worth an hour of your time because it is the reason queries return answers that are wrong and *look right*. A filter that quietly matches nothing. A sort that puts 9 after 10. A total that refuses to add up.
+
+By the end of this lesson you will be able to ask any database what a column holds, and say what that means for the query you are about to write.
+
+Every query below runs on the Northwind sample database that ships with DataPallas.
+
+**Open the koans before you read on.** There is a koan for every idea in this lesson — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _07
+```
+
+## Every column has a type
+
+A type is a **promise about what can go in a column**. `UnitPrice` promises to hold a number with decimals. `ProductName` promises to hold text. The database keeps that promise: it will refuse a word where a number belongs, and it stores each kind differently.
+
+The promise is made once, when the table is created, and every row obeys it. That is why you never see a price in one row and a paragraph in the next.
+
+## Ask the database what it is holding
+
+You do not have to guess, and you should not. Every SQL database describes its own tables in a set of standard tables called the **catalog**, and you query the catalog exactly like any other table.
+
+```sql file=./scripts/products-types.sql
+SELECT "column_name", "data_type"
+FROM information_schema.columns
+WHERE table_name = 'Products';
+```
+
+| column_name | data_type |
+| ----------- | --------- |
+| ProductID | integer |
+| ProductName | character varying |
+| SupplierID | integer |
+| CategoryID | integer |
+| QuantityPerUnit | character varying |
+| UnitPrice | numeric |
+| UnitsInStock | smallint |
+| UnitsOnOrder | smallint |
+| ReorderLevel | smallint |
+| Discontinued | boolean |
+
+That third line is a filter, and you will write filters properly in the next lesson. For now read it as "only the Products table" — and notice `'Products'` is in **single** quotes, because it is a text value, not the name of a column. That is the rule from last lesson, doing real work.
+
+Your rows may arrive in a different order than the ones above. SQL does not promise an order until you ask for one, and asking is a later lesson.
+
+<Callout>
+Different databases spell the same families differently. PostgreSQL says `character varying` where DuckDB says `VARCHAR`, and `numeric` where DuckDB says `DECIMAL(19,4)`. Same promise, different word. Learn the **families** below and the spellings stop mattering.
+</Callout>
+
+This one query works on PostgreSQL, MySQL, SQL Server and DuckDB. It is the first thing to run against a database you have never seen.
+
+## The five families you will actually meet
+
+Databases ship dozens of types. In day-to-day work you meet five.
+
+| Family | What it holds | In Northwind |
+| ------ | ------------- | ------------ |
+| **Whole numbers** | counts and ids, no decimal point | `ProductID`, `UnitsInStock` |
+| **Decimals** | money and measurements | `UnitPrice`, `Freight` |
+| **Text** | anything written | `ProductName`, `City` |
+| **Dates & times** | a real point in time | `OrderDate`, `HireDate` |
+| **True / false** | a yes-or-no flag | `Discontinued` |
+
+Dates deserve a look, because they are the family people most often get wrong:
+
+```sql file=./scripts/orders-dates.sql
+SELECT "OrderID", "OrderDate"
+FROM "Orders"
+LIMIT 3;
+```
+
+| OrderID | OrderDate |
+| ------: | --------- |
+| 1 | 2024-03-15 |
+| 2 | 2024-04-05 |
+| 3 | 2024-05-20 |
+
+`OrderDate` is not the text `"2024-03-15"`. It is a point in time the database understands, which is why it can tell you that March comes before April without comparing letters. Store dates as text and you lose that, permanently.
+
+## What the type decides
+
+Three practical consequences, and they cover almost everything you will hit.
+
+**1. Whether you quote it.** Text values go in single quotes; numbers go bare.
+
+- `'Beverages'` — text value, quoted
+- `18` — number, not quoted
+
+**2. Whether you can do arithmetic on it.** Numbers add, multiply and average. Text does not.
+
+```sql file=./scripts/price-times-two.sql
+SELECT "ProductName", "UnitPrice", "UnitPrice" * 2
+FROM "Products"
+LIMIT 3;
+```
+
+| ProductName | UnitPrice | ?column? |
+| ----------- | --------: | -------: |
+| Chai | 18 | 36 |
+| Chang | 19 | 38 |
+| Aniseed Syrup | 10 | 20 |
+
+That third column has no name of its own. You asked for a calculation and never said what to call it, so the database invented a heading — PostgreSQL shows `?column?`, DuckDB shows `(UnitPrice * 2)`. Naming it yourself is a later lesson; for now it is a useful reminder that the result is *computed*, not stored.
+
+Try the same thing on a text column and the database stops you:
+
+```sql file=./scripts/name-times-two.sql
+SELECT "ProductName" * 2
+FROM "Products";
+```
+
+```
+ERROR: operator does not exist: character varying * integer
+```
+
+That error is the type system doing its job. Multiplying a product name is meaningless, and the database says so instead of inventing an answer.
+
+**3. How it sorts and compares.** This is the one that costs people real money, and it gets its own section.
+
+## Text that looks like a number
+
+Look at the postal codes of the German customers:
+
+```sql file=./scripts/postal-codes.sql
+SELECT "CompanyName", "City", "PostalCode"
+FROM "Customers"
+LIMIT 8;
+```
+
+| CompanyName | City | PostalCode |
+| ----------- | ---- | ---------- |
+| Alfreds Futterkiste | Berlin | 12209 |
+| Blauer See Delikatessen | Mannheim | 68306 |
+| Drachenblut Delikatessen | Aachen | 52066 |
+| Frankenversand | München | 80805 |
+| Königlich Essen | Brandenburg | 14776 |
+| Lehmanns Marktstand | Frankfurt a.M. | 60528 |
+| Morgenstern Gesundkost | Leipzig | 04179 |
+| Ottilies Käseladen | Köln | 50739 |
+
+Every one of those is digits. `PostalCode` is still **text**, and the seventh row is why: Leipzig is `04179`. Store that as a number and the leading zero is gone — the number `4179` is not a postal code in Leipzig or anywhere else.
+
+The rule generalises, and it is worth remembering: **if you will never do arithmetic on it, it is not a number.** Postal codes, phone numbers, order references, product codes — all text, however numeric they look. You never add two postal codes together.
+
+## What goes wrong
+
+Here is the consequence, in one query you can run right now:
+
+```sql file=./scripts/text-vs-number.sql
+SELECT '9' > '10', 9 > 10;
+```
+
+| ?column? | ?column? |
+| -------- | -------- |
+| true | false |
+
+Two made-up headings again, and two answers to the same question. Read it again. **As text, 9 is greater than 10. As numbers, it is not.**
+
+Nothing is broken. Text compares character by character, the way a dictionary does: `'9'` beats `'1'` on the very first character, so `'9'` sorts after `'10'` — exactly as *banana* comes after *apple*. Numbers compare by value.
+
+This is where wrong answers that look right come from. Import a spreadsheet where the amount column arrived as text, ask for everything over 100, and you get a confident, instant, silently wrong answer — because `'99'` is "greater than" `'100'`. The query is fine. The type is wrong.
+
+So when a comparison gives you a result you did not expect, check the type before you check your logic.
+
+## true, false and NULL
+
+`Discontinued` is a **boolean** — it holds `true` or `false`, and you write those bare, like numbers, never as `'true'` in quotes.
+
+There is a third possibility that is not a type but shows up everywhere: **`NULL`**. You met it last lesson as the empty `Picture` column. `NULL` does not mean zero, and it does not mean an empty word. It means **nobody knows**. A price of `0` is a giveaway; a price of `NULL` is a price that was never recorded. Those are different facts, and SQL keeps them apart on purpose.
+
+Missing values change how comparisons behave, which is a lesson of its own later in this series. For now: when you see `NULL`, read it as "unknown".
+
+## Your turn, before we go on
+
+Run the catalog query against two more tables, changing only the name in quotes:
+
+```sql
+SELECT "column_name", "data_type"
+FROM information_schema.columns
+WHERE table_name = 'Customers';
+```
+
+Then try `'Orders'`. Which columns are text that you might have expected to be numbers? Which one column in `"Orders"` is a date? Answering that from the catalog, rather than by guessing from the values, is the skill this lesson teaches.
+
+## What you can do now
+
+Given any table in any database:
+
+1. `SELECT "column_name", "data_type" FROM information_schema.columns WHERE table_name = 'TheTable';` to ask what it holds.
+2. Sort each column into one of the five families, and you know whether to quote it, whether you can add it, and how it will compare.
+
+Next lesson: **`WHERE`** — keeping only the rows you want. Every filter you write there is a comparison, so everything on this page is about to earn its keep.
+
+## The koans: now you write the queries
+
+Each koan is a tiny fill-in-the-blank exercise: a failing test with a `___` where the answer belongs. Fill it in, run it, watch red turn green — and the next one unlocks.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _07
+```
+
+On macOS or Linux, run `./zeus.sh koans learnsql series1 _07` from the same folder. The three arguments are course, series and episode.
+
+> **Says the lesson isn't there?** Your copy of DataZeus predates this lesson — run `.\zeus.bat update` (or `./zeus.sh update`) once to fetch the latest lessons, then run the command again. Koans you have already solved are kept.
+
+The file you edit is:
+
+```
+c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_07\DataTypesKoans.groovy
+```
+
+Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
+
+Seven koans, one per idea in this lesson and in the same order: ask the catalog what a column holds, name the family, quote text and leave numbers bare, do arithmetic on a number, predict the text comparison, read a boolean, then write a catalog query from scratch. They run on DuckDB — a single file, no server to start.

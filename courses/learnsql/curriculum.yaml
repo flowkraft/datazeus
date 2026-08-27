@@ -240,17 +240,33 @@ series:
       # actually hit, and episode 10 already improvises half of this ("'single quotes' for
       # text, numbers bare") because it has to. Teaching it here arms 10 instead.
       #
-      # WHERE/ORDER BY are still untaught at 07, so the catalog query is shown without them —
-      # they only ever made its output tidier.
-      # The engine vocabulary (DECIMAL(10,4) vs numeric) stays in Series 4 · 00, and so does
+      # ORDER BY is still untaught at 07, so the catalog query is shown without it — it only
+      # ever made the output tidier, and the lesson says the row order may differ.
+      #
+      # WHERE IS THE ONE EXCEPTION, decided 2026-08-27 while writing the episode. The brief
+      # said to show the catalog query without WHERE too; in practice
+      # `SELECT column_name, data_type FROM information_schema.columns` with no filter returns
+      # every column of every table, which is not "less tidy", it is unusable. So the filter
+      # is shown, and Mnemosyne names it as a line the next lesson explains. It pays for
+      # itself twice: `WHERE table_name = 'Products'` is also the best demonstration in the
+      # course of the single-vs-double quote rule, which is the other thing this episode
+      # has to land before 10.
+      #
+      # The engine vocabulary (DECIMAL(19,4) vs numeric) stays in Series 4 · 00, and so does
       # the client-rendering trap: psql prints 18.0000, CloudBeaver shows 18. Same value.
+      # 07 gives the vocabulary difference ONE line, because a learner running the koans on
+      # DuckDB and the lesson on PostgreSQL sees two spellings on day one and needs to know
+      # it is not a mistake.
+      #
+      # INTEGER DIVISION IS NOT TAUGHT HERE and must not be added: DuckDB answers 2.5 to
+      # `SELECT 5/2`, PostgreSQL answers 2. Verified on both, 2026-08-27.
       - n: "07"
         slug: data-types
         title: "Data Types — What a Column Can Hold, and Why Results Surprise You"
         short: "Data Types — what a column can hold"
         hands_on: ["koan:predict", "koan:complete"]
         core: true
-        status: planned
+        status: published
       - n: "10"
         slug: where-filtering
         title: "WHERE, AND/OR/NOT, IN, BETWEEN — Keeping Only the Rows You Need"

@@ -1,4 +1,4 @@
-# Flashcards for Learn SQL · Series 1 · 05 — Meet Your Data With SELECT
+# Flashcards for Learn SQL · Series 1 · 05 — SELECT & Column Lists
 #
 # OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
 # tools/build-anki.py turns it into a .apkg with genanki.
@@ -8,7 +8,7 @@
 # cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
 # tags:  applied to every card in the file.
 
-deck: "DataZeus::Learn SQL::Series 1::05 Meet Your Data With SELECT"
+deck: "DataZeus::Learn SQL::Series 1::05 SELECT & Column Lists"
 guid: "datazeus-learn-sql-series1-05-meet-your-data-with-select"
 tags: ["datazeus", "learn-sql", "series-1", "sql"]
 
@@ -29,13 +29,13 @@ cards:
       front: "\"Employees\" stores LastName before FirstName. You run `SELECT \"FirstName\", \"LastName\" FROM \"Employees\"`. Which column comes first in the result?"
       back: "FirstName — the select list decides the column order, not the table. The database rearranges nothing; you described the answer you wanted."
 
-  - basic:
-      front: "Chai costs 18. Why does the query return `18.0000`?"
-      back: "That is the column's data type being displayed. UnitPrice is declared DECIMAL(10,4) — four decimal places — so all four are printed even when they are zeros."
-
-  - basic:
-      front: "How do you find out what type a column is?"
-      back: "Query the catalog: `SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'Products';` — standard tables that describe your tables."
+  # THREE CARDS WERE REMOVED HERE on 2026-08-27, and they were all data-types cards left
+  # behind when that arc was cut from this lesson on 2026-08-26: "why does 18 print as
+  # 18.0000" (which CloudBeaver never shows, and which quoted the wrong precision — the
+  # column is DECIMAL(19,4), not (10,4)), the information_schema card, and the
+  # DuckDB-vs-PostgreSQL type-vocabulary cloze. All three now live in Series 1 · 07's deck,
+  # rewritten for what that lesson actually teaches. Do not re-add them here: a card that
+  # tests something the lesson never showed is worse than no card.
 
   - cloze: "`'Products'` in {{c1::single}} quotes is a text {{c1::value}}; `\"ProductName\"` in {{c2::double}} quotes is the {{c2::name of a column}}. They are not interchangeable."
 
