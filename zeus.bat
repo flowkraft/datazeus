@@ -300,6 +300,7 @@ set "PROG=%DIR%tests\target\path-to-enlightenment.txt"
 set "LOG=%DIR%tests\target\koans-build.log"
 if not exist "%DIR%tests\target" mkdir "%DIR%tests\target"
 if exist "%PROG%" del "%PROG%" >nul 2>nul
+call :sweeporphans "%DIR%tests\target\test-classes" "%DIR%tests\src\koans\groovy" "Koans"
 
 where mvn >nul 2>nul
 if not errorlevel 1 (
@@ -415,6 +416,9 @@ echo ============================================================
 echo.
 endlocal & exit /b 1
 :test_run
+REM Same ghost, other source root: a renamed lesson leaves its old *Spec class behind and the
+REM gate would keep verifying a lesson that no longer exists.
+call :sweeporphans "%DIR%tests\target\test-classes" "%DIR%tests\src\verify\groovy" "Spec"
 where mvn >nul 2>nul
 if not errorlevel 1 goto :test_mvn
 pushd "%DIR%tests"
@@ -488,12 +492,21 @@ REM of this file, before anything else is read.
 set "XD=/XD "%BASE%""
 for /f "usebackq delims=" %%W in ("%WSLIST%") do set "XD=!XD! /XD "%NEW%\%%W""
 robocopy "%NEW%" "%ROOT%" /E !XD! /XF "zeus.bat" /XF "zeus.sh" /NFL /NDL /NJH /NJS /NC /NS /NP >nul
+REM COMPARE AS TEXT, NOT BYTES (no /b), here and at every other fc in this file. The question
+REM every one of them asks is "did the learner change this file?" - and an editor that rewrites
+REM line endings on save changes no character at all. A byte compare answers "yes" to that and
+REM freezes the lesson: never updated, never pruned. Text mode ignores line endings and still
+REM reports any real edit. Only text is ever compared here (launchers and koans); the binary
+REM datasets go through robocopy, which never calls fc.
+REM
+REM zeus.sh still byte-compares (cmp has no text mode, so the POSIX-safe fix needs a helper to
+REM strip CR into temp files first). Deferred, so the two intentionally differ on this point.
 for %%L in (zeus.bat zeus.sh) do if exist "%NEW%\%%L" (
-  fc /b "%NEW%\%%L" "%ROOT%\%%L" >nul 2>nul
+  fc "%NEW%\%%L" "%ROOT%\%%L" >nul 2>nul
   if errorlevel 1 copy /y "%NEW%\%%L" "%ROOT%\%%L.new" >nul 2>nul
 )
 
-REM 3) per-workspace merge against the baseline; 4) then refresh the baseline
+REM 3) per-workspace merge against the baseline
 for /f "usebackq delims=" %%W in ("%WSLIST%") do if exist "%NEW%\%%W" (
   for /f "delims=" %%F in ('dir /s /b /a:-d "%NEW%\%%W\*" 2^>nul') do (
     set "rel=%%F"
@@ -503,11 +516,9 @@ for /f "usebackq delims=" %%W in ("%WSLIST%") do if exist "%NEW%\%%W" (
     if not exist "!loc!" (
       call :dzcopy "%%F" "!loc!"
     ) else if exist "!bas!" (
-      fc /b "!loc!" "!bas!" >nul 2>nul
-      if not errorlevel 1 call :dzcopy "%%F" "!loc!"
+      call :dzmerge "%%F" "!loc!" "!bas!" "!rel!"
     )
   )
-  robocopy "%NEW%\%%W" "%BASE%\%%W" /E /NFL /NDL /NJH /NJS /NC /NS /NP >nul
 )
 REM 5) PRUNE what upstream dropped. Steps 2-4 only ever copy - robocopy runs /E, NOT /MIR or
 REM /PURGE - so a file we RENAMED or MOVED upstream stays on disk forever. Invisible until a
@@ -522,7 +533,7 @@ for /f "usebackq delims=" %%W in ("%WSLIST%") do if exist "%BASE%\%%W" (
     set "rel=!rel:%BASE%\=!"
     if not exist "%NEW%\!rel!" (
       if exist "%ROOT%\!rel!" (
-        fc /b "%ROOT%\!rel!" "%%F" >nul 2>nul
+        fc "%ROOT%\!rel!" "%%F" >nul 2>nul
         if not errorlevel 1 (
           del /q "%ROOT%\!rel!" >nul 2>nul
         ) else (
@@ -532,12 +543,61 @@ for /f "usebackq delims=" %%W in ("%WSLIST%") do if exist "%BASE%\%%W" (
     )
   )
 )
-REM Outside the workspaces there is no baseline, so prune only `_todo` artifacts: they are
-REM ours, nobody hand-edits a stub, and they go stale by design once an episode is written.
+REM OUTSIDE the workspaces, step 2 only ever COPIES, so anything we renamed or moved upstream
+REM stayed on disk forever. A LESSON IS A BUNDLE, not a koans file: renaming lesson 05 moved
+REM its .mdx, its scripts\*.sql, its cards\cards.yaml and its verify-gate *Spec.groovy. The old
+REM code pruned `courses\_todo-*` only - so the renamed lesson kept a second, stale copy of
+REM itself in courses\, and the learner saw lesson 05 listed twice.
+REM
+REM A MANIFEST, not a second byte-for-byte baseline: outside the workspaces every file is ours
+REM by definition (the learner edits koans, and practice\ which we never ship), so the only
+REM question is "did we ship this last time and stop shipping it now?" - which a list of paths
+REM answers exactly, for a few KB instead of mirroring the 3.8M of datasets every update.
+REM
+REM Deliberately NOT robocopy /MIR: /MIR deletes anything not in the download, including a
+REM scratch notes.md or my-query.sql the learner left somewhere. The manifest can only ever
+REM remove a file WE put there. An update must never silently destroy somebody's work.
+set "MANIFEST=%BASE%\.zeus-shipped"
+if not exist "%BASE%\" mkdir "%BASE%" >nul 2>nul
+if exist "%MANIFEST%" (
+  for /f "usebackq delims=" %%F in ("%MANIFEST%") do call :dzprune "%%F"
+)
+REM No manifest yet -> we cannot prove what we shipped, so we prune nothing this round.
+( for /f "delims=" %%F in ('dir /s /b /a:-d "%NEW%\*" 2^>nul') do (
+    set "rel=%%F"
+    set "rel=!rel:%NEW%\=!"
+    echo(!rel!
+  ) ) >"%MANIFEST%.tmp"
+move /y "%MANIFEST%.tmp" "%MANIFEST%" >nul 2>nul
+
+REM 6) MIRROR the baseline - add what is new AND drop what upstream no longer ships. This must
+REM come AFTER the prune above, which reads the OLD baseline to learn what went away; a
+REM baseline that only ever grew would keep re-proposing files gone for releases. /MIR is safe
+REM HERE and nowhere else: .internal-donttouch is entirely ours, no learner file ever lands in it.
+for /f "usebackq delims=" %%W in ("%WSLIST%") do if exist "%NEW%\%%W" (
+  robocopy "%NEW%\%%W" "%BASE%\%%W" /MIR /NFL /NDL /NJH /NJS /NC /NS /NP >nul
+)
+
+REM BELT AND BRACES for `_todo` stubs, which the manifest alone cannot cover on its FIRST run:
+REM an install that has never updated under the new code has no .zeus-shipped yet, so the prune
+REM above stays silent exactly once - and a PROMOTED lesson is the case that gap shows up in
+REM worst (07-data-types.mdx arriving to sit beside _todo-07-data-types.mdx). This check needs
+REM no manifest to be safe: a stub is ours by construction, nobody hand-edits one, and it is
+REM stale the moment the episode it stands in for is written. Cheap, and it never stops being
+REM true, so it stays as a second line of defence rather than being retired after the cold start.
 for /f "delims=" %%F in ('dir /s /b /a:-d "%ROOT%\courses\_todo-*" 2^>nul') do (
   set "rel=%%F"
   set "rel=!rel:%ROOT%\=!"
   if not exist "%NEW%\!rel!" del /q "%%F" >nul 2>nul
+)
+
+REM A renamed lesson leaves its whole folder behind once the files inside it are gone -
+REM 05-meet-your-data-with-select\, its scripts\ and its cards\. Empty is not merely untidy
+REM here: :resolve below decides a scope by asking whether a DIRECTORY exists, so an empty
+REM lesson folder is a scope that resolves and then runs nothing. Reverse-sorted so children
+REM are removed before parents; plain `rd` refuses a non-empty directory, which is the guard.
+for %%R in ("courses" "tests\src\verify" "datasets" "tools") do (
+  for /f "delims=" %%D in ('dir /s /b /a:d "%ROOT%\%%~R" 2^>nul ^| sort /r') do rd "%%D" 2>nul
 )
 
 rmdir /s /q "%TMP_DZ%" 2>nul
@@ -549,6 +609,85 @@ endlocal & exit /b 0
 for %%P in ("%~2") do if not exist "%%~dpP" mkdir "%%~dpP" >nul 2>nul
 copy /y "%~1" "%~2" >nul 2>nul
 exit /b 0
+
+:dzmerge
+REM  %1 = the shipped file, %2 = the learner's file, %3 = the baseline, %4 = relative path.
+REM  Mirror of the same branch in zeus.sh - keep the two in step.
+fc "%~2" "%~3" >nul 2>nul
+if not errorlevel 1 (
+  REM Byte-identical to the baseline: never touched, so it is ours to update.
+  copy /y "%~1" "%~2" >nul 2>nul
+  exit /b 0
+)
+fc "%~1" "%~3" >nul 2>nul
+if not errorlevel 1 exit /b 0
+REM  ^ yours differs but we did not change this file - nothing to report.
+fc "%~1" "%~2" >nul 2>nul
+if not errorlevel 1 (
+  REM You already match the new version - which is also how a .new sidecar from an earlier
+  REM update ends once you have folded it in. Clear it so it does not become litter.
+  if exist "%~2.new" del /q "%~2.new" >nul 2>nul
+  exit /b 0
+)
+REM THE ONE CASE WHERE "KEEP YOUR WORK" SILENTLY COSTS YOU A FIX: you edited this lesson AND
+REM we changed it upstream (a corrected expected value, a reworded koan). Preserving yours in
+REM silence means a lesson we KNOW is wrong stays wrong on your disk forever, and the next
+REM failure reads as your SQL being wrong. Keep yours - your answers are in it - but put ours
+REM beside it and say so. Same answer dpkg and rpm reached for modified config files
+REM (.dpkg-dist / .rpmnew): a 3-way merge nobody asked for is worse than two files and a
+REM clear sentence. `**/*.groovy` in pom.xml will not compile a .new, so it is inert.
+copy /y "%~1" "%~2.new" >nul 2>nul
+echo   %~4
+echo       we corrected this lesson and you have edits in it - yours kept,
+for %%N in ("%~2") do echo       ours is beside it as %%~nxN.new
+exit /b 0
+
+:dzprune
+REM  %1 = a path we shipped LAST time, relative to the download root.
+REM  Removes it only if upstream stopped shipping it AND it is not inside an editable
+REM  workspace (those are handled against the baseline, where edits are detected and kept).
+setlocal enabledelayedexpansion
+set "rel=%~1"
+if "!rel!"=="" endlocal & exit /b 0
+if exist "%NEW%\!rel!" endlocal & exit /b 0
+REM The launchers are STAGED as *.new and applied on the next run - never pruned here.
+if /I "!rel!"=="zeus.bat" endlocal & exit /b 0
+if /I "!rel!"=="zeus.sh"  endlocal & exit /b 0
+for /f "usebackq delims=" %%W in ("%WSLIST%") do (
+  set "t=!rel:%%W\=!"
+  if not "!t!"=="!rel!" endlocal & exit /b 0
+)
+del /q "%ROOT%\!rel!" >nul 2>nul
+endlocal & exit /b 0
+
+:sweeporphans
+REM  DELETE COMPILED CLASSES WHOSE SOURCE IS GONE.  %1 compiled tree, %2 source tree,
+REM  %3 suffix (Koans|Spec). Mirror of _zeus_sweep_orphans() in zeus.sh.
+REM
+REM  gmavenplus writes into target\test-classes and never removes an output whose .groovy
+REM  disappeared, and surefire matches its `includes` against THAT class directory, not
+REM  against src - note the ".java" in the scope line we print. So a koan file renamed
+REM  upstream keeps running from its last build: its koans keep counting toward the total,
+REM  and the failure report names a file the learner cannot open because it no longer
+REM  exists. From their side that reads as their own mistake.
+REM
+REM  A sweep, not `mvn clean`: clean would also throw away every still-valid class and turn
+REM  the next run into a full recompile, and this runs on every single koan attempt.
+if not exist "%~1" exit /b 0
+setlocal enabledelayedexpansion
+set "CL=%~1"
+set "SRCD=%~2"
+for /f "delims=" %%F in ('dir /s /b /a:-d "%CL%\*%~3*.class" 2^>nul') do (
+  set "rel=%%F"
+  set "rel=!rel:%CL%\=!"
+  set "rel=!rel:.class=!"
+  REM Groovy emits closures and Spock features as Outer$__spock_feature_0_closure1.class.
+  REM An inner class is orphaned by the same source going away as its outer one, so resolve
+  REM EVERY class back to the outer name and ask whether THAT source still exists.
+  for /f "delims=$" %%O in ("!rel!") do set "rel=%%O"
+  if not exist "%SRCD%\!rel!.groovy" del /q "%%F" >nul 2>nul
+)
+endlocal & exit /b 0
 
 :resolve
 REM  %1 = parent directory, %2 = one token exactly as the user typed it.

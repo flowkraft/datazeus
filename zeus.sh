@@ -44,6 +44,33 @@ Short aliases: sql=learnsql, S1=series1. Courses: sql modeling etl warehousing d
 EOF
 }
 
+_zeus_sweep_orphans() {
+  # DELETE COMPILED CLASSES WHOSE SOURCE IS GONE.
+  #
+  # gmavenplus writes into target/test-classes and never removes an output whose .groovy
+  # disappeared, and surefire matches its `includes` against THAT class directory, not
+  # against src. So a koan file we renamed upstream keeps running from its last build:
+  # its koans keep counting toward the total, and the failure report names a file the
+  # learner cannot open because it no longer exists. From their side that is precisely
+  # what a `zeus update` rename looks like - which makes it read as their mistake.
+  #
+  # A sweep, not `mvn clean`: clean would also throw away every still-valid class and turn
+  # the next run into a full recompile, and this runs on every single koan attempt.
+  # $1 compiled tree, $2 source tree, $3 suffix (Koans|Spec).
+  _classes="$1"; _sources="$2"; _suffix="$3"
+  [ -d "$_classes" ] || return 0
+  ( cd "$_classes" && find . -name "*${_suffix}*.class" -type f 2>/dev/null | sed 's#^\./##' ) \
+  | while IFS= read -r _c; do
+      # Groovy emits closures and Spock features as Outer$__spock_feature_0_closure1.class.
+      # An inner class is orphaned by exactly the same source going away as its outer one,
+      # so resolve EVERY class - inner or not - back to the outer name and ask whether that
+      # source still exists. Matching only "*Koans.class" would strand the inner ones.
+      _rel="${_c%.class}"; _rel="${_rel%%\$*}"
+      [ -f "$_sources/$_rel.groovy" ] && continue
+      rm -f "$_classes/$_c"
+    done
+}
+
 zeus_update() {
   echo "Updating DataZeus from github.com/flowkraft/datazeus ..."
   tmp="$(mktemp -d 2>/dev/null || echo "/tmp/datazeus-update-$$")"
@@ -77,6 +104,9 @@ zeus_update() {
   # katas tomorrow). Refresh everything else; inside each workspace: add new
   # exercises, update ones you never touched, preserve ones you edited.
   # "Never touched" = byte-identical (cmp) to the baseline snapshot from last update.
+  # NOTE: zeus.bat now compares as TEXT (fc without /b), so an editor that only rewrote line
+  # endings is not mistaken for an edit. cmp has no text mode, so the POSIX-safe equivalent
+  # needs a helper that strips CR into temp files first - not done yet, hence the divergence.
   baseline="$DIR/.internal-donttouch"
 
   # 1) discover workspaces (paths relative to the download) from the markers
@@ -98,7 +128,7 @@ zeus_update() {
       mkdir -p "$DIR/$(dirname "$f")"; cp "$new/$f" "$DIR/$f"
     done )
 
-  # 3) per-workspace merge against the baseline, then 4) refresh the baseline
+  # 3) per-workspace merge against the baseline
   for w in $workspaces; do
     [ -d "$new/$w" ] || continue
     ( cd "$new/$w" && find . -type f 2>/dev/null | sed 's#^\./##' | while IFS= read -r f; do
@@ -107,10 +137,25 @@ zeus_update() {
           mkdir -p "$DIR/$w/$(dirname "$f")"; cp "$src" "$loc"          # new exercise
         elif [ -f "$bas" ] && cmp -s "$loc" "$bas"; then
           cp "$src" "$loc"                                              # untouched -> update
-        fi                                                              # else edited -> preserve
-      done )
-    ( cd "$new/$w" && find . -type f 2>/dev/null | sed 's#^\./##' | while IFS= read -r f; do
-        mkdir -p "$baseline/$w/$(dirname "$f")"; cp "$new/$w/$f" "$baseline/$w/$f"
+        elif [ -f "$bas" ] && cmp -s "$src" "$bas"; then
+          :                                                             # yours differs, ours didn't change -> nothing to say
+        elif cmp -s "$src" "$loc"; then
+          # You already match the new version - which is also how a .new sidecar from an
+          # earlier update ends once you have folded it in. Clear it so it is not litter.
+          rm -f "$loc.new"
+        else
+          # THE ONE CASE WHERE "KEEP YOUR WORK" SILENTLY COSTS YOU A FIX: you edited this
+          # lesson AND we changed it upstream (a corrected expected value, a reworded koan).
+          # Preserving yours in silence means a lesson we KNOW is wrong stays wrong on your
+          # disk forever, and the next failure reads as your SQL being wrong. Keep yours -
+          # your answers are in it - but put ours beside it and say so. Same answer dpkg and
+          # rpm reached for modified config files (.dpkg-dist / .rpmnew), for the same reason:
+          # a 3-way merge nobody asked for is worse than two files and a clear sentence.
+          cp "$src" "$loc.new"
+          echo "  $w/$f"
+          echo "      we corrected this lesson and you have edits in it - yours kept,"
+          echo "      ours is beside it as $(basename "$f").new"
+        fi
       done )
   done
   # 5) PRUNE what upstream dropped. Steps 2-4 only ever copy, so a file we RENAMED or MOVED
@@ -121,7 +166,6 @@ zeus_update() {
   #    CONSERVATIVE BY DESIGN: only files WE shipped, that upstream no longer has, that the
   #    learner never edited. Anything edited is kept and named. An update must never silently
   #    destroy somebody's work.
-  kept=""
   for w in $workspaces; do
     [ -d "$baseline/$w" ] || continue
     ( cd "$baseline/$w" && find . -type f 2>/dev/null | sed 's#^\./##' ) | while IFS= read -r f; do
@@ -131,14 +175,59 @@ zeus_update() {
       if cmp -s "$loc" "$bas"; then rm -f "$loc"; else echo "  kept your edited $w/$f (no longer shipped)"; fi
     done
   done
-  # Outside the workspaces there is no baseline to compare against, so prune only `_todo`
-  # artifacts: they are ours, nobody hand-edits a stub, and they are the files that go stale
-  # by design the moment an episode is written.
+  # OUTSIDE the workspaces, step 2 only ever COPIES, so anything we renamed or moved upstream
+  # stayed on disk forever - the verify-gate spec of a renamed lesson, a dataset we replaced,
+  # a tool we dropped. The old code pruned `courses/_todo-*` only, which fixed the one symptom
+  # that had been noticed rather than the leak underneath it.
+  #
+  # A MANIFEST, not a second byte-for-byte baseline: outside the workspaces every file is
+  # ours by definition (the learner edits koans, nothing else), so the only question is "did
+  # we ship this last time and stop shipping it now?" - a question a list of paths answers
+  # exactly, for a few KB instead of mirroring the datasets on every update.
+  manifest="$baseline/.zeus-shipped"
+  mkdir -p "$baseline"
+  if [ -f "$manifest" ]; then
+    while IFS= read -r f; do
+      [ -z "$f" ] && continue
+      _in_ws "$f" && continue                              # workspaces are handled above
+      [ -f "$new/$f" ] && continue                         # still shipped
+      case "$f" in zeus.sh|zeus.bat) continue ;; esac      # launchers are staged, never pruned
+      rm -f "$DIR/$f"
+    done < "$manifest"
+  fi                                                       # no manifest yet -> nothing proven, prune nothing
+  ( cd "$new" && find . -type f 2>/dev/null | sed 's#^\./##' ) > "$manifest.tmp" \
+    && mv -f "$manifest.tmp" "$manifest"
+  # BELT AND BRACES for `_todo` stubs, which the manifest alone cannot cover on its FIRST run:
+  # an install that has never updated under the new code has no .zeus-shipped yet, so the prune
+  # above stays silent exactly once - and a PROMOTED lesson is the case that gap shows up in
+  # worst (07-data-types.mdx arriving to sit beside _todo-07-data-types.mdx). This check needs
+  # no manifest to be safe: a stub is ours by construction, nobody hand-edits one, and it is
+  # stale the moment the episode it stands in for is written. Cheap, and it never stops being
+  # true, so it stays as a second line of defence rather than being retired after the cold start.
   find "$DIR/courses" -name "_todo-*" -type f 2>/dev/null | while IFS= read -r loc; do
     rel="${loc#$DIR/}"
     [ -f "$new/$rel" ] || rm -f "$loc"
   done
-  find "$DIR/courses" -type d -empty -delete 2>/dev/null
+  # A renamed lesson leaves its whole folder behind once the files inside it are gone -
+  # 05-meet-your-data-with-select/, its scripts/ and its cards/. Empty is not merely untidy
+  # here: `zeus koans sql 1 05` resolves its scope by asking whether a DIRECTORY exists, so
+  # an empty lesson folder is a scope that resolves and then runs nothing.
+  for d in courses tests/src/verify datasets tools; do
+    [ -d "$DIR/$d" ] && find "$DIR/$d" -type d -empty -delete 2>/dev/null
+  done
+
+  # 6) MIRROR the baseline - add what is new AND drop what upstream no longer ships. This has
+  #    to come after step 5, which reads the OLD baseline to learn what went away; a baseline
+  #    that only ever grew would keep re-proposing files that have been gone for releases.
+  for w in $workspaces; do
+    [ -d "$new/$w" ] || continue
+    ( cd "$new/$w" && find . -type f 2>/dev/null | sed 's#^\./##' | while IFS= read -r f; do
+        mkdir -p "$baseline/$w/$(dirname "$f")"; cp "$new/$w/$f" "$baseline/$w/$f"
+      done )
+    [ -d "$baseline/$w" ] && ( cd "$baseline/$w" && find . -type f 2>/dev/null | sed 's#^\./##' \
+      | while IFS= read -r f; do [ -f "$new/$w/$f" ] || rm -f "$baseline/$w/$f"; done )
+    find "$baseline/$w" -type d -empty -delete 2>/dev/null
+  done
 
   # --------------------------------------------------------------------------
   rm -rf "$tmp"
@@ -366,6 +455,7 @@ zeus_koans() {
   PROG="$DIR/tests/target/path-to-enlightenment.txt"
   LOG="$DIR/tests/target/koans-build.log"
   mkdir -p "$DIR/tests/target"; rm -f "$PROG"
+  _zeus_sweep_orphans "$DIR/tests/target/test-classes" "$DIR/tests/src/koans/groovy" Koans
   if command -v mvn >/dev/null 2>&1; then
     # Maven is installed - use it directly.
     mvn -q -f "$DIR/tests/pom.xml" -Pkoans test -Dtest.includes="$inc" > "$LOG" 2>&1 || true
@@ -489,6 +579,9 @@ zeus_test() {
     echo
     exit 1
   fi
+  # Same ghost, other source root: a renamed lesson leaves its old *Spec class behind and the
+  # gate would keep verifying a lesson that no longer exists.
+  _zeus_sweep_orphans "$DIR/tests/target/test-classes" "$DIR/tests/src/verify/groovy" Spec
   if command -v mvn >/dev/null 2>&1; then
     mvn -f "$DIR/tests/pom.xml" test
   else
