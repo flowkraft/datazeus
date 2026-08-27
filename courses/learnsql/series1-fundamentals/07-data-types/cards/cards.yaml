@@ -19,9 +19,13 @@ guid: "datazeus-learn-sql-series1-07-data-types"
 tags: ["datazeus", "learn-sql", "series-1", "sql"]
 
 cards:
+  # This card and the "write it from memory" one further down used to be the same recall
+  # twice — this one's ANSWER was the query that one asks you to produce, which is how you get
+  # two cards that interfere with each other. This one now tests the CONCEPT (what the catalog
+  # is and why you can rely on it); the other tests PRODUCTION (write it).
   - basic:
-      front: "You open a database you have never seen. What is the first query to run against a table, before you write anything else?"
-      back: "The catalog: `SELECT \"column_name\", \"data_type\" FROM information_schema.columns WHERE table_name = 'TheTable';` — standard tables that describe your tables. It works on PostgreSQL, MySQL, SQL Server and DuckDB."
+      front: "What is the 'catalog', and why can you rely on it in a database you have never seen?"
+      back: "A set of standard tables that describe your tables — `information_schema` — which you query exactly like any other table. It is part of the SQL standard, so the same query works on PostgreSQL, MySQL, SQL Server and DuckDB. You never have to guess what a column holds; you can ask."
 
   - cloze: "A data type is a {{c1::promise}} about what a column can hold. It is decided once, when the {{c2::table is created}}, and every row obeys it."
 
@@ -67,7 +71,7 @@ cards:
   # fill blanks in a query that is already on screen.
 
   - basic:
-      front: "From memory, with nothing on screen: write the query that asks a database what columns `\"Orders\"` holds, and what type each one is."
+      front: "Write from memory: the query that asks a database what columns `\"Orders\"` holds, and what type each one is."
       back: "`SELECT \"column_name\", \"data_type\" FROM information_schema.columns WHERE table_name = 'Orders';` — note the single quotes around the table NAME, because there it is a text value being matched, not an identifier."
 
   - basic:
@@ -82,7 +86,10 @@ cards:
 
   # The "never as 'true' in quotes" half of this was WRONG and was cut on 2026-08-27:
   # both PostgreSQL and DuckDB accept the quoted form.
-  - cloze: "The `Discontinued` column is a {{c1::boolean}} — it answers a {{c2::yes-or-no}} question, so every row is either true or false."
+  # "so every row is either true or false" said a ROW is true or false. It is not — the VALUE
+  # in that column is. The same wording was corrected in the video on 2026-08-27 and was left
+  # standing here. Column name quoted too, to match how the lesson writes it everywhere else.
+  - cloze: "The `\"Discontinued\"` column is a {{c1::boolean}} — it answers a {{c2::yes-or-no}} question, so its value in every row is either {{c3::true or false}}."
 
   - basic:
       front: "Why is `OrderDate` better stored as a date than as the text \"2024-03-15\"?"
