@@ -10,7 +10,15 @@ import spock.lang.Unroll
  * here, on BOTH engines. The lesson's eight scripts:
  *
  *   1. products-types        — the catalog: ten columns, and the families they fall into
- *   2. unit-price            — Chai's price, and the scale its type promises
+ *   2. unit-price            — Chai's price, and the scale its type promises.
+ *                              NOT SHOWN IN THE ARTICLE ANY MORE, and not unused either:
+ *                              the "why 18 comes back as 18.0000" section was cut on
+ *                              2026-08-28 because a reader following the lesson in
+ *                              CloudBeaver sees 18 and was being talked out of something
+ *                              they had never seen. KOAN 4 is where a learner actually
+ *                              meets 18.0000 (the koans run on DuckDB, which prints the
+ *                              zeros), so that is where it is taught now — and this script
+ *                              is what still gates the claim on both engines.
  *   3. orders-dates          — OrderDate is a real point in time, not text
  *   4. price-times-two       — arithmetic works on a number: 18 doubles to 36
  *   5. name-times-two        — and is REFUSED on text (asserted to FAIL)
@@ -263,6 +271,8 @@ class DataTypesSpec extends NorthwindGateSpec {
     }
 
     // --- What the KOANS stand on ---------------------------------------------------------
+    // (koan 8's eight postal codes are already pinned by the postal-codes test above, and
+    //  koans 2/3/5's type spellings by the DuckDB block at the foot of this section.)
     // The koans ask things the scripts above never touch, so nothing here would notice if
     // that data shifted — and the break would land on a student mid-exercise, with a green
     // gate behind it. One assertion per koan that has its own dependency.
@@ -293,7 +303,7 @@ class DataTypesSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 8: twice Chai's price is 36"() {
+    def "[#engine] koan 7: twice Chai's price is 36"() {
         expect:
         (sqlFor(engine).firstRow('SELECT "UnitPrice" * 2 AS n FROM "Products" LIMIT 1').n as BigDecimal)
                 .compareTo(36 as BigDecimal) == 0

@@ -208,8 +208,9 @@ zeus_update() {
     rel="${loc#$DIR/}"
     [ -f "$new/$rel" ] || rm -f "$loc"
   done
-  # A renamed lesson leaves its whole folder behind once the files inside it are gone -
-  # 05-meet-your-data-with-select/, its scripts/ and its cards/. Empty is not merely untidy
+  # A renamed lesson leaves its whole folder behind once the files inside it are gone - the
+  # case that found this was 05-meet-your-data-with-select/ (episode 05's name BEFORE it
+  # became select-fetch-your-data), its scripts/ and its cards/. Empty is not merely untidy
   # here: `zeus koans sql 1 05` resolves its scope by asking whether a DIRECTORY exists, so
   # an empty lesson folder is a scope that resolves and then runs nothing.
   for d in courses tests/src/verify datasets tools; do

@@ -8,6 +8,28 @@
 # cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
 # tags:  applied to every card in the file.
 #
+# ── WHAT BELONGS IN THIS DECK, AND WHAT DOES NOT ────────────────────────────────────
+#
+# Anki is reviewed on a phone, weeks later, with no database open and the lesson long
+# forgotten. So every card here is SELF-CONTAINED: it carries its own premise. None of
+# them asks the learner to run a query, to remember a result from an earlier card, or to
+# know Northwind's schema — where a card needs a fact ("Chai costs 18", "PostalCode is
+# every digit"), the FRONT states it and the card tests the reasoning, not the recall of
+# data. A card that fails this test is a koan wearing the wrong clothes.
+#
+# That is also why this deck COMPLEMENTS rather than repeats. The video explains, the
+# koans fill blanks in a query already on screen, and these do the two things spaced
+# repetition is uniquely good at: PRODUCTION (write it from memory, nothing open) and
+# DISCRIMINATION (decide between look-alikes).
+#
+# ── ORDER IS THE CURRICULUM ─────────────────────────────────────────────────────────
+# Simple to complex, following the lesson's own arc: what a type IS → the families →
+# what a type DECIDES → each consequence in turn → the trap that combines them →
+# production from memory. Anki introduces new cards in file order, so a learner meeting
+# this deck for the first time meets the ideas in the order they build on each other.
+# The trap ('9' > '10') used to sit fourth, before decimals, arithmetic or postal codes
+# had been taught — it is the PAYOFF of those three and now sits after them.
+#
 # FOUR OF THESE CARDS USED TO LIVE IN LESSON 05's DECK — the 18.0000 one, the
 # information_schema one, the DECIMAL/numeric vocabulary one and the single-vs-double
 # quotes one. They were written when 05 still carried the data-types arc, and stayed
@@ -19,70 +41,28 @@ guid: "datazeus-learn-sql-series1-07-data-types"
 tags: ["datazeus", "learn-sql", "series-1", "sql"]
 
 cards:
-  # This card and the "write it from memory" one further down used to be the same recall
-  # twice — this one's ANSWER was the query that one asks you to produce, which is how you get
-  # two cards that interfere with each other. This one now tests the CONCEPT (what the catalog
-  # is and why you can rely on it); the other tests PRODUCTION (write it).
+  # ── 1. WHAT A TYPE IS ──────────────────────────────────────────────────────────────
+  - cloze: "A data type is a {{c1::promise}} about what a column can hold. It is decided once, when the {{c2::table is created}}, and every row obeys it."
+
+  # Tests the CONCEPT (what the catalog is, why you can rely on it). The "write it from
+  # memory" card at the end tests PRODUCTION of the same query. Split deliberately: when
+  # one card's answer was the other card's question, the two interfered.
   - basic:
       front: "What is the 'catalog', and why can you rely on it in a database you have never seen?"
       back: "A set of standard tables that describe your tables — `information_schema` — which you query exactly like any other table. It is part of the SQL standard, so the same query works on PostgreSQL, MySQL, SQL Server and DuckDB. You never have to guess what a column holds; you can ask."
 
-  - cloze: "A data type is a {{c1::promise}} about what a column can hold. It is decided once, when the {{c2::table is created}}, and every row obeys it."
-
+  # ── 2. THE FIVE FAMILIES ───────────────────────────────────────────────────────────
   - basic:
       front: "Name the five type families you actually meet in day-to-day work."
       back: "Whole numbers (ids, counts), decimals (money), text, dates & times, and true/false. Everything else is a variation you can look up when you meet it."
 
   - basic:
-      front: "`SELECT '9' > '10';` — what does it return, and why?"
-      back: "true. The quotes make them TEXT, and text compares character by character like a dictionary: '9' beats '1' on the very first character. `SELECT 9 > 10;` returns false, because numbers compare by value."
-
-  - cloze: "Text compares like a {{c1::dictionary}} — character by character. Numbers compare by {{c2::value}}. That is why the same two digits can give opposite answers."
-
-  - basic:
-      front: "Northwind's `PostalCode` column is every digit. Why is it text and not a number?"
-      back: "Leipzig's postal code is 04179. Stored as a number the leading zero is gone, and 4179 is a different place. The general rule: if you will never do arithmetic on it, it is not a number — postal codes, phone numbers, order references, product codes."
-
-  - basic:
-      front: "A query returns a comparison result you did not expect. What do you check first?"
-      back: "The type, before the logic. A column of amounts that arrived as text will answer 'everything over 100' with something that looks correct and most likely is not — the query is fine, the type is wrong."
-
-  # The single-vs-double-quotes card is NOT duplicated here. Lesson 05 teaches that rule and
-  # keeps the card; this lesson only puts it to work in the catalog query's WHERE line.
-
-  - basic:
-      front: "What happens if you run `SELECT \"ProductName\" * 2 FROM \"Products\";`?"
-      back: "It fails: `operator does not exist: character varying * integer`. That error is the type system doing its job — multiplying a name is meaningless, so the database refuses instead of inventing an answer."
-
-  - basic:
-      front: "Chai costs 18. Why does `\"UnitPrice\"` come back as 18.0000 in some clients and 18 in others?"
-      back: "The column is DECIMAL(19,4) — up to 19 digits, exactly 4 after the point — so the value really is 18.0000. Whether you SEE the zeros is the client's choice: CloudBeaver trims them, the DuckDB CLI and psql print them. Same value, same type."
-
-  - cloze: "In `DECIMAL(19,4)` the 19 is the {{c1::total number of digits}} and the 4 is how many come {{c2::after the decimal point}}."
-
-  - basic:
       front: "PostgreSQL says a column is `character varying`; DuckDB says `VARCHAR`. Which is right?"
       back: "Both. They are the same family — text — spelled differently by different engines. Learn the five families and the spellings stop mattering."
 
-  # ── COMPLEMENTARY TO THE VIDEO AND THE KOANS ───────────────────────────────────────
-  # The three below do what a video cannot and a koan does only once: PRODUCTION (write the
-  # query from memory, no editor open) and DISCRIMINATION (decide between look-alikes). Both
-  # are what spaced repetition is actually good at, and neither repeats a koan — the koans
-  # fill blanks in a query that is already on screen.
-
   - basic:
-      front: "Write from memory: the query that asks a database what columns `\"Orders\"` holds, and what type each one is."
-      back: "`SELECT \"column_name\", \"data_type\" FROM information_schema.columns WHERE table_name = 'Orders';` — note the single quotes around the table NAME, because there it is a text value being matched, not an identifier."
-
-  - basic:
-      front: "Number or text? (a) quantity in stock (b) phone number (c) unit price (d) invoice reference (e) year of birth"
-      back: "Numbers: quantity in stock, unit price, year of birth — you may want to add, average or compare them. Text: phone number and invoice reference — you would never do arithmetic on either, and both can carry leading zeros, spaces or letters."
-
-  - cloze: "A column's type decides three things: whether you {{c1::quote}} the value, whether you can do {{c2::arithmetic}} on it, and how it {{c3::sorts and compares}}."
-
-  - basic:
-      front: "What does NULL mean, and what does it NOT mean?"
-      back: "It means the value is MISSING — nobody ever recorded it. It is not zero and not empty text: a price of 0 is a real price, a price of NULL was never written down. SQL keeps those apart on purpose."
+      front: "Why is `OrderDate` better stored as a date than as the text \"2024-03-15\"?"
+      back: "Because a date is a point in time the database understands. Store it as text and you can no longer add days to it, and the database will happily accept the 31st of February. (Sorting survives only by luck: ISO text sorts right, 15/03/2024-style text does not.)"
 
   # The "never as 'true' in quotes" half of this was WRONG and was cut on 2026-08-27:
   # both PostgreSQL and DuckDB accept the quoted form.
@@ -92,5 +72,48 @@ cards:
   - cloze: "The `\"Discontinued\"` column is a {{c1::boolean}} — it answers a {{c2::yes-or-no}} question, so its value in every row is either {{c3::true or false}}."
 
   - basic:
-      front: "Why is `OrderDate` better stored as a date than as the text \"2024-03-15\"?"
-      back: "Because a date is a point in time the database understands. Store it as text and you can no longer add days to it, and the database will happily accept the 31st of February. (Sorting survives only by luck: ISO text sorts right, 15/03/2024-style text does not.)"
+      front: "What does NULL mean, and what does it NOT mean?"
+      back: "It means the value is MISSING — nobody ever recorded it. It is not zero and not empty text: a price of 0 is a real price, a price of NULL was never written down. SQL keeps those apart on purpose."
+
+  # ── 3. WHAT THE TYPE DECIDES — the three consequences, then each in turn ───────────
+  - cloze: "A column's type decides three things: whether you {{c1::quote}} the value, whether you can do {{c2::arithmetic}} on it, and how it {{c3::sorts and compares}}."
+
+  - basic:
+      front: "Chai costs 18. Why does `\"UnitPrice\"` come back as 18.0000 in some clients and 18 in others?"
+      back: "The column is DECIMAL(19,4) — up to 19 digits, exactly 4 after the point — so the value really is 18.0000. Whether you SEE the zeros is the client's choice: CloudBeaver trims them, the DuckDB CLI and psql print them. Same value, same type."
+
+  - cloze: "In `DECIMAL(19,4)` the 19 is the {{c1::total number of digits}} and the 4 is how many come {{c2::after the decimal point}}."
+
+  - basic:
+      front: "What happens if you run `SELECT \"ProductName\" * 2 FROM \"Products\";`?"
+      back: "It fails: `operator does not exist: character varying * integer`. That error is the type system doing its job — multiplying a name is meaningless, so the database refuses instead of inventing an answer."
+
+  # The single-vs-double-quotes card is NOT duplicated here. Lesson 05 teaches that rule and
+  # keeps the card; this lesson only puts it to work in the catalog query's WHERE line.
+
+  # ── 4. TEXT THAT LOOKS NUMERIC — the setup for the trap ────────────────────────────
+  - basic:
+      front: "Northwind's `PostalCode` column is every digit. Why is it text and not a number?"
+      back: "Leipzig's postal code is 04179. Stored as a number the leading zero is gone, and 4179 is a different place. The general rule: if you will never do arithmetic on it, it is not a number — postal codes, phone numbers, order references, product codes."
+
+  # DISCRIMINATION — deciding between look-alikes, which a video cannot drill and a koan
+  # does once. This is the rule above, applied to cases the lesson never showed.
+  - basic:
+      front: "Number or text? (a) quantity in stock (b) phone number (c) unit price (d) invoice reference (e) year of birth"
+      back: "Numbers: quantity in stock, unit price, year of birth — you may want to add, average or compare them. Text: phone number and invoice reference — you would never do arithmetic on either, and both can carry leading zeros, spaces or letters."
+
+  # ── 5. THE TRAP — the payoff of everything above ───────────────────────────────────
+  - basic:
+      front: "`SELECT '9' > '10';` — what does it return, and why?"
+      back: "true. The quotes make them TEXT, and text compares character by character like a dictionary: '9' beats '1' on the very first character. `SELECT 9 > 10;` returns false, because numbers compare by value."
+
+  - cloze: "Text compares like a {{c1::dictionary}} — character by character. Numbers compare by {{c2::value}}. That is why the same two digits can give opposite answers."
+
+  - basic:
+      front: "A query returns a comparison result you did not expect. What do you check first?"
+      back: "The type, before the logic. A column of amounts that arrived as text will answer 'everything over 100' with something that looks correct and most likely is not — the query is fine, the type is wrong."
+
+  # ── 6. PRODUCTION — hardest, and last ──────────────────────────────────────────────
+  - basic:
+      front: "Write from memory: the query that asks a database what columns `\"Orders\"` holds, and what type each one is."
+      back: "`SELECT \"column_name\", \"data_type\" FROM information_schema.columns WHERE table_name = 'Orders';` — note the single quotes around the table NAME, because there it is a text value being matched, not an identifier."

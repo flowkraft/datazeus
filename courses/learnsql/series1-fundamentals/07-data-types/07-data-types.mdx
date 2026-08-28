@@ -112,7 +112,7 @@ Three practical consequences, and they cover almost everything you will hit.
 
 1. **Whether you quote it.** Text values go in single quotes; numbers go bare. `'Beverages'` is text; `18` is a number.
 2. **Whether you can do arithmetic on it.** Prices add and multiply. Names do not.
-3. **How it sorts and compares.** This one is a real source of bugs, and they cost real money.
+3. **How it sorts and compares.** Often a real source of bugs - bugs which, many times, cost real money.
 
 ## Numbers do arithmetic
 
@@ -131,18 +131,6 @@ LIMIT 3;
 | Aniseed Syrup | 10 | 20 |
 
 That third column has no name of its own. You asked for a calculation and never said what to call it, so the database invented a heading — PostgreSQL shows `?column?`, DuckDB shows `(UnitPrice * 2)`. Naming it yourself is a later lesson.
-
-### Why a price of 18 can come back as 18.0000
-
-Look again at what the catalog said `"UnitPrice"` is. On DuckDB it answers `DECIMAL(19,4)`, and those two numbers are part of the promise: **up to 19 digits in total, exactly 4 of them after the decimal point.** So the value is not `18` — it is `18.0000`, and it always was.
-
-```sql file=./scripts/unit-price.sql
-SELECT "ProductName", "UnitPrice"
-FROM "Products"
-LIMIT 1;
-```
-
-Whether you *see* those zeros is up to your client, not the database. CloudBeaver trims them and shows `18`; the DuckDB CLI and `psql` print `18.0000`. Same value, same type, different display — which is worth knowing the first time two tools disagree in front of you.
 
 ## …and it is refused on text
 

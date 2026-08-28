@@ -21,7 +21,7 @@ import spock.lang.Stepwise
  *   1-2  ask the catalog what a table holds, and what one column is
  *   3-4  the price column: what its type SAYS, and what the value LOOKS like
  *   5-6  the other two families you will meet — dates, and true/false
- *   7-8  text that looks numeric, and arithmetic that only numbers allow
+ *   7-8  what being a number buys you, and text that only LOOKS numeric
  *   9    the comparison that catches everyone
  *   10   the whole query, written from scratch
  *
@@ -102,10 +102,13 @@ class DataTypesKoans extends KoanBase {
         '''
     }
 
-    // 4) And here is that promise being kept. Chai costs eighteen — ask for the price and
-    //    you get 18.0000, four decimal places, because koan 3 said there would be four.
-    //    (CloudBeaver TRIMS those zeros and shows 18. Same value, different client. The
-    //    zeros are the column's type, not the number.)
+    // 4) And here is that promise being kept. Chai costs eighteen — ask for the price and you
+    //    get 18.0000, four decimal places, because koan 3 said there would be four.
+    //
+    //    If that looks odd: the zeros are the COLUMN'S TYPE, not the number. And whether you
+    //    ever see them is your client's choice, not the database's — CloudBeaver hides them
+    //    for readability, so there a price of 12.50 shows as 12.5 and this one as 18. Same
+    //    value either way.
     def "so the price comes back as 18.0000, not 18"() {
         expect:
         shouldReturn 18.0000, '''
@@ -127,7 +130,7 @@ class DataTypesKoans extends KoanBase {
     // 6) The fourth family: a yes-or-no flag. Fill in the column that says whether a product
     //    is still sold. Every row holds either true or false — and only two of the twenty
     //    products are discontinued, so the first three are all false.
-    def "read a true/false column"() {
+    def "a yes-or-no column holds true or false"() {
         expect:
         // ONE LIST PER ROW, even for a single column — that is the shape rows() returns, and
         // it is the same shape every other row-set koan in the course uses.
@@ -136,7 +139,17 @@ class DataTypesKoans extends KoanBase {
         ''')
     }
 
-    // 7) All digits, and still not a number. Fill in the column holding the postal code,
+    // 7) What being a number BUYS you: arithmetic. Chai costs 18 — double it.
+    //    (Try the same thing on "ProductName" in CloudBeaver afterwards. The database
+    //    refuses, and that refusal is the type system doing its job.)
+    def "numbers do arithmetic"() {
+        expect:
+        shouldReturn 36.0000, '''
+            SELECT "UnitPrice" * ___ FROM "Products" LIMIT 1
+        '''
+    }
+
+    // 8) All digits, and still not a number. Fill in the column holding the postal code,
     //    then look at the seventh row: Leipzig is 04179. Store that as a number and the
     //    leading zero is gone — 4179 is a different place. If you will never do arithmetic
     //    on it, it is not a number.
@@ -146,16 +159,6 @@ class DataTypesKoans extends KoanBase {
                       ["14776"], ["60528"], ["04179"], ["50739"]], '''
             SELECT ___ FROM "Customers" LIMIT 8
         ''')
-    }
-
-    // 8) What being a number BUYS you: arithmetic. Chai costs 18 — double it.
-    //    (Try the same thing on "ProductName" in CloudBeaver afterwards. The database
-    //    refuses, and that refusal is the type system doing its job.)
-    def "numbers do arithmetic"() {
-        expect:
-        shouldReturn 36.0000, '''
-            SELECT "UnitPrice" * ___ FROM "Products" LIMIT 1
-        '''
     }
 
     // 9) THE ONE THAT CATCHES EVERYONE. The same two digits on both sides — one pair quoted,

@@ -591,8 +591,9 @@ for /f "delims=" %%F in ('dir /s /b /a:-d "%ROOT%\courses\_todo-*" 2^>nul') do (
   if not exist "%NEW%\!rel!" del /q "%%F" >nul 2>nul
 )
 
-REM A renamed lesson leaves its whole folder behind once the files inside it are gone -
-REM 05-meet-your-data-with-select\, its scripts\ and its cards\. Empty is not merely untidy
+REM A renamed lesson leaves its whole folder behind once the files inside it are gone - the
+REM case that found this was 05-meet-your-data-with-select\ (episode 05's name BEFORE it
+REM became select-fetch-your-data), its scripts\ and its cards\. Empty is not merely untidy
 REM here: :resolve below decides a scope by asking whether a DIRECTORY exists, so an empty
 REM lesson folder is a scope that resolves and then runs nothing. Reverse-sorted so children
 REM are removed before parents; plain `rd` refuses a non-empty directory, which is the guard.
