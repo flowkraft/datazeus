@@ -274,13 +274,47 @@ series:
         hands_on: ["koan:complete", "koan:predict"]
         core: true
         status: published
+      # WRITTEN 2026-08-28. The episode earns its place on ONE failure: `LIMIT 5` with no
+      # ORDER BY returns five real products at five real prices, raises nothing, and is not
+      # a top five. On Northwind it hands you Aniseed Syrup at 10.0000 — the third CHEAPEST
+      # product in the catalogue — inside a report headed "most expensive", while Thuringer
+      # Rostbratwurst at 123.7900 is absent. A query that errors gets fixed in thirty
+      # seconds; this one gets forwarded.
+      #
+      # THE SAME DEFECT IS TAUGHT THREE TIMES, at three depths, on purpose — it is the spine
+      # of the episode rather than three separate warnings:
+      #   1. no ORDER BY at all           -> five arbitrary rows
+      #   2. an ORDER BY with a live tie  -> Scottish Longbreads and Gorgonzola Telino both
+      #      cost 12.5000, so "the five cheapest" has an undecided fifth row and the promo
+      #      list can change between runs. Fixed by a second sort key.
+      #   3. OFFSET on an unstable sort   -> page two repeats a row from page one.
+      #
+      # NULL PLACEMENT IS THE OTHER HALF, and it is the one genuine cross-engine gotcha in
+      # Series 1: 27 of the 79 orders have never shipped, and `ORDER BY "ShippedDate" DESC
+      # LIMIT 5` returns the five most recent SHIPMENTS on DuckDB (nulls last) and five
+      # orders that NEVER SHIPPED on PostgreSQL (null sorts high). Both legal, both correct,
+      # and the slide exists so a learner meets that before production does. Asserted per
+      # engine by OrderByAndTopNSpec; NULLS LAST is then asserted identical on both.
+      #
+      # "WHO IS YOUR #1 CUSTOMER?" — episode 10 closes on that line, and this episode does
+      # NOT answer it, deliberately. Ranking customers by revenue needs SUM and a JOIN, which
+      # are episodes 25 and 40. Mnemosyne says so plainly and reframes it into the question
+      # ORDER BY actually forces you to answer — "number one BY WHAT column?" — which is the
+      # most useful thing a data person can ask when handed a vague request.
+      #
+      # NOT TAUGHT HERE, and each was considered: ORDER BY <ordinal> and sorting by an
+      # unselected column are in the article as "know it, don't write it" and in the deck,
+      # but not in the video — they are reading skills, not doing skills. Collation and case
+      # sensitivity are out entirely: the behaviour differs by engine AND by install, so no
+      # claim would survive the dual-engine gate. Keyset pagination and what OFFSET costs on
+      # a large table are Series 3 · 20.
       - n: "15"
         slug: order-by-and-top-n
         title: "ORDER BY, LIMIT & FETCH FIRST — Sorting Rows and Keeping the Top Few"
         short: "ORDER BY, LIMIT & FETCH FIRST — sort and keep the top"
         hands_on: ["koan:complete", "koan:predict"]
         core: true
-        status: planned
+        status: published
       - n: "20"
         slug: distinct-aliases-expressions
         title: "Aliases, Expressions & DISTINCT — Make Messy Output Look Like a Report"

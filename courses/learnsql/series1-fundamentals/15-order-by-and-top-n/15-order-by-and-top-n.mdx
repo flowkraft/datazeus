@@ -1,0 +1,380 @@
+---
+title: "ORDER BY, LIMIT & FETCH FIRST — Sorting Rows and Keeping the Top Few"
+description: "Every request that says top, latest, biggest or worst is a sort and a cut. Learn to put rows in the order you want, keep only the few you need, and see why the same query can hand two people different answers."
+topic: "learn-sql"
+tags: ["sql", "fundamentals", "order-by", "limit"]
+level: "beginner"
+module: "series1-fundamentals"
+order: 15
+date: "2026-08-28"
+published: true
+videoId: "learnsql-series1-15-order-by-and-top-n"
+---
+
+## The situation this lesson prepares you for
+
+Somebody asks you for "our five most expensive products".
+
+You can already write most of that. You know how to pick the table, name the columns and filter the rows. What you do not yet have is the word **most** — and it turns out that one word is doing two separate jobs. It says *put these in order*, and it says *stop after five*.
+
+Get either half wrong and you send back a table that is the right shape, full of real numbers, and answers a question nobody asked.
+
+By the end of this lesson you will be able to put rows in any order you want, keep only the top few, and recognise the two ways a "top five" quietly stops being one.
+
+Every query below runs on the Northwind sample database that ships with DataPallas.
+
+**Open the koans before you read on.** There is a koan for every idea in this lesson — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _15
+```
+
+## First, the thing nobody tells you
+
+**A table has no order.**
+
+That is worth reading twice, because every spreadsheet you have ever opened has taught you the opposite. In a spreadsheet, row 1 is above row 2 and always will be. In a database, "row 1" is not a thing. The rows are a set, and a set has no first element.
+
+So when you run a query with no `ORDER BY`, the database returns the rows in whatever order was cheapest for it. That order is not random — but it is **not promised**, and it can change when the data changes, when the query changes, or when you run it somewhere else.
+
+You have already seen this happen. In lesson 2 you ran:
+
+```sql
+SELECT "FirstName", "LastName", "Title" FROM "Employees";
+```
+
+On DuckDB it comes back Nancy, Andrew, Janet. On the PostgreSQL that ships with DataPallas it comes back Andrew, Janet, Nancy. Same query, same three people, same data. Neither engine is wrong, because the query never said what order it wanted.
+
+**If you want an order, ask for one.** That is the whole of `ORDER BY`.
+
+## ORDER BY: say what "in order" means
+
+```sql file=./scripts/products-by-price.sql
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+ORDER BY "UnitPrice";
+```
+
+| ProductName | UnitPrice |
+| ----------- | --------: |
+| Guarana Fantastica | 4.5000 |
+| Filo Mix | 7.0000 |
+| Aniseed Syrup | 10.0000 |
+| Scottish Longbreads | 12.5000 |
+| Gorgonzola Telino | 12.5000 |
+| … | … |
+| Mishi Kobe Niku | 97.0000 |
+| Thuringer Rostbratwurst | 123.7900 |
+
+Cheapest first. You did not ask for cheapest first — **ascending is what `ORDER BY` does when you do not say otherwise.** You may write `ORDER BY "UnitPrice" ASC` and mean exactly the same thing. Almost nobody does.
+
+## DESC: biggest first, which is usually what was meant
+
+```sql file=./scripts/products-by-price-desc.sql
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+ORDER BY "UnitPrice" DESC;
+```
+
+| ProductName | UnitPrice |
+| ----------- | --------: |
+| Thuringer Rostbratwurst | 123.7900 |
+| Mishi Kobe Niku | 97.0000 |
+| Gnocchi di nonna Alice | 38.0000 |
+| Camembert Pierrot | 34.0000 |
+| Ikura | 31.0000 |
+
+One word, and the list turns around. Read what it tells you: 123.79, then 97, and then it falls off a cliff to 38. **Two premium lines, and then everything else.** That is a fact about the business you could not see a minute ago, and it took six characters.
+
+`DESC` is the direction almost every real request means. "Biggest", "most", "latest", "worst offenders" — all `DESC`.
+
+## Sorting is comparing, over and over
+
+`ORDER BY` does not have a private idea of order. It compares values, the same way `WHERE` does — so **everything from the data types lesson still applies.**
+
+Here is what that looks like when the column is text:
+
+```sql file=./scripts/postal-codes-text-sort.sql
+SELECT "CompanyName", "City", "PostalCode"
+FROM "Customers"
+WHERE "City" IN ('Leipzig', 'Berlin', 'Stuttgart', 'Graz', 'München')
+ORDER BY "PostalCode";
+```
+
+| CompanyName | City | PostalCode |
+| ----------- | ---- | ---------- |
+| Morgenstern Gesundkost | Leipzig | 04179 |
+| Alfreds Futterkiste | Berlin | 12209 |
+| Die Wandernde Kuh | Stuttgart | 70563 |
+| **Ernst Handel** | **Graz** | **8010** |
+| Frankenversand | München | 80805 |
+
+Look at the fourth row. **8010 is the smallest number of the last three, and it is filed in the middle.**
+
+Nothing is broken. `"PostalCode"` is text — lesson 07, the leading zero settles it — so it sorts like a dictionary, character by character. `'8'` beats `'7'`, so 8010 lands after 70563. Then `'8010'` and `'80805'` split at the fourth character, where `'1'` comes before `'8'`, so 8010 lands before 80805.
+
+For postal codes that is fine; nobody does arithmetic on them. But hold the picture, because **the same rule applies to a column of amounts that arrived as text** — and then "biggest first" sorts your money like words, and the largest figure is somewhere in the middle of the report. That is the bug lesson 07 warned about, and this is what it looks like across a whole column.
+
+<Callout>
+When a sort surprises you, check the **type** of the column you sorted on, before you check anything else.
+</Callout>
+
+## LIMIT: keep only the top few
+
+You have met `LIMIT` before — in lesson 2 it meant "just show me a few rows so I can see what this table looks like". Here it does a different job, and the difference is entirely the `ORDER BY` in front of it.
+
+```sql file=./scripts/top-5-expensive.sql
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+ORDER BY "UnitPrice" DESC
+LIMIT 5;
+```
+
+| ProductName | UnitPrice |
+| ----------- | --------: |
+| Thuringer Rostbratwurst | 123.7900 |
+| Mishi Kobe Niku | 97.0000 |
+| Gnocchi di nonna Alice | 38.0000 |
+| Camembert Pierrot | 34.0000 |
+| Ikura | 31.0000 |
+
+**`ORDER BY` decides which rows. `LIMIT` decides how many.** Both, and in that order, or you do not have a top five.
+
+### The other spelling: FETCH FIRST
+
+```sql file=./scripts/top-5-expensive-fetch-first.sql
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+ORDER BY "UnitPrice" DESC
+FETCH FIRST 5 ROWS ONLY;
+```
+
+The same five rows. `LIMIT` is what nearly everyone writes, and PostgreSQL, MySQL, DuckDB and SQLite all take it. `FETCH FIRST n ROWS ONLY` is the spelling in the SQL standard, and it is what Oracle, IBM Db2 and SQL Server want.
+
+Write `LIMIT`. Recognise `FETCH FIRST` when you meet it in somebody else's query, and know why it is there. That is the whole of it for now; Series 4 is where the difference starts to cost you something.
+
+## The wrong answer that looks right
+
+Here is the same request — "the five most expensive products" — written in a hurry.
+
+```sql file=./scripts/five-rows-no-order.sql
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+LIMIT 5;
+```
+
+| ProductName | UnitPrice |
+| ----------- | --------: |
+| Chai | 18.0000 |
+| Chang | 19.0000 |
+| **Aniseed Syrup** | **10.0000** |
+| Chef Antons Cajun Seasoning | 22.0000 |
+| Scottish Longbreads | 12.5000 |
+
+Five rows. Five real products. Five real prices. No error, no warning, nothing to notice.
+
+And it is not a top five. **Thuringer Rostbratwurst, at 123.79, is not on it** — nor is anything else from the expensive end of the catalogue. `Aniseed Syrup` at 10.00 is the **third cheapest product the company sells**, sitting in a report headed "most expensive".
+
+This is why the lesson exists:
+
+> **`LIMIT` without `ORDER BY` is not a top five. It is five rows, and which five is not promised.**
+
+Nothing failed. That is precisely what makes it dangerous — a query that errors gets fixed in thirty seconds, and a query that quietly answers the wrong question gets forwarded to your boss.
+
+## And a sorted query can still move
+
+Now the same defect one level down, in a query that *does* have an `ORDER BY`.
+
+"Our five cheapest lines, for the promotion":
+
+```sql file=./scripts/cheapest-5-tie.sql
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+ORDER BY "UnitPrice"
+LIMIT 5;
+```
+
+| ProductName | UnitPrice |
+| ----------- | --------: |
+| Guarana Fantastica | 4.5000 |
+| Filo Mix | 7.0000 |
+| Aniseed Syrup | 10.0000 |
+| **Scottish Longbreads** | **12.5000** |
+| **Gorgonzola Telino** | **12.5000** |
+
+Two products cost **exactly** 12.5000. Only one of them can be fifth, and **nothing in that query decides which.** The database picks; it is entitled to; and it may pick differently tomorrow.
+
+So the promotion list you send on Monday and the one you send on Tuesday can differ by a line, both correct, neither erroring. Somebody will eventually ask why a product was dropped, and there will be nothing to find.
+
+### The fix is a second sort key
+
+```sql file=./scripts/cheapest-5-tiebreak.sql
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+ORDER BY "UnitPrice", "ProductName"
+LIMIT 5;
+```
+
+| ProductName | UnitPrice |
+| ----------- | --------: |
+| Guarana Fantastica | 4.5000 |
+| Filo Mix | 7.0000 |
+| Aniseed Syrup | 10.0000 |
+| Gorgonzola Telino | 12.5000 |
+| Scottish Longbreads | 12.5000 |
+
+Read it left to right: **sort by price; where two prices are equal, sort those rows by name.** G before S, every run, on every engine.
+
+> **If the result is going to somebody, break the tie.** A second key costs six characters and makes the answer repeatable.
+
+## Two keys, doing what they were made for
+
+Tie-breaking is the defensive use. Here is the everyday one — a list a human is actually going to read.
+
+```sql file=./scripts/customers-by-country-then-name.sql
+SELECT "CompanyName", "Country"
+FROM "Customers"
+ORDER BY "Country", "CompanyName"
+LIMIT 8;
+```
+
+| CompanyName | Country |
+| ----------- | ------- |
+| Cactus Comidas para llevar | Argentina |
+| Ernst Handel | Austria |
+| Bon app' | France |
+| Du monde entier | France |
+| Alfreds Futterkiste | Germany |
+| Blauer See Delikatessen | Germany |
+| Die Wandernde Kuh | Germany |
+| Drachenblut Delikatessen | Germany |
+
+Country groups it; name orders each group. **The first key decides, and the second only gets a say when the first one ties.**
+
+Swap the two and you get a completely different report — every customer alphabetically, with countries scattered through it. Neither is wrong. They answer different questions, and the order of the keys is how you say which one you meant.
+
+## Where does "missing" go?
+
+Twenty-seven of Northwind's seventy-nine orders have no `"ShippedDate"`. They were placed and have never shipped. So when you sort by that column, the database has to put those twenty-seven **somewhere** — and this is the one place in this lesson where two correct engines disagree.
+
+```sql file=./scripts/recent-shipments.sql
+SELECT "OrderID", "CustomerID", "ShippedDate"
+FROM "Orders"
+ORDER BY "ShippedDate" DESC
+LIMIT 5;
+```
+
+**On DuckDB** you get the five most recent shipments: orders 6, 4, 79, 3, 78. Missing values sort last.
+
+**On PostgreSQL** you get five orders that have never shipped at all. PostgreSQL treats `NULL` as larger than any date, so `DESC` puts them first.
+
+Same query. Same data. One of those answers is a shipping report and the other is a backlog, and nothing on screen tells you which one you are holding.
+
+Neither engine is wrong — the SQL standard leaves the choice to the implementation. **The query never said where missing values belong.** So say it:
+
+```sql file=./scripts/recent-shipments-nulls-last.sql
+SELECT "OrderID", "CustomerID", "ShippedDate"
+FROM "Orders"
+ORDER BY "ShippedDate" DESC NULLS LAST
+LIMIT 5;
+```
+
+| OrderID | CustomerID | ShippedDate |
+| ------: | ---------- | ----------- |
+| 6 | AROUT | 2024-06-13 |
+| 4 | ALFKI | 2024-06-10 |
+| 79 | OTTIK | 2024-05-30 |
+| 3 | BERGS | 2024-05-25 |
+| 78 | MORGK | 2024-05-22 |
+
+Two words, and the answer stops depending on which database you happened to run it against. `NULLS FIRST` is the other half of the pair, for when "not done yet" is exactly what you are hunting for.
+
+**The habit worth forming: if the column you sort on can be empty, say where empty goes.**
+
+## The query that is actually worth running
+
+Put this lesson together with the last one and you can write something your company wants and probably does not have:
+
+```sql file=./scripts/unshipped-backlog.sql
+SELECT "OrderID", "CustomerID", "OrderDate"
+FROM "Orders"
+WHERE "ShippedDate" IS NULL
+ORDER BY "OrderDate"
+LIMIT 5;
+```
+
+| OrderID | CustomerID | OrderDate |
+| ------: | ---------- | --------- |
+| **8** | **ALFKI** | **2022-12-05** |
+| 11 | AROUT | 2022-12-26 |
+| 14 | BONAP | 2023-01-19 |
+| 17 | DUMON | 2023-02-12 |
+| 20 | FRANK | 2023-03-05 |
+
+`WHERE` keeps only the unshipped ones; `ORDER BY` puts the oldest at the top, where somebody will read it first. Order 8 was placed on the 5th of December 2022 and has never shipped.
+
+Note `IS NULL`, **not** `= NULL`. Missing needs its own test, and `= NULL` quietly matches nothing at all — lesson 45 explains why. For now, use `IS NULL` and trust it.
+
+## OFFSET: page two
+
+```sql file=./scripts/products-page-2.sql
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+ORDER BY "UnitPrice" DESC
+LIMIT 5 OFFSET 5;
+```
+
+| ProductName | UnitPrice |
+| ----------- | --------: |
+| Uncle Bobs Organic Dried Pears | 30.0000 |
+| Tofu | 23.2500 |
+| Chef Antons Cajun Seasoning | 22.0000 |
+| Queso Cabrales | 21.0000 |
+| Ravioli Angelo | 19.5000 |
+
+`OFFSET` skips rows you have already shown. Products six to ten — page two of a five-per-page price list.
+
+And it depends on everything above it: **`OFFSET` only means anything on top of a stable order.** If the sort leaves ties unbroken, page two can repeat a row from page one and silently drop another. That is the same defect as the top-five trap, arriving on the second screen instead of the first.
+
+## Two things worth knowing about, and not using
+
+**`ORDER BY 2`.** You will meet this in older code. The number is a position in your select list — `ORDER BY 2` means "the second column I selected". It works everywhere, and you should not write it: add a column to the front of your select list and the sort silently changes to something else. Name the column.
+
+**Sorting by a column you did not select.** `SELECT "ProductName" FROM "Products" ORDER BY "UnitPrice"` is legal and does what you expect. It is genuinely useful — right up until somebody reads the output and cannot see why it is in that order.
+
+## What you can do now
+
+For any table, and any request with "top", "latest", "biggest" or "worst" in it:
+
+1. **Decide what the order means** — which column, and which direction. Most requests mean `DESC`.
+2. **Add a second key if the first can tie**, whenever the result leaves your screen.
+3. **Say where `NULL` goes**, if the sort column can be empty.
+4. **Then cut** with `LIMIT` — never before, never instead.
+
+And one question to ask out loud whenever somebody says "the top ten": *top ten by what?* `ORDER BY` cannot be written until that is answered, which makes it the most useful question in the room.
+
+Next lesson: **aliases, expressions and `DISTINCT`** — because you can now sort and cut, but `?column?` is still sitting in your headings, and the output still does not look like a report.
+
+## The koans: now you write the queries
+
+Each koan is a tiny fill-in-the-blank exercise: a failing test with a `___` where the answer belongs. Fill it in, run it, watch red turn green — and the next one unlocks.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _15
+```
+
+On macOS or Linux, run `./zeus.sh koans learnsql series1 _15` from the same folder. The three arguments are course, series and episode.
+
+> **Says the lesson isn't there?** Your copy of DataZeus predates this lesson — run `.\zeus.bat update` (or `./zeus.sh update`) once to fetch the latest lessons, then run the command again. Koans you have already solved are kept.
+
+The file you edit is:
+
+```
+c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_15\OrderByAndTopNKoans.groovy
+```
+
+Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
+
+Ten koans, easiest first, in the order this lesson builds them: sort in both directions; keep the top few with `LIMIT` and then with `FETCH FIRST`; take the `ORDER BY` away and see what a "top five" becomes without it; break a tie; sort a list by two keys; put missing values where you want them; skip a page; and finally write a whole query from scratch. They run on DuckDB — a single file, no server to start.

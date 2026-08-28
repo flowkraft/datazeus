@@ -1,0 +1,74 @@
+# Flashcards for Learn SQL · Series 1 · 15 — ORDER BY, LIMIT & FETCH FIRST
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
+# tools/build-anki.py turns it into a .apkg with genanki.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds update the same deck (no duplicates).
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# THESE ARE CARDS, NOT LESSON EXTRACTS. Each one tests a thing you have to RECALL at
+# a keyboard — a rule, a default, a failure mode. The prose that explains WHY lives in
+# the lesson; a card that needs three sentences of context has not been written yet.
+#
+# NOTHING HERE DUPLICATES LESSON 07's DECK. Sorting is comparing, so the two lessons
+# touch the same mechanism — but 07 owns "what a type is and how it compares" and this
+# deck owns "what that does to a sorted list". The text-sort card below is deliberately
+# about the SORT, and points at a column, where 07's is about the comparison operator.
+
+deck: "DataZeus::Learn SQL::Series 1::15 ORDER BY and Top N"
+guid: "datazeus-learn-sql-series1-15-order-by-and-top-n"
+tags: ["datazeus", "learn-sql", "series-1", "sql"]
+
+cards:
+  - basic:
+      front: "You run a SELECT with no ORDER BY. What order do the rows come back in?"
+      back: "No promised order at all. A table is a set, not a spreadsheet — there is no row 1. The engine returns whatever was cheapest, and that can change with the data, the query, or the engine. The same Employees query returns Nancy/Andrew/Janet on DuckDB and Andrew/Janet/Nancy on PostgreSQL."
+
+  - cloze: "ORDER BY sorts {{c1::ascending}} when you do not say otherwise. The word for the other direction is {{c2::DESC}}."
+
+  # THE CARD THIS DECK EXISTS FOR. Phrased as the mistake, because that is how it will
+  # be met in the wild — someone hands you a query and you have to spot it in one read.
+  - basic:
+      front: "`SELECT \"ProductName\", \"UnitPrice\" FROM \"Products\" LIMIT 5;` was written to answer \"our five most expensive products\". What is wrong with it?"
+      back: "There is no ORDER BY, so it is not a top five — it is five rows, and which five is not promised. On Northwind it returns Chai, Chang, Aniseed Syrup, Chef Antons and Scottish Longbreads: the most expensive product (Thuringer Rostbratwurst, 123.79) is missing, and Aniseed Syrup at 10.00 is the third cheapest thing in the catalogue. No error is raised, which is why it survives review."
+
+  - cloze: "In a top-N query, {{c1::ORDER BY}} decides WHICH rows come back and {{c2::LIMIT}} decides HOW MANY. You need both, in that order."
+
+  - basic:
+      front: "Your \"five cheapest products\" query has an ORDER BY and still returns a different fifth row some days. Why, and what fixes it?"
+      back: "Two products cost exactly the same (12.5000), so the sort has a tie and nothing decides which one is fifth. Add a second sort key: `ORDER BY \"UnitPrice\", \"ProductName\"`. The rule: if the result is going to somebody, break the tie."
+
+  - basic:
+      front: "In `ORDER BY \"Country\", \"CompanyName\"`, what does the second key actually do?"
+      back: "Nothing, until the first key ties. Country decides the order; company name only orders the rows that share a country. Swap the two and you get a different report — every customer alphabetically with countries scattered through it."
+
+  - basic:
+      front: "LIMIT vs FETCH FIRST n ROWS ONLY — what is the difference?"
+      back: "Only which databases take them. FETCH FIRST is the SQL standard spelling and is what Oracle, IBM Db2 and SQL Server want; LIMIT is what PostgreSQL, MySQL, DuckDB and SQLite take, and what nearly everyone writes. Same result. Write LIMIT; recognise FETCH FIRST in other people's queries."
+
+  # The one genuine cross-engine gotcha in Series 1. Worth a card precisely because it
+  # cannot be reasoned out — you either know the defaults differ or you get bitten.
+  - basic:
+      front: "`ORDER BY \"ShippedDate\" DESC LIMIT 5` on Northwind returns different orders on DuckDB and PostgreSQL. Why?"
+      back: "27 of the 79 orders have never shipped, so ShippedDate is NULL on them, and the two engines put NULLs in different places: DuckDB sorts them last, PostgreSQL treats NULL as larger than any date and puts them first on DESC. Neither is wrong — the standard leaves it open. Say which you want: `DESC NULLS LAST`."
+
+  - cloze: "If the column you sort on can be empty, say where empty goes: {{c1::NULLS LAST}} or {{c2::NULLS FIRST}}. Otherwise the answer depends on the engine."
+
+  - basic:
+      front: "Why does sorting a column of amounts sometimes put the biggest number in the middle of the report?"
+      back: "Because the column is text, not a number. Text compares character by character like a dictionary, so '8010' sorts after '70563' — '8' beats '7' on the first character. Northwind's PostalCode shows it: Graz 8010 lands between Stuttgart 70563 and München 80805. When a sort surprises you, check the column's type first."
+
+  - basic:
+      front: "What does OFFSET do, and what does it quietly depend on?"
+      back: "It skips rows you have already shown — `LIMIT 5 OFFSET 5` is page two. It depends on a STABLE order: if the sort leaves ties unbroken, page two can repeat a row from page one and drop another. Same defect as a LIMIT with no ORDER BY, one screen later."
+
+  - basic:
+      front: "You will meet `ORDER BY 2` in old code. What does it mean, and should you write it?"
+      back: "The number is a position in the select list — the second column you selected. It works everywhere, and no: add a column to the front of the select list and the sort silently changes to something else. Name the column."
+
+  # PRODUCTION, not recall. The deck's last card should make you type something.
+  - basic:
+      front: "Write the query: the five oldest orders that have never shipped, showing OrderID, CustomerID and OrderDate."
+      back: "`SELECT \"OrderID\", \"CustomerID\", \"OrderDate\" FROM \"Orders\" WHERE \"ShippedDate\" IS NULL ORDER BY \"OrderDate\" LIMIT 5;` — IS NULL, never = NULL. On Northwind the oldest is order 8, placed 2022-12-05."
