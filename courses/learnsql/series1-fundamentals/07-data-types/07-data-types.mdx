@@ -98,11 +98,13 @@ LIMIT 3;
 
 | OrderID | OrderDate |
 | ------: | --------- |
-| 1 | 2024-03-15 |
-| 2 | 2024-04-05 |
-| 3 | 2024-05-20 |
+| 1 | 2024-03-15 00:00:00.000 |
+| 2 | 2024-04-05 00:00:00.000 |
+| 3 | 2024-05-20 00:00:00.000 |
 
-`"OrderDate"` is not the text `"2024-03-15"`. It is a point in time the database understands, which is why it knows March comes before April **without comparing letters**.
+**Look at what came back.** You asked for a date and got a time as well, down to the millisecond — because the catalog does not call this column a date, it calls it a **timestamp**: a point on a clock, not a day on a calendar. Nobody recorded a time of day for these orders, so each one sits at midnight.
+
+That is the whole section in one result. `"OrderDate"` is not the text `"2024-03-15"` — text has no midnight to show you. It is a point in time the database understands, which is why it knows March comes before April **without comparing letters**.
 
 Some people store dates as text anyway. That is a bad habit: you can no longer add thirty days to one, and the database will happily accept the **31st of February**.
 
@@ -212,6 +214,8 @@ LIMIT 4;
 | Chef Antons Cajun Seasoning | 53 | false |
 
 That last column is a **boolean** — it answers a yes-or-no question, so its value is either true or false for every product. All four here are false; only two of the twenty products are discontinued.
+
+**In CloudBeaver you will not see the word.** It draws a boolean as a checkbox: an empty box is false, a ticked one is true. Nothing is different about the data — `psql` prints the same value as `f`, and the DuckDB CLI prints `false`. Three tools, three renderings, one value. The type is what the database stores; how it appears is your client's decision.
 
 And then there is **`NULL`**, which you met as that empty `"Picture"` column. `NULL` means the value is **missing** — nobody ever recorded it. That is not the same as zero, and not the same as empty text: **a price of `0` is a real price; a price of `NULL` was never written down.**
 

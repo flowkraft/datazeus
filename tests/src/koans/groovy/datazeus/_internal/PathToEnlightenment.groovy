@@ -69,13 +69,41 @@ class PathToEnlightenment implements IGlobalExtension {
     private static final Map<String, String> hints = [:]
     private static final Map<String, Integer> lineNos = [:]
 
-    private static final List<String> ZEN = [
+    /* TWO LISTS, NOT ONE — and the split fixes a bug this shipped with.
+     *
+     * The closing line used to be picked as ZEN[done % ZEN.size()] from a single list holding
+     * both "keep going" lines and "you have finished" lines. Six entries, seeded by the number
+     * of koans passed, so at 9 of 10 the index landed on 3:
+     *
+     *     "You became a legendary Data Zeus!"
+     *
+     * printed directly under a screen that had just said "You have not yet reached
+     * enlightenment" and named the koan that failed. The learner is congratulated for
+     * finishing something they have not finished, which is worse than saying nothing — it
+     * tells them the runner is not paying attention. It went the other way too: completing
+     * all ten could close on "Don't go hunting for the answer", advice for somebody who is
+     * still working.
+     *
+     * Splitting the list makes the wrong line IMPOSSIBLE rather than unlikely. Anything
+     * congratulatory can only be reached from the branch where done == total.
+     *
+     * Both lists stay carrot, never stick: the walking ones are what to do next, not what
+     * went wrong. A red koan is a step on the path here, not a failure. */
+    private static final List<String> ZEN_WALKING = [
             "Real data, real questions. Become the Data Zeus.",
             "Don't go hunting for the answer — write a query and ask for it.",
             "A query you typed is worth a thousand you watched.",
-            "You became a legendary Data Zeus!",
-            "Small data, fits in your head. Real enough to ask anything.",
             "The rows you keep tell the truth. WHERE is your discipline.",
+    ]
+
+    /* Only ever printed when every koan is green. "Northwind" is NAMED here: the old line read
+     * "Small data, fits in your head. Real enough to ask anything." — true, and about a
+     * database the sentence never mentioned, so it read as a fortune cookie rather than an
+     * invitation to go and query the thing they just spent an hour learning on. */
+    private static final List<String> ZEN_ARRIVED = [
+            "You became a legendary Data Zeus!",
+            "Northwind is small enough to fit in your head, and real enough to ask anything.",
+            "Every koan green. Now go and ask this database something nobody has asked it yet.",
     ]
 
     void start() {}
@@ -188,7 +216,7 @@ class PathToEnlightenment implements IGlobalExtension {
         if (done == total) {
             o << "  " + GREEN + BOLD + "You have reached enlightenment." + RESET + "\n"
             o << "  " + GREEN + "Every koan is green - " + total + " of " + total + ". Well done.\n" + RESET
-            o << "\n  " + CYAN + zen(done) + RESET + "\n"
+            o << "\n  " + CYAN + zenArrived(done) + RESET + "\n"
         } else {
             o << "  " + BOLD + "You have not yet reached enlightenment ..." + RESET + "\n"
             if (currentKey) {
@@ -227,7 +255,7 @@ class PathToEnlightenment implements IGlobalExtension {
             }
             o << "\n      your path thus far  " + bar(done, total) + "  " +
                     BOLD + done + RESET + " of " + BOLD + total + RESET + " koans\n"
-            o << "\n  " + CYAN + zen(done) + RESET + "\n"
+            o << "\n  " + CYAN + zenWalking(done) + RESET + "\n"
         }
 
         String report = o.toString()
@@ -248,9 +276,10 @@ class PathToEnlightenment implements IGlobalExtension {
         return "[" + GREEN + ("#" * fill) + RESET + DIM + ("." * (width - fill)) + RESET + "]"
     }
 
-    private static String zen(int seed) {
-        return ZEN[Math.abs(seed) % ZEN.size()]
-    }
+    // Seeded by progress so the line varies as you advance — but only ever drawn from the
+    // list that matches where you actually are.
+    private static String zenWalking(int seed) { ZEN_WALKING[Math.abs(seed) % ZEN_WALKING.size()] }
+    private static String zenArrived(int seed) { ZEN_ARRIVED[Math.abs(seed) % ZEN_ARRIVED.size()] }
 
     /** "datazeus.learnsql.series1._00" -> "series1 _00 " (matches the koans.bat command). */
     private static String tag(String specName) {

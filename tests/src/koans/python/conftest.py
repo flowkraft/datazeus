@@ -151,13 +151,27 @@ _BOLD = _ESC + "[1m"
 _CYAN = _ESC + "[36m"
 _RESET = _ESC + "[0m"
 
-_ZEN = [
+# TWO LISTS, NOT ONE — mirrors PathToEnlightenment.groovy, and fixes the same bug there.
+# The closing line was indexed by progress out of a single list holding both "keep going" and
+# "you have finished" lines, so at 9 of 10 koans it landed on "You became a legendary Data
+# Zeus!" — printed directly beneath "You have not yet reached enlightenment" and the name of
+# the koan that failed. Congratulating somebody for finishing what they have not finished
+# reads as a runner that is not paying attention.
+# Splitting the lists makes the wrong line impossible rather than unlikely.
+_ZEN_WALKING = [
     "Real data, real questions. Become the Data Zeus.",
     "Don't go hunting for the answer — write a query and ask for it.",
     "A query you typed is worth a thousand you watched.",
-    "You became a legendary Data Zeus!",
-    "Small data, fits in your head. Real enough to ask anything.",
     "The rows you keep tell the truth. WHERE is your discipline.",
+]
+
+# Only reachable when every koan is green. Northwind is NAMED: the old line read "Small data,
+# fits in your head. Real enough to ask anything." — true, and about a database it never
+# mentioned, so it landed as a fortune cookie rather than an invitation to go and query it.
+_ZEN_ARRIVED = [
+    "You became a legendary Data Zeus!",
+    "Northwind is small enough to fit in your head, and real enough to ask anything.",
+    "Every koan green. Now go and ask this database something nobody has asked it yet.",
 ]
 
 _results = []          # [rel, koan_name, passed, hint_lines, def_line]
@@ -350,7 +364,7 @@ def _screen(host_root):
         o.append("  " + _GREEN + "Every koan is green - " + str(total) + " of " +
                  str(total) + ". Well done." + _RESET)
         o.append("")
-        o.append("  " + _CYAN + _ZEN[done % len(_ZEN)] + _RESET)
+        o.append("  " + _CYAN + _ZEN_ARRIVED[done % len(_ZEN_ARRIVED)] + _RESET)
         o.append("")
         return "\n".join(o)
 
@@ -373,7 +387,7 @@ def _screen(host_root):
     o.append("      your path thus far  " + _bar(done, total) + "  " +
              _BOLD + str(done) + _RESET + " of " + _BOLD + str(total) + _RESET + " koans")
     o.append("")
-    o.append("  " + _CYAN + _ZEN[done % len(_ZEN)] + _RESET)
+    o.append("  " + _CYAN + _ZEN_WALKING[done % len(_ZEN_WALKING)] + _RESET)
     o.append("")
     return "\n".join(o)
 
