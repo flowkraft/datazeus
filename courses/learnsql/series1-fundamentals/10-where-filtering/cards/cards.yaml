@@ -38,10 +38,10 @@ cards:
   - cloze: "Text goes in quotes, but a number in a WHERE test is written {{c1::bare, with no quotes around it}}. Quote it and you are comparing the column against {{c2::a piece of text}} instead of a number."
 
   - basic:
-      front: "WHERE \"Country\" = 'germany' returns zero rows on Northwind. Why — and why is there no error?"
+      front: "WHERE \"Country\" = 'germany' returns zero rows, though the table holds German customers. Why — and why is there no error?"
       back: "SQL text comparison is exact, capitals included: the column holds 'Germany'. An empty result is a valid answer, so nothing fails. A suspiciously empty filter → check spelling and case first. If those are right, the other cause is a column with nothing recorded in it: NULL never matches `=`, and needs `IS NULL` instead."
 
-  - cloze: "SQL's not-equal operator is spelled {{c1::<>}} in the standard — and every course database also accepts {{c2::!=}} as the same operator."
+  - cloze: "SQL's not-equal operator is spelled {{c1::<>}} in the ANSI standard — and every course database also accepts {{c2::!=}} as the same operator."
 
   - cloze: "Each {{c1::AND}} makes a result NARROWER (both tests must pass); each {{c2::OR}} makes it WIDER (either test is enough)."
 
@@ -53,8 +53,8 @@ cards:
   # how a deck ends up testing a lesson it only half covers. It is deliberately about the
   # PAIRING with parentheses, because that is the part people get wrong.
   - basic:
-      front: "How do you keep every row that is neither a beverage nor a condiment, in one test?"
-      back: "Wrap the test and flip the whole group: WHERE NOT (\"CategoryID\" = 1 OR \"CategoryID\" = 2). NOT applies to what follows it, so without the brackets it would negate only the first comparison."
+      front: "A test keeps rows matching either of two conditions. How do you keep exactly the rows matching NEITHER — and what is the trap?"
+      back: "Put NOT in front of the whole group, in brackets: WHERE NOT (condition1 OR condition2). NOT applies only to what immediately follows it, so without the brackets you negate condition1 alone and silently get a different answer."
 
   - basic:
       front: "You wrote \"Country\" = 'Mexico' OR \"Country\" = 'Venezuela' OR \"Country\" = 'Argentina'. What's the cleaner way?"

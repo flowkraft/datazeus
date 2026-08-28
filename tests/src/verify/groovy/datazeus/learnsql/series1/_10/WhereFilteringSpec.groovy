@@ -23,7 +23,14 @@ import spock.lang.Unroll
  *   13. orders-june-2024            — the half-open date habit: >= first AND < next = 4
  *   14. products-like-ch            — LIKE 'Ch%': 3 products start with Ch
  *
- * The learner-facing version, with the queries blanked to ___, is WhereFilteringKoans.
+ * PLUS three claims the lesson makes that no script covers, and which were unproved until
+ * 2026-08-28: that "Products" really holds 20 rows (the denominator behind "14 of the 20"
+ * and "two of the twenty"), that the ELEVEN German companies on screen are exactly the right
+ * eleven and not just the first and last, and that LIKE is case-exact so a lowercase 'ch%'
+ * matches nothing.
+ *
+ * The learner-facing version, with the queries blanked to ___, is WhereFilteringKoans —
+ * THIRTEEN koans, which practise the same ideas in the same order on different questions.
  *
  * Convention: the spec runs the SAME *.sql files the lesson/video show, so the SQL is
  * authored in exactly one place (the lesson's scripts/) and verified here — no drift.
@@ -60,6 +67,23 @@ class WhereFilteringSpec extends NorthwindGateSpec {
         rows.first().City == "Berlin"
         rows.last().CompanyName == "Die Wandernde Kuh"
         rows.last().City == "Stuttgart"
+
+        where:
+        engine << ENGINES
+    }
+
+    // ALL ELEVEN, not just the ends. The video puts every one of these on screen, so every
+    // one of them is a claim. Compared as a SET: row ORDER is not guaranteed without an
+    // ORDER BY, and this lesson has not taught one yet.
+    @Unroll
+    def "[#engine] the eleven German customers are exactly the eleven the lesson lists"() {
+        expect:
+        sqlFor(engine).rows(script("customers-germany"))*.CompanyName.toSet() == [
+                "Alfreds Futterkiste", "Blauer See Delikatessen", "Drachenblut Delikatessen",
+                "Frankenversand", "Königlich Essen", "Lehmanns Marktstand",
+                "Morgenstern Gesundkost", "Ottilies Käseladen", "QUICK-Stop",
+                "Toms Spezialitäten", "Die Wandernde Kuh",
+        ].toSet()
 
         where:
         engine << ENGINES
@@ -171,6 +195,17 @@ class WhereFilteringSpec extends NorthwindGateSpec {
 
     // --- 8. NOT flips a whole (parenthesized) test ----------------------------------------
 
+    // THE DENOMINATOR. The lesson says 'fourteen of the twenty' and 'only two of the twenty
+    // products' - both are claims about the size of the table, and neither was proved.
+    @Unroll
+    def "[#engine] the Products table holds 20 rows, the denominator the lesson quotes"() {
+        expect:
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Products"').n == 20
+
+        where:
+        engine << ENGINES
+    }
+
     @Unroll
     def "[#engine] NOT (beverages OR condiments) keeps the other 14 of the 20 products"() {
         expect:
@@ -271,6 +306,17 @@ class WhereFilteringSpec extends NorthwindGateSpec {
         expect:
         sqlFor(engine).rows(script("products-like-ch"))*.ProductName ==
                 ["Chai", "Chang", "Chef Antons Cajun Seasoning"]
+
+        where:
+        engine << ENGINES
+    }
+
+    // CASE-EXACT, which Leo asserts on screen (lowercase ch-percent would find nothing).
+    // Same rule as the 'germany' case above, on the other text operator.
+    @Unroll
+    def "[#engine] LIKE is case-exact: lowercase ch% matches nothing"() {
+        expect:
+        sqlFor(engine).rows('SELECT "ProductName" FROM "Products" WHERE "ProductName" LIKE \'ch%\'').isEmpty()
 
         where:
         engine << ENGINES

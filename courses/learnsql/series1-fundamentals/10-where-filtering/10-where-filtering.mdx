@@ -29,7 +29,7 @@ kind of test.
 
 Every query below runs on the Northwind sample database that ships with DataPallas.
 
-**Open the koans before you read on.** There is a koan for every idea in this lesson — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
+**Open the koans before you read on.** Thirteen of them, following this lesson's ideas in the same order — each one a query with something missing for you to supply. Keep them open in a second window and do the next one as each idea lands; you remember what you type, and you forget what you read.
 
 ```powershell
 cd c:/DataPallas/db/datazeus
@@ -112,7 +112,7 @@ WHERE "Country" <> 'Germany';
 Fourteen rows — and eleven Germans plus fourteen others is the whole table again. That add-up
 check takes two seconds in your head and it catches real mistakes. You will also see `!=` in
 other people's queries: it is **the same operator**, and every database in this course accepts
-both. `<>` is the standard spelling.
+both. `<>` is the standard ANSI spelling.
 
 ## Numbers stand alone — no quotes
 
@@ -393,11 +393,11 @@ c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_10\W
 
 Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
 
-Twelve koans, one per idea in this lesson and in the same order: keep rows with `=`, flip it with `<>`, compare a number, narrow with `AND`, tame `OR` with parentheses, test against a list with `IN` and `NOT IN`, keep a range with `BETWEEN` and then without its ends, build the date habit, match a pattern with `LIKE`, then write a whole filtered query from scratch. They run on DuckDB — a single file, no server to start.
+Thirteen koans, following this lesson's ideas in the same order. They are **not** the queries above — they ask the same idea of a different question, which is the point: you write the SQL rather than retyping it. In order: keep rows with `=`, flip it with `<>`, compare a number, narrow with `AND`, tame `OR` with parentheses, flip a whole group with `NOT`, test against a list with `IN` and `NOT IN`, keep a range with `BETWEEN` and then without its ends, build the date habit, match a pattern with `LIKE`, then write a whole filtered query from scratch. They run on DuckDB — a single file, no server to start.
 
 ---
 
 ## 🧪 Practice & remember
 
-- **Koans** — twelve exercises on this lesson's queries. From the datazeus folder, run `./zeus.sh koans learnsql series1 _10` (or `.\zeus.bat koans learnsql series1 _10` on Windows). That's course · series · episode, the package `datazeus.learnsql.series1._10`.
+- **Koans** — thirteen exercises on this lesson's ideas. From the datazeus folder, run `./zeus.sh koans learnsql series1 _10` (or `.\zeus.bat koans learnsql series1 _10` on Windows). That's course · series · episode, the package `datazeus.learnsql.series1._10`.
 - **Scripts** — every query above lives in `…/10-where-filtering/scripts/` as `customers-germany.sql`, `customers-germany-lowercase.sql`, `customers-not-germany.sql`, `products-under-ten.sql`, `products-cheap-beverages.sql`, `products-trap-no-parens.sql`, `products-parens-fix.sql`, `products-not-bev-cond.sql`, `customers-in-list.sql`, `customers-not-in-list.sql`, `products-between.sql`, `products-strict-range.sql`, `orders-june-2024.sql` and `products-like-ch.sql`.

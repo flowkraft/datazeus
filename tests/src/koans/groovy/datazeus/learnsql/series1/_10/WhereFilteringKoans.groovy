@@ -17,10 +17,12 @@ import spock.lang.Stepwise
  * first (that's the skill) — if it comes back wrong, the hint shows what your query
  * returned vs what it should, so you can fix the SQL, not guess a value.
  *
- * Twelve koans, one per idea in the lesson and in the same order: keep rows with =,
- * flip it with <>, compare a number, narrow with AND, tame OR with parentheses, test
- * against a list with IN and NOT IN, keep a range with BETWEEN and then without its
- * ends, build the date habit, match a pattern with LIKE, then write a whole
+ * Thirteen koans, following the lesson's ideas in the same order. They are NOT the same
+ * queries the video shows — they practise the same idea on a different question, which is
+ * the point: you write the SQL rather than retyping it. In order: keep rows with =, flip it
+ * with <>, compare a number, narrow with AND, tame OR with parentheses, flip a whole group
+ * with NOT, test against a list with IN and NOT IN, keep a range with BETWEEN and then
+ * without its ends, build the date habit, match a pattern with LIKE, then write a whole
  * filtered query yourself.
  *
  * Tip: every query here also runs in CloudBeaver against the real Northwind —
@@ -114,7 +116,19 @@ class WhereFilteringKoans extends KoanBase {
         '''
     }
 
-    // 6) One test against a whole list: IN. Name the three countries — Mexico,
+    // 6) NOT turns a test inside out. It applies to whatever FOLLOWS it, so to flip a whole
+    //    group you must wrap the group first — without the brackets you would negate only the
+    //    first comparison and quietly get a different answer. Keep every product that is
+    //    neither a beverage (category 1) nor a condiment (category 2).
+    def "everything except beverages and condiments"() {
+        expect:
+        shouldReturn 14, '''
+            SELECT count(*) FROM "Products"
+            WHERE ___ ("CategoryID" = 1 OR "CategoryID" = 2)
+        '''
+    }
+
+    // 7) One test against a whole list: IN. Name the three countries — Mexico,
     //    Venezuela and Argentina — that together keep five customers.
     //    (Each value in its own 'single quotes', separated by commas.)
     def "customers in any of three countries"() {
@@ -125,7 +139,7 @@ class WhereFilteringKoans extends KoanBase {
         '''
     }
 
-    // 7) And the flip side — everyone the list does NOT name. Two words this time.
+    // 8) And the flip side — everyone the list does NOT name. Two words this time.
     def "customers in none of those countries"() {
         expect:
         shouldReturn 20, '''
@@ -134,7 +148,7 @@ class WhereFilteringKoans extends KoanBase {
         '''
     }
 
-    // 8) A range in one word — and BOTH ends are included. Aniseed Syrup costs
+    // 9) A range in one word — and BOTH ends are included. Aniseed Syrup costs
     //    exactly 10.0000: does it make the cut? Predict, then run.
     def "prices from ten to twenty, ends included"() {
         expect:
@@ -144,7 +158,7 @@ class WhereFilteringKoans extends KoanBase {
         '''
     }
 
-    // 9) The same range with the ends EXCLUDED — no BETWEEN this time, two strict
+    // 10) The same range with the ends EXCLUDED — no BETWEEN this time, two strict
     //    comparisons. Aniseed Syrup at exactly 10.0000 drops out: nine become eight.
     def "the same range, ends excluded"() {
         expect:
@@ -154,7 +168,7 @@ class WhereFilteringKoans extends KoanBase {
         '''
     }
 
-    // 10) The date habit, straight from episode 00 — and now you can read every
+    // 11) The date habit, straight from episode 00 — and now you can read every
     //     character of it: greater-or-equal the FIRST day, and strictly before the
     //     first day of the NEXT month. Which operator finishes the June query?
     def "orders placed in June 2024"() {
@@ -166,7 +180,7 @@ class WhereFilteringKoans extends KoanBase {
         '''
     }
 
-    // 11) LIKE matches text patterns; % stands for "anything from here". Write the
+    // 12) LIKE matches text patterns; % stands for "anything from here". Write the
     //     pattern (in 'single quotes') that keeps products STARTING WITH Ch.
     def "products whose name starts with Ch"() {
         expect:
@@ -176,7 +190,7 @@ class WhereFilteringKoans extends KoanBase {
         ''')
     }
 
-    // 12) The whole query — no scaffolding. Write the WHOLE query: name and price of every
+    // 13) The whole query — no scaffolding. Write the WHOLE query: name and price of every
     //     product that costs more than 90. (Two luxury items, one of them a sausage.)
     def "write it yourself: the luxury shelf"() {
         expect:
