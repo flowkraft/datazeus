@@ -108,7 +108,12 @@ class WhereFilteringSpec extends NorthwindGateSpec {
         rows.size() == 2
         rows*.ProductName == ["Filo Mix", "Guarana Fantastica"]
 
-        and: "the prices print with the type's four decimals, as episode 05 explained"
+        // THE STORED VALUE, which is what JDBC hands back and what this asserts: "UnitPrice"
+        // is DECIMAL(19,4), so every price carries four decimal places. The LESSON and the
+        // VIDEO both show 7 and 4.5, because CloudBeaver trims the trailing zeros and
+        // CloudBeaver is the client they tell the learner to open. Same value, different
+        // rendering — episode 07 explains it, and this line is not in conflict with them.
+        and: "the prices carry the type's four decimals"
         rows*.UnitPrice*.toString() == ["7.0000", "4.5000"]
 
         where:

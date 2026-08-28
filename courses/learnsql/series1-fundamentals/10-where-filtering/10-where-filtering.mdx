@@ -6,16 +6,26 @@ tags: ["sql", "fundamentals", "where", "filtering"]
 level: "beginner"
 module: "series1-fundamentals"
 order: 10
-date: "2026-08-03"
+date: "2026-08-28"
 published: true
 videoId: "learnsql-series1-10-where-filtering"
 ---
 
 ## The situation this lesson prepares you for
 
-Your boss asks: "which of our customers are in Germany?" You know how to read the customers table — that was the previous lesson — but `SELECT "CompanyName", "City" FROM "Customers"` hands you **all twenty-five customers**, and now you are scanning the Country column with your finger like it's a phone book.
+Last lesson ended on a promise: every condition you write in `WHERE` is a comparison, so
+everything you learned about types is about to matter. Here is where it pays.
 
-The database should do that scanning, not you. That is what `WHERE` is: a test, applied to **every row**. Rows that pass come back; rows that fail are thrown away. Every operator in this lesson — `=`, `<>`, `AND`, `OR`, `NOT`, `IN`, `BETWEEN`, `LIKE` — is just a different kind of test.
+Your boss asks: "which of our customers are in Germany?" You know how to read the customers
+table — `SELECT "CompanyName", "City" FROM "Customers"` — but that hands you **all twenty-five
+customers**, and now you are reading down the Country column with your finger like it is a
+phone book. Twenty-five rows you would survive. Twenty-five thousand and you are there all
+week.
+
+The database should do that scanning, not you. That is what `WHERE` is: a test, applied to
+**every row**. Rows that pass come back; rows that fail are thrown away. Every operator in
+this lesson — `=`, `<>`, `AND`, `OR`, `NOT`, `IN`, `BETWEEN`, `LIKE` — is just a different
+kind of test.
 
 Every query below runs on the Northwind sample database that ships with DataPallas.
 
@@ -30,7 +40,7 @@ cd c:/DataPallas/db/datazeus
 
 `WHERE` goes right after `FROM`, and the test reads almost like English:
 
-```sql
+```sql file=./scripts/customers-germany.sql
 SELECT "CompanyName", "City"
 FROM "Customers"
 WHERE "Country" = 'Germany';
@@ -50,27 +60,41 @@ WHERE "Country" = 'Germany';
 | Toms Spezialitäten | Münster |
 | Die Wandernde Kuh | Stuttgart |
 
-Eleven rows out of twenty-five. The other fourteen customers still exist — the filter did not touch the table, it only decided what came back to you. That distinction matters: **`WHERE` shapes the answer, never the data.**
+Eleven rows out of twenty-five. The other fourteen customers still exist — the filter did not
+touch the table, it only decided what came back to you. That distinction matters: **`WHERE`
+shapes the answer, never the data.**
 
-Notice the quotes, because they are doing two different jobs: `"Country"` in **double** quotes is the name of a column, `'Germany'` in **single** quotes is a text **value**. That is the rule from last lesson, and `WHERE` is where you will use it constantly — every text value you compare against goes in single quotes.
+Notice the quotes doing two different jobs: `"Country"` in **double** quotes is the name of a
+column, `'Germany'` in **single** quotes is a text **value**. You met that rule in the `SELECT`
+lesson; `WHERE` is where you will use it constantly, because every text value you compare
+against goes in single quotes.
 
 ## Text comparisons are exact
 
 Try the same query with `'germany'`:
 
-```sql
+```sql file=./scripts/customers-germany-lowercase.sql
 SELECT "CompanyName", "City"
 FROM "Customers"
 WHERE "Country" = 'germany';
 ```
 
-**Zero rows.** No error, no warning — just an empty result, because no row's Country is exactly `germany` with a small g. SQL compares text character by character, capitals included. When a filter comes back suspiciously empty, the value's spelling and case are the first things to check.
+**Zero rows.** No error, no warning — just an empty result, because no row's Country is
+exactly `germany` with a small g. SQL compares text character by character, capitals included.
+
+So when a filter comes back suspiciously empty, **check the value's spelling and case first.**
+That is the usual cause.
+
+There is one other, and it is worth knowing the name of now even though it gets a lesson of
+its own later in this series: a column with **nothing recorded in it** never matches `=`. Not
+even `= NULL`. You test for that with `IS NULL`. Park the two words for now — if the spelling
+and the capitals are right and the result is still empty, that is where to look next.
 
 ## Not equal: `<>`
 
 The opposite test — everyone who is *not* in Germany:
 
-```sql
+```sql file=./scripts/customers-not-germany.sql
 SELECT "CompanyName", "Country"
 FROM "Customers"
 WHERE "Country" <> 'Germany';
@@ -85,13 +109,16 @@ WHERE "Country" <> 'Germany';
 | Bon app' | France |
 | … | … |
 
-Fourteen rows — eleven Germans plus fourteen others is the whole table again, which is a quick sanity check worth doing in your head. You will also see `!=` in other people's queries: it is **the same operator**, and every database in this course accepts both. `<>` is the standard spelling.
+Fourteen rows — and eleven Germans plus fourteen others is the whole table again. That add-up
+check takes two seconds in your head and it catches real mistakes. You will also see `!=` in
+other people's queries: it is **the same operator**, and every database in this course accepts
+both. `<>` is the standard spelling.
 
 ## Numbers stand alone — no quotes
 
 Text needs quotes; numbers do not. Products cheaper than 10:
 
-```sql
+```sql file=./scripts/products-under-ten.sql
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 WHERE "UnitPrice" < 10;
@@ -99,18 +126,30 @@ WHERE "UnitPrice" < 10;
 
 | ProductName | UnitPrice |
 | ----------- | --------: |
-| Filo Mix | 7.0000 |
-| Guarana Fantastica | 4.5000 |
+| Filo Mix | 7 |
+| Guarana Fantastica | 4.5 |
 
-Two of the twenty products. Writing `'10'` in quotes would ask the database to compare a price against a piece of text — some engines forgive it, some refuse; none of them like it. **If the column holds numbers, compare it with a number.** (The four decimal places are `UnitPrice`'s `DECIMAL(10,4)` type talking — last lesson explained those.)
+Two of the twenty products. Writing `'10'` in quotes would ask the database to compare a price
+against a piece of text — which is exactly the trap the last lesson ended on, where `'9' > '10'`
+comes back true. **If the column holds numbers, compare it with a number.**
 
-The comparison family is what you would expect: `<`, `>`, `<=`, `>=`, and they work on numbers, text and dates alike.
+The comparison family is what you would expect: `<`, `>`, `<=`, `>=`, and they work on numbers,
+text and dates alike.
 
-## AND: every test must pass
+<Callout>
+`"UnitPrice"` is a decimal column — PostgreSQL calls it `numeric`, DuckDB calls it
+`DECIMAL(19,4)` — so the stored value really is `4.5000`, with four places after the point.
+CloudBeaver trims the trailing zeros and shows `4.5`, which is what the tables on this page
+show; the DuckDB CLI and `psql` print `4.5000`. Same value, different display — the previous
+lesson has the whole story.
+</Callout>
 
-Chain two tests with `AND` and a row must pass **both**. Cheap beverages — category 1 is Beverages, straight from the Categories table you printed last lesson:
+## AND narrows, OR widens
 
-```sql
+Chain two tests with `AND` and a row must pass **both**. Cheap beverages — category 1 is
+Beverages, straight from the Categories table you printed two lessons ago:
+
+```sql file=./scripts/products-cheap-beverages.sql
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 WHERE "CategoryID" = 1
@@ -119,15 +158,21 @@ WHERE "CategoryID" = 1
 
 | ProductName | UnitPrice |
 | ----------- | --------: |
-| Guarana Fantastica | 4.5000 |
+| Guarana Fantastica | 4.5 |
 
-One row. Three products are beverages, two products are under 10 — but only Guarana Fantastica is both. **Each `AND` narrows the result further.** `OR` does the opposite: a row passes if **either** side passes, so each `OR` widens the result.
+One row. Three products are beverages, two products are under 10 — but only Guarana Fantastica
+is both. **Each `AND` you add makes the answer smaller.** `OR` does the opposite: a row passes
+if **either** side passes, so each `OR` makes it bigger.
+
+Hold on to both of those, because the next section is about what happens when they meet.
 
 ## The trap: AND grabs before OR
 
-Now the one thing in this lesson that silently produces wrong answers in real reports. Say the requirement is: *"beverages or condiments, under 15"*. The obvious translation looks right and is wrong:
+This is the one thing in this lesson that silently produces wrong answers in real reports. Say
+the requirement is: *"beverages or condiments, under 15"*. The obvious translation looks right
+and is wrong:
 
-```sql
+```sql file=./scripts/products-trap-no-parens.sql
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 WHERE "CategoryID" = 1 OR "CategoryID" = 2 AND "UnitPrice" < 15;
@@ -135,20 +180,26 @@ WHERE "CategoryID" = 1 OR "CategoryID" = 2 AND "UnitPrice" < 15;
 
 | ProductName | UnitPrice |
 | ----------- | --------: |
-| Chai | 18.0000 |
-| Chang | 19.0000 |
-| Aniseed Syrup | 10.0000 |
-| Guarana Fantastica | 4.5000 |
+| Chai | 18 |
+| Chang | 19 |
+| Aniseed Syrup | 10 |
+| Guarana Fantastica | 4.5 |
 
-Four rows — and look at the prices: **Chai at 18 and Chang at 19 are over the cap you asked for.** Nothing failed, no error was raised, the result simply answers a different question. SQL evaluates `AND` before `OR` (the same way arithmetic does `×` before `+`), so the engine read your test as:
+Four rows — and look at the prices: **Chai at 18 and Chang at 19 are over the cap you asked
+for.** Nothing failed, no error was raised, the query is perfectly legal. It simply answers a
+different question from the one you asked it.
+
+SQL evaluates `AND` before `OR`, the same way arithmetic does `×` before `+`, so the engine
+read your test as:
 
 ```
 "CategoryID" = 1   OR   ("CategoryID" = 2 AND "UnitPrice" < 15)
 ```
 
-Every beverage got in free, at any price. Parentheses say what you actually meant:
+Your `OR` ended up owning only the condiments half, and every beverage walked in free at any
+price. Parentheses say what you actually meant:
 
-```sql
+```sql file=./scripts/products-parens-fix.sql
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 WHERE ("CategoryID" = 1 OR "CategoryID" = 2)
@@ -157,43 +208,47 @@ WHERE ("CategoryID" = 1 OR "CategoryID" = 2)
 
 | ProductName | UnitPrice |
 | ----------- | --------: |
-| Aniseed Syrup | 10.0000 |
-| Guarana Fantastica | 4.5000 |
+| Aniseed Syrup | 10 |
+| Guarana Fantastica | 4.5 |
 
-Two rows, every price under 15. The rule to carry away is not the precedence table — it is: **the moment one `WHERE` mixes `AND` with `OR`, parenthesize.** Even when the default happens to be right, the parentheses tell the next reader (and future you) what was intended.
+Two rows, every price under 15. The rule to carry away is not the precedence table — it is:
+**the moment one `WHERE` mixes `AND` with `OR`, parenthesize.** Even when the default happens
+to be right, because the next person to read it cannot tell that you checked.
 
 ## NOT flips a test
 
 `NOT` turns a test inside out, and it pairs naturally with parentheses — flip the whole group:
 
-```sql
+```sql file=./scripts/products-not-bev-cond.sql
 SELECT count(*)
 FROM "Products"
 WHERE NOT ("CategoryID" = 1 OR "CategoryID" = 2);
 ```
 
-The answer is **14**: everything except the beverages and condiments, 14 of the 20 products. (`count(*)` just counts the surviving rows instead of printing them — aggregates get their own lesson soon.)
+The answer is **14**: everything except the beverages and condiments, 14 of the 20 products.
+(`count(*)` just counts the surviving rows instead of printing them — aggregates get their own
+lesson soon.)
 
 ## Your turn, before we go on
 
-Run these two in CloudBeaver, predicting each count before you hit Run:
+Run the fixed query in CloudBeaver, and then **take the parentheses out and run it again**:
 
 ```sql
-SELECT count(*) FROM "Customers" WHERE "Country" = 'Germany';
-
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 WHERE ("CategoryID" = 1 OR "CategoryID" = 2)
   AND "UnitPrice" < 15;
 ```
 
-Then change something — a country, the price cap, drop the parentheses and watch Chai sneak back in. Breaking a query on purpose is the fastest way to trust it.
+Two rows become four, and Chai walks straight back in at 18. Breaking a query on purpose, and
+watching the bug arrive under your own hands, is the fastest way to remember where it lives.
 
 ## IN: one test against a list
 
-"Customers in Mexico, Venezuela or Argentina" could be three `=` tests glued with `OR`. `IN` says it in one breath:
+"Customers in Mexico, Venezuela or Argentina" could be three `=` tests glued with `OR`. `IN`
+says it in one breath:
 
-```sql
+```sql file=./scripts/customers-in-list.sql
 SELECT "CompanyName", "Country"
 FROM "Customers"
 WHERE "Country" IN ('Mexico', 'Venezuela', 'Argentina');
@@ -209,19 +264,21 @@ WHERE "Country" IN ('Mexico', 'Venezuela', 'Argentina');
 
 Five customers. And the flip side, `NOT IN`, keeps everyone the list does not name:
 
-```sql
+```sql file=./scripts/customers-not-in-list.sql
 SELECT count(*)
 FROM "Customers"
 WHERE "Country" NOT IN ('Mexico', 'Venezuela', 'Argentina');
 ```
 
-**20** — twenty-five minus the five above. The moment you catch yourself writing the same column with `= … OR … = … OR … =`, that is `IN` asking to be used.
+**20** — twenty-five minus the five above. The moment you catch yourself writing the same
+column with `= … OR … = … OR … =`, that is `IN` asking to be used.
 
 ## BETWEEN keeps a range — and includes both ends
 
-Products priced from 10 to 20:
+Products priced from 10 to 20. Before you run it: Aniseed Syrup costs **exactly 10**. Is it in
+or out?
 
-```sql
+```sql file=./scripts/products-between.sql
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 WHERE "UnitPrice" BETWEEN 10 AND 20;
@@ -229,47 +286,59 @@ WHERE "UnitPrice" BETWEEN 10 AND 20;
 
 | ProductName | UnitPrice |
 | ----------- | --------: |
-| Chai | 18.0000 |
-| Chang | 19.0000 |
-| Aniseed Syrup | 10.0000 |
-| Scottish Longbreads | 12.5000 |
-| Boston Crab Meat | 18.4000 |
-| Gorgonzola Telino | 12.5000 |
-| Genen Shouyu | 15.5000 |
-| Pavlova | 17.4500 |
-| Ravioli Angelo | 19.5000 |
+| Chai | 18 |
+| Chang | 19 |
+| Aniseed Syrup | 10 |
+| Scottish Longbreads | 12.5 |
+| Boston Crab Meat | 18.4 |
+| Gorgonzola Telino | 12.5 |
+| Genen Shouyu | 15.5 |
+| Pavlova | 17.45 |
+| Ravioli Angelo | 19.5 |
 
-Nine rows — and look at Aniseed Syrup: **exactly 10.0000, and it is in.** `BETWEEN 10 AND 20` means `>= 10 AND <= 20`; both ends are included, always. If you want the ends *out*, say so with strict comparisons:
+Nine rows, and **Aniseed Syrup is in.** `BETWEEN 10 AND 20` means `>= 10 AND <= 20`; both ends
+are included, always, on every database you will meet. If you want the ends *out*, say so with
+strict comparisons:
 
-```sql
+```sql file=./scripts/products-strict-range.sql
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 WHERE "UnitPrice" > 10
   AND "UnitPrice" < 20;
 ```
 
-Eight rows now — Aniseed Syrup, sitting exactly on the boundary, dropped out. Neither query is more correct; they answer different questions. The skill is noticing that a row can sit **on** an end, and deciding on purpose whether it belongs.
+Eight rows now — Aniseed Syrup, sitting exactly on the boundary, dropped out. Neither query is
+more correct; they answer different questions. The skill is noticing that a row can sit **on**
+an end, and deciding on purpose whether it belongs. Nobody reading the finished report would
+ever spot the difference.
 
 ## The date habit that never miscounts a month
 
 Back in episode 00 you ran a query on faith. Now you can read every character of it:
 
-```sql
+```sql file=./scripts/orders-june-2024.sql
 SELECT count(*)
 FROM "Orders"
 WHERE "OrderDate" >= DATE '2024-06-01'
   AND "OrderDate" <  DATE '2024-07-01';
 ```
 
-**4** — the same four June orders as your very first query. The shape is called a **half-open range**: greater-or-equal the first day, strictly **before** the first day of the *next* month.
+**4** — the same four June orders as your very first query. The shape is called a **half-open
+range**: greater-or-equal the first day, strictly **before** the first day of the *next* month.
 
-Why not `BETWEEN DATE '2024-06-01' AND DATE '2024-06-30'`? On this data it happens to return 4 as well — every Northwind order lands exactly at midnight. But `OrderDate` is a **timestamp**, and an order stamped `2024-06-30 14:00` is *after* `2024-06-30 00:00` — `BETWEEN` would silently drop it. The half-open shape has no such edge: it works for dates and timestamps alike, for 28-, 30- and 31-day months, with no leap-year thinking. **Make `>= first, < next` your reflex for every date range you ever write.**
+Why not `BETWEEN DATE '2024-06-01' AND DATE '2024-06-30'`? On this data it happens to return 4
+as well — every Northwind order lands exactly at midnight. But `OrderDate` is a **timestamp**,
+and an order stamped `2024-06-30 14:00` is *after* midnight on the thirtieth, so `BETWEEN`
+would silently drop it. The half-open shape has no such edge: it works for dates and timestamps
+alike, for 28-, 30- and 31-day months, with no leap-year thinking. **Make `>= first, < next`
+your reflex for every date range you ever write.**
 
 ## LIKE: a taste of patterns
 
-One more test belongs in the family. `LIKE` compares text against a **pattern**, where `%` stands for "anything here":
+One more test belongs in the family. `LIKE` compares text against a **pattern**, where `%`
+stands for "anything here":
 
-```sql
+```sql file=./scripts/products-like-ch.sql
 SELECT "ProductName"
 FROM "Products"
 WHERE "ProductName" LIKE 'Ch%';
@@ -281,28 +350,38 @@ WHERE "ProductName" LIKE 'Ch%';
 | Chang |
 | Chef Antons Cajun Seasoning |
 
-`'Ch%'` reads: starts with `Ch`, then anything. Put `%` on both sides — `'%an%'` — and it means *contains*. Like every text comparison it is case-exact: `'ch%'` finds nothing here. Patterns go deeper than this (there is also `_` for exactly one character), but `%` at the start, end or both covers most of what you will reach for.
+`'Ch%'` reads: starts with `Ch`, then anything. Put `%` on both sides — `'%an%'` — and it means
+*contains*. Like every text comparison it is case-exact: `'ch%'` finds nothing here. Patterns
+go deeper than this (there is also `_` for exactly one character), but `%` at the start, end or
+both covers most of what you will reach for.
 
 ## What you can do now
 
-Given any table, you can now answer a question instead of printing the table:
+This morning you could **print** a table. Now you can **question** one:
 
 1. One test: `WHERE "Country" = 'Germany'` — text in 'single quotes', numbers bare.
 2. Combined tests: `AND` narrows, `OR` widens — **and parentheses the moment they mix**.
 3. A list: `IN ('A', 'B', 'C')`, and `NOT IN` for the complement.
 4. A range: `BETWEEN` (ends in) or `> … AND < …` (ends out) — decide on purpose.
 5. Dates: `>= first day, < first day of next` — every time.
+6. A pattern: `LIKE 'Ch%'`, and `'%an%'` for *contains*.
 
-Next lesson: putting the survivors in order and keeping the top of the list, with `ORDER BY` and `LIMIT` — who is your #1 customer?
+Next lesson: putting the survivors in order and keeping the top of the list, with `ORDER BY`
+and `LIMIT` — who is your #1 customer?
 
 ## The koans: now you write the queries
 
-So far the queries were handed to you. The koans are where you write them. Each koan is a tiny fill-in-the-blank exercise: a failing test with a `___` where the answer belongs. Fill it in, run it, watch red turn green — and the next one unlocks.
+So far the queries were handed to you. The koans are where you write them. Each koan is a tiny
+fill-in-the-blank exercise: a failing test with a `___` where the answer belongs. Fill it in,
+run it, watch red turn green — and the next one unlocks.
 
 ```powershell
 cd c:/DataPallas/db/datazeus
 .\zeus.bat koans learnsql series1 _10
 ```
+
+On macOS or Linux, run `./zeus.sh koans learnsql series1 _10` from the same folder. The three
+arguments are course, series and episode.
 
 > **Says the lesson isn't there?** Your copy of DataZeus predates this lesson — run `.\zeus.bat update` (or `./zeus.sh update`) once to fetch the latest lessons, then run the command again. Koans you have already solved are kept.
 

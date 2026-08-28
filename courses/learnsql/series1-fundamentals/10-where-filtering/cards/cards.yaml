@@ -7,6 +7,19 @@
 # guid:  STABLE per-deck id so rebuilds update the same deck (no duplicates).
 # cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
 # tags:  applied to every card in the file.
+#
+# AUDITED 2026-08-28 the same way decks 00, 05 and 07 were: every card read as it appears in
+# Anki — alone, with no lesson around it and no way to run anything. Three real problems, all
+# fixed below and each noted at the card:
+#   - the quoting card repeated lesson 05's almost word for word;
+#   - the two date cards were the same recall twice;
+#   - a card quoted a price as 10.0000 where the lesson shows 10.
+# NOT was also missing entirely, though the lesson teaches it, so it gains a card.
+#
+# Checked mechanically too: no card refers to "this lesson", "the video" or "the table above";
+# no card needs something run to answer it; no answer is a bare Northwind lookup. Where a card
+# names a value (Chai at 18, Aniseed Syrup at 10), the QUESTION supplies it and the ANSWER
+# explains why — so it reinforces the rule instead of testing recall of sample data.
 
 deck: "DataZeus::Learn SQL::Series 1::10 WHERE Filtering"
 guid: "datazeus-learn-sql-series1-10-where-filtering"
@@ -17,11 +30,16 @@ cards:
       front: "What does WHERE do to a table's data?"
       back: "Nothing. WHERE shapes the ANSWER — it tests every row and returns only the ones that pass. The table itself is untouched."
 
-  - cloze: "In a WHERE test, text values go in {{c1::'single quotes'}}, column names go in {{c2::\"double quotes\"}}, and numbers are written {{c3::bare, with no quotes}}."
+  # NARROWED to what this lesson actually adds. It used to cover single quotes, double quotes
+  # AND bare numbers, which made its first two thirds a near-copy of lesson 05's quoting card
+  # ("'Products' in single quotes is a text value; \"ProductName\" in double quotes is the name
+  # of a column"). Near-duplicates interfere with each other in a spaced deck and waste
+  # reviews. Lesson 05 owns the quoting rule; this card owns the number.
+  - cloze: "Text goes in quotes, but a number in a WHERE test is written {{c1::bare, with no quotes around it}}. Quote it and you are comparing the column against {{c2::a piece of text}} instead of a number."
 
   - basic:
       front: "WHERE \"Country\" = 'germany' returns zero rows on Northwind. Why — and why is there no error?"
-      back: "SQL text comparison is exact, capitals included: the column holds 'Germany'. An empty result is a valid answer, so nothing fails. A suspiciously empty filter → check spelling and case first."
+      back: "SQL text comparison is exact, capitals included: the column holds 'Germany'. An empty result is a valid answer, so nothing fails. A suspiciously empty filter → check spelling and case first. If those are right, the other cause is a column with nothing recorded in it: NULL never matches `=`, and needs `IS NULL` instead."
 
   - cloze: "SQL's not-equal operator is spelled {{c1::<>}} in the standard — and every course database also accepts {{c2::!=}} as the same operator."
 
@@ -31,20 +49,37 @@ cards:
       front: "WHERE \"CategoryID\" = 1 OR \"CategoryID\" = 2 AND \"UnitPrice\" < 15 — what does SQL actually evaluate, and what's the fix?"
       back: "AND binds first: CategoryID = 1 OR (CategoryID = 2 AND UnitPrice < 15) — every category-1 row gets in at ANY price. Fix: (CategoryID = 1 OR CategoryID = 2) AND UnitPrice < 15. Rule: the moment AND and OR mix, parenthesize."
 
+  # ADDED 2026-08-28. The lesson teaches NOT and the deck had no card for it at all — which is
+  # how a deck ends up testing a lesson it only half covers. It is deliberately about the
+  # PAIRING with parentheses, because that is the part people get wrong.
+  - basic:
+      front: "How do you keep every row that is neither a beverage nor a condiment, in one test?"
+      back: "Wrap the test and flip the whole group: WHERE NOT (\"CategoryID\" = 1 OR \"CategoryID\" = 2). NOT applies to what follows it, so without the brackets it would negate only the first comparison."
+
   - basic:
       front: "You wrote \"Country\" = 'Mexico' OR \"Country\" = 'Venezuela' OR \"Country\" = 'Argentina'. What's the cleaner way?"
       back: "\"Country\" IN ('Mexico', 'Venezuela', 'Argentina') — one test against a list. NOT IN keeps everyone the list does not name."
 
   - cloze: "BETWEEN 10 AND 20 includes {{c1::both ends}} — it means {{c2::>= 10 AND <= 20}}. To exclude the ends, write two strict comparisons: {{c3::> 10 AND < 20}}."
 
+  # "exactly 10", not "exactly 10.0000". The stored value really does carry four decimal places
+  # — "UnitPrice" is DECIMAL(19,4) — but CloudBeaver trims them and the lesson's tables show 10
+  # throughout, so a card quoting the untrimmed form makes the learner doubt they are looking at
+  # the same row. The card is about the boundary, not the precision.
   - basic:
-      front: "Aniseed Syrup costs exactly 10.0000. Which of these keeps it: UnitPrice BETWEEN 10 AND 20, or UnitPrice > 10 AND UnitPrice < 20?"
+      front: "Aniseed Syrup costs exactly 10. Which of these keeps it: UnitPrice BETWEEN 10 AND 20, or UnitPrice > 10 AND UnitPrice < 20?"
       back: "BETWEEN keeps it (ends included, 9 rows). The strict version drops it (8 rows). Neither is 'more correct' — decide on purpose whether a boundary row belongs."
 
   - basic:
       front: "Write the WHERE that counts June 2024 orders and cannot miss a late-June timestamp."
-      back: "WHERE \"OrderDate\" >= DATE '2024-06-01' AND \"OrderDate\" < DATE '2024-07-01' — the half-open range. BETWEEN …-06-01 AND …-06-30 silently drops a timestamp like 2024-06-30 14:00."
+      back: "WHERE \"OrderDate\" >= DATE '2024-06-01' AND \"OrderDate\" < DATE '2024-07-01' — the half-open range: >= the first day, < the first day of the next month."
 
-  - cloze: "The date-range reflex: {{c1::>=}} the first day, {{c2::<}} the first day of the {{c3::next}} month — works for dates, timestamps and every month length."
+  # THIS CARD USED TO BE A CLOZE OF THE RULE (">= the first day, < the first day of the next
+  # month"), which is exactly what the card above asks you to produce — the same recall twice,
+  # in two shapes. The one above keeps PRODUCTION; this one now tests the REASON, which is the
+  # half of it a learner actually forgets.
+  - basic:
+      front: "Why is BETWEEN DATE '2024-06-01' AND DATE '2024-06-30' a poor way to filter a month?"
+      back: "Because a date column is often a timestamp, and an order stamped 2024-06-30 14:00 is after midnight on the 30th — so BETWEEN silently drops it. The half-open form (>= the 1st, < the 1st of the next month) has no such edge, and needs no thinking about 28-, 30- or 31-day months."
 
   - cloze: "In a LIKE pattern, {{c1::%}} stands for 'anything here': 'Ch%' means {{c2::starts with Ch}}, and '%an%' means {{c3::contains an}}. LIKE is {{c4::case-exact}}, like every text comparison."
