@@ -29,8 +29,12 @@ import spock.lang.Unroll
  * eleven and not just the first and last, and that LIKE is case-exact so a lowercase 'ch%'
  * matches nothing.
  *
- * The learner-facing version, with the queries blanked to ___, is WhereFilteringKoans —
- * THIRTEEN koans, which practise the same ideas in the same order on different questions.
+ * PLUS the THIRTEEN KOANS. The first three ARE the queries above with blanks in them, and
+ * have to be: the video opens the koan file on screen and names them, so they are pinned by
+ * something already rendered. Koans 4-13 ask questions the lesson never asks — "UnitsInStock"
+ * and "CategoryID" rather than "Country" and "UnitPrice" — so that past a gentle start you
+ * write SQL instead of copying it back. Those ten get their own assertions at the foot of
+ * this file, because nothing in the lesson's queries touches the data they depend on.
  *
  * Convention: the spec runs the SAME *.sql files the lesson/video show, so the SQL is
  * authored in exactly one place (the lesson's scripts/) and verified here — no drift.
@@ -317,6 +321,140 @@ class WhereFilteringSpec extends NorthwindGateSpec {
     def "[#engine] LIKE is case-exact: lowercase ch% matches nothing"() {
         expect:
         sqlFor(engine).rows('SELECT "ProductName" FROM "Products" WHERE "ProductName" LIKE \'ch%\'').isEmpty()
+
+        where:
+        engine << ENGINES
+    }
+
+    // --- What the KOANS stand on ---------------------------------------------------------
+    // KOANS 1-3 need nothing here. They are the lesson's own queries — the video opens the
+    // koan file on screen and shows them by name, so they have to stay as they are — and the
+    // sections above already assert all three (11 German customers, 14 not, two under 10).
+    //
+    // KOANS 4-13 ask questions the lesson never asks: "UnitsInStock" and "CategoryID" where
+    // the scripts use "Country" and "UnitPrice". That is what makes them practice rather than
+    // retyping, and it is also why they need their own assertions — nothing above touches the
+    // data they depend on, so a shift there would surface as a red koan on a student's screen
+    // with a green gate behind it, which is the worst place to find it.
+
+    @Unroll
+    def "[#engine] koan 4: AND narrows eight well-stocked products down to five"() {
+        given:
+        def sql = sqlFor(engine)
+
+        // This assertion earned its keep immediately: the koan's hint first said SEVEN, and
+        // this caught it at eight (Ikura, 31 in stock, was the one missed by counting down a
+        // column by eye). A wrong number in a hint is worse than no hint — it tells a student
+        // their correct query is wrong.
+        expect: "the koan's hint says 'more than 30 in stock is eight products' — that has to stay true"
+        sql.firstRow('SELECT count(*) AS n FROM "Products" WHERE "UnitsInStock" > 30').n == 8
+
+        and: "and the price test drops three of them"
+        sql.firstRow('SELECT count(*) AS n FROM "Products" WHERE "UnitsInStock" > 30 AND "UnitPrice" < 20').n == 5
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koans 5 and 6: the trap returns five, the parenthesized version three"() {
+        given:
+        def sql = sqlFor(engine)
+
+        expect: "koan 5 — the query as SQL really groups it: category 4 at ANY price"
+        sql.firstRow('''SELECT count(*) AS n FROM "Products"
+                        WHERE "CategoryID" = 4 OR ("CategoryID" = 5 AND "UnitPrice" < 20)''').n == 5
+
+        and: "which is the SAME as writing it with no brackets at all — that is the whole point"
+        sql.firstRow('''SELECT count(*) AS n FROM "Products"
+                        WHERE "CategoryID" = 4 OR "CategoryID" = 5 AND "UnitPrice" < 20''').n == 5
+
+        and: "koan 6 — what the learner MEANT, and it is a different answer"
+        sql.firstRow('''SELECT count(*) AS n FROM "Products"
+                        WHERE ("CategoryID" = 4 OR "CategoryID" = 5) AND "UnitPrice" < 20''').n == 3
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koans 7 and 8: NOT a group leaves 16, and IN keeps 6"() {
+        given:
+        def sql = sqlFor(engine)
+
+        expect: "koan 7 — neither meat (6) nor produce (7)"
+        sql.firstRow('SELECT count(*) AS n FROM "Products" WHERE NOT ("CategoryID" = 6 OR "CategoryID" = 7)').n == 16
+
+        and: "koan 8 — categories 3, 6 and 8, which the koan says holds two each"
+        sql.firstRow('SELECT count(*) AS n FROM "Products" WHERE "CategoryID" IN (3, 6, 8)').n == 6
+
+        and: "koan 8 invites this as an aside — and the complement, which must add back to the 20 products"
+        sql.firstRow('SELECT count(*) AS n FROM "Products" WHERE "CategoryID" NOT IN (3, 6, 8)').n == 14
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koans 9 and 10: BETWEEN keeps 11, the strict range 10, and 20 is the row between them"() {
+        given:
+        def sql = sqlFor(engine)
+
+        expect: "koan 9 — ends included"
+        sql.firstRow('SELECT count(*) AS n FROM "Products" WHERE "UnitsInStock" BETWEEN 20 AND 40').n == 11
+
+        and: "koan 10 — ends excluded"
+        sql.firstRow('SELECT count(*) AS n FROM "Products" WHERE "UnitsInStock" > 20 AND "UnitsInStock" < 40').n == 10
+
+        and: "the koan names the row that falls out: Guarana Fantastica, at exactly 20"
+        sql.firstRow('SELECT "ProductName" AS p FROM "Products" WHERE "UnitsInStock" = 20').p == "Guarana Fantastica"
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koan 11: the half-open range finds five orders in March 2024"() {
+        expect: "a 31-day month on purpose — the lesson's own example is June, which has 30"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
+                                   WHERE "OrderDate" >= DATE '2024-03-01'
+                                     AND "OrderDate" <  DATE '2024-04-01' ''').n == 5
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koan 12: four products start with G, and lowercase 'g%' finds none"() {
+        given:
+        def sql = sqlFor(engine)
+
+        expect:
+        sql.rows('SELECT "ProductName" FROM "Products" WHERE "ProductName" LIKE \'G%\'')*.ProductName.toSet() ==
+                ["Gorgonzola Telino", "Gnocchi di nonna Alice", "Guarana Fantastica", "Genen Shouyu"].toSet()
+
+        and: "the koan warns that a lowercase g finds nothing — that warning has to be true"
+        sql.rows('SELECT "ProductName" FROM "Products" WHERE "ProductName" LIKE \'g%\'').isEmpty()
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koan 13: two products are out of stock, and one is the priciest thing sold"() {
+        given:
+        def rows = sqlFor(engine).rows('SELECT "ProductName", "UnitPrice" FROM "Products" WHERE "UnitsInStock" = 0')
+
+        expect: "the koan is written from scratch, so both the names and the prices are the goal"
+        rows*.ProductName.toSet() == ["Gorgonzola Telino", "Thuringer Rostbratwurst"].toSet()
+
+        and:
+        (rows.find { it.ProductName == "Gorgonzola Telino" }.UnitPrice as BigDecimal).compareTo(12.5 as BigDecimal) == 0
+        (rows.find { it.ProductName == "Thuringer Rostbratwurst" }.UnitPrice as BigDecimal).compareTo(123.79 as BigDecimal) == 0
+
+        and: "the koan's aside — it really is the most expensive product in the table"
+        (sqlFor(engine).firstRow('SELECT max("UnitPrice") AS m FROM "Products"').m as BigDecimal)
+                .compareTo(123.79 as BigDecimal) == 0
 
         where:
         engine << ENGINES
