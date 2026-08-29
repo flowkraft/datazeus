@@ -17,9 +17,12 @@ import spock.lang.Stepwise
  * first (that's the skill) — if it comes back wrong, the hint shows what your query
  * returned vs what it should, so you can fix the SQL, not guess a value.
  *
- * Thirteen koans, following the lesson's ideas in the same order. They are NOT the same
- * queries the video shows — they practise the same idea on a different question, which is
- * the point: you write the SQL rather than retyping it. In order: keep rows with =, flip it
+ * Thirteen koans, following the lesson's ideas in the same order. Twelve of them ARE the
+ * lesson's own queries with the operative piece blanked — you supply the operator, the value
+ * or the whole WHERE clause, and most ask for a count where the video listed the rows. The
+ * thirteenth gives you the goal and nothing else. Recognising a query you have just watched
+ * and being able to produce it are different skills; the blank is where the second one lives.
+ * In order: keep rows with =, flip it
  * with <>, compare a number, narrow with AND, tame OR with parentheses, flip a whole group
  * with NOT, test against a list with IN and NOT IN, keep a range with BETWEEN and then
  * without its ends, build the date habit, match a pattern with LIKE, then write a whole
