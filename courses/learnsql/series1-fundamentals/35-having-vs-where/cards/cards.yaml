@@ -1,0 +1,135 @@
+# Flashcards for Learn SQL · Series 1 · 35 — HAVING vs WHERE
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
+# tools/build-anki.py turns it into a .apkg with genanki.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds update the same deck (no duplicates).
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# ── WHAT ANKI IS FOR, AND WHAT IT IS NOT FOR ────────────────────────────────────────
+# Anki is reviewed on a phone, weeks later, with no database open, no CloudBeaver, and
+# the lesson long forgotten. So every card here is SELF-CONTAINED: it carries its own
+# premise. NOT ONE of them asks the learner to run a query, to remember a result from
+# an earlier card, or to know Northwind's schema. Where a card needs a fact — a freight
+# figure, a query somebody handed you — the FRONT states it, and the card tests the
+# REASONING, not the recall of data. A card that fails that test is a koan wearing the
+# wrong clothes: the koans are where you type SQL against real rows; this deck is where
+# the rules have to survive without them.
+#
+# Northwind names DO appear below, but only ever as a SUPPLIED PREMISE — "a report says
+# Germany's dearest delivery is 45.15; what is wrong with it" is a reasoning card. "What
+# is Germany's dearest delivery" would not be a SQL card at all, and there is none here.
+#
+# FILE ORDER IS THE CURRICULUM. Anki introduces new cards in file order, so a learner
+# meeting this deck for the first time meets the ideas in the order they build on each
+# other — the same order as the lesson and the video: the keyword, the model, the
+# execution order, both filters together, the trap, the rule, then the two advanced ones.
+#
+# ── WHO OWNS WHAT, so the next deck does not re-teach this ──────────────────────────
+# LESSON 30 owns GROUP BY itself: what a group is, that the GROUP BY list is the grain
+# of the report, and that a raw column beside an aggregate is refused. This deck does
+# NOT re-test any of that. It owns exactly one thing: WHICH CLAUSE A CONDITION GOES IN,
+# and what happens when you get it wrong.
+# LESSON 25 owns the aggregate functions themselves (what COUNT/SUM/MAX mean, and that
+# an aggregate is an answer about a set). Cards here USE max() and sum() as premises but
+# never test what they do.
+# The EXECUTION ORDER card below is the one genuinely shared asset — 30 mentions that
+# WHERE runs before grouping, this deck owns the full six-step list, because that list
+# is what makes HAVING derivable rather than memorised.
+
+deck: "DataZeus::Learn SQL::Series 1::35 HAVING vs WHERE"
+guid: "datazeus-learn-sql-series1-35-having-vs-where"
+tags: ["datazeus", "learn-sql", "series-1", "sql"]
+
+cards:
+
+  # ── 1. THE KEYWORD, AND THE ONE-LINE DIFFERENCE ──────────────────────────────
+  # Simplest possible entry. A learner who knows only this card can already write the
+  # query that lesson 30 left them unable to write.
+
+  - cloze: "WHERE filters {{c1::rows}}, before any group is built. HAVING filters {{c2::groups}}, after they exist."
+
+  - basic:
+      front: "Why can't you write `WHERE count(*) > 5`?"
+      back: "Because WHERE runs *before* the rows are grouped, so at that moment no count exists yet — there is not even a group to count. The database refuses it outright (PostgreSQL: SQLSTATE 42803, \"aggregate functions are not allowed in WHERE\"). The condition is not wrong; it is one clause too early."
+
+  - basic:
+      front: "Is HAVING the \"stronger\" filter, or the one for harder conditions?"
+      back: "Neither. It does exactly the same job as WHERE — keep what you want, throw the rest away. It is simply *later*: WHERE is handed one row and asks about it, HAVING is handed a whole group and asks about all of it at once. By the time HAVING runs there is something bigger to ask about."
+
+  # ── 2. THE EXECUTION ORDER — the spine everything else derives from ───────────
+  # This is the card that makes the rest of the deck derivable instead of memorised.
+  # It is early on purpose: a learner who has it can reason out cards 8 and 9 without
+  # ever having seen them.
+
+  - basic:
+      front: "In what order does a database actually evaluate a SELECT statement? (six steps)"
+      back: "1. FROM — fetch the rows\n2. WHERE — throw rows away, one at a time\n3. GROUP BY — build the groups\n4. HAVING — throw whole groups away\n5. SELECT — work out the output columns\n6. ORDER BY — sort what survived\n\nYou *write* SELECT first. The database runs it fifth."
+
+  - cloze: "In evaluation order, WHERE is step {{c1::2}} and HAVING is step {{c2::4}} — with {{c3::GROUP BY}} in between them. That gap is the whole reason both clauses exist."
+
+  # ── 3. BOTH IN ONE QUERY ─────────────────────────────────────────────────────
+
+  - basic:
+      front: "Can one query have both a WHERE and a HAVING? What does each one do?"
+      back: "Yes, and most real reports do. WHERE removes rows before grouping; HAVING removes whole groups afterwards. Example shape: keep only the expensive orders (WHERE), group by country, then keep only the countries with more than two of them (HAVING). Each step only ever sees what the step before it handed over."
+
+  - basic:
+      front: "Write the clause order of a query that uses every one of: SELECT, FROM, WHERE, GROUP BY, HAVING, ORDER BY."
+      back: "SELECT … FROM … WHERE … GROUP BY … HAVING … ORDER BY …\n\nNote this is the order you WRITE them, which is not the order they run in — SELECT is written first and evaluated fifth."
+
+  # ── 4. THE TEST — the single most useful card in the deck ─────────────────────
+  # Stated as a rule about the QUESTION, not about syntax. "Aggregates go in HAVING"
+  # is true and useless at the moment it matters, because by then you have already
+  # decided what you are asking.
+
+  - basic:
+      front: "You have a condition and you don't know whether it belongs in WHERE or HAVING. What is the one question to ask?"
+      back: "**Can I answer this by looking at one row?**\n\nYes → WHERE. (\"The freight on this order is over 50.\")\nNo, I need to see the whole group → HAVING. (\"This country has never shipped anything over 50.\")\n\nIt is a rule about the question, not about the syntax."
+
+  - basic:
+      front: "If a condition *could* be written in either WHERE or HAVING, which should you pick, and why?"
+      back: "WHERE. Throwing rows away early means fewer rows to group and less work in every later step. Putting a plain row condition in HAVING usually still runs (if the column is in the GROUP BY) but it is slower and tells the next reader you weren't sure which you meant.\n\nThe lesson is not \"be afraid of WHERE\" — it is \"know which question you are asking\"."
+
+  # ── 5. THE TRAP — the reason the lesson exists ────────────────────────────────
+  # SELF-CONTAINED: the front supplies the query, the result and the contradicting
+  # fact. A reviewer on a bus can answer it with no database and no memory of the
+  # lesson. (The first draft of this card asked "what's wrong with this report?" and
+  # expected the reviewer to know Germany's real freight figures. Rewritten so the
+  # front states them — 2026-08-30.)
+
+  - basic:
+      front: "Somebody asks which countries are always cheap to ship to — nothing ever over 50. This query is run:\n\n```\nSELECT \"ShipCountry\", max(\"Freight\") AS \"Dearest\"\nFROM \"Orders\"\nWHERE \"Freight\" <= 50\nGROUP BY \"ShipCountry\";\n```\n\nIt returns 9 countries and every row shows a Dearest under 50. Why is it wrong?"
+      back: "The WHERE deleted every expensive delivery *before* the grouping, so of course nothing dear was left to find. max() then reported the biggest of the survivors.\n\nThe report is self-confirming: every row satisfies the condition **because** you filtered on that condition first. That is why the bug survives review.\n\nThe fix is to ask after the groups exist:\n`GROUP BY \"ShipCountry\" HAVING max(\"Freight\") <= 50`\nSame condition, same number, moved from step 2 to step 4."
+
+  - basic:
+      front: "A report claims Germany's most expensive delivery was 45.15. The same table, unfiltered, says it was 95.75. Both queries ran without error. How can both numbers be real?"
+      back: "The first query filtered the rows before aggregating — something like `WHERE \"Freight\" <= 50`. 45.15 is the dearest of what was *left* after the filter, not the dearest there is.\n\nAn aggregate is an answer about whatever set of rows survived to reach it. Change what survives and you change the answer, with no error and no warning."
+
+  - basic:
+      front: "A query filters rows with WHERE and then groups them. A group whose rows were ALL removed by the WHERE — does it come back with a count of 0?"
+      back: "No. It does not come back at all. Groups are built from the rows that survive the WHERE, so if nothing survived there is nothing to build a group from.\n\nA zero is a fact; a missing row is a silence. This is why a filtered report can quietly lose an entire category without anything looking wrong."
+
+  # ── 6. FILTERING ON SOMETHING YOU DON'T SHOW ──────────────────────────────────
+
+  - basic:
+      front: "Does a HAVING condition have to use a column or aggregate that appears in the SELECT list?"
+      back: "No. HAVING can filter on any aggregate over the grouped rows, shown or not — e.g. select the order *count* per country while keeping only countries whose `sum(\"Freight\")` tops 300.\n\nUseful (\"significant markets\" is usually a revenue threshold nobody wants as a column) and worth a comment in the SQL, because later the missing rows will look like a bug."
+
+  # ── 7. THE PORTABILITY ONE — derivable from the execution-order card ──────────
+
+  - basic:
+      front: "`SELECT \"ShipCountry\", count(*) AS \"OrderCount\" … GROUP BY \"ShipCountry\" HAVING \"OrderCount\" > 5`\n\nThis runs on DuckDB and fails on PostgreSQL with `column \"OrderCount\" does not exist`. Which engine is right, and why?"
+      back: "PostgreSQL. HAVING is step 4 and SELECT is step 5, so when HAVING runs the alias has not been created yet. DuckDB is being generous, not correct.\n\nThe dangerous half is the one that *works*: the query passes on your laptop and fails on the server. Repeat the aggregate instead — `HAVING count(*) > 5` — and it is portable everywhere."
+
+  - cloze: "An alias defined in SELECT is not visible in {{c1::HAVING}} (step 4, before SELECT), but it usually *is* visible in {{c2::ORDER BY}} (step 6, after SELECT)."
+
+  # ── 8. PRODUCTION — hardest, and last ─────────────────────────────────────────
+  # SUPPLIES ITS OWN SCHEMA on the front, because of the self-containment rule: the
+  # reviewer has no database and no memory of which columns Northwind has.
+
+  - basic:
+      front: "Write the query.\n\nTable `\"Products\"` has columns `\"ProductID\"`, `\"CategoryID\"` (integer), `\"UnitPrice\"` (decimal) and `\"UnitsInStock\"` (integer).\n\nReturn each category and its total units in stock, but only for categories holding fewer than 50 units in total. Order by category."
+      back: "```sql\nSELECT \"CategoryID\", sum(\"UnitsInStock\") AS \"TotalStock\"\nFROM \"Products\"\nGROUP BY \"CategoryID\"\nHAVING sum(\"UnitsInStock\") < 50\nORDER BY \"CategoryID\";\n```\n\nThe condition is about the whole category, not about one product, so it is a HAVING. Note the aggregate is written out again rather than reusing the alias `\"TotalStock\"` — that keeps it portable."

@@ -1,0 +1,329 @@
+---
+title: "HAVING vs WHERE — Why WHERE Can't Filter Your Totals"
+description: "You can build a total. Now keep only the groups you want. Learn what HAVING does, the order a database really runs your query in, and why putting a filter one clause too early gives you a wrong answer that proves itself right."
+topic: "learn-sql"
+tags: ["sql", "fundamentals", "having", "group-by"]
+level: "beginner"
+module: "series1-fundamentals"
+order: 35
+date: "2026-08-30"
+published: true
+videoId: "learnsql-series1-35-having-vs-where"
+---
+
+## The situation this lesson prepares you for
+
+Somebody asks you for "our significant markets". Or "the customers worth chasing". Or "the countries we can always ship to cheaply".
+
+Every one of those is a question about a **group**, not about a row. No single order is a significant market. No single delivery makes a country cheap to ship to. The answer only exists once you have piled the rows up and worked something out about each pile — and the piling is the part you can already do.
+
+What you cannot do yet is throw a pile away.
+
+Last lesson you built one number per group and then hit a wall: you could produce the totals and you could not filter them. Ask for only the countries with more than five orders and the database refuses outright. That refusal is not a limitation to work around. It is the database telling you that at the moment your `WHERE` runs, **the number you are asking about does not exist yet**.
+
+By the end of this lesson you will be able to filter on a total, say which of the two filters any given condition belongs in, and recognise the mistake that puts it in the wrong one — because that mistake does not produce an error. It produces a report that agrees with itself.
+
+Every query below runs on the Northwind sample database that ships with DataPallas.
+
+**Open the koans before you read on.** There is a koan for every idea in this lesson — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _35
+```
+
+## HAVING: the word you were missing
+
+Here is the query you could not write last time.
+
+```sql file=./scripts/countries-over-five-orders.sql
+SELECT "ShipCountry", count(*) AS "OrderCount"
+FROM "Orders"
+GROUP BY "ShipCountry"
+HAVING count(*) > 5
+ORDER BY "OrderCount" DESC, "ShipCountry";
+```
+
+| ShipCountry | OrderCount |
+| ----------- | ---------: |
+| Germany | 32 |
+| Mexico | 8 |
+| Sweden | 8 |
+| UK | 7 |
+| France | 6 |
+| Venezuela | 6 |
+
+Six countries out of ten. The other four are still in the table exactly where they were — they simply did not clear the bar.
+
+One new word, and notice **where it sits**: underneath the `GROUP BY`, not above it. That position is the whole idea, and it is not a style choice. `WHERE` gets its say before the piles are built. `HAVING` gets its say after they exist.
+
+Read the condition out loud and you can hear why it could not have gone anywhere else. *More than five orders.* No single order "has more than five orders" — that is not even a sentence. You can only ask that of a whole country at once.
+
+## Two filters, and they are not rivals
+
+It is tempting to file `HAVING` as "the advanced one" or "the one for hard conditions". It is neither. It does exactly the same job `WHERE` does — keep the things you want, throw the rest away. The only difference is **what each of them is looking at**.
+
+- `WHERE` is handed **one row** and asks a question about it.
+- `HAVING` is handed **a whole group** and asks a question about all of it at once.
+
+`HAVING` is not stronger. It is *later*. By the time it runs, there is something bigger to ask about.
+
+## The order the database actually works in
+
+This is the most useful thing in the lesson, and it explains everything else in it.
+
+You write a query in this order:
+
+```
+SELECT … FROM … WHERE … GROUP BY … HAVING … ORDER BY …
+```
+
+The database runs it in a different one:
+
+1. **FROM** — fetch the rows.
+2. **WHERE** — throw rows away, one at a time. No piles exist yet.
+3. **GROUP BY** — build the piles.
+4. **HAVING** — throw whole piles away.
+5. **SELECT** — work out the columns you asked for.
+6. **ORDER BY** — sort whatever survived.
+
+You write `SELECT` first. The database runs it **fifth**.
+
+Look at where the two filters sit: `WHERE` is step 2, `HAVING` is step 4, and the pile-building is in between them. Every other thing in this lesson falls out of that one gap — the keyword, the error, the trap, and the portability problem at the end.
+
+### Why the aggregate in a WHERE is refused
+
+```sql file=./scripts/aggregate-in-where-fails.sql
+SELECT "ShipCountry", count(*)
+FROM "Orders"
+WHERE count(*) > 5
+GROUP BY "ShipCountry";
+```
+
+```
+SQL Error [42803]: ERROR: aggregate functions are not allowed in WHERE
+  Position: 52
+```
+
+At step 2 there is no count to compare against. There is not even a group. The database is not being fussy — it is being asked for a number that will not be computed for another two steps. DuckDB says the same thing in different words: *"Binder Error: WHERE clause cannot contain aggregates!"*
+
+## Both filters, one query
+
+Most real reports use both, and each does a job the other cannot.
+
+```sql file=./scripts/expensive-orders-busy-countries.sql
+SELECT "ShipCountry", count(*) AS "OrderCount"
+FROM "Orders"
+WHERE "Freight" > 50
+GROUP BY "ShipCountry"
+HAVING count(*) > 2
+ORDER BY "OrderCount" DESC, "ShipCountry";
+```
+
+| ShipCountry | OrderCount |
+| ----------- | ---------: |
+| Germany | 20 |
+| France | 4 |
+| Austria | 3 |
+| Sweden | 3 |
+
+*Only the expensive deliveries* is a question about one order, so it goes in the `WHERE`. *Only the countries with more than two of them* is a question about a pile, so it goes in the `HAVING`. Trace it down the list: seventy-nine orders go in, `WHERE` knocks out the cheap ones, the piles are built from what survives, then `HAVING` drops the small piles. Each step only ever sees what the step before it handed over.
+
+That last sentence is the whole lesson, and the next section is what happens when you forget it.
+
+## The trap: a report that proves itself right
+
+Here is a question somebody in a warehouse would actually ask.
+
+> **Which countries can we always ship to cheaply — where nothing has ever cost us more than 50 to send?**
+
+The obvious answer is to filter out the expensive deliveries and see who is left.
+
+```sql file=./scripts/cheap-to-ship-wrong.sql
+SELECT "ShipCountry", max("Freight") AS "Dearest"
+FROM "Orders"
+WHERE "Freight" <= 50
+GROUP BY "ShipCountry"
+ORDER BY "ShipCountry";
+```
+
+| ShipCountry | Dearest |
+| ----------- | ------: |
+| Argentina | 49.7100 |
+| France | 47.9300 |
+| Germany | 45.1500 |
+| Italy | 48.3200 |
+| Mexico | 24.0600 |
+| Sweden | 40.0000 |
+| UK | 45.5000 |
+| USA | 11.3900 |
+| Venezuela | 46.5400 |
+
+Nine countries. Every single row shows a dearest delivery under 50. Nothing failed, nothing warned you, and **the report agrees with the question you asked**. You would send it.
+
+It is wrong, and it is wrong in the most dangerous way available: it is self-confirming. Of course every row is under 50 — you deleted everything above 50 before you looked.
+
+### What the same table says with nothing removed
+
+```sql file=./scripts/dearest-delivery-per-country.sql
+SELECT "ShipCountry", max("Freight") AS "Dearest"
+FROM "Orders"
+GROUP BY "ShipCountry"
+ORDER BY "Dearest" DESC
+LIMIT 5;
+```
+
+| ShipCountry | Dearest |
+| ----------- | ------: |
+| Venezuela | 98.9200 |
+| Mexico | 97.5300 |
+| USA | 96.1400 |
+| Germany | 95.7500 |
+| Sweden | 87.3300 |
+
+**Germany's dearest delivery is 95.75.** The first report put Germany on a list of countries we can always ship to cheaply and said its most expensive delivery was 45.15. Same table. Same column. Both numbers are real.
+
+The `WHERE` threw the expensive German orders away, and the biggest one *left over* was 45.15. The query then told you the truth about a table you had already broken.
+
+And look at who is missing from that first report altogether: **Austria**. All three Austrian orders cost more than 50 to ship, so the filter removed every one of them and the group never got built. Austria does not come back as "no cheap deliveries". It does not come back. A zero is a fact; a missing row is a silence.
+
+### The fix is one move
+
+```sql file=./scripts/cheap-to-ship-right.sql
+SELECT "ShipCountry", max("Freight") AS "Dearest"
+FROM "Orders"
+GROUP BY "ShipCountry"
+HAVING max("Freight") <= 50
+ORDER BY "ShipCountry";
+```
+
+| ShipCountry | Dearest |
+| ----------- | ------: |
+| UK | 45.5000 |
+
+**One country.** Not nine.
+
+Same condition, same number, moved from step 2 to step 4. Every order gets counted first, and only then does anything get thrown away. The question was always *"is this country's dearest delivery under 50?"* — which you cannot answer without looking at all of them, which means it was never a `WHERE` question at all.
+
+Nine versus one. The wrong answer was not slightly wrong. It was the opposite answer.
+
+## The test that tells you which one
+
+Before you pick a clause, ask yourself one thing:
+
+> **Can I answer this by looking at one row?**
+
+- *The freight on this order is over 50.* One row. → `WHERE`
+- *This country has never shipped anything over 50.* You cannot answer that without seeing all of them. → `HAVING`
+
+That is the whole rule, and it is a rule about the **question**, not about the syntax. "Aggregates go in HAVING" is true but useless at the moment it matters, because by then you have already decided what you are asking.
+
+**And do not overcorrect.** If a condition *can* go in the `WHERE`, put it in the `WHERE`. Throwing rows away early is cheaper than building piles you are about to discard — the database has less to carry through every later step. A learner who leaves this lesson frightened of `WHERE` has been taught the wrong thing.
+
+Some engines will let you put a non-aggregate condition in the `HAVING` (`HAVING "ShipCountry" <> 'Germany'` will run on both PostgreSQL and DuckDB, because the column is in the `GROUP BY`). It works, it is slower, and it tells the next reader you were not sure which clause you meant. Put row conditions in `WHERE`.
+
+## You can filter on a number the report never shows
+
+`HAVING` is not limited to what you put in the `SELECT`. If the question is about the pile, it does not matter whether the answer is on the page.
+
+```sql file=./scripts/freight-bill-over-300.sql
+SELECT "ShipCountry", count(*) AS "OrderCount"
+FROM "Orders"
+GROUP BY "ShipCountry"
+HAVING sum("Freight") > 300
+ORDER BY "ShipCountry";
+```
+
+| ShipCountry | OrderCount |
+| ----------- | ---------: |
+| France | 6 |
+| Germany | 32 |
+| Sweden | 8 |
+
+Now look for the row that should be there and is not. **France has six orders and it is here. Venezuela has six orders and it is not.** Same count, same column, one in and one out — and nothing on the page explains why.
+
+The reason is a total you cannot see:
+
+```sql file=./scripts/country-freight-totals.sql
+SELECT "ShipCountry", sum("Freight") AS "TotalFreight"
+FROM "Orders"
+GROUP BY "ShipCountry"
+ORDER BY "TotalFreight" DESC
+LIMIT 5;
+```
+
+| ShipCountry | TotalFreight |
+| ----------- | -----------: |
+| Germany | 1841.7800 |
+| Sweden | 410.6000 |
+| France | 347.8500 |
+| Venezuela | 254.3800 |
+| Austria | 226.1500 |
+
+France's freight bill is 347.85 and Venezuela's is 254.38. That is the whole story, and it was never printed.
+
+This is genuinely useful — "our significant markets" almost always means a revenue threshold that nobody wants as a column. It is also worth a comment in your SQL, because six months later the missing row will look like a bug.
+
+## One last trap, and it moves between engines
+
+You named that count `AS "OrderCount"`. So surely you can filter on the name.
+
+```sql file=./scripts/alias-in-having-fails.sql
+SELECT "ShipCountry", count(*) AS "OrderCount"
+FROM "Orders"
+GROUP BY "ShipCountry"
+HAVING "OrderCount" > 5
+ORDER BY "ShipCountry";
+```
+
+Run that in CloudBeaver and PostgreSQL says:
+
+```
+SQL Error [42703]: ERROR: column "OrderCount" does not exist
+  Position: 92
+```
+
+And it is right. Go back to the list: `HAVING` is step 4 and `SELECT` is step 5. At the moment the `HAVING` runs, the name `"OrderCount"` **has not been invented yet**. It does not exist for another whole step.
+
+Here is the part that will catch you one day: **DuckDB allows it.** It is being helpful. So the query runs perfectly on your machine, you push it to a PostgreSQL server, and it falls over there instead — which is a far worse afternoon than it failing in front of you.
+
+Write the aggregate out again in the `HAVING` and it works everywhere:
+
+```sql file=./scripts/alias-in-having-portable.sql
+SELECT "ShipCountry", count(*) AS "OrderCount"
+FROM "Orders"
+GROUP BY "ShipCountry"
+HAVING count(*) > 5
+ORDER BY "ShipCountry";
+```
+
+Six more characters, and it stops being a question about which engine you are on.
+
+**Worth knowing:** `ORDER BY` is step 6, *after* `SELECT`, which is why `ORDER BY "OrderCount"` works fine on both engines while `HAVING "OrderCount"` does not. That is not an inconsistency — it is the list, doing exactly what it says.
+
+## See it for yourself
+
+The koans cover every idea above, asked about a different part of the business — the lesson counted orders per country, the koans work in the warehouse over `"Products"`. Copying a query across will not work, which is the point.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _35
+```
+
+Ten koans, easiest first: the keyword itself, naming the aggregate a condition is about, both filters in one query, filtering on a total the report never shows, **the trap in warehouse form** (six suppliers or four?), predicting how far wrong the wrong clause is, a group vanishing because `WHERE` ran first, the comparison operator, the alias problem, and finally a whole query written from scratch.
+
+## What goes wrong
+
+The mistake this lesson prevents is not a syntax error. Syntax errors are cheap — you get one, you fix it, thirty seconds gone.
+
+This one ships. `WHERE "Freight" <= 50` runs clean, returns nine tidy rows, and every row on it satisfies the condition you asked about. There is nothing to notice. The report **confirms itself**, which is exactly why it survives being checked: the reviewer reads the question, reads the rows, sees they agree, and approves it.
+
+The damage is that the filter destroyed the evidence the question was about. You asked *"does this country have an expensive delivery?"* and the `WHERE` deleted the expensive deliveries before anyone could look. What comes back is a confident, correct-looking answer to a question nobody asked — and somebody in the warehouse starts routing shipments to Germany because a report said Germany was cheap.
+
+One row, or the whole pile. Ask that before you pick the clause.
+
+## What's next
+
+Everything you have counted in this lesson — and in the last one — has come out of a single table. You have grouped orders, counted them, totalled their freight and filtered the totals, and you still cannot say what anybody actually bought, because that lives somewhere else.
+
+Next: **JOINs**, and putting two tables side by side.
