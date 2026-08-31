@@ -1,0 +1,385 @@
+---
+title: "GROUP BY — One Number per Customer, per Month, per Anything"
+description: "An aggregate gives you one number for a whole table, and nobody ever asks for that. Learn to get one number per group — and why adding a column to your GROUP BY can silently change the answer your report gives."
+topic: "learn-sql"
+tags: ["sql", "fundamentals", "group-by", "aggregates"]
+level: "beginner"
+module: "series1-fundamentals"
+order: 30
+date: "2026-08-30"
+published: true
+videoId: "learnsql-series1-30-group-by"
+---
+
+## The situation this lesson prepares you for
+
+You can now fold a whole table into a single number. `count(*)` over our orders gives you **79**. It is true, and it is almost never the number anybody wanted.
+
+Nobody has ever walked over and asked how many orders there are altogether. They ask how many **per country**. What we spent **per month**. Who our biggest customer is — which is one number **per customer**, twenty-five separate answers, not one.
+
+That shape has a name. Every one of those requests is *one number per something*, and the something is the only thing `GROUP BY` asks you to supply.
+
+By the end of this lesson you will be able to produce a report with one row per customer, per country, per month or per anything you can compute — and you will be able to spot the two ways such a report quietly starts answering a different question than the one on its heading.
+
+Every query below runs on the Northwind sample database that ships with DataPallas.
+
+**Open the koans before you read on.** There is a koan for every idea here — a query with a blank for you to fill in. They ask about a *different table* on purpose, so you cannot copy an answer off the page.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _30
+```
+
+## The hard way, and why it runs out
+
+You already have a way to do this. Filter to one country and count what is left:
+
+```sql file=./scripts/orders-count-germany.sql
+SELECT count(*) AS "OrderCount"
+FROM "Orders"
+WHERE "ShipCountry" = 'Germany';
+```
+
+| OrderCount |
+| ---------: |
+| 32 |
+
+That is a real answer to a real question, and it works. Now do the other nine.
+
+And there is the problem — not the nine queries, the **nine names**. You can already find out *how many* countries there are, because `count(DISTINCT "ShipCountry")` is 10. But a count is not a list. It will never tell you that one of them is called Venezuela, and you cannot write a filter for a country you cannot name. So you go and read the values out of the table by hand, and you do it again every time the data changes.
+
+Miss one and your report does not say "Poland: 0". Poland is simply not on it, and nothing about the page looks wrong.
+
+## GROUP BY: say what a group is
+
+```sql file=./scripts/orders-per-country.sql
+SELECT "ShipCountry", count(*) AS "OrderCount"
+FROM "Orders"
+GROUP BY "ShipCountry"
+ORDER BY "ShipCountry";
+```
+
+| ShipCountry | OrderCount |
+| ----------- | ---------: |
+| Argentina | 3 |
+| Austria | 3 |
+| France | 6 |
+| Germany | 32 |
+| Italy | 3 |
+| Mexico | 8 |
+| Sweden | 8 |
+| UK | 7 |
+| USA | 3 |
+| Venezuela | 6 |
+
+One new line did that. `GROUP BY "ShipCountry"` says: *make one pile for every different country you find in that column*, then run the aggregate once inside each pile.
+
+Two things are worth noticing before you move on.
+
+**No country is named anywhere in that query.** The database found them. Add a Polish customer tomorrow and the eleventh row appears on its own.
+
+**Germany still says 32** — the same number you counted by hand. `count(*)` did not change its meaning; it just ran ten times instead of once.
+
+## What GROUP BY actually does to your rows
+
+`WHERE` throws rows away and hands you back the survivors — same rows, fewer of them.
+
+`GROUP BY` throws nothing away. It piles the rows up and hands you back **one row per pile**. Seventy-nine orders went in, ten rows came out, and every order was counted exactly once.
+
+That has one consequence worth holding on to, because every mistake later in this lesson comes from forgetting it:
+
+> The row that says `Germany, 32` is not in the `Orders` table. There is no Germany row to go and look at. It exists because you asked for it.
+
+## One pile, as many numbers as you like
+
+A group will answer more than one question at a time, and that is the moment a count turns into a report.
+
+```sql file=./scripts/country-report.sql
+SELECT "ShipCountry", count(*) AS "OrderCount",
+       sum("Freight") AS "TotalFreight",
+       max("Freight") AS "DearestDelivery"
+FROM "Orders"
+GROUP BY "ShipCountry"
+ORDER BY "TotalFreight" DESC LIMIT 5;
+```
+
+| ShipCountry | OrderCount | TotalFreight | DearestDelivery |
+| ----------- | ---------: | -----------: | --------------: |
+| Germany | 32 | 1841.7800 | 95.7500 |
+| Sweden | 8 | 410.6000 | 87.3300 |
+| France | 6 | 347.8500 | 73.2700 |
+| Venezuela | 6 | 254.3800 | 98.9200 |
+| Austria | 3 | 226.1500 | 80.3000 |
+
+Three aggregates, all computed inside the same ten piles.
+
+Read down the first column and Germany dominates. Read across the last one and something else appears: **Venezuela had six orders and the single most expensive delivery in the whole table, at 98.9200** — more than Germany's dearest, at 95.7500. Two different questions, visible at once, because both numbers came out of the same pass.
+
+## The grouped rows are just rows
+
+The result of a `GROUP BY` is a table like any other, so everything from the sorting lesson still applies to it — including sorting by a number that did not exist until you invented it.
+
+```sql file=./scripts/orders-per-country-ranked.sql
+SELECT "ShipCountry", count(*) AS "OrderCount"
+FROM "Orders"
+GROUP BY "ShipCountry"
+ORDER BY "OrderCount" DESC, "ShipCountry"
+LIMIT 5;
+```
+
+| ShipCountry | OrderCount |
+| ----------- | ---------: |
+| Germany | 32 |
+| Mexico | 8 |
+| Sweden | 8 |
+| UK | 7 |
+| France | 6 |
+
+Germany takes 32 of our 79 orders — four in every ten we ship.
+
+And note the second sort key, which is doing real work here: **Mexico and Sweden both have eight**. Grouped rows tie exactly like ungrouped ones, and a `LIMIT` sitting above an undecided tie is the same defect you met two lessons ago.
+
+## The rule, and its two doors
+
+Now the query everybody writes next. You have counts per country, and you would like the order number beside them, so you add `"OrderID"` to the select list and change nothing else:
+
+```sql file=./scripts/country-with-orderid.sql
+SELECT "ShipCountry", "OrderID", count(*) AS "OrderCount"
+FROM "Orders"
+GROUP BY "ShipCountry";
+```
+
+```
+SQL Error [42803]: ERROR: column "Orders.OrderID" must appear in the GROUP BY
+clause or be used in an aggregate function
+  Position: 23
+```
+
+You have met this refusal before — it is the same one that stopped you putting a product name beside a `max()` in the aggregates lesson, down to the SQLSTATE. Germany's pile holds 32 different order numbers, you asked it to print one, and there is no honest answer to *which one*. So it stops instead of choosing.
+
+What is new is the advice. Last lesson the message said "add it to the `GROUP BY` clause" and you had no `GROUP BY` to add it to. Now you do. So state the rule carefully, because **it has two doors and the error only ever points at one of them**:
+
+1. **Group by it.** The column joins in the pile-making. More piles, and every number gets smaller.
+2. **Wrap it in an aggregate** — `min`, `max`, `count`. The piles stay exactly as they are; you get one value out of each.
+
+There is no third door: a raw column cannot survive the collapse. And those two are not interchangeable. One of them changes how many piles you have. The other does not.
+
+## The wrong answer that looks right
+
+So take the advice. Not with `"OrderID"`, which nobody wanted, but with the city, which somebody genuinely did ask to see:
+
+```sql file=./scripts/orders-per-country-city.sql
+SELECT "ShipCountry", "ShipCity", count(*) AS "OrderCount"
+FROM "Orders"
+GROUP BY "ShipCountry", "ShipCity"
+ORDER BY "OrderCount" DESC, "ShipCountry"
+LIMIT 5;
+```
+
+| ShipCountry | ShipCity | OrderCount |
+| ----------- | -------- | ---------: |
+| Mexico | México D.F. | 8 |
+| Germany | Berlin | 5 |
+| Sweden | Luleå | 5 |
+| UK | London | 4 |
+| Argentina | Buenos Aires | 3 |
+
+No error. No warning. Every number on that table is a real, correct count.
+
+And the report has changed its answer. A minute ago it said our biggest market was Germany with 32. Now the top row is **Mexico, with 8** — and Germany's best row is Berlin, at 5.
+
+Nothing is broken. Mexico only reaches the top because all eight of its orders go to a single city, while Germany's 32 are spread across **eleven** of them. The query is counting correctly; it is simply no longer counting the thing the heading claims.
+
+### The rule that prevents it
+
+> A column in the `GROUP BY` does not add detail to a row. **It splits the row.**
+
+Ten countries became **twenty-four** country-and-city pairs, and every count shrank to fit. The `GROUP BY` list *is* the grain of your report, so there is exactly one test to apply:
+
+**Only put a column in the `GROUP BY` if you want your report broken up by it.**
+
+And notice how you arrived here, because this is what makes the bug survive in real code: the error message was correct, and taking its advice was the wrong fix. What you actually wanted was to stop asking for the city.
+
+## The same two keys, meant this time
+
+Which does not make two keys wrong — it makes them something you have to mean. Here is the identical pair of columns answering the question that genuinely wants them:
+
+```sql file=./scripts/cities-per-country.sql
+SELECT "ShipCountry", "ShipCity", count(*) AS "OrderCount"
+FROM "Orders"
+WHERE "ShipCountry" IN ('France', 'Sweden')
+GROUP BY "ShipCountry", "ShipCity"
+ORDER BY "ShipCountry", "ShipCity";
+```
+
+| ShipCountry | ShipCity | OrderCount |
+| ----------- | -------- | ---------: |
+| France | Marseille | 3 |
+| France | Nantes | 3 |
+| Sweden | Bräcke | 3 |
+| Sweden | Luleå | 5 |
+
+Two countries, two cities each, four rows: **one row for every combination that actually occurs**. France's six orders split three and three, Sweden's eight split three and five, and both still add up to what the country-level report said — nothing was thrown away, it was only piled differently.
+
+The SQL did not change its mind. The question did.
+
+## Per month — and there is no month column
+
+This is the shape you will be asked for most, and it is the one that stops people, because there is no `"Month"` column anywhere in `Orders`. There is a date.
+
+So group by something you **compute**:
+
+```sql file=./scripts/freight-per-month-2024.sql
+SELECT EXTRACT(MONTH FROM "OrderDate") AS "Month",
+       sum("Freight") AS "TotalFreight"
+FROM "Orders"
+WHERE "OrderDate" >= DATE '2024-01-01'
+GROUP BY "Month"
+ORDER BY "Month";
+```
+
+| Month | TotalFreight |
+| ----: | -----------: |
+| 1 | 100.4200 |
+| 2 | 212.9000 |
+| 3 | 350.4800 |
+| 4 | 182.3600 |
+| 5 | 226.3400 |
+| 6 | 112.2400 |
+
+`EXTRACT(MONTH FROM "OrderDate")` pulls the month number out of each date, and *that number* becomes the pile. You can group by anything you can work out from a row.
+
+Now the shape is readable: March cost us 350.4800 in freight, more than triple January. And June drops back to 112.2400 — but the latest order in this database is dated the 12th of June, so June is a partial month. **Say so on the report**, or somebody reads that last figure as the business falling over.
+
+> **A note on `GROUP BY "Month"`.** That refers to the alias from the select list. PostgreSQL and DuckDB both allow it and it keeps the query readable, but it is not standard SQL — other engines want the expression repeated: `GROUP BY EXTRACT(MONTH FROM "OrderDate")`. Both forms are correct here; know that the second one is the portable one.
+
+## WHERE runs first, and a group can vanish
+
+One more thing, and it decides whether a report is right.
+
+`WHERE` runs **before** the grouping. It walks the 79 orders one at a time, before any pile exists, and throws some of them away. Only the survivors are ever grouped.
+
+```sql file=./scripts/heavy-orders-per-country.sql
+SELECT "ShipCountry", count(*) AS "OrderCount"
+FROM "Orders"
+WHERE "Freight" > 50
+GROUP BY "ShipCountry"
+ORDER BY "OrderCount" DESC, "ShipCountry";
+```
+
+| ShipCountry | OrderCount |
+| ----------- | ---------: |
+| Germany | 20 |
+| France | 4 |
+| Austria | 3 |
+| Sweden | 3 |
+| Argentina | 2 |
+| USA | 2 |
+| Italy | 1 |
+| Mexico | 1 |
+| Venezuela | 1 |
+
+Count the rows: **nine**. The full report has ten. The UK has left, and nothing on the page mentions it.
+
+It is not a data error. The UK has seven orders and its dearest delivery all year was 45.5000, so every one of them was filtered out before the piling started — and a pile with nothing in it is never made.
+
+> A group with no surviving rows does not come back as zero. **It does not come back.** A zero is a fact; a missing row is a silence.
+
+### And no, you cannot filter on the count
+
+The obvious next request is "only the countries with more than five orders". Put it in the `WHERE` and you get:
+
+```sql file=./scripts/where-with-count.sql
+SELECT "ShipCountry", count(*) AS "OrderCount"
+FROM "Orders"
+WHERE count(*) > 5
+GROUP BY "ShipCountry";
+```
+
+```
+SQL Error [42803]: ERROR: aggregate functions are not allowed in WHERE
+  Position: 68
+```
+
+Which follows from the running order you now know. At the moment `WHERE` looks at an order, nothing has been piled up, so there is no count to compare against — there is not even a pile. It is a perfectly good question asked one clause too early, and the clause that answers it is the whole of the next lesson.
+
+## So: who is our number-one customer?
+
+You have been carrying that question for four lessons, and you now have every piece of it. One pile per customer, count the orders inside each pile, sort by that count:
+
+```sql file=./scripts/orders-per-customer.sql
+SELECT "CustomerID", count(*) AS "OrderCount"
+FROM "Orders"
+GROUP BY "CustomerID"
+ORDER BY "OrderCount" DESC, "CustomerID"
+LIMIT 5;
+```
+
+| CustomerID | OrderCount |
+| ---------- | ---------: |
+| ALFKI | 5 |
+| ANATR | 5 |
+| BERGS | 5 |
+| AROUT | 4 |
+| ANTON | 3 |
+
+**Three of them, five orders each.** By this measure there is no number one — there are three, and the query is being honest about it.
+
+Now ask the same piles a different question. Instead of counting the orders, add up what they cost us to ship:
+
+```sql file=./scripts/freight-per-customer.sql
+SELECT "CustomerID", sum("Freight") AS "TotalFreight"
+FROM "Orders"
+GROUP BY "CustomerID"
+ORDER BY "TotalFreight" DESC
+LIMIT 5;
+```
+
+| CustomerID | TotalFreight |
+| ---------- | -----------: |
+| FRANK | 268.3300 |
+| ALFKI | 253.7300 |
+| FOLKO | 247.2400 |
+| ERNSH | 226.1500 |
+| DUMON | 205.0600 |
+
+**FRANK, on three orders** — fewer than the three customers who tied at the top of the other list, and two of those three are not on this one at all.
+
+Both lists are correct. They answer different questions, and the question was hiding inside the word *biggest* the whole time.
+
+Two honest limits on those tables. The customer **codes** are all you get for now — real company names live in a second table. And this is what each customer cost us **to ship**, not what they **spent**; what they bought is in a second table too. Putting two tables together is the JOINs lesson.
+
+## What you can do now
+
+For any table, and any request that contains the word *per*:
+
+1. **Name the group.** Which column makes a pile — customer, country, month, category? That is the whole of the `GROUP BY`.
+2. **Choose the numbers.** As many aggregates as the report needs, all computed inside each pile.
+3. **Check the grain.** Every extra column in the `GROUP BY` splits your rows further. If you did not want the report broken up by it, take it out.
+4. **Filter rows with `WHERE`** — and remember that a group whose rows all get filtered out disappears rather than reporting zero.
+5. **Sort and cut** afterwards, ties included; grouped rows are still rows.
+
+Next lesson: **`HAVING` vs `WHERE`** — because you can build totals now, and you still cannot filter them.
+
+## The koans: now you write the queries
+
+Each koan is a tiny fill-in-the-blank exercise: a failing test with a `___` where the answer belongs. Fill it in, run it, watch red turn green — and the next one unlocks.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _30
+```
+
+On macOS or Linux, run `./zeus.sh koans learnsql series1 _30` from the same folder. The three arguments are course, series and episode.
+
+> **Says the lesson isn't there?** Your copy of DataZeus predates this lesson — run `.\zeus.bat update` (or `./zeus.sh update`) once to fetch the latest lessons, then run the command again. Koans you have already solved are kept.
+
+The file you edit is:
+
+```
+c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_30\GroupByKoans.groovy
+```
+
+Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
+
+Ten koans, easiest first, in the order this lesson builds them. They count **products per category** rather than orders per country, so none of them can be solved by copying a query off this page. They run on DuckDB — a single file, no server to start.

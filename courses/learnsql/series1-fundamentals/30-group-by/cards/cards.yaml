@@ -1,0 +1,131 @@
+# Flashcards for Learn SQL · Series 1 · 30 — GROUP BY
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
+# tools/build-anki.py turns it into a .apkg with genanki.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds update the same deck (no duplicates).
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# ── WHAT ANKI IS FOR, AND WHAT IT IS NOT FOR ────────────────────────────────────────
+# Anki is reviewed on a phone, weeks later, with no database open, no CloudBeaver, and
+# the lesson long forgotten. So every card here is SELF-CONTAINED: it carries its own
+# premise. NOT ONE of them asks the learner to run a query, to remember a result from
+# an earlier card, or to know Northwind's schema. Where a card needs a fact — a row
+# count, a query somebody handed you — the FRONT states it, and the card tests the
+# REASONING, not the recall of data. A card that fails that test is a koan wearing the
+# wrong clothes: the koans are where you type SQL against real rows; this deck is where
+# the rules have to survive without them.
+#
+# FILE ORDER IS THE CURRICULUM. Anki introduces new cards in file order, so a learner
+# meeting this deck for the first time meets the ideas in the order they build on each
+# other — the same order as the lesson and the video: what a group is, what grouping
+# does to your rows, the grain, then where WHERE sits, then ranking.
+#
+# ── WHO OWNS WHAT, so the next deck does not re-teach this one ──────────────────────
+# LESSON 25 owns the aggregate functions themselves: what count/sum/avg/min/max do,
+# count(*) vs count(column) and NULLs, AVG's denominator, and the plain "column must
+# appear in the GROUP BY clause" REFUSAL met with no GROUP BY in the query at all.
+# THIS DECK owns everything that only exists once there IS a GROUP BY: one row per
+# pile, the grain, the two legal exits from that same rule, WHERE running before the
+# grouping, and a group that vanishes instead of reporting zero.
+# LESSON 35 owns HAVING. The "why is WHERE count(*) rejected" card deliberately stops
+# at "not in WHERE, and here is why" and never names the fix, because the reasoning is
+# the transferable half and the keyword is 35's to give.
+# LESSON 15 owns ties and ORDER BY; the tie card here is about a tie BETWEEN GROUPS, on
+# a number the query invented — which is the thing 15 could not show.
+# (Card NUMBERS are deliberately not used in these notes: inserting one card renumbers
+# every reference after it, and nobody re-checks them.)
+
+deck: "DataZeus::Learn SQL::Series 1::30 GROUP BY"
+guid: "datazeus-learn-sql-series1-30-group-by"
+tags: ["datazeus", "learn-sql", "series-1", "sql"]
+
+cards:
+  # ── 1. WHAT GROUP BY IS FOR ──
+  - basic:
+      front: "An aggregate like <code>count(*)</code> collapses a whole table into one number. What does GROUP BY change about that?"
+      back: "It collapses the table into one number PER GROUP instead of one number for the lot. You name a column; the database makes one pile for every distinct value it finds in that column, and runs the aggregate once inside each pile. \"How many orders?\" becomes \"how many orders per country?\" — same aggregate, run many times."
+
+  - basic:
+      front: "You want a count per country, and you already know how to filter. Why is writing one <code>WHERE \"Country\" = '…'</code> query per country not good enough?"
+      back: "Because you have to know every country before you can start, and a filter cannot tell you that. You can count the distinct values, but a count is not a list — it never gives you the names to put in the WHERE clauses. So you read them out by hand, and you do it again whenever the data changes. Miss one and your report does not say zero for it: that row simply is not there. GROUP BY finds the values for you."
+
+  - cloze: "GROUP BY takes the column that says {{c1::what a group is}}, and returns {{c2::one row per distinct value}} found in it."
+
+  # ── 2. THE MENTAL MODEL: PILES, NOT A FILTER ──
+  # THE CARD THE REST OF THE DECK RESTS ON. Almost every GROUP BY mistake is this
+  # distinction not being held: people picture GROUP BY as a filter that hides rows.
+  - basic:
+      front: "What is the difference between what WHERE does to your rows and what GROUP BY does to them?"
+      back: "WHERE throws rows away and hands back the survivors — the same rows, fewer of them. GROUP BY throws nothing away: it piles the rows up and hands back one row per pile. 79 rows in can become 10 rows out, with every one of the 79 counted exactly once."
+
+  - basic:
+      front: "A grouped query returns a row reading <code>Germany | 32</code>. Where in the table is that row?"
+      back: "Nowhere. It was never in the table. Every row in a grouped result is a SUMMARY of a pile, not one of the original rows — which is why you cannot ask it for a value that belongs to an individual row. Forgetting this is the cause of almost every GROUP BY error and every GROUP BY bug."
+
+  # ── 3. THE RULE, AND ITS TWO DOORS ──
+  # 25's deck owns the bare refusal (met with no GROUP BY present). This card is about
+  # what the rule becomes once a GROUP BY exists — which is where it has two answers.
+  - cloze: "A column in the SELECT list of a grouped query is either {{c1::in the GROUP BY}} or {{c2::inside an aggregate}}. Anything else is refused, because the pile holds many values for it and none of them is the right one."
+
+  - basic:
+      front: "In a grouped query, what are the only two legal things a column in your SELECT list can be?"
+      back: "Either (1) a column you grouped by, or (2) a column wrapped in an aggregate — min, max, count, sum. There is no third option: a raw column cannot survive the collapse, because the pile holds many values for it and there is no honest way to pick one. That is the whole of the \"must appear in the GROUP BY clause or be used in an aggregate function\" error."
+
+  - basic:
+      front: "The two ways to satisfy that rule — put the column in the GROUP BY, or wrap it in an aggregate — are not interchangeable. What is the difference?"
+      back: "Wrapping it in an aggregate leaves your piles exactly as they are and gets one extra value out of each. Putting it in the GROUP BY changes how many piles there ARE, so every row splits and every number gets smaller. The error message only ever recommends the first of those, which is why obeying it can silently change your report."
+
+  # ── 4. THE GRAIN — the card this deck exists for ──
+  # PHRASED AS THE MISTAKE, because that is how it is met in the wild: somebody hands
+  # you a report and you have to see it in one read. Everything the reviewer needs is
+  # stated on the front — no schema, no dataset, no query to run.
+  - basic:
+      front: "A report headed \"orders per country\" was built with <code>GROUP BY \"Country\"</code>. A colleague wanted the city visible too, hit the \"must appear in the GROUP BY clause\" error, and fixed it by adding \"City\" to the GROUP BY. It runs with no error and every count is correct. What has gone wrong?"
+      back: "The report is no longer per country — it is per country AND city, so each country's single row has split into one row per city and every count has shrunk. A country with 32 orders spread over 11 cities now shows a best row of 5, and a country whose orders all go to one city can overtake it. Nothing errors, every number is a genuine count, and the heading is now a lie."
+
+  - basic:
+      front: "State the one test that decides whether a column belongs in your GROUP BY list."
+      back: "Only put a column in the GROUP BY if you want your report BROKEN UP by it. The GROUP BY list IS the grain of the report: a column there does not add detail to a row, it splits the row. If you want to see a column without splitting, it has to go inside an aggregate — or it does not belong in the report at all."
+
+  - cloze: "Every extra column in the GROUP BY makes the piles {{c1::smaller and more numerous}}, so every aggregate in the result gets {{c2::smaller}} too."
+
+  # ── 5. GROUPING BY MORE THAN A PLAIN COLUMN ──
+  - basic:
+      front: "Grouping by two columns is not always a mistake. What exactly do you get when you do it deliberately?"
+      back: "One row for every COMBINATION that actually occurs in the data — not one row per value of each column, and not a row for combinations that never happen. Two countries with two cities each gives four rows. The totals still reconcile with the one-column version, because nothing was thrown away; it was only piled differently."
+
+  - basic:
+      front: "You need a report of totals per month, but the table has no \"Month\" column — only a date. How do you group by month?"
+      back: "Group by an EXPRESSION rather than a column: <code>GROUP BY EXTRACT(MONTH FROM \"OrderDate\")</code>. The computed value becomes the pile. You can group by anything you can work out from a row, which is what makes \"per month\", \"per year\" and \"per week\" possible at all.<br><br>PostgreSQL and DuckDB also let you write <code>GROUP BY \"Month\"</code> referring to a select-list alias. It reads better and it is not standard SQL — repeating the expression is the portable form."
+
+  # ── 6. WHERE AND GROUP BY, IN THAT ORDER ──
+  - cloze: "The clauses run in this order: FROM, then {{c1::WHERE}} which filters ROWS, then {{c2::GROUP BY}} which makes the piles, and only then ORDER BY. Filtering on a total is impossible in WHERE because at that moment no pile exists yet."
+
+  - basic:
+      front: "A \"count per country\" report normally returns 10 rows. You add a WHERE clause and it returns 9, with no error. What happened to the tenth country, and what does that tell you about the running order?"
+      back: "WHERE ran BEFORE the grouping and removed every one of that country's rows, so there was nothing left to make a pile from — and a pile that is never made produces no row. It did not come back as zero; it did not come back at all.<br><br>A zero is a fact. A missing row is a silence. If a grouped report has to show every group, the filter cannot be the thing that removes them."
+
+  - basic:
+      front: "Why is <code>WHERE count(*) > 5</code> rejected, when \"only the groups with more than five rows\" is a perfectly sensible request?"
+      back: "Because WHERE runs first, one row at a time, before any grouping has happened. At the moment it inspects a row there is no count to compare against — there is not even a pile yet. The request is fine; it is being asked one clause too early, and it needs the clause that filters groups AFTER they are built."
+
+  # ── 7. RANKING THE GROUPS ──
+  # Lesson 15 owns ties on ordinary rows. What is new here is that the tie is between
+  # GROUPS, on a number that did not exist until the query invented it.
+  - basic:
+      front: "You rank groups with <code>ORDER BY \"OrderCount\" DESC LIMIT 5</code>. Two groups have the same count. Does the tie rule from the sorting lesson still apply?"
+      back: "Yes, completely — the rows a GROUP BY hands back are rows like any other. If two groups tie on the count and nothing else decides between them, which one lands inside the LIMIT is not promised and can differ between runs. Add a second sort key, usually the grouping column itself, so the report is the same every time."
+
+  - basic:
+      front: "\"Who is our biggest customer?\" You can now compute one number per customer. Why can that still have more than one right answer?"
+      back: "Because \"biggest\" names no measure. Ranked by number of orders placed you may get one answer — and a tie is entirely possible, with several customers on the same count. Ranked by money you get a different one: a customer with few but expensive orders can top that list while not appearing on the other at all. Both queries are correct. The ambiguity was in the question, and GROUP BY is what lets you answer either version."
+
+  # ── 8. PRODUCTION — hardest, and last ──
+  # SUPPLIES ITS OWN SCHEMA on the front, because of the self-containment rule: a
+  # reviewer on a phone has no way to know what columns exist.
+  - basic:
+      front: "Write the query. A table <code>\"Products\"</code> has columns <code>\"ProductName\"</code>, <code>\"CategoryID\"</code>, <code>\"UnitsInStock\"</code> (a number) and <code>\"Discontinued\"</code> (a boolean). Report the three categories holding the most stock, counting only lines still being sold, showing the category and its total. Break ties so the answer is the same every run."
+      back: "<code>SELECT \"CategoryID\", sum(\"UnitsInStock\") AS \"TotalStock\"<br>FROM \"Products\"<br>WHERE \"Discontinued\" = false<br>GROUP BY \"CategoryID\"<br>ORDER BY \"TotalStock\" DESC, \"CategoryID\"<br>LIMIT 3;</code><br><br>The clauses only go in this order. WHERE comes before GROUP BY because it filters rows, not groups. ORDER BY can use \"TotalStock\" because sorting happens after the groups exist, and the second sort key is there so a tie on the total cannot make the list wobble."
