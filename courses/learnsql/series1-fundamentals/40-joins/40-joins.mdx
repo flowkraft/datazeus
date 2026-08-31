@@ -1,0 +1,373 @@
+---
+title: "JOINs: INNER, LEFT, RIGHT, FULL — Combining Rows From Two Tables"
+description: "The data you need is almost never in one table. Learn to match rows across two tables with JOIN and ON, keep the rows that match nothing, and see why moving one condition from ON into WHERE silently undoes a LEFT JOIN."
+topic: "learn-sql"
+tags: ["sql", "fundamentals", "joins", "left-join"]
+level: "beginner"
+module: "series1-fundamentals"
+order: 40
+date: "2026-08-30"
+published: true
+videoId: "learnsql-series1-40-joins"
+---
+
+## The situation this lesson prepares you for
+
+You have spent eight lessons getting good at one table. You can pick columns, filter rows, sort them, cut them down to the top few, and add them up.
+
+And you still cannot answer "what did this customer actually buy?"
+
+Not because it is hard. Because the answer is not in the table you have been querying. `"Orders"` knows that an order happened — who placed it, when, what the delivery cost. What was *in* it is in a different table entirely. Ask `"Orders"` what somebody bought and it has nothing to say, because there is no product name anywhere in it.
+
+That is not a flaw. It is how every database you will ever work with is built, and this lesson is where you stop working inside one table at a time.
+
+By the end of it you will be able to match rows from two tables, keep the rows that match nothing, and recognise the single most common way a join quietly returns the wrong answer.
+
+Every query below runs on the Northwind sample database that ships with DataPallas.
+
+**Open the koans before you read on.** There is a koan for every idea in this lesson — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _40
+```
+
+## First, the thing nobody tells you
+
+**A database is not one big table. It is a lot of small ones that point at each other.**
+
+Ask why, and the answer is short: a row holds one value per column, not a list. An order with three products in it cannot be one row, because there is nowhere to put the second and third product. So the products bought go in a table of their own — `"Order Details"` — one row per thing bought, each row carrying the number of the order it belongs to.
+
+The same reasoning puts customer names in `"Customers"` rather than in every order. Write a name once and point at it, and the day that company changes its name you change one row instead of hunting for seventy-nine copies.
+
+The price of that tidiness is that the thing you want is rarely in the table you started from. **A join is how you go and get it.**
+
+## The table that knows — and cannot say
+
+Here is everything the database knows about what was in order 3, one of Berglunds' orders.
+
+```sql file=./scripts/order-lines-raw.sql
+SELECT *
+FROM "Order Details"
+WHERE "OrderID" = 3
+ORDER BY "ProductID";
+```
+
+| OrderID | ProductID | UnitPrice | Quantity | Discount |
+| ------- | --------- | --------- | -------- | -------- |
+| 3       | 1         | 18.0000   | 8        | 0.0000   |
+| 3       | 2         | 19.0000   | 5        | 0.0000   |
+| 3       | 4         | 22.0000   | 3        | 0.1000   |
+
+Three rows, so three different things were bought. And read what it says they were: product 1, product 2, product 4. Quantities, prices, a discount — and not one word anywhere in it.
+
+This is the same problem you met when you sorted the unshipped backlog, one level deeper. There, a customer was a code: `ALFKI`. Here the *whole table* is codes. `"ProductID"` is a pointer, and the thing it points at — the name — lives in `"Products"`.
+
+> `SELECT *` is used here on purpose, and it is one of the few places it earns its keep: the point is the shape of the whole table, not a chosen list of columns. For anything you actually send to someone, name your columns.
+
+## JOIN: reading two tables as one
+
+```sql file=./scripts/order-lines-with-names.sql
+SELECT p."ProductName", d."Quantity", d."UnitPrice"
+FROM "Order Details" d
+JOIN "Products" p
+  ON p."ProductID" = d."ProductID"
+WHERE d."OrderID" = 3
+ORDER BY p."ProductName";
+```
+
+| ProductName                 | Quantity | UnitPrice |
+| --------------------------- | -------- | --------- |
+| Chai                        | 8        | 18.0000   |
+| Chang                       | 5        | 19.0000   |
+| Chef Antons Cajun Seasoning | 3        | 22.0000   |
+
+Same three lines. Same quantities. And now it reads like something you could hand to a person: eight Chai, five Chang, three Chef Antons Cajun Seasoning.
+
+Two new pieces of syntax, and they do exactly what they look like:
+
+- **`JOIN "Products" p`** names the second table.
+- **`ON p."ProductID" = d."ProductID"`** is the **matching rule** — how the database decides which row over there belongs with which row over here.
+
+Mechanically it works row by row: take an order line, read its `"ProductID"`, go and find the product with that id, and lay the two rows side by side as one wider row. Do that for every order line and you have your result.
+
+`ON` deserves its own line in your queries. It is not punctuation — it is the whole logic of the join, and putting it where you can see it will matter enormously in a few minutes.
+
+## Aliases, and why every column gets a prefix
+
+`FROM "Order Details" d` says: *for the rest of this query, `d` means `"Order Details"`*. Same for `p` and `"Products"`. These are **table aliases**.
+
+They save typing, but that is not why they are there. Watch what happens without them:
+
+```sql file=./scripts/ambiguous-column.sql
+SELECT p."ProductName", "UnitPrice", d."Quantity"
+FROM "Order Details" d
+JOIN "Products" p
+  ON p."ProductID" = d."ProductID";
+```
+
+```
+ERROR: column reference "UnitPrice" is ambiguous
+SQL state: 42702
+Position: 25
+```
+
+Both tables have a column called `"UnitPrice"`, and the database will not guess which one you meant.
+
+That refusal is worth more than it looks, because those two columns **mean different things**:
+
+- `d."UnitPrice"` is what that line **sold for**, on the day it sold.
+- `p."UnitPrice"` is what the catalogue **charges today**.
+
+On an invoice you want the first. On a "what would this order cost now" report you want the second. They are different questions, and the error is the database making you say which one you asked. Once two tables are in play, prefix everything — it costs two characters and removes a whole class of quiet mistake.
+
+## A different shape of question
+
+Now a job that looks just as easy and is not.
+
+Your sales manager wants the June review: **each of our three people, and the orders they took.** Three employees, four orders placed in June 2024.
+
+The `ON` clause is not limited to the key. It is the whole matching rule, so you can put more in it — match this rep to this order, **and** only if the order is from June:
+
+```sql file=./scripts/june-by-rep-inner.sql
+SELECT e."FirstName", o."OrderID", o."OrderDate"
+FROM "Employees" e
+JOIN "Orders" o
+  ON o."EmployeeID" = e."EmployeeID"
+ AND o."OrderDate" >= DATE '2024-06-01'
+ORDER BY e."FirstName", o."OrderDate";
+```
+
+| FirstName | OrderID | OrderDate  |
+| --------- | ------- | ---------- |
+| Janet     | 4       | 2024-06-05 |
+| Janet     | 7       | 2024-06-12 |
+| Nancy     | 6       | 2024-06-07 |
+| Nancy     | 5       | 2024-06-10 |
+
+Four orders. All real. And **two people**, in a report about three.
+
+Andrew Fuller is not in it. No error, no warning, nothing to notice.
+
+## What a plain JOIN quietly does
+
+**Andrew took no orders in June, so Andrew matched nothing — and a row that matches nothing produces no row at all.**
+
+That is the rule the whole lesson follows from, and the word for it is **INNER**. You have been writing it since the first query on this page: a plain `JOIN` *is* an `INNER JOIN`. It keeps the rows that matched and drops the rest without a word.
+
+Now look at *which* row you lost. Andrew is the Vice President of Sales; a month where he personally takes no orders is completely normal. That blank row is the one genuinely informative fact in the report — and instead of showing it, the report now quietly claims that everyone sold something in June.
+
+That is the shape of this bug in the wild. Not a crash. A report that is the right shape, full of real rows, making a claim that is not true.
+
+## LEFT JOIN: keep every row on the left
+
+So say what you actually want. One word:
+
+```sql file=./scripts/june-by-rep-left.sql
+SELECT e."FirstName", o."OrderID", o."OrderDate"
+FROM "Employees" e
+LEFT JOIN "Orders" o
+  ON o."EmployeeID" = e."EmployeeID"
+ AND o."OrderDate" >= DATE '2024-06-01'
+ORDER BY e."FirstName", o."OrderDate";
+```
+
+| FirstName | OrderID | OrderDate  |
+| --------- | ------- | ---------- |
+| Andrew    |         |            |
+| Janet     | 4       | 2024-06-05 |
+| Janet     | 7       | 2024-06-12 |
+| Nancy     | 6       | 2024-06-07 |
+| Nancy     | 5       | 2024-06-10 |
+
+**`LEFT JOIN` keeps every row of the left-hand table** — "left" meaning the one named in your `FROM` line, here `"Employees"` — whether it found a match or not.
+
+### The empty cells you just created
+
+Andrew's row has an order number and a date that are **empty**. There is no such order anywhere in the database. The database *made* those two cells: it had a row on the left, went looking for a match, found none, and put `NULL` in every column that would have come from the right-hand table.
+
+That is worth sitting with, because it is the first time in this course you have produced a `NULL` yourself rather than found one. And it is not missing data — **it is the answer**. It means "no June order", which is exactly what the manager wanted to know.
+
+What `NULL` then does to comparisons, and why `= NULL` matches nothing at all, is the next lesson in this series. For now: those cells are empty on purpose, and they are the point of the report.
+
+### Three people in, five rows out
+
+Both of those numbers are right, and the arithmetic surprises everyone once.
+
+A join gives you **one row per match**. Janet matched two June orders, so Janet appears twice. Nancy matched two, so Nancy appears twice. Andrew matched none, so he gets a single row full of blanks. Four matches plus one unmatched row is five.
+
+The row count follows the *matches*, not the table. Count the matches and it always adds up.
+
+## The trap: ON versus WHERE
+
+Here is the one that costs people days.
+
+The query above works. Now "tidy it up" by moving the date condition down into a `WHERE`, which is where you have put every condition since lesson 4:
+
+```sql file=./scripts/june-by-rep-where.sql
+SELECT e."FirstName", o."OrderID", o."OrderDate"
+FROM "Employees" e
+LEFT JOIN "Orders" o
+  ON o."EmployeeID" = e."EmployeeID"
+WHERE o."OrderDate" >= DATE '2024-06-01'
+ORDER BY e."FirstName", o."OrderDate";
+```
+
+| FirstName | OrderID | OrderDate  |
+| --------- | ------- | ---------- |
+| Janet     | 4       | 2024-06-05 |
+| Janet     | 7       | 2024-06-12 |
+| Nancy     | 6       | 2024-06-07 |
+| Nancy     | 5       | 2024-06-10 |
+
+Andrew is gone again. The words `LEFT JOIN` are still sitting there on line 3.
+
+**Because `ON` and `WHERE` happen at different times.**
+
+1. The `LEFT JOIN` runs first. Andrew gets his row, with an empty `"OrderDate"`.
+2. **Then** the `WHERE` runs, on the rows that came out of the join.
+3. Andrew's date is empty, so it is not on or after the first of June. His row is thrown away.
+
+The `WHERE` deleted precisely the rows the `LEFT JOIN` went to the trouble of keeping. Put a condition on the right-hand table into a `WHERE` and you have turned your `LEFT JOIN` back into an `INNER JOIN` — and left the word `LEFT` there to reassure you.
+
+Note that on an `INNER JOIN` this move is completely harmless: `ON` and `WHERE` give identical answers, because there are no unmatched rows to protect. That is exactly why the habit forms, and exactly why it bites the first time you switch a query to `LEFT`.
+
+### The rule worth writing down
+
+> **A condition about the RIGHT-hand table belongs in `ON`.**
+> **A condition about the LEFT-hand table — the one you are keeping every row of — can go in `WHERE`.**
+
+The reason is the same one either way: `WHERE` cannot take away a left-hand row you meant to keep if the condition is *about* that left-hand row.
+
+## The one legitimate WHERE: the anti-join
+
+There is a single exception, and it is genuinely useful. If you want **only** the rows that matched nothing, test the right-hand side for `NULL`:
+
+```sql file=./scripts/reps-with-no-june-order.sql
+SELECT e."FirstName", e."LastName"
+FROM "Employees" e
+LEFT JOIN "Orders" o
+  ON o."EmployeeID" = e."EmployeeID"
+ AND o."OrderDate" >= DATE '2024-06-01'
+WHERE o."OrderID" IS NULL
+ORDER BY e."FirstName";
+```
+
+| FirstName | LastName |
+| --------- | -------- |
+| Andrew    | Fuller   |
+
+This is called an **anti-join**, and it is how you answer every "which of these has none?" question: customers who have never ordered, products that did not sell this month, invoices with no payment against them.
+
+It works precisely *because* of the trap above — you are deliberately keeping only the rows the `WHERE` would otherwise destroy. Test a column that can never be `NULL` in a real matched row (a primary key is ideal), or you will also throw away rows that matched but happen to have a blank in the column you tested.
+
+## RIGHT JOIN: the same thing, mirrored
+
+```sql file=./scripts/june-by-rep-right.sql
+SELECT e."FirstName", o."OrderID", o."OrderDate"
+FROM "Orders" o
+RIGHT JOIN "Employees" e
+  ON o."EmployeeID" = e."EmployeeID"
+ AND o."OrderDate" >= DATE '2024-06-01'
+ORDER BY e."FirstName", o."OrderDate";
+```
+
+`RIGHT JOIN` keeps every row of the **right-hand** table. Here the two tables are written the other way round and the keyword is `RIGHT`, so it returns exactly the five rows the `LEFT JOIN` returned — Andrew's blanks and all.
+
+The practical advice is short: **pick `LEFT` and stay there.** Anything a `RIGHT JOIN` can do, a `LEFT JOIN` with the tables swapped can do, and reading a query is much easier when every join in it leans the same way. You will still meet `RIGHT JOIN` in other people's code, and now it will not stop you.
+
+## FULL OUTER JOIN: keep both sides
+
+```sql file=./scripts/june-by-rep-full.sql
+SELECT e."FirstName", o."OrderID", o."OrderDate"
+FROM "Employees" e
+FULL JOIN "Orders" o
+  ON o."EmployeeID" = e."EmployeeID"
+ AND o."OrderDate" >= DATE '2024-06-01'
+ORDER BY e."FirstName", o."OrderDate";
+```
+
+| FirstName | OrderID | OrderDate  |
+| --------- | ------- | ---------- |
+| Andrew    |         |            |
+| Janet     | 4       | 2024-06-05 |
+| Janet     | 7       | 2024-06-12 |
+| Nancy     | 6       | 2024-06-07 |
+| Nancy     | 5       | 2024-06-10 |
+|           | 8       | 2022-12-05 |
+| …         | …       | …          |
+
+**Eighty rows** — and the number is the lesson. It decomposes exactly: four matched June orders, one employee with no June order, and then all seventy-five orders that are not June orders, each with a blank where the rep's name should be.
+
+Blanks on the left, blanks on the right. That is what "keep the unmatched rows from both sides" looks like.
+
+And it is honestly not a report. You will write `LEFT JOIN` a thousand times before you write one of these. Where `FULL OUTER` earns its place is **reconciliation** — comparing two lists that are supposed to agree and do not. This month's stock file against your supplier's. Two systems that should hold the same customers. You want to see what is only on the left, what is only on the right, and what is on both, in one pass.
+
+## The four joins, in one picture
+
+| Join | What it keeps | When you want it |
+| ---- | ------------- | ---------------- |
+| `INNER` (plain `JOIN`) | only rows that matched | the default; when a non-match means "not relevant" |
+| `LEFT` | every row of the first table, matched or not | almost always, when the first table is your list of things |
+| `RIGHT` | every row of the second table | rarely — swap the tables and write `LEFT` |
+| `FULL OUTER` | every row of both | reconciling two lists neither of which you trust |
+
+The question that picks between them is not "which join is correct". It is:
+
+> **Which rows must survive even when nothing matches?**
+
+Answer that and the join names itself. Then remember where the conditions go, and you have the whole of this lesson.
+
+## Things you will read but should not write
+
+Three pieces of join syntax you will meet in other people's SQL. Recognise them; do not adopt them.
+
+**The comma join.** `FROM "Orders" o, "Customers" c WHERE c."CustomerID" = o."CustomerID"` is the pre-1992 way of writing an inner join. It still works everywhere. It is worse for one specific reason: forget the `WHERE` and you get a **cross join** — every row paired with every row, silently, and 79 orders against 25 customers is 1,975 rows that look plausible. With `JOIN ... ON`, forgetting the rule is a syntax error instead. Write `JOIN`.
+
+**`CROSS JOIN`.** The deliberate version of that: every combination of both tables, no matching rule at all. It has real uses — generating a row per day per product, for instance — but if you did not mean it, it is a bug.
+
+**`USING (col)`.** A shorthand for when the columns have the same name on both sides: `JOIN "Products" p USING ("ProductID")`. Compact and legal. It only works when the names match exactly, and it merges the two columns into one in the output, which occasionally surprises people. Harmless; `ON` is never wrong.
+
+**`NATURAL JOIN`.** Joins on *every* column the two tables happen to share, with no rule written down at all. Avoid it. Add a column called `"ModifiedDate"` to both tables next year and your query silently starts joining on that too, returning a different answer with no change to its text.
+
+## A note on this database
+
+Everything in the Northwind that ships with DataPallas has a valid foreign key. Every order has a real customer and a real employee; every product has a real supplier and a real category. There are no orphan rows anywhere in it.
+
+That is why every outer-join example above narrows the match with a **second condition in `ON`** rather than relying on missing data: in this database there is none to rely on. It is also, as it happens, the most common real LEFT JOIN there is — *every X, and their Y in this period, including the ones with none* — so it is worth learning in exactly this shape.
+
+Out in the world, unmatched rows also arrive the other way: a nullable foreign key, an import that dropped a row, a code that points at something deleted last year. `LEFT JOIN` finds those too, and the anti-join above is how you go looking for them.
+
+## Practice
+
+There are ten koans for this lesson, and they deliberately use **different tables** from everything above — products and their categories, and suppliers and the lines you have run out of. You cannot answer them by copying a query off this page, which is the point.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _40
+```
+
+They walk the same path this lesson did: match on a shared column, say which table a column comes from, narrow the match in `ON`, watch an `INNER JOIN` drop four rows out of six, fix it with `LEFT`, meet the `ON`-versus-`WHERE` trap head on, write an anti-join, mirror it with `RIGHT`, count what `FULL OUTER` gives you, and finish by writing a whole query from scratch — one with a condition in `ON` **and** a condition in `WHERE`, which is the real exam.
+
+One more query to try on your own, using a third pair of tables. Which courier carried our five most expensive deliveries?
+
+```sql file=./scripts/orders-with-courier.sql
+SELECT o."OrderID", s."CompanyName", o."Freight"
+FROM "Orders" o
+JOIN "Shippers" s
+  ON s."ShipperID" = o."ShipVia"
+ORDER BY o."Freight" DESC
+LIMIT 5;
+```
+
+| OrderID | CompanyName      | Freight |
+| ------- | ---------------- | ------- |
+| 72      | United Package   | 98.9200 |
+| 59      | Speedy Express   | 97.5300 |
+| 46      | Federal Shipping | 96.1400 |
+| 33      | United Package   | 95.7500 |
+| 20      | Speedy Express   | 94.3600 |
+
+## What is next
+
+You just manufactured your first `NULL`s. The next lesson is what they do to everything else — why `WHERE "ShippedDate" = NULL` returns nothing at all, why a `NULL` is not equal to another `NULL`, and why `COUNT(column)` and `COUNT(*)` can disagree by a third of your business.

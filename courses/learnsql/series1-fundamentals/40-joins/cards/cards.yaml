@@ -1,0 +1,126 @@
+# Flashcards for Learn SQL · Series 1 · 40 — JOINs: INNER, LEFT, RIGHT, FULL
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
+# tools/build-anki.py turns it into a .apkg with genanki.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds update the same deck (no duplicates).
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# ── WHAT ANKI IS FOR, AND WHAT IT IS NOT FOR ────────────────────────────────────────
+# Anki is reviewed on a phone, weeks later, with no database open, no CloudBeaver, and
+# the lesson long forgotten. So every card here is SELF-CONTAINED: it carries its own
+# premise. NOT ONE of them asks the learner to run a query, to remember a result from an
+# earlier card, or to know Northwind's schema. Where a card needs a fact — a table's
+# columns, a query somebody handed you — the FRONT states it, and the card tests the
+# REASONING, not the recall of data. A card that fails that test is a koan wearing the
+# wrong clothes: the koans are where you type SQL against real rows; this deck is where
+# the rules have to survive without them.
+#
+# NORTHWIND NAMES APPEAR ONLY AS A SUPPLIED PREMISE. "A table of employees has three
+# rows" is fine when the card says so; "how many employees are there" is not a SQL
+# question at all.
+#
+# FILE ORDER IS THE CURRICULUM. Anki introduces new cards in file order, so a learner
+# meeting this deck for the first time meets the ideas in the order they build on each
+# other — the same order as the lesson and the video: why two tables, matching them,
+# naming the columns, what a plain join throws away, keeping it, and the trap that
+# throws it away again.
+#
+# WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
+#   - Lesson 45 owns NULL itself — three-valued logic, IS NULL vs = NULL, what NULL does
+#     to a WHERE. This deck touches NULL only as something a LEFT JOIN PRODUCES, and the
+#     anti-join card below is deliberately about WHY you test the right-hand key rather
+#     than about how NULL comparisons behave. Do not re-teach 45 here.
+#   - Series 2 owns joining three or more tables, fan-out as a topic, and self-joins.
+#     The "one row per match" card here is the beginner-level answer to "why did my row
+#     count change", not the fan-out lesson.
+
+deck: "DataZeus::Learn SQL::Series 1::40 JOINs"
+guid: "datazeus-learn-sql-series1-40-joins"
+tags: ["datazeus", "learn-sql", "series-1", "sql"]
+
+cards:
+  # ── 1. WHY THERE IS A SECOND TABLE AT ALL ──
+  - basic:
+      front: "An order can contain one product or thirty. Why can't the products bought just be columns on the order row itself?"
+      back: "Because a row holds one value per column, not a list. There is nowhere to put the second and third product without inventing columns you can never have enough of. So the things bought go in a table of their own — one row per item — each carrying the number of the order it belongs to. That pointing back by id is what you follow with a join."
+
+  # ── 2. THE MECHANICS: JOIN AND ON ──
+  - cloze: "In a two-table query, {{c1::JOIN}} names the second table and {{c2::ON}} is the matching rule that says which row over there belongs with which row over here."
+
+  - basic:
+      front: "In plain words, what does a join actually DO to produce its rows?"
+      back: "It matches rows and glues them side by side. For each row on one side it looks for rows on the other side that satisfy the ON condition, and for every match it emits one wider row containing both. No match, no row — unless you asked for an outer join."
+
+  # ── 3. QUALIFYING COLUMNS ──
+  - basic:
+      front: "Two tables in one query both have a column called <code>\"UnitPrice\"</code>. You write it with no table prefix. What happens, and why is that good?"
+      back: "The query is refused: the column reference is ambiguous (SQLSTATE 42702). It is good because the two columns almost certainly mean different things — the price the line SOLD for versus the price the catalogue charges NOW — and the database is making you say which question you asked instead of guessing. Once two tables are in play, prefix every column."
+
+  # ── 4. WHAT A PLAIN JOIN THROWS AWAY — the card this deck exists for ──
+  # Phrased as the mistake, because that is how it is met in the wild: somebody hands
+  # you a report and you have to spot it in one read. Everything needed is on the front.
+  - basic:
+      front: "A report is supposed to show all 3 sales reps and the orders each took last month. It uses a plain <code>JOIN</code> from the employees table to the orders table. Two reps sold something; one sold nothing. How many reps appear in the report?"
+      back: "Two. A plain JOIN is an INNER JOIN: it keeps only rows that found a match, and a row that matches nothing produces no row at all — not a blank row, no row. So the rep who sold nothing vanishes, with no error and no warning. The report is now quietly claiming every rep sold something, which is false. The row you lost is usually the one worth knowing about."
+
+  - cloze: "A plain {{c1::JOIN}} is short for {{c2::INNER}} JOIN, which keeps only the rows that matched on both sides."
+
+  # ── 5. KEEPING THE UNMATCHED ROWS ──
+  - basic:
+      front: "What does <code>LEFT JOIN</code> keep that <code>JOIN</code> does not, and which table is \"left\"?"
+      back: "It keeps every row of the left-hand table — the one named in your FROM clause — whether or not it found a match. Rows that matched nothing still come back, with NULL in every column that would have come from the right-hand table. \"Left\" is purely positional: it is the table you wrote first."
+
+  - basic:
+      front: "A LEFT JOIN returns a row whose right-hand columns are all empty. Where did those empty values come from?"
+      back: "The database invented them. There is no such row anywhere on the right-hand side — the join had a row on the left, went looking for a match, found none, and filled the right-hand columns with NULL so the row could still be returned. The emptiness is the answer: it means \"nothing matched\", which is usually the exact fact the report was asked for."
+
+  - basic:
+      front: "You LEFT JOIN a 3-row table to another table and get 5 rows back. Is that a bug?"
+      back: "No. A join emits one row per MATCH, not one row per row of the original table. If one of the three matched twice you get two rows for it; if another matched nothing you get one row of blanks for it. The count follows the matches: 2 + 2 + 1 = 5. Count the matches and it always reconciles."
+
+  # ── 6. THE TRAP — the hardest idea in the lesson, and the one worth the most ──
+  - basic:
+      front: "This is supposed to list every employee and their June orders, including employees with none. It returns only employees who had a June order. Why?<br><br><code>SELECT e.name, o.id<br>FROM employees e<br>LEFT JOIN orders o ON o.emp_id = e.id<br>WHERE o.order_date &gt;= '2024-06-01'</code>"
+      back: "The WHERE ran after the join and undid it. The LEFT JOIN did keep the employees with no June order — with an empty order_date — but then WHERE tested that empty date against the first of June, it failed, and the row was thrown away. A condition on the RIGHT-hand table in a WHERE turns a LEFT JOIN back into an INNER JOIN, while the word LEFT stays on screen reassuring you. The fix is to move the date up into the ON clause with an AND."
+
+  - cloze: "{{c1::ON}} decides what counts as a match while the join is being built; {{c2::WHERE}} runs afterwards, on the rows that came out of it."
+
+  - basic:
+      front: "You are writing an outer join and have a condition to place. What decides whether it goes in ON or in WHERE?"
+      back: "Which table it is about. A condition about the RIGHT-hand table belongs in ON — put it in WHERE and it deletes the unmatched rows you were trying to keep. A condition about the LEFT-hand table (the one you are keeping every row of) is safe in WHERE, because it cannot remove a row on the grounds of a match that never happened. On an INNER JOIN it makes no difference at all, which is exactly why the habit forms and then bites."
+
+  # ── 7. THE ONE LEGITIMATE EXCEPTION ──
+  # Deliberately about WHY you pick a never-null key to test, not about NULL semantics —
+  # NULL itself belongs to lesson 45. See the ownership note at the top of this file.
+  - basic:
+      front: "How do you return ONLY the rows that matched nothing — customers who never ordered, products that never sold? And which column should you test?"
+      back: "LEFT JOIN as usual, then <code>WHERE &lt;right-hand column&gt; IS NULL</code>. It is called an anti-join, and it works precisely because a WHERE on the right-hand table destroys matched rows — here that is what you want. Test a column that could never be empty on a genuine match, such as the right-hand table's primary key; test a merely optional column and you will also collect rows that DID match but happen to be blank there."
+
+  # ── 8. THE OTHER TWO DIRECTIONS ──
+  - cloze: "{{c1::RIGHT}} JOIN keeps every row of the second table — the mirror image of LEFT JOIN. In practice write {{c2::LEFT}} and swap the tables instead, so every join in a query leans the same way; recognise the other one in code you did not write."
+
+  - basic:
+      front: "What does FULL OUTER JOIN keep, and when is it actually the right tool?"
+      back: "Every row from both sides: the matches, the left-hand rows that matched nothing, and the right-hand rows that matched nothing, with NULLs filling whichever side is absent. You will rarely want it for a report. Where it earns its place is RECONCILIATION — comparing two lists that are supposed to agree and do not, such as your stock file against a supplier's, when you need to see what is only on one side, only on the other, and on both, in a single pass."
+
+  # ── 9. THE QUESTION THAT PICKS THE JOIN ──
+  - basic:
+      front: "You have to choose between INNER, LEFT, RIGHT and FULL. What single question decides it?"
+      back: "\"Which rows must survive even when nothing matches?\" None — INNER. All of the first table — LEFT. All of the second — RIGHT (or swap the tables and write LEFT). Both — FULL OUTER. It is not a question about SQL, it is a question about the report you were asked for, and answering it names the join for you."
+
+  # ── 10. THINGS YOU WILL READ BUT SHOULD NOT WRITE ──
+  - basic:
+      front: "What is a CROSS JOIN, and what is the classic way of producing one by accident?"
+      back: "Every row of one table paired with every row of the other, with no matching rule — 79 rows against 25 gives 1,975. You get one by accident with the old comma syntax, <code>FROM a, b</code>, when you forget the WHERE that was supposed to match them: no error, just a plausible-looking result many times too large. Written as <code>JOIN ... ON</code>, forgetting the rule is a syntax error instead. That is the argument for the modern syntax."
+
+  - basic:
+      front: "Why is NATURAL JOIN discouraged, even though it is shorter?"
+      back: "It joins on EVERY column the two tables happen to share, and the rule is never written down in the query. Add a column with the same name to both tables next year — an audit column like ModifiedDate is the classic — and the query silently starts joining on that as well, returning a different answer with no change to its text. Write the ON clause; a join rule you cannot see is a join rule you cannot review."
+
+  # ── 11. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  - basic:
+      front: "Write the query. <code>\"Suppliers\"</code> has <code>\"SupplierID\"</code> and <code>\"CompanyName\"</code>; <code>\"Products\"</code> has <code>\"ProductID\"</code>, <code>\"SupplierID\"</code>, <code>\"ProductName\"</code> and <code>\"UnitsInStock\"</code>. List EVERY supplier, alongside any of their products that is out of stock (zero units) — including suppliers with nothing out of stock."
+      back: "<code>SELECT s.\"CompanyName\", p.\"ProductName\"<br>FROM \"Suppliers\" s<br>LEFT JOIN \"Products\" p<br>&nbsp;&nbsp;ON p.\"SupplierID\" = s.\"SupplierID\"<br>&nbsp;&nbsp;AND p.\"UnitsInStock\" = 0<br>ORDER BY s.\"CompanyName\";</code><br><br>Two things to get right: LEFT JOIN, because \"every supplier\" means unmatched suppliers must survive; and the stock test in the ON clause, NOT in a WHERE. Put it in a WHERE and you throw away exactly the suppliers you were told to include, and the word LEFT will still be sitting there looking correct."
