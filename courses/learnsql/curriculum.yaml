@@ -321,21 +321,82 @@ series:
         short: "Aliases, Expressions & DISTINCT — output like a report"
         hands_on: ["koan:complete", "koan:diagnose"]
         core: true
-        status: planned
+        status: published
+      # THE FIRST LESSON WHOSE RESULT IS A VALUE RATHER THAN ROWS, and the episode says so in
+      # the first thirty seconds — SELECT, WHERE, ORDER BY and LIMIT all hand back rows, and
+      # this hands back one number. That shape change is the lesson's own frame.
+      #
+      # THE SPINE, taught at three depths, because it is one idea and a learner who meets it
+      # once files it as a special case: AN AGGREGATE IS AN ANSWER ABOUT A SET OF ROWS, and
+      # two things decide that set while being invisible in the answer.
+      #   1. WHICH ROWS SURVIVED WHERE. max("UnitPrice") is 123.7900 — and BOTH of the two
+      #      dearest lines are discontinued, so that is a sausage nobody can order. The same
+      #      question over "Discontinued" = false answers 38.0000. A 69% drop, no error.
+      #   2. WHICH VALUES WERE THERE. count(*) is 79, count("ShippedDate") is 52, because 27
+      #      orders were placed and never shipped. Two correct answers to "how many orders",
+      #      a third of the business apart. The brief calls this "the lesson, not a footnote".
+      #      The rule then generalises: every aggregate skips missing values, and on AVG that
+      #      moves the DENOMINATOR — the article shows 3988.5200 over 79 (50.4876) against the
+      #      same total over 52 (76.7023) to make the size of it concrete.
+      #   3. WHEN THE SET IS EMPTY. No order has ever shipped to Japan, so WHERE throws all 79
+      #      rows away and the query STILL returns one row: count 0, sum NULL. Not zero.
+      #
+      # THE WALL closes it: SELECT "ProductName", max("UnitPrice") is REFUSED (SQLSTATE 42803,
+      # and the video draws the real CloudBeaver panel). One row cannot hold twenty names. To
+      # NAME the row you sort and take one, which is episode 15; to get one number PER GROUP
+      # you need GROUP BY, which is episode 30 — so the error message itself is the handover.
+      #
+      # NULL DEBT, deliberate and unchanged: three-valued logic is Series 1 · 45. This episode
+      # teaches only the behaviour ("an empty cell is not a value, so it is not counted") and
+      # borrows IS NULL / IS NOT NULL on trust, exactly as episode 15 did.
+      #
+      # NOT TAUGHT HERE, and each was considered: HAVING is named once as the answer to "can I
+      # put an aggregate in WHERE" and left to 35; GROUP BY is named twice and shown never;
+      # ROUND is not used at all, so the article prints AVG's full sixteen digits and explains
+      # them rather than hiding them. STRING_AGG, STDDEV and the statistical set are Series 2.
       - n: "25"
         slug: aggregate-functions
         title: "COUNT, SUM, AVG, MIN, MAX — Turning Many Rows Into One Number"
         short: "COUNT, SUM, AVG, MIN, MAX — many rows, one number"
         hands_on: ["koan:complete", "koan:predict"]
         core: true
-        status: planned
+        status: published
+      # WRITTEN 2026-08-30. The episode earns its place on ONE failure, and it is caused by
+      # OBEYING A CORRECT ERROR MESSAGE. `SELECT "ShipCountry", "OrderID", count(*) ... GROUP BY
+      # "ShipCountry"` is refused (42803, "must appear in the GROUP BY clause"), and the message
+      # tells you the fix: add it to the GROUP BY list. So you add "ShipCity", which somebody
+      # genuinely wanted to see, and the query runs clean — and the report has changed its
+      # answer. Ten rows become twenty-four, every count shrinks, and "our biggest market" moves
+      # from Germany (32 orders) to Mexico (8), because all eight of Mexico's orders go to one
+      # city while Germany's thirty-two are spread over eleven. No error. Every number real.
+      #
+      # THE RULE THAT PREVENTS IT: the GROUP BY list IS the grain of the report. A column there
+      # does not add detail to a row, it SPLITS the row. Only group by a column you want the
+      # report broken up by.
+      #
+      # THE SECOND SILENT FAULT sets up 35: WHERE runs BEFORE the grouping, so `WHERE "Freight"
+      # > 50` drops the UK — seven real orders, dearest 45.50 — out of the report entirely. Not
+      # zero. Absent. A zero is a fact; a missing row is a silence.
+      #
+      # PAYS OFF "WHO IS YOUR #1 CUSTOMER?", open since 10 and deferred twice (15: "sorting
+      # doesn't add anything up"; 25: "that needs one number for each customer — one more
+      # lesson"). THIS is that lesson, and the payoff is that the question was ambiguous: by
+      # orders placed it is a THREE-WAY TIE (five each); by freight paid it is one customer on
+      # three orders. Spend on the products themselves still needs the JOIN, and the episode
+      # says so rather than letting "biggest" quietly stand in for it.
+      #
+      # NOT TAUGHT HERE, and each was considered: HAVING is 35, and the episode ends by walking
+      # Leo into the error that makes it necessary. COUNT(col) skipping NULLs is 45's loop back
+      # to 25. Names beside the grouped codes need the JOIN (40). GROUPING SETS / ROLLUP / CUBE
+      # and GROUP BY <ordinal> are later series. `GROUP BY <select alias>` IS used on screen —
+      # both our engines allow it, it is not standard, and the article carries the portable form.
       - n: "30"
         slug: group-by
         title: "GROUP BY — One Number per Customer, per Month, per Anything"
         short: "GROUP BY — one number per group"
         hands_on: ["koan:complete", "koan:predict"]
         core: true
-        status: planned
+        status: published
       # Closes the aggregation arc inside Series 1 — grouping you can't filter is half a tool.
       - n: "35"
         slug: having-vs-where
@@ -343,14 +404,14 @@ series:
         short: "HAVING vs WHERE — why WHERE can't filter totals"
         hands_on: ["koan:diagnose", "koan:predict"]
         core: true
-        status: planned
+        status: published
       - n: "40"
         slug: joins
         title: "JOINs: INNER, LEFT, RIGHT, FULL — Combining Rows From Two Tables"
         short: "JOINs: INNER, LEFT, RIGHT, FULL — rows from two tables"
         hands_on: ["koan:predict", "koan:complete"]
         core: true
-        status: planned
+        status: published
       # Sits AFTER the JOINs episode on purpose: the learner has just manufactured NULLs
       # with a LEFT JOIN, so `WHERE col = NULL` returning nothing is demonstrable on data
       # they made themselves rather than an abstract note next to the data types.
@@ -370,7 +431,7 @@ series:
         short: "NULL & Three-Valued Logic — how missing values count"
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
-        status: planned
+        status: published
       - n: "50"
         slug: your-first-real-report
         title: "SELECT + JOIN + GROUP BY — Building Your First Real Report"
@@ -378,7 +439,7 @@ series:
         hands_on: ["koan:author", "cloudbeaver"]
         core: true
         tags: ["project"]
-        status: planned
+        status: published
 
   - slug: series2-intermediate
     title: Intermediate SQL
