@@ -1,0 +1,439 @@
+---
+title: "NULL & Three-Valued Logic — How Missing Values Change Your Results"
+description: "An empty cell is not a value, so comparing it to one answers neither yes nor no. Learn why = NULL matches nothing, why a filter and its opposite do not add up, and the two places a missing value quietly changes a number you were about to send someone."
+topic: "learn-sql"
+tags: ["sql", "fundamentals", "null", "three-valued-logic", "coalesce"]
+level: "beginner"
+module: "series1-fundamentals"
+order: 45
+date: "2026-08-30"
+published: true
+videoId: "learnsql-series1-45-null-and-three-valued-logic"
+---
+
+## The situation this lesson prepares you for
+
+Last lesson you made your first empty cells. A `LEFT JOIN` went looking for a match, found none, and left the space blank — and you were told those blanks were the answer, not a gap.
+
+Today somebody asks you something that sounds much easier: **which of our orders have not shipped yet?**
+
+You have been writing `WHERE` since lesson 4. The shipped date is the empty one. So you test the shipped date against nothing, run it, and get back **zero rows** — while 27 orders sit in that table unshipped, one of them since December 2022.
+
+Nothing errors. Nothing warns you. The query is not broken; it is answering a different question from the one you think you asked.
+
+That is the whole of this lesson, and it happens three times over: once where the result is empty and looks wrong, once where two correct reports quietly fail to add up, and once where a number lands on a slide and is simply false.
+
+Every query below runs on the Northwind sample database that ships with DataPallas.
+
+**Open the koans before you read on.** There is a koan for every idea here — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _45
+```
+
+## The obvious query, and what it returns
+
+```sql file=./scripts/backlog-equals-null.sql
+SELECT count(*) AS "Unshipped"
+FROM "Orders"
+WHERE "ShippedDate" = NULL;
+```
+
+| Unshipped |
+| --------- |
+| 0         |
+
+Zero. No error, no red text, no hint that anything went wrong.
+
+If you sent that upstairs you would have reported "we are all caught up", and there would be two years of backlog underneath it.
+
+## Why: NULL is not a value
+
+**An empty cell does not hold anything.** Not a zero, not blank text, not a special marker you can compare against. `NULL` is the database recording that *nobody ever wrote a value there*.
+
+So `"ShippedDate" = NULL` is asking whether a value that is not there equals a value that is not there. And the honest answer is not yes, and it is not no.
+
+The objection everyone has at this point is a fair one: *both cells are empty, so surely they match.* They do not, and the reason is worth saying carefully. Take two orders with no shipped date. Did they ship on the same day? **You cannot say.** Nobody recorded either one. Two unknowns are not the same thing as each other — they are two things you do not know.
+
+> A `NULL` is not equal to another `NULL`. It is not *unequal* to it either.
+
+## The third answer
+
+Most languages give you `true` and `false`. SQL has a third, and it has had it since Codd's relational model: **`UNKNOWN`**.
+
+| The test | The answer |
+| -------- | ---------- |
+| `"ShippedDate" = DATE '2024-06-01'` on a row that shipped that day | `TRUE` |
+| `"ShippedDate" = DATE '2024-06-01'` on a row that shipped later | `FALSE` |
+| `"ShippedDate" = DATE '2024-06-01'` on a row that never shipped | `UNKNOWN` |
+
+And now the part that costs money:
+
+> **`WHERE` keeps the rows whose test came back `TRUE`, and throws away everything else.**
+
+`UNKNOWN` goes in the same bin as `FALSE`. There is no third pile to go and look in, and no message telling you a pile existed. That single sentence explains every bug on this page.
+
+## IS NULL: the test that always answers
+
+```sql file=./scripts/backlog-is-null.sql
+SELECT count(*) AS "Unshipped"
+FROM "Orders"
+WHERE "ShippedDate" IS NULL;
+```
+
+| Unshipped |
+| --------- |
+| 27        |
+
+`IS NULL` is not a comparison. It asks a different question — *is there anything in this cell at all?* — and that question can always be answered, so it comes back `TRUE` or `FALSE` and never `UNKNOWN`.
+
+Its partner is `IS NOT NULL`, for the rows that do have a value. Those two are the only correct way to test for a missing value. **Never write `= NULL` or `<> NULL`**: both run, both match nothing, and neither will ever tell you.
+
+You were handed those two words on trust back in lesson 4, and again in lesson 15 and lesson 25. This is the lesson that owed you the reason.
+
+And here is the backlog itself:
+
+```sql file=./scripts/backlog-oldest-first.sql
+SELECT "OrderID", "CustomerID", "OrderDate"
+FROM "Orders"
+WHERE "ShippedDate" IS NULL
+ORDER BY "OrderDate"
+LIMIT 5;
+```
+
+| OrderID | CustomerID | OrderDate  |
+| ------- | ---------- | ---------- |
+| 8       | ALFKI      | 2022-12-05 |
+| 11      | AROUT      | 2022-12-26 |
+| 14      | BONAP      | 2023-01-19 |
+| 17      | DUMON      | 2023-02-12 |
+| 20      | FRANK      | 2023-03-05 |
+
+A count is not a report, though. Somebody has to be telephoned about those orders, and `ALFKI` is not a name — so bring last lesson's `JOIN` along and this becomes something you could actually send:
+
+```sql file=./scripts/unshipped-with-customer-names.sql
+SELECT c."CompanyName", o."OrderID", o."OrderDate"
+FROM "Orders" o
+JOIN "Customers" c
+  ON c."CustomerID" = o."CustomerID"
+WHERE o."ShippedDate" IS NULL
+ORDER BY o."OrderDate"
+LIMIT 5;
+```
+
+| CompanyName         | OrderID | OrderDate  |
+| ------------------- | ------- | ---------- |
+| Alfreds Futterkiste | 8       | 2022-12-05 |
+| Around the Horn     | 11      | 2022-12-26 |
+| Bon app'            | 14      | 2023-01-19 |
+| Du monde entier     | 17      | 2023-02-12 |
+| Frankenversand      | 20      | 2023-03-05 |
+
+Note where the `IS NULL` sits: in the `WHERE`, about the LEFT-hand table. That is the safe placement lesson 40 taught, and it is unaffected by everything on this page.
+
+## The expensive version: two reports that do not add up
+
+The query above was the cheap mistake, because an empty result at least *looks* wrong. Here is the one that does not.
+
+Your manager wants two numbers for the year-end review: how many orders shipped in 2024, and how many shipped before it.
+
+```sql file=./scripts/shipped-in-2024.sql
+SELECT count(*) AS "Orders"
+FROM "Orders"
+WHERE "ShippedDate" >= DATE '2024-01-01';
+```
+
+| Orders |
+| ------ |
+| 18     |
+
+```sql file=./scripts/shipped-before-2024.sql
+SELECT count(*) AS "Orders"
+FROM "Orders"
+WHERE "ShippedDate" < DATE '2024-01-01';
+```
+
+| Orders |
+| ------ |
+| 34     |
+
+Both numbers are correct. Both queries are ordinary. And 18 + 34 is **52**, out of **79** orders.
+
+The 27 missing from both reports are the same 27 you counted a moment ago. An order that never shipped has no date to compare, so it is not on or after January — and it is not before January either. Both tests came back `UNKNOWN`. Both reports discarded it. Neither mentioned it.
+
+**A condition and its opposite do not divide a table in two.** They divide it in three, and the third part is invisible.
+
+### NOT does not rescue you
+
+The natural next move is to negate the test instead. It does not help:
+
+```sql file=./scripts/shipped-not-2024.sql
+SELECT count(*) AS "Orders"
+FROM "Orders"
+WHERE NOT (
+  "ShippedDate" >= DATE '2024-01-01'
+);
+```
+
+| Orders |
+| ------ |
+| 34     |
+
+The same 34. Not one of the 27 came back.
+
+`NOT` has only two things to turn over: it flips `TRUE` to `FALSE` and `FALSE` to `TRUE`. Hand it `UNKNOWN` and it hands `UNKNOWN` straight back — the opposite of "I do not know" is still "I do not know" — and `WHERE` discards it exactly as before.
+
+### AND and OR, and the one cell that saves you
+
+`AND` and `OR` do have an escape hatch. If one side already settles the answer, the missing value cannot change it, and the database says so:
+
+| Expression | Result | Why |
+| ---------- | ------ | --- |
+| `TRUE OR unknown` | **`TRUE`** | one yes is enough |
+| `FALSE AND unknown` | **`FALSE`** | one no is enough |
+| `FALSE OR unknown` | `UNKNOWN` | nothing has decided it |
+| `TRUE AND unknown` | `UNKNOWN` | nothing has decided it |
+
+That first row is the fix. Bolt an `OR` onto the filter and the empty rows have a way back in:
+
+```sql file=./scripts/shipped-before-or-never.sql
+SELECT count(*) AS "Orders"
+FROM "Orders"
+WHERE "ShippedDate" < DATE '2024-01-01'
+   OR "ShippedDate" IS NULL;
+```
+
+| Orders |
+| ------ |
+| 61     |
+
+61 + 18 = 79. The books balance, and the only thing that changed was saying out loud what should happen to the empty rows.
+
+### The rule worth writing down
+
+> **Before you filter a column, ask whether it can be empty.**
+> **If it can, your condition and its opposite do not add up to the whole table — so decide which side the empty rows belong on, and write it in.**
+
+Note what you do *not* get if you forget: not an error. A total that is short.
+
+## It spreads into your output too
+
+So far a missing value has been removing rows. Now it removes something you did not know was at risk.
+
+Back in lesson 20 you glued columns together with `||` and were warned about one thing for later. This is later. Mailing labels — city and region on one line:
+
+```sql file=./scripts/label-broken.sql
+SELECT "City", "Region", "City" || ', ' || "Region" AS "Label"
+FROM "Customers"
+ORDER BY "CustomerID"
+LIMIT 4;
+```
+
+| City        | Region | Label |
+| ----------- | ------ | ----- |
+| Berlin      |        |       |
+| México D.F. |        |       |
+| México D.F. |        |       |
+| London      |        |       |
+
+The city is right there on every row. The label is gone — not the region part of it, **the whole line**.
+
+**Anything combined with nothing is nothing.** One empty piece and the entire expression collapses. The same is true of arithmetic: `"Freight" + NULL` is `NULL`, not `"Freight"`. Twenty-one of the twenty-five customers here have no region, so twenty-one labels vanish.
+
+### COALESCE: put something there
+
+```sql file=./scripts/label-coalesce.sql
+SELECT "City" || ', ' || COALESCE("Region", 'no region') AS "Label"
+FROM "Customers"
+ORDER BY "CustomerID"
+LIMIT 4;
+```
+
+| Label                  |
+| ---------------------- |
+| Berlin, no region      |
+| México D.F., no region |
+| México D.F., no region |
+| London, no region      |
+
+`COALESCE` hands back the first of its arguments that is not `NULL`. Give it as many as you like — `COALESCE("Mobile", "HomePhone", 'no number')` works through them in order.
+
+**Wrap the piece that can be missing, not the whole line.** `COALESCE("City" || ', ' || "Region", "City")` would also produce output, but it throws the city away and re-adds it, which is harder to read and easier to get wrong. Fix the hole, not the wall around it.
+
+And be clear about what `COALESCE` does: it changes what *this query returns*. It does not change the data, and it does not make the value known.
+
+### NULLIF: take something away
+
+`NULLIF` is `COALESCE` backwards. It returns `NULL` when its two arguments are equal, and the first argument otherwise:
+
+```sql file=./scripts/nullif-in-stock.sql
+SELECT "ProductName", NULLIF("UnitsInStock", 0) AS "InStock"
+FROM "Products"
+ORDER BY "UnitsInStock", "ProductName"
+LIMIT 3;
+```
+
+| ProductName             | InStock |
+| ----------------------- | ------- |
+| Gorgonzola Telino       |         |
+| Thuringer Rostbratwurst |         |
+| Scottish Longbreads     | 6       |
+
+Two reasons you would want that.
+
+The first is when a placeholder in your data really means "not recorded" — an imported `0`, an empty string, a `'N/A'` — and you want it to behave like the missing value it actually is.
+
+The second is guarding a division. `x / NULLIF(y, 0)` gives you `NULL` when `y` is zero instead of failing, because dividing by nothing gives nothing.
+
+<Callout>
+**The engines disagree about the unguarded version, and it is worth knowing which one you are on.** `SELECT "UnitsOnOrder" / "UnitsInStock" FROM "Products"` stops PostgreSQL — and therefore CloudBeaver — with `ERROR: division by zero` (SQLSTATE 22012). DuckDB does not raise at all; it hands back `inf`, which is arguably worse, because it flows into a total and looks like a number. With `NULLIF` in place both engines return `NULL` for those rows and nobody has to know the difference. That is the argument for the guard.
+</Callout>
+
+But notice what `NULLIF` is really doing: **a zero and a blank are not the same claim.** "None left" is something a person counted; "nobody knows" is not. Turning one into the other is a decision about what your data means, which is exactly why it has to be asked for by name rather than happening on its own.
+
+## The numbers you already saw, and now the reason
+
+You met these two counts in lesson 25 and were told they were both correct:
+
+```sql file=./scripts/count-star-vs-column.sql
+SELECT count(*) AS "Orders",
+       count("ShippedDate") AS "Shipped"
+FROM "Orders";
+```
+
+| Orders | Shipped |
+| ------ | ------- |
+| 79     | 52      |
+
+`count(*)` counts **rows**. `count("ShippedDate")` counts **values in that column** — and an empty cell is not a value, so it is not counted. The 27 they differ by are the same 27 as everywhere else on this page.
+
+That is the point worth carrying away: this was never a separate rule about `COUNT`. It is the rule you met in the very first query, met again somewhere else.
+
+### And the one that reaches a slide
+
+Every aggregate skips missing values. On `SUM`, `MIN` and `MAX` that is usually what you wanted. On `AVG` it moves the **denominator**, and that is where it stops being harmless.
+
+How long do we take to ship an order?
+
+```sql file=./scripts/avg-days-to-ship.sql
+SELECT round(avg(
+         CAST("ShippedDate" AS DATE)
+       - CAST("OrderDate" AS DATE)
+       ), 1) AS "AvgDaysToShip"
+FROM "Orders";
+```
+
+| AvgDaysToShip |
+| ------------- |
+| 5.8           |
+
+304 days of shipping, spread over **52** orders — not 79. The 27 that never shipped are not in that number as zero, and not as late. They are not in it at all.
+
+And they are the slow ones. The average says the company ships in under six days, and it got there by leaving out every order it is late on. That is not a rounding error; it is a claim that is false, wearing a decimal point.
+
+The habit that follows is cheap: **when an average matters, print the count beside it.** `count(*)` and `count(<the column>)` in the same query answer the reader's first question before they ask it.
+
+## The one place NULLs *are* treated as equal
+
+Everything above says a `NULL` is not equal to another `NULL`. There is one family of exceptions, and it surprises people because it looks like a contradiction. It is not — it is a different operation, one that groups rather than compares.
+
+```sql file=./scripts/regions-distinct.sql
+SELECT DISTINCT "Region"
+FROM "Customers"
+ORDER BY "Region";
+```
+
+| Region        |
+| ------------- |
+| Isle of Wight |
+| Lara          |
+| OR            |
+| Táchira       |
+|               |
+
+Five rows: four real regions, and **one** row standing for all twenty-one empties. `DISTINCT` did not keep twenty-one of them.
+
+```sql file=./scripts/regions-grouped.sql
+SELECT "Region", count(*) AS "Customers"
+FROM "Customers"
+GROUP BY "Region"
+ORDER BY "Customers" DESC, "Region";
+```
+
+| Region        | Customers |
+| ------------- | --------- |
+|               | 21        |
+| Isle of Wight | 1         |
+| Lara          | 1         |
+| OR            | 1         |
+| Táchira       | 1         |
+
+`GROUP BY` gathers every empty region into a single group of 21. And that group total is worth noticing on its own: unlike every `WHERE` on this page, **nothing was lost** — the five groups add up to all 25 customers.
+
+The rule underneath both is that `DISTINCT`, `GROUP BY`, `UNION` and `ORDER BY` treat two `NULL`s as *not distinct from each other*, while `=` treats them as *not known to be equal*. Two different questions, two different answers, both correct.
+
+Then one more twist in the same paragraph, so you are not caught by it:
+
+```sql
+SELECT count(DISTINCT "Region") FROM "Customers";   -- 4, not 5
+```
+
+`count(<column>)` never counts empties, `DISTINCT` or not. So `DISTINCT "Region"` returns five rows and `count(DISTINCT "Region")` says four. Both are right; they are answering "which values appear" and "how many values appear".
+
+## Things you will read but rarely write
+
+**`IS NOT DISTINCT FROM`.** The comparison that treats two `NULL`s as equal: `a IS NOT DISTINCT FROM b` is `TRUE` when both are `NULL`, where `a = b` would be `UNKNOWN`. Portable across PostgreSQL and DuckDB, genuinely useful when comparing two nullable columns, and rare enough that you should write a comment when you use it.
+
+**`IS TRUE` / `IS FALSE` / `IS UNKNOWN`.** These test the *result of a condition* rather than a value, and they always answer. `WHERE ("ShippedDate" >= DATE '2024-01-01') IS NOT TRUE` catches the 27 as well as the 34 — a compact alternative to the `OR ... IS NULL` above. Correct, portable, and harder for the next reader, which is why the `OR` version is the one taught here.
+
+**`NVL`, `IFNULL`, `ISNULL`.** Vendor-specific versions of `COALESCE` from Oracle, MySQL and SQL Server. Recognise them; write `COALESCE`, which is standard and works everywhere.
+
+## Where NULL is *not* this lesson's problem
+
+Two boundaries worth naming, because they use the same word for different questions.
+
+**Where a `NULL` sorts** is lesson 15, which covers `NULLS FIRST` and `NULLS LAST` — and shows that DuckDB and PostgreSQL genuinely disagree about `DESC` unless you say. If you are sorting a column that can be empty, go back to that one.
+
+**Whether a column should allow `NULL` at all** is a design decision, and it belongs to Data Modeling Series 1 · 37. This lesson is about querying data that is already missing. That one is about whether the missing value should ever have been permitted — a `NOT NULL` constraint, a default, a separate table. Same word, different job, and the answer to a query problem is almost never "change the schema".
+
+## What you can do now
+
+For any column that is allowed to be empty — and most of them are:
+
+1. **Test for it with `IS NULL` or `IS NOT NULL`**, never with `=` or `<>`. Those two run and match nothing.
+2. **Ask whether the column can be empty before you filter on it.** If it can, your condition and its opposite do not cover the table, and neither does wrapping one in `NOT`.
+3. **Say which side the empty rows belong on** — usually `OR <column> IS NULL` — and the totals add up again.
+4. **Wrap the piece that can be missing** with `COALESCE` before you concatenate it or do arithmetic with it, or the whole expression comes back empty.
+5. **Print the row count beside any average or `COUNT(column)`**, because both quietly work on a smaller set than you think.
+
+And one question to ask out loud whenever somebody hands you a filter: *what should happen to the rows where we do not know?* SQL will not choose for you — it will just leave them out and say nothing.
+
+Next lesson: **`SELECT` + `JOIN` + `GROUP BY`** — the last of this series, and the one where every clause you have met turns up in the same query.
+
+## The koans: now you write the queries
+
+Each koan is a tiny fill-in-the-blank exercise: a failing test with a `___` where the answer belongs. Fill it in, run it, watch red turn green — and the next one unlocks.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _45
+```
+
+On macOS or Linux, run `./zeus.sh koans learnsql series1 _45` from the same folder. The three arguments are course, series and episode.
+
+> **Says the lesson isn't there?** Your copy of DataZeus predates this lesson — run `.\zeus.bat update` (or `./zeus.sh update`) once to fetch the latest lessons, then run the command again. Koans you have already solved are kept.
+
+The file you edit is:
+
+```
+c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_45\NullAndThreeValuedLogicKoans.groovy
+```
+
+Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
+
+The ten of them deliberately use **different tables** from everything above — the supplier list, the staff list and the shelf. You cannot answer them by copying a query off this page, which is the point. They walk the same path this lesson did: test for an empty cell, predict what an equals sign against `NULL` really returns, find the rows that do have a value, meet the not-equals trap head on, predict how little `NOT` helps, stand a word in with `COALESCE`, watch one missing piece empty a whole line, count rows against values, turn a value into a `NULL` on purpose, and finish by writing a whole query from scratch — one that needs both the filter fix *and* the output fix, which is the real exam.
+
+## What is next
+
+That is the last of the traps. The next lesson is the last of this series, and it is the one everything has been building to: a single question from your manager, answered with one query that filters, joins, groups and adds up all at once — `SELECT` + `JOIN` + `GROUP BY`, and every habit you have picked up on the way.

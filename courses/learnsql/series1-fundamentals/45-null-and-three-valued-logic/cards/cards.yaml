@@ -1,0 +1,169 @@
+# Flashcards for Learn SQL · Series 1 · 45 — NULL & Three-Valued Logic
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
+# tools/build-anki.py turns it into a .apkg with genanki.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds update the same deck (no duplicates).
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# ── WHAT ANKI IS FOR, AND WHAT IT IS NOT FOR ────────────────────────────────────────
+# Anki is reviewed on a phone, weeks later, with no database open, no CloudBeaver, and
+# the lesson long forgotten. So every card here is SELF-CONTAINED: it carries its own
+# premise. NOT ONE of them asks the learner to run a query, to remember a result from an
+# earlier card, or to know Northwind's schema. Where a card needs a fact — a table's
+# shape, a query somebody handed you, how many rows are empty — the FRONT states it, and
+# the card tests the REASONING. A card that fails that test is a koan wearing the wrong
+# clothes: the koans are where you type SQL against real rows; this deck is where the
+# rules have to survive without them.
+#
+# THIS DECK IS ALMOST ENTIRELY THEORETICAL, AND THAT IS RIGHT FOR THIS TOPIC. Three-valued
+# logic is a set of rules you either hold or you do not; you cannot look at a result set
+# and see that UNKNOWN happened, which is the whole reason the bugs are silent. So the
+# cards drill the rules, the discriminations, and the "what does this return" reasoning —
+# and the koans do the typing.
+#
+# NORTHWIND NAMES APPEAR ONLY AS A SUPPLIED PREMISE, and mostly they do not appear at all:
+# the rules here are about SQL, not about this database, so most fronts use a generic
+# "a table of orders" rather than borrowing a schema the reviewer cannot see.
+#
+# FILE ORDER IS THE CURRICULUM. Anki introduces new cards in file order, so a learner
+# meeting this deck for the first time meets the ideas in the order they build on each
+# other — the same order as the lesson and the video: what NULL is, the third truth
+# value, testing for it, filtering with it, what it does to expressions, what it does to
+# aggregates, and last the query you write yourself.
+#
+# WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
+#   - Lesson 15 owns WHERE A NULL SORTS — NULLS FIRST / NULLS LAST, and the fact that the
+#     two engines disagree on DESC. Not one card here is about sorting. If you want to add
+#     one, add it to 15's deck.
+#   - Lesson 25 owns the AGGREGATE BEHAVIOUR — that count(column) skips empties and AVG
+#     moves the denominator. Its deck states the behaviour; the two cards here ask WHY,
+#     and connect it to the same rule met in a WHERE. That is the division: 25 says what
+#     happens, 45 says why it is the same thing happening twice. Do not restate 25's card.
+#   - Lesson 40 owns WHERE THE NULLS CAME FROM (a LEFT JOIN inventing them) and the
+#     anti-join. This deck starts one step later: they exist, now what.
+#   - Series 2 · 15 owns CASE WHEN and will pick COALESCE up again beside it. Here
+#     COALESCE and NULLIF are taught only as the NULL stand-in and its inverse.
+#   - Data Modeling Series 1 · 37 owns NULLABLE-OR-NOT AS A DESIGN DECISION. One card
+#     below names that boundary on purpose, because "just make it NOT NULL" is the wrong
+#     answer to a query problem and somebody will reach for it.
+#
+# TWENTY-TWO CARDS, WHICH IS LONGER THAN ANY OTHER DECK IN THE SERIES, AND DELIBERATE.
+# The house guidance is that much over twenty usually means trivia has crept in, so this
+# was checked card by card rather than waved through. The reason it runs long is that this
+# topic is unusually RULE-DENSE: NULL behaves differently in a comparison, in NOT, in AND,
+# in OR, in a concatenation, in arithmetic, in COUNT, in AVG, in GROUP BY and in DISTINCT,
+# and a learner who holds nine of those ten still ships the bug. Every front here asks for
+# a reason or a discrimination; not one asks for a token or a figure on its own. If a card
+# ever stops earning that, cut it rather than keeping the count tidy.
+#
+# THE BASIC-TO-CLOZE RATIO IS 19:3, against roughly 3:1 elsewhere, and it follows from the
+# same fact. Cloze is for short mechanical rules; almost everything here is "why does this
+# happen" or "which of these two is it", which is what basic is for. The three clozes are
+# the three genuinely mechanical bits: the truth value a comparison produces, the two
+# spellings of the test, and the two cells of the AND/OR table that matter.
+
+deck: "DataZeus::Learn SQL::Series 1::45 NULL & Three-Valued Logic"
+guid: "datazeus-learn-sql-series1-45-null-and-three-valued-logic"
+tags: ["datazeus", "learn-sql", "series-1", "sql"]
+
+cards:
+  # ── 1. WHAT A NULL ACTUALLY IS ──
+  - basic:
+      front: "What does <code>NULL</code> mean in a database column, and what are the two things people mistake it for?"
+      back: "It means the value is MISSING — nobody ever recorded one. It is not zero, and it is not empty text. Both of those are values somebody wrote down: a stock level of 0 means \"we counted, there are none\"; an empty name means \"we recorded a blank\". NULL means nobody counted and nobody recorded anything. That distinction is what every other rule about NULL follows from."
+
+  - basic:
+      front: "Two rows both have an empty <code>ship_date</code>. Is one row's empty date equal to the other's?"
+      back: "No — and it is not unequal either. You do not know what either value is, so you cannot say whether they match. Two unknowns are not the same thing as each other; they are two things you do not know. A NULL is never equal to another NULL."
+
+  # ── 2. THE THIRD TRUTH VALUE — the card the rest of the deck rests on ──
+  - basic:
+      front: "SQL has three truth values, not two. Name them, and say which one a comparison against a missing value produces."
+      back: "TRUE, FALSE and UNKNOWN. Any comparison involving a NULL produces UNKNOWN — including <code>= NULL</code>, <code>&lt;&gt; NULL</code>, <code>&gt; NULL</code> and comparing two NULL columns to each other. The three-valued logic comes from Codd's relational model; it is not a quirk of any one database."
+
+  - cloze: "A comparison against a missing value is neither true nor false — it is {{c1::UNKNOWN}}, and a WHERE keeps only the rows whose test came back {{c2::TRUE}}."
+
+  - basic:
+      front: "Why does a query with a NULL problem give you a wrong answer instead of an error?"
+      back: "Because WHERE throws away UNKNOWN rows in exactly the same way it throws away FALSE ones. There is no third bucket, no warning, and no count of what was discarded. The rows you are missing did not FAIL your test — they never answered it — and nothing in the result tells them apart from rows that were genuinely excluded."
+
+  # ── 3. TESTING FOR IT ──
+  - basic:
+      front: "Why does <code>WHERE ship_date = NULL</code> return no rows at all, even when many rows have no ship date? And what do you write instead?"
+      back: "It asks whether a value that is not there equals a value that is not there, which is UNKNOWN for every row — so every row is discarded, and you get an empty result with no error. Write <code>WHERE ship_date IS NULL</code>. IS NULL is not a comparison: it asks \"is there anything in this cell\", which can always be answered TRUE or FALSE."
+
+  - cloze: "The only correct tests for a missing value are {{c1::IS NULL}} and {{c2::IS NOT NULL}}; writing <code>= NULL</code> or <code>&lt;&gt; NULL</code> runs without error and matches {{c3::nothing}}."
+
+  # ── 4. THE FILTER TRAP — the hardest idea in the lesson, and the one worth the most ──
+  # Phrased as a report somebody hands you, because that is how it is met in the wild.
+  # Everything the reviewer needs is on the front; no schema, no data, no query to run.
+  - basic:
+      front: "A table has 79 orders. One report counts orders where <code>ship_date &gt;= '2024-01-01'</code> and gets 18. Another counts <code>ship_date &lt; '2024-01-01'</code> and gets 34. Both queries are correct. Why is 18 + 34 not 79?"
+      back: "Because 27 orders have no ship date at all. Both tests compare against a missing value, so both come back UNKNOWN for those rows, and both reports discard them. A condition and its opposite do NOT divide a table in two — they divide it in three, and the third part is invisible. Neither report is wrong on its own; together they make a claim about the whole table that is false."
+
+  - basic:
+      front: "A filter on a nullable column is dropping rows you wanted. Someone suggests wrapping the condition in <code>NOT</code>. Does that bring them back?"
+      back: "No. NOT only flips TRUE to FALSE and FALSE to TRUE. Hand it UNKNOWN and it returns UNKNOWN — the opposite of \"I don't know\" is still \"I don't know\" — and WHERE discards it exactly as before. You get the identical row count, which is what makes this so convincing and so wrong."
+
+  - basic:
+      front: "So how DO you bring the missing rows back into a filter, and why does that particular fix work?"
+      back: "Add <code>OR &lt;column&gt; IS NULL</code> to the condition. It works because of one cell of the OR truth table: TRUE OR unknown is TRUE. Once one side of an OR is definitely true, the missing value cannot change the answer, so the database stops caring about it and keeps the row."
+
+  - cloze: "One yes is enough for an OR, so {{c1::TRUE}} OR unknown is TRUE. One no is enough for an AND, so {{c2::FALSE}} AND unknown is FALSE. Every other combination involving an unknown stays {{c3::unknown}}."
+
+  - basic:
+      front: "State the one habit that prevents every filtering bug caused by missing values."
+      back: "Before you filter a column, ask whether it can be empty. If it can, your condition and its opposite do not add up to the whole table — so decide which side the empty rows belong on and write it into the query. Note what you get if you forget: not an error. A total that is quietly short."
+
+  # ── 5. IT SPREADS INTO EXPRESSIONS ──
+  - basic:
+      front: "You build a label with <code>city || ', ' || region</code>. On a row where <code>city</code> is 'Berlin' and <code>region</code> is empty, what comes back?"
+      back: "Nothing at all — the whole label is NULL, Berlin included. Anything combined with a missing value is missing: one empty piece collapses the entire expression, it does not just leave a gap where that piece was. The same is true of arithmetic — <code>freight + NULL</code> is NULL, not freight."
+
+  - basic:
+      front: "What does <code>COALESCE</code> do, and where in an expression should you put it?"
+      back: "It returns the first of its arguments that is not NULL — <code>COALESCE(region, 'no region')</code>, and you can chain as many as you like. Wrap THE PIECE THAT CAN BE MISSING, not the whole expression: fix the hole, not the wall around it. And be clear what it changes — the output of that one query. It does not change the stored data and it does not make the value known."
+
+  # ── 6. THE INVERSE, AND THE DECISION HIDDEN INSIDE IT ──
+  - basic:
+      front: "<code>NULLIF(a, b)</code> — what does it return, and what are the two everyday reasons to reach for it?"
+      back: "It returns NULL when a and b are equal, and a otherwise. It is COALESCE backwards: that one swaps a missing value for a value, this one swaps a value for a missing value. Reason one: a placeholder in your data — an imported 0, an empty string, 'N/A' — really means \"not recorded\", so you make it behave like it. Reason two: guarding a division, <code>x / NULLIF(y, 0)</code>, which yields NULL instead of failing, because dividing by nothing gives nothing."
+
+  - basic:
+      front: "Why does turning a 0 into a NULL have to be asked for explicitly, rather than something the database does for you?"
+      back: "Because a zero and a blank are different claims about the world. \"None left\" is something a person counted; \"nobody knows\" is not. Only you know which one that column means, and the two lead to different answers — an average over a column with real zeros is not the average over the same column with those zeros blanked out."
+
+  # ── 7. THE LOOP BACK TO THE AGGREGATES ──
+  # Lesson 25 owns the BEHAVIOUR and states it. These two ask WHY, and connect it to the
+  # filter rule — which is the thing 25 could not say. See the ownership note at the top.
+  - basic:
+      front: "A table has 79 rows. <code>count(*)</code> returns 79 and <code>count(ship_date)</code> returns 52. Explain the gap in terms of what a NULL is."
+      back: "count(*) counts ROWS. count(column) counts VALUES in that column — and a missing cell is not a value, so it is not counted. 27 rows have no ship date. This is not a special rule about COUNT: it is the same fact that makes <code>= NULL</code> match nothing, met in a different clause. Both numbers are correct; they answer different questions."
+
+  - basic:
+      front: "A column has 79 rows, 27 of them empty, and the 52 values sum to 304. What does <code>AVG</code> of that column return, and why is that dangerous in a report?"
+      back: "304 / 52 = 5.8, not 304 / 79 = 3.8 — AVG divides by the number of VALUES it found, not the number of rows. It is dangerous because the missing rows are rarely random: if the column is \"days to ship\" and the empties are orders that never shipped, the average silently excludes exactly the slowest cases and reports a flattering number. When an average matters, print the row count and the value count beside it."
+
+  # ── 8. THE EXCEPTION THAT LOOKS LIKE A CONTRADICTION ──
+  - basic:
+      front: "A NULL is never equal to another NULL. So why does <code>GROUP BY</code> on a column with 21 empty cells produce ONE group of 21, and why does <code>SELECT DISTINCT</code> return only one empty row?"
+      back: "Because grouping is not comparing. DISTINCT, GROUP BY, UNION and ORDER BY ask whether two values are \"not distinct from\" each other, and two NULLs are not distinct; <code>=</code> asks whether they are known to be equal, and they are not. Two different questions with two different answers, both correct. Worth knowing that grouping is also the one operation on this topic that loses nothing — the groups add back up to the whole table."
+
+  - basic:
+      front: "A column has 4 distinct real values and 21 empty cells. <code>SELECT DISTINCT col</code> returns 5 rows. What does <code>count(DISTINCT col)</code> return?"
+      back: "4. DISTINCT keeps one row standing for all the empties, but count of a COLUMN never counts empties, with or without DISTINCT. So the row count and the count disagree by one, and both are right: \"which values appear\" and \"how many values appear\" are different questions."
+
+  # ── 9. THE BOUNDARY SOMEBODY WILL CROSS ──
+  # Deliberately here: "just make the column NOT NULL" is the wrong answer to a query
+  # problem, and it is the first thing a confident beginner reaches for.
+  - basic:
+      front: "After being bitten by this a few times, somebody proposes \"we should just make every column NOT NULL\". What is wrong with that as a response?"
+      back: "It answers a different question. Whether a column should permit missing values is a data-modelling decision, made when the table is designed and based on whether the fact can genuinely be unknown — an order that has not shipped HAS no ship date, and forcing a fake one in (1900-01-01, or 0) is worse, because now the wrong answers look like real data. Querying data that is already missing is a query problem, and it is solved in the query: IS NULL, an explicit OR, COALESCE."
+
+  # ── 10. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  - basic:
+      front: "Write the query. Table <code>suppliers</code> has <code>company_name</code> and <code>region</code>, where <code>region</code> is empty for some suppliers. List every supplier that is NOT in region 'Victoria' — including those with no region recorded — showing the company name and the region, printing 'no region' where there is none, in company-name order."
+      back: "<code>SELECT company_name,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;COALESCE(region, 'no region') AS region<br>FROM suppliers<br>WHERE region &lt;&gt; 'Victoria'<br>&nbsp;&nbsp;&nbsp;OR region IS NULL<br>ORDER BY company_name;</code><br><br>Two independent things to get right, and each fails differently. The <code>OR region IS NULL</code> is the FILTER fix: without it the suppliers with no region are dropped, because \"unknown &lt;&gt; 'Victoria'\" is UNKNOWN. The COALESCE is the OUTPUT fix: without it those rows come back with a blank cell. Get one and not the other and the report is wrong in a way that looks fine."
