@@ -98,8 +98,9 @@ abstract class KoanBase extends Specification {
         try {
             actual = (expected instanceof List) ? rows(sql) : firstCell(sql)
         } catch (Exception e) {
-            throw new KoanHint("your query didn't run: ${firstLine(e.message)}\n" +
-                    "(it should return ${show(expected)})")
+            throw new KoanHint("your query didn't run:\n" + sqlError(e.message) +
+                    "\n\nthe query you ran:\n" + showSql(sql) +
+                    "\n\n(it should return ${show(expected)})")
         }
         if (actual != expected) {
             throw new KoanHint("your query returned ${show(actual)},\n" +
@@ -128,9 +129,64 @@ abstract class KoanBase extends Specification {
         return String.valueOf(v)
     }
 
-    private static String firstLine(String msg) {
+    /**
+     * THE QUERY THE LEARNER ACTUALLY RAN, echoed back under the error.
+     *
+     * WHY THIS IS HERE. The DuckDB JDBC driver returns ONLY the error sentence --
+     * `Parser Error: syntax error at or near "WHERE"` -- and none of the LINE-and-caret
+     * detail the CLI and the Python client print. So the engine cannot point at the mistake
+     * for us, and "syntax error near WHERE" on its own still leaves a beginner hunting.
+     *
+     * Showing the SQL closes that gap from the other side: the error names the token, and
+     * this shows the statement it appeared in, so the two together locate the problem even
+     * though nothing drew an arrow. It is also the only way to see what the koan really
+     * sent -- indentation, missing quotes and all -- rather than what you thought you typed.
+     *
+     * Re-indented to a flat four spaces: a koan's SQL is written inside a triple-quoted
+     * Groovy string and carries twelve spaces of source indentation that mean nothing here.
+     */
+    private static String showSql(String sql) {
+        List<String> lines = sql.readLines().findAll { it?.trim() }
+        if (lines.isEmpty()) return "    (empty)"
+        // Drop the common leading indentation, then give every line the same small one.
+        int pad = lines.collect { it.length() - it.replaceAll(/^\s+/, "").length() }.min()
+        return lines.collect { "    " + it.substring(Math.min(pad, it.length())) }.join("\n")
+    }
+
+    /** A database error is capped at this many lines, so one pathological message cannot
+     *  bury the rest of the report. Twelve is far more than any syntax error needs. */
+    private static final int MAX_ERROR_LINES = 12
+
+    /**
+     * THE DATABASE'S OWN ERROR, IN FULL AND STILL ALIGNED.
+     *
+     * This was firstLine(): the first non-blank line, truncated at 90 characters. For a
+     * DuckDB syntax error that threw away the only part worth reading. The engine says
+     *
+     *     Parser Error: syntax error at or near "WHERE"
+     *
+     *     LINE 3:             WHERE "Discontinued" = false
+     *                         ^
+     *
+     * and the learner was shown the first line alone -- "something is wrong" instead of
+     * "the WHERE is on line 3, right here". That is the difference between a fix and a
+     * guessing game, and a beginner making a syntax error is the likeliest reader of it.
+     *
+     * DO NOT TRIM THESE LINES. The caret is positioned by counting spaces from the start of
+     * the line, so stripping leading whitespace off either the LINE or the caret makes the
+     * arrow point somewhere else. Blank lines go, indentation stays. PathToEnlightenment
+     * indents every line of a hint by the same six spaces, which keeps them aligned.
+     */
+    private static String sqlError(String msg) {
         if (msg == null) return "syntax error"
-        String first = msg.readLines().find { it?.trim() } ?: msg
-        return first.length() > 90 ? first.substring(0, 90) + " ..." : first
+        // JDBC prefixes the driver's exception class; the database's own sentence follows it.
+        String cleaned = msg.replaceFirst(/^\s*[\w.]*Exception:\s*/, "")
+        List<String> lines = cleaned.readLines().findAll { it?.trim() }
+        if (lines.isEmpty()) return "syntax error"
+        if (lines.size() > MAX_ERROR_LINES) {
+            int hidden = lines.size() - MAX_ERROR_LINES
+            lines = lines.take(MAX_ERROR_LINES) + ("... and " + hidden + " more line(s)")
+        }
+        return lines.join("\n")
     }
 }
