@@ -1,0 +1,119 @@
+# Flashcards for Learn SQL · Series 1 · 50 — SELECT + JOIN + GROUP BY, your first real report
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki); tools/build-anki.py turns it into a
+# .apkg with genanki. The .apkg is a BUILD ARTIFACT — gitignored, built in CI. Only this
+# YAML is source.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds UPDATE the same deck instead of giving the learner a
+#        second copy of every card. Set once, from the slug, and never changed.
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# ── WHAT ANKI IS FOR, AND WHAT IT IS NOT FOR ────────────────────────────────────────
+# Anki is reviewed on a phone, weeks later, with no database open, no CloudBeaver, and the
+# lesson long forgotten. So every card here is SELF-CONTAINED: it carries its own premise.
+# NOT ONE of them asks the learner to run a query, to remember a result from an earlier
+# card, or to know Northwind's schema. Where a card needs a fact — a customer's order
+# count, a report somebody handed you — the FRONT states it, and the card tests the
+# REASONING, not the recall of data. A card that fails that test is a koan wearing the
+# wrong clothes: the koans are where you type SQL against real rows; this deck is where the
+# rules have to survive without them.
+#
+# THIS DECK IS ALMOST ENTIRELY REASONING, and that is right for a project episode. There is
+# no new syntax to drill — every keyword had its own lesson and its own deck. What survives
+# away from a database is the JUDGEMENT: what one row means, what a join did to it, which
+# number to distrust, and what a check is and is not worth.
+#
+# FILE ORDER IS THE CURRICULUM. Anki introduces new cards in file order, so a learner meets
+# the ideas in the order they build on each other — the same order as the lesson and the
+# video: the question before the query, what a join does to the row count, what that breaks,
+# the two checks, their limits, and reading the answer.
+#
+# WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
+#   - Lesson 40's deck owns "a join emits one row per MATCH" as an arithmetic surprise
+#     ("you LEFT JOIN a 3-row table and get 5 rows — is that a bug?"). THIS deck owns the
+#     CONSEQUENCE that arrives one step later: the grain has changed, so an aggregate whose
+#     meaning depended on the old grain is now silently answering a different question. Same
+#     mechanism, different lesson, and the boundary is worth keeping — do not re-teach 40's
+#     row arithmetic here.
+#   - Lesson 30's deck owns "the GROUP BY list IS the grain of the report" — the grain of the
+#     ANSWER. This deck's grain cards are about the grain of the SOURCE, which is the half a
+#     join changes under you.
+#   - Lesson 20 owns ROUND and where the brackets go. The rounding card here is about what
+#     happens when you round twenty-five things and then add them up, which is a reporting
+#     fact rather than a syntax one.
+#   - Series 2 owns fan-out that corrupts the MONEY. Everything here is confined to the case
+#     COUNT(DISTINCT ...) repairs.
+
+deck: "DataZeus::Learn SQL::Series 1::50 Your First Real Report"
+guid: "datazeus-learn-sql-series1-50-your-first-real-report"
+tags: ["datazeus", "learn-sql", "series-1", "sql"]
+
+cards:
+  # ── 1. THE QUESTION THAT COMES BEFORE THE QUERY ──
+  - basic:
+      front: "You have been asked for a report. Before you write a single line of SQL, which two questions decide almost everything about the query?"
+      back: "<b>One row of my ANSWER is one what?</b> — that names the GROUP BY, and it is usually obvious from the request.<br><br><b>One row of my SOURCE is one what?</b> — that is what you will actually be adding up and counting, and it is almost never the same thing. The gap between those two answers is where wrong reports come from."
+
+  - basic:
+      front: "You need a report of one row per customer, showing what each has spent. The money is not stored on the customer and not on the order — it is on the individual lines of each order. What does that tell you about your query before you write it?"
+      back: "That the grain of your source is the ORDER LINE, not the customer and not the order. You will be summing at line grain and collapsing to customer grain with GROUP BY — and anything else in the SELECT list has to be true at line grain too, or it will answer a different question than you think. Say what one row is before you write the query, not after somebody queries the answer."
+
+  # ── 2. WHAT EACH JOIN DOES TO THE ROW COUNT ──
+  - basic:
+      front: "You join a table of orders to a table of customers, matching each order to the one customer who placed it. The order table had 79 rows. How many rows come out, and why does that matter?"
+      back: "79. Each order has exactly one customer, so the join adds a COLUMN and cannot add a row — one row is still one order. It matters because you now have a baseline: you know what the count was, so if a later join moves it you will notice. A count you never took cannot warn you about anything."
+
+  - basic:
+      front: "You then join that same result to the individual lines inside each order, and 79 rows become 193. Is that a bug?"
+      back: "No. An order can hold several products and each is a row in the lines table, so you asked for something finer and got it. But it is not free either: <b>the grain has changed</b>. One row is no longer one order, it is one order line — and from this moment any aggregate whose meaning depended on the old grain is quietly answering a different question. The rule: when the row count moves, note what it moved TO."
+
+  - cloze: "A join changes at most two things: how many {{c1::rows}} you have, and what those rows {{c2::add up to}}. Checking both is how you find out which of them happened."
+
+  # ── 3. WHAT THE MOVED GRAIN BREAKS — the card this deck exists for ──
+  # Phrased as the mistake, because that is how it is met in the wild: somebody hands you a
+  # report and you have to spot it in one read. Everything needed is on the front.
+  - basic:
+      front: "A sales report joins customers to their orders to the order lines, then does <code>GROUP BY customer</code> with <code>COUNT(order_id) AS \"Orders\"</code>. One customer placed 5 orders, containing 11 lines between them. What number appears in their Orders column?"
+      back: "11. COUNT counts the ROWS in each group, and since the join to the order lines the rows are lines, not orders. There is no error and no warning — the report simply says a customer placed eleven orders when they placed five. The fix is <code>COUNT(DISTINCT order_id)</code>, which counts how many different order numbers are in the group rather than how many rows."
+
+  - basic:
+      front: "In that same broken report, the money column (a SUM of price × quantity per line) is correct to the penny and the ranking is correct. Why is only the count wrong?"
+      back: "Because the SUM is asking a question at the grain the rows actually have. Every line appears exactly once, so summing line values gives the right total no matter how many lines a customer has. The COUNT was asking a question at a DIFFERENT grain — how many orders — and nothing in the query told it the rows had stopped being orders. That is what makes this bug survive review: one wrong column sitting between two right ones."
+
+  - cloze: "{{c1::COUNT(*)}} counts rows in the group. {{c2::COUNT(DISTINCT x)}} counts how many different values of x are in it — which is what you want whenever a join has made the rows finer than the thing you are counting."
+
+  - basic:
+      front: "Why is a wrong order count worse than it first looks, if the revenue figure beside it is right?"
+      back: "Because per-order metrics are computed FROM it. Divide a correct total by an inflated count and the average order value collapses — in the lesson's report, 767.69 becomes 348.95, less than half. Totals get quoted; averages get ACTED on. A wrong denominator quietly rewrites the conclusion while every number it is built from looks fine."
+
+  # ── 4. THE TWO CHECKS ──
+  - basic:
+      front: "What are the two checks to run on any report built from joined tables, before anybody else sees it?"
+      back: "<b>1. Count the rows before the join and after it.</b> If the number moves, your grain moved, and every total on top of it now means something different. If it moves and you did not expect it to, stop.<br><br><b>2. Get the total a second way</b> — by a route that does not resemble the first. If both routes agree, the join did not duplicate or lose your number. Neither check takes a minute, and between them they catch most of what silently goes wrong."
+
+  - basic:
+      front: "What makes a \"second way\" of getting a total a GOOD one, and what makes it worthless?"
+      back: "A good one shares as little as possible with the first: fewer joins, a different starting table, or better still a number that did not come from you at all — last quarter's figure, the finance team's total, the number on an invoice. A worthless one re-uses your own formula and your own joins: it will reproduce your mistake faithfully and hand you back a matching number, which feels like confirmation and is not."
+
+  - basic:
+      front: "Your two checks pass: the row count is what you expected and the total agrees by two routes. What have you actually proved, and what have you not?"
+      back: "You have proved the PLUMBING — the join did not duplicate your number and the grouping did not lose it. You have NOT proved the number means what you were asked for. If you defined revenue wrongly (forgot the discount, included cancelled orders, used the wrong price column), both routes make the same mistake and agree perfectly. Checks catch mechanical damage. Only understanding the question catches the wrong question."
+
+  # ── 5. READING THE ANSWER ──
+  - basic:
+      front: "A manager asks for \"our number one customer\". You find that one customer placed the most orders, a second paid the most in delivery charges, and a third spent the most money. Which is the answer?"
+      back: "None of them yet — the question is not a SQL question. \"Number one\" is a business definition, and until somebody supplies it you cannot pick between three correct answers. The useful move is to ask them back, and the useful thing to bring is all three. Producing one number and letting them assume it means what they meant is how a correct query becomes a wrong decision."
+
+  # REWORDED 2026-08-30: the first version ended "...in this lesson", which breaks the
+  # self-containment rule this file opens with — a card reviewed on a phone weeks later has no
+  # lesson to refer back to. The premise (twenty-five rounded figures) is now stated on the
+  # card itself, and both blanks are crisp single words rather than a quantity the reviewer
+  # would have to have memorised.
+  - cloze: "Round {{c1::once}}, at the end. Twenty-five money figures each rounded to the penny and then added up do not have to equal the rounded grand total — the two can sit a few pence apart, and {{c2::neither}} of them is a bug."
+
+  # ── 6. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  - basic:
+      front: "Write the query. <code>customers</code> has <code>customer_id</code> and <code>company_name</code>; <code>orders</code> has <code>order_id</code> and <code>customer_id</code>; <code>order_lines</code> has <code>order_id</code>, <code>unit_price</code>, <code>quantity</code> and <code>discount</code>. Produce one row per customer: their name, how many orders they placed, and what they spent, biggest spender first."
+      back: "<code>SELECT c.company_name,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;COUNT(DISTINCT o.order_id) AS orders,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROUND(SUM(l.unit_price * l.quantity<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* (1 - l.discount)), 2) AS total_sales<br>FROM customers c<br>JOIN orders o ON o.customer_id = c.customer_id<br>JOIN order_lines l ON l.order_id = o.order_id<br>GROUP BY c.company_name<br>ORDER BY total_sales DESC;</code><br><br>Three things to get right: <b>DISTINCT on the order count</b>, because the rows are lines and a plain count would inflate every customer; <b>ROUND wrapping the whole calculation</b>, not just the price; and the discount applied per line rather than at the end. Then run both checks before you send it."

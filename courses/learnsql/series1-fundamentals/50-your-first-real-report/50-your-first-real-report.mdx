@@ -1,0 +1,385 @@
+---
+title: "SELECT + JOIN + GROUP BY — Building Your First Real Report"
+description: "The Series 1 project. Assemble everything you have learned into one report a manager would actually ask for — and learn the two checks that tell you whether the number in it is true before anybody else reads it."
+topic: "learn-sql"
+tags: ["sql", "fundamentals", "join", "group-by", "reporting", "project"]
+level: "beginner"
+module: "series1-fundamentals"
+order: 50
+date: "2026-08-30"
+published: true
+videoId: "learnsql-series1-50-your-first-real-report"
+---
+
+## The situation this lesson prepares you for
+
+Somebody asks you for the customer sales summary. Top customers, how much each one has spent, and how many orders that was. By Friday.
+
+It is the most ordinary request in business, and it is the first one in this course you have everything you need to answer.
+
+You will not learn a new keyword today. Every piece of what follows already had a lesson of its own: `SELECT`, `WHERE`, `ORDER BY`, aliases, `SUM`, `COUNT`, `GROUP BY`, `HAVING`, `JOIN`. What is new is putting them together, and one habit that goes with it — **checking the number before somebody else acts on it.** That habit is the difference between somebody who writes SQL and somebody you would trust with a report.
+
+Every query below runs on the Northwind sample database that ships with DataPallas.
+
+**Open the koans before you read on.** There is a koan for every idea in this lesson — and the last two ask you to write a whole query from nothing, because that is what this lesson is for.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _50
+```
+
+## The question that comes before the query
+
+Not "which tables do I need". This one:
+
+> **One row of my answer is one what?**
+
+For this report, one row is **one customer**. That decides the `GROUP BY` before you have written a line.
+
+Then the harder half of the same question: **one row of my source is one what?** Because that is what you will be adding up, and it is almost never the same thing as a row of your answer.
+
+The money you have been asked for is not in `"Customers"`. It is not in `"Orders"` either — an order knows who placed it and what the delivery cost, not what was in it. It is in `"Order Details"`, one row per thing bought.
+
+So the customer's name and the customer's money are **three tables apart**:
+
+```
+"Customers"  →  "Orders"  →  "Order Details"
+   the name      whose order     the money
+```
+
+## Two hops, and a join for each
+
+You already know how to follow one pointer. This is the same thing, written twice — a second `JOIN ... ON` under the first, read top to bottom.
+
+Nothing about the syntax is new. What *is* new is what the second hop does to your row count, and that is the whole lesson.
+
+### Start by counting
+
+Before the report, the habit. Know what you started with:
+
+```sql file=./scripts/count-orders.sql
+SELECT count(*) AS "Orders"
+FROM "Orders";
+```
+
+| Orders |
+| ------ |
+| 79     |
+
+Seventy-nine orders. Hold on to that number.
+
+### One hop: still 79
+
+```sql file=./scripts/customers-and-orders.sql
+SELECT count(*) AS "Rows"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID";
+```
+
+| Rows |
+| ---- |
+| 79   |
+
+**Unchanged, and that is exactly right.** A customer has many orders — but an order has exactly *one* customer, so looking that customer up adds a column and cannot add a row. One row is still one order.
+
+### Two hops: 193
+
+```sql file=./scripts/add-the-order-lines.sql
+SELECT count(*) AS "Rows"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID";
+```
+
+| Rows |
+| ---- |
+| 193  |
+
+**The number moved.** Seventy-nine became a hundred and ninety-three.
+
+That is not a bug, and it is not something to fix. An order can hold three different products, and each of them is a row in `"Order Details"`. You asked to go where the money is, and the money is one level finer than an order. So one row is no longer one order — **one row is now one order line.**
+
+Write that down, because from this moment `count(*)` has quietly stopped counting orders. It counts lines. Nothing will tell you.
+
+> **This is the check.** Count the rows before the join and after it. When the number moves, the grain of your query has changed, and every total built on top of it means something different from what it meant a moment ago.
+
+## The money
+
+What one line is worth is price times quantity, less whatever discount was given on the day:
+
+`d."UnitPrice" * d."Quantity" * (1 - d."Discount")`
+
+`SUM` that inside each customer's pile and you have the report's headline column. `ROUND(..., 2)` wraps the *whole* calculation, because what you want rounded is the answer — the rule from the expressions lesson, and it applies unchanged here.
+
+```sql file=./scripts/sales-by-customer.sql
+SELECT c."CompanyName",
+       ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")), 2) AS "Total sales"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID"
+GROUP BY c."CompanyName"
+ORDER BY "Total sales" DESC;
+```
+
+| CompanyName                | Total sales |
+| -------------------------- | ----------- |
+| Cactus Comidas para llevar | 4567.80     |
+| Blauer See Delikatessen    | 4318.80     |
+| Frankenversand             | 4267.27     |
+| Lehmanns Marktstand        | 4077.12     |
+| Ernst Handel               | 3902.78     |
+| …                          | …           |
+
+Twenty-five rows, one per customer. That is a report.
+
+Note where the `d.` prefixes are doing real work: `d."UnitPrice"` is what the line **sold for on the day**. `"Products"` has a `"UnitPrice"` too, and it is what the catalogue charges **now**. On a sales report you want the first one. This is the ambiguity the joins lesson made you meet as an error; here it is the difference between a true number and a plausible one.
+
+## Now add the order count, and break the report
+
+The request asked for "how many orders", so add a count. The obvious way:
+
+```sql file=./scripts/orders-counted-wrong.sql
+SELECT c."CompanyName",
+       count(o."OrderID") AS "Orders",
+       ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")), 2) AS "Total sales"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID"
+GROUP BY c."CompanyName"
+ORDER BY "Total sales" DESC;
+```
+
+| CompanyName                | Orders | Total sales |
+| -------------------------- | ------ | ----------- |
+| Cactus Comidas para llevar | 8      | 4567.80     |
+| Blauer See Delikatessen    | 8      | 4318.80     |
+| Frankenversand             | 7      | 4267.27     |
+| Lehmanns Marktstand        | 8      | 4077.12     |
+| Ernst Handel               | 7      | 3902.78     |
+| Alfreds Futterkiste        | 11     | 3838.43     |
+| …                          | …      | …           |
+
+Read the sixth row. **Alfreds Futterkiste placed eleven orders.**
+
+They placed five.
+
+Nothing failed. No warning. And look at what makes this one so hard to catch: **the money column is right.** Every figure in it is correct to the penny, the ranking is correct, and the report is the right shape and the right length. One column is more than double what it should be, sitting between two that are perfect.
+
+`count(o."OrderID")` counts the rows in the pile, and since the second join the rows are **order lines**. Alfreds has five orders holding eleven lines between them, so eleven is what comes back. The query did what you asked. You asked the wrong question — and you asked it seventy-nine lines after the row count told you the grain had changed.
+
+## The fix is one word
+
+```sql file=./scripts/customer-sales-summary.sql
+SELECT c."CompanyName",
+       count(DISTINCT o."OrderID") AS "Orders",
+       ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")), 2) AS "Total sales"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID"
+GROUP BY c."CompanyName"
+ORDER BY "Total sales" DESC;
+```
+
+| CompanyName                        | Orders | Total sales |
+| ---------------------------------- | ------ | ----------- |
+| Cactus Comidas para llevar         | 3      | 4567.80     |
+| Blauer See Delikatessen            | 3      | 4318.80     |
+| Frankenversand                     | 3      | 4267.27     |
+| Lehmanns Marktstand                | 3      | 4077.12     |
+| Ernst Handel                       | 3      | 3902.78     |
+| Alfreds Futterkiste                | 5      | 3838.43     |
+| Morgenstern Gesundkost             | 3      | 3289.13     |
+| Around the Horn                    | 4      | 2701.58     |
+| Great Lakes Food Market            | 3      | 2683.28     |
+| LILA-Supermercado                  | 3      | 2127.61     |
+| Berglunds snabbköp                 | 5      | 1952.66     |
+| Du monde entier                    | 3      | 1918.93     |
+| Magazzini Alimentari Riuniti       | 3      | 1738.24     |
+| Toms Spezialitäten                 | 2      | 1728.38     |
+| Bon app'                           | 3      | 1728.05     |
+| Island Trading                     | 3      | 1716.15     |
+| HILARION-Abastos                   | 3      | 1596.39     |
+| Folk och fä HB                     | 3      | 1594.23     |
+| Drachenblut Delikatessen           | 3      | 1589.46     |
+| Antonio Moreno Taquería            | 3      | 1377.33     |
+| Königlich Essen                    | 3      | 1345.98     |
+| Ana Trujillo Emparedados y helados | 5      | 1292.10     |
+| Ottilies Käseladen                 | 3      | 1118.60     |
+| Die Wandernde Kuh                  | 2      | 991.76      |
+| QUICK-Stop                         | 2      | 691.28      |
+
+`count(DISTINCT o."OrderID")` counts **how many different orders** appear in the pile, not how many rows. Alfreds' eleven lines carry five distinct order numbers, so five is what comes back.
+
+**The rule worth carrying:** once a join has multiplied your rows, `count(*)` counts rows and nothing else. To count *things*, name the thing and say `DISTINCT`.
+
+## The second check: get the total a second way
+
+The row count told you the grain moved. It did not tell you whether the *money* moved with it — and that is the number somebody is going to act on.
+
+So get it twice, by two different routes. First through all three tables:
+
+```sql file=./scripts/report-total.sql
+SELECT ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")), 2) AS "Total"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID";
+```
+
+| Total    |
+| -------- |
+| 58153.31 |
+
+Now the short way, with no join at all — every penny on every order line there has ever been:
+
+```sql file=./scripts/total-a-second-way.sql
+SELECT ROUND(SUM("UnitPrice" * "Quantity"
+         * (1 - "Discount")), 2) AS "Total"
+FROM "Order Details";
+```
+
+| Total    |
+| -------- |
+| 58153.31 |
+
+**The same number.** And now you know something you could not have known by reading the query: the joins multiplied the *rows* and left the *money* alone. Each line is still counted exactly once.
+
+The order count survives the same treatment. Twenty-five customers, and the `Orders` column of the report adds up to seventy-nine — the number you started with:
+
+```sql file=./scripts/orders-a-second-way.sql
+SELECT count(DISTINCT "OrderID") AS "Orders"
+FROM "Order Details";
+```
+
+| Orders |
+| ------ |
+| 79     |
+
+Run that against the broken version and its `Orders` column adds up to **193**. The check catches the bug on its own, without anybody needing to notice that Alfreds looked busy.
+
+### The three pence you will find if you add the column up
+
+One more thing, because you will meet it the first time somebody checks your work with a calculator.
+
+Add up the twenty-five figures in the `Total sales` column above and you get **58153.34**. The database says **58153.31**. Neither is a bug.
+
+Each customer's total was rounded to the penny before you saw it, and twenty-five roundings do not cancel each other out — they drift, here by three pence upward. The true total, unrounded, is 58153.3075.
+
+Three pence is nothing. On a report with a thousand rows and a currency conversion it is not nothing, and it is the sort of discrepancy that costs an afternoon. The habit that avoids it:
+
+> **Round once, at the end.** A column of rounded numbers is not obliged to add up to the rounded total, and if both figures are going in front of the same person, compute the total from the raw values rather than from the column.
+
+This is worth knowing here specifically because the Excel report at the end of this lesson totals its money column in the footer — so the spreadsheet will say 58153.34 while a `SELECT` says 58153.31, and now you know which is which and why.
+
+### What a check proves, and what it does not
+
+Be clear about this, because it is where people over-trust their own arithmetic.
+
+The two checks prove that the **plumbing** did not break your number: the join did not duplicate it, the grouping did not lose it. They cannot prove the number **means** what you were asked for. Define revenue wrong and both routes will make the same mistake and agree with each other perfectly.
+
+So the strongest second way is one that does **not** come from you: last quarter's figure, the finance team's total, the number on the invoice. If your cross-check re-uses your own formula, it is checking your SQL, not your understanding.
+
+## So who is our number one customer?
+
+That question has been open since the filtering lesson, and it has now been answered three different ways:
+
+| Asked as | Answer |
+| -------- | ------ |
+| Who places the most orders? | A three-way tie — Alfreds Futterkiste, Ana Trujillo and Berglunds, five each |
+| Who pays us the most freight? | Frankenversand |
+| **Who spends the most money?** | **Cactus Comidas para llevar — 4567.80, on three orders** |
+
+Cactus is in neither of the other two answers. Alfreds Futterkiste, who orders more often than almost anyone, is **sixth**.
+
+That is not a contradiction and none of the three is wrong. "Number one customer" was never a SQL question — it was a question about what the business means by *number one*, and the useful move when somebody asks it is to ask them back.
+
+### The column that shows why
+
+Divide the money by the orders and the two customers stop looking similar:
+
+```sql file=./scripts/avg-order-value.sql
+SELECT c."CompanyName",
+       count(DISTINCT o."OrderID") AS "Orders",
+       ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")), 2) AS "Total sales",
+       ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount"))
+         / count(DISTINCT o."OrderID"), 2) AS "Avg order"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID"
+GROUP BY c."CompanyName"
+ORDER BY "Total sales" DESC;
+```
+
+| CompanyName                | Orders | Total sales | Avg order |
+| -------------------------- | ------ | ----------- | --------- |
+| Cactus Comidas para llevar | 3      | 4567.80     | 1522.60   |
+| Blauer See Delikatessen    | 3      | 4318.80     | 1439.60   |
+| Frankenversand             | 3      | 4267.27     | 1422.42   |
+| Lehmanns Marktstand        | 3      | 4077.12     | 1359.04   |
+| Ernst Handel               | 3      | 3902.78     | 1300.93   |
+| Alfreds Futterkiste        | 5      | 3838.43     | 767.69    |
+| …                          | …      | …           | …         |
+
+Cactus orders rarely and enormously. Alfreds orders often and small. Those are two completely different customers who want two completely different things from your sales team, and no single "top customers" number would have told them apart.
+
+Now go back and look at what the broken count did to *this* column. With eleven orders instead of five, Alfreds' average order value reads **348.95** instead of 767.69 — less than half, in the one number a sales director is most likely to act on.
+
+> A note if you run this in two places: `ROUND(a / b, 2)` comes back as a floating-point number on DuckDB and as an exact decimal on PostgreSQL, so DuckDB may print `1522.6` where CloudBeaver prints `1522.60`. Same value, different rendering — the same thing the data types lesson warned about.
+
+## From a query to a report somebody receives
+
+Everything above is a result grid in a database client. Nobody outside your team wants a result grid.
+
+In DataPallas that same SQL is the entire data source of a finished document. Open **Configuration → Reports → Report Generation**, and:
+
+1. **DataSource** — choose *SQL query*, pick your database connection, and paste the query. This is the part that has to be right, and it is the part this whole course has been about.
+2. **Output / Template** — choose *Excel*, and point it at an HTML template that lays out the columns, freezes the header row and totals the money column in a footer.
+3. **Generate Reports** — and you have `CustomerSalesSummary.xlsx`.
+
+From there it can go on a schedule and be emailed on the first of the month without anybody touching it again.
+
+DataPallas ships this exact report as a ready-to-run sample — **Customer Sales Summary**, under *Samples*. Click *Try It* and it generates. Its query is the one you just wrote, with two additions that are worth reading now that you can:
+
+- `COUNT(DISTINCT O."OrderID")` — the same fix, for the same reason. It is in the shipped report because the bug is real and somebody hit it.
+- `COALESCE(OD."Discount", 0)` — insurance for a discount column that might be empty. Our Northwind never has one, but a production database is not obliged to be tidy, and multiplying by an empty cell gives you an empty answer rather than an error.
+
+The tool builds the document. **You supply the number, and nothing downstream can repair a wrong one** — a beautifully formatted spreadsheet full of eleven-order customers is worse than no spreadsheet at all, because somebody will believe it.
+
+<a href="/docs/report-generation" target="_blank">Report Generation in DataPallas (read more)</a>
+
+## Practice
+
+There are ten koans for this lesson, and they build the **other side of the same business**: not who spends the most with us, but whose goods earn us the most. Different tables — `"Suppliers"`, `"Products"` and `"Order Details"` — so you cannot answer them by copying a query off this page.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _50
+```
+
+They walk the same path: count the rows before you group, follow the pointer a second time and watch six become twenty and then a hundred and ninety-three, sum the money, count the *things* rather than the rows, get the total a second way, rank it, filter the totals with `HAVING`, and watch a `WHERE` rewrite the whole ranking — one supplier goes from first place to last once you count only what you can still sell.
+
+The last two koans hand you nothing but the question. That is the exam, and it is the one that tells you whether this series worked.
+
+## What is next
+
+You have finished Series 1. You can fetch, filter, sort, calculate, aggregate, group, filter the groups, join, and now assemble all of it into a report and check it before you send it.
+
+Series 2 opens where this lesson stopped. You watched a row count move from 79 to 193 and learned to notice it; the next series starts by asking what happens when it moves and you *did not* mean it — when a join multiplies the money instead of the rows, and no amount of `DISTINCT` will put it back.
