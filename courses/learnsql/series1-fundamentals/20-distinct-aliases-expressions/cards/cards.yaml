@@ -1,0 +1,123 @@
+# Flashcards for Learn SQL · Series 1 · 20 — Aliases, Expressions & DISTINCT
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
+# tools/build-anki.py turns it into a .apkg with genanki.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds update the same deck (no duplicates).
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# ── WHAT ANKI IS FOR, AND WHAT IT IS NOT FOR ────────────────────────────────────────
+# Anki is reviewed on a phone, weeks later, with no database open, no CloudBeaver, and
+# the lesson long forgotten. So every card here is SELF-CONTAINED: it carries its own
+# premise. NOT ONE of them asks the learner to run a query, to remember a result from
+# an earlier card, or to know Northwind's schema. Where a card needs a fact — a query
+# somebody handed you, a table with two columns in it — the FRONT states it, and the
+# card tests the REASONING rather than the recall of data. A card that fails that test
+# is a koan wearing the wrong clothes: the koans are where you type SQL against real
+# rows, and this deck is where the rules have to survive without them.
+#
+# THIS DECK CARRIES MORE THAN ITS SHARE OF THE LESSON, deliberately. Two of the
+# episode's ideas have NO KOAN, because the koans run on DuckDB and DuckDB is more
+# permissive than PostgreSQL on both of them — a koan would go green on an answer
+# CloudBeaver rejects. Those two (an alias in WHERE; ORDER BY on an unselected column
+# under SELECT DISTINCT) are pure rules with no rows attached, which is exactly what a
+# flashcard is for. See the header of DistinctAliasesExpressionsKoans.groovy.
+#
+# FILE ORDER IS THE CURRICULUM. Anki introduces new cards in file order, so a learner
+# meeting this deck for the first time meets the ideas in the order they build on each
+# other — the same order as the lesson and the video: name a column, build one the
+# table has not got, find out how far the name reaches, round it, join text, and then
+# the two faces of DISTINCT.
+#
+# NOTHING HERE DUPLICATES LESSON 15's DECK. Both lessons touch ORDER BY — but 15 owns
+# "what a sort does and how it goes wrong", and this deck only ever asks about ORDER BY
+# in order to answer a question about NAMES (which clause can see an alias). If a card
+# here could be answered without knowing what an alias is, it belongs in 15's deck.
+#
+# AND NOTHING HERE PRE-EMPTS 35. The clause-order card stops at ORDER BY on purpose.
+# HAVING is Series 1 · 35 and that deck owns it; this one lays the groundwork by
+# teaching the running order, and says so in one clause rather than teaching HAVING.
+
+deck: "DataZeus::Learn SQL::Series 1::20 Aliases, Expressions and DISTINCT"
+guid: "datazeus-learn-sql-series1-20-distinct-aliases-expressions"
+tags: ["datazeus", "learn-sql", "series-1", "sql"]
+
+cards:
+  # ── 1. THE IDEA UNDER ALL OF IT ──
+  - basic:
+      front: "Your SELECT list can contain more than column names. What else can go in it, and what does that make the select list?"
+      back: "Any EXPRESSION: arithmetic on columns (<code>\"UnitPrice\" * \"UnitsInStock\"</code>), text joined together, a function call like ROUND. So the select list is not a list of columns — it is a list of things to WORK OUT for each row, and a bare column name is just the simplest of them. The output column does not have to exist in the table."
+
+  - basic:
+      front: "You run <code>SELECT \"ProductName\", \"UnitPrice\" * \"UnitsInStock\" FROM \"Products\";</code> and the second column comes back headed <code>?column?</code>. What happened, and whose job is it to fix?"
+      back: "Nothing went wrong. You invented that column, so the database has nothing to name it after — PostgreSQL falls back to <code>?column?</code> and DuckDB echoes the arithmetic back as <code>(UnitPrice * UnitsInStock)</code>. Both are useless to a reader. Naming it is your job: add <code>AS \"Stock value\"</code>."
+
+  # ── 2. NAMING IT ──
+  - cloze: "The keyword that gives an output column a heading of your choosing is {{c1::AS}}, and to give that heading spaces or capital letters you wrap it in {{c2::double quotes}}."
+
+  - basic:
+      front: "What is the difference between <code>AS StockValue</code> and <code>AS \"Stock value\"</code>, beyond the space?"
+      back: "The quotes decide whether you get the heading you typed. An UNQUOTED alias is an identifier, so PostgreSQL folds it to lower case and hands back <code>stockvalue</code> (DuckDB keeps your capitals). A QUOTED alias is taken literally — capitals, spaces and all — on every engine. Quote every alias and the question never comes up."
+
+  # ── 3. HOW FAR THE NAME REACHES — the highest-value idea in the lesson ──
+  # NO KOAN EXISTS FOR THIS (DuckDB accepts what PostgreSQL rejects), so these two
+  # cards are where the rule lives. They are phrased to be derivable from the running
+  # order rather than memorised, because that is what makes the rule survive.
+  - basic:
+      front: "You write <code>… \"UnitPrice\" * \"UnitsInStock\" AS \"Stock value\" … WHERE \"Stock value\" &gt; 1000</code> and get <code>column \"Stock value\" does not exist</code>. But <code>ORDER BY \"Stock value\"</code> works fine. Why the difference?"
+      back: "Because of the order the database does the work in, which is not the order you wrote it: FROM → WHERE → SELECT → ORDER BY. WHERE runs BEFORE the select list is built, so at that moment your name does not exist yet. ORDER BY runs after SELECT has produced the columns, so by then it does. WHERE is not refusing — it is early."
+
+  - basic:
+      front: "You cannot use an alias in WHERE. What do you write instead, and what does it cost you?"
+      back: "Repeat the expression: <code>WHERE \"UnitPrice\" * \"UnitsInStock\" &gt; 1000</code>. It costs you the duplication, and nothing else — ORDER BY can still use the short name. (Watch out: DuckDB is permissive and DOES accept the alias in WHERE. PostgreSQL and the SQL standard do not, so code that works in one can fail in the other. Writing the expression out is right everywhere.)"
+
+  # ── 4. ROUNDING ──
+  - basic:
+      front: "A price column holds 4 decimal places. You multiply it by 0.85 and the answer comes back with SIX. Is that a bug, and what do you do about it?"
+      back: "Not a bug — multiplying two exact decimals produces a result with more places than either input, so 123.7900 × 0.85 is 105.221500. It is simply more precision than the question has. Wrap the whole calculation: <code>ROUND(\"UnitPrice\" * 0.85, 2)</code>. ROUND takes the number and how many decimal places you want."
+
+  - basic:
+      front: "What is the difference between <code>ROUND(price * 0.85, 2)</code> and <code>ROUND(price, 2) * 0.85</code>?"
+      back: "The first rounds the ANSWER; the second rounds the INPUT and then multiplies, so it can drift and it is almost never what you meant. Round last — the brackets go around the whole calculation. The two often produce similar-looking numbers, which is exactly why this one goes unnoticed."
+
+  - cloze: "ROUND changes what the {{c1::query returns}} — it never changes what is {{c2::stored in the table}}. You are rounding the copy you hand over."
+
+  # ── 5. TEXT EXPRESSIONS ──
+  - basic:
+      front: "In standard SQL, how do you join two text columns into one output column with the word \"at\" between them?"
+      back: "With the concatenation operator, two pipe characters: <code>\"ContactName\" || ' at ' || \"CompanyName\"</code>. The bit in the middle is an ordinary string literal in single quotes. (Some databases also offer CONCAT() and PostgreSQL has format(); <code>||</code> is the standard one and the one you will meet in other people's SQL.)"
+
+  - basic:
+      front: "Somebody writes <code>first || 'at' || second</code> and complains the output is wrong. What do they see, and why is there no error?"
+      back: "They see the whole line closed up — <code>Maria AndersatAlfreds Futterkiste</code> — because 'at' has no space on EITHER side, so both joins run together. Concatenation adds nothing of its own: it glues exactly what you hand it. The spaces are part of your string literal, so write <code>' at '</code>. Nothing errors, because nothing is wrong as far as the database is concerned."
+
+  # ── 6. DISTINCT, AND THE TRAP THIS LESSON EXISTS FOR ──
+  - cloze: "{{c1::DISTINCT}} goes immediately after SELECT and removes rows that are copies of a row already returned — turning one row per record into one row per {{c2::value}}."
+
+  # THE CARD THIS DECK EXISTS FOR. Phrased as the mistake, because that is how it is met
+  # in the wild: somebody hands you a report and you have to spot it in one read. Both
+  # numbers are on the front, so nothing has to be remembered about the table.
+  - basic:
+      front: "A colleague's report is headed \"countries we sell into\". <code>SELECT DISTINCT \"Country\" FROM \"Customers\"</code> gave 10 rows. They then added a column — <code>SELECT DISTINCT \"Country\", \"City\"</code> — and got 24 rows, with Germany in it eleven times. The word DISTINCT is still there. What went wrong?"
+      back: "DISTINCT is not a function on the column beside it — it applies to the WHOLE ROW you selected. Two rows are copies only when every column matches, so Germany+Aachen and Germany+Berlin are different rows and both survive; the country column had no say at all. Every column you add gives the rows one more way to differ and one more way to stay. Nothing errored, which is what makes it dangerous: the heading still says countries and the query still says DISTINCT."
+
+  - basic:
+      front: "Given that, is <code>SELECT DISTINCT \"Country\", \"City\"</code> a mistake?"
+      back: "No — it is the right query for \"which towns, in which countries, do we have customers in?\". The trap was never the second column; it was the HEADING that no longer matched the query underneath it. Read your select list and make the title agree with it."
+
+  - basic:
+      front: "A result has unexpected duplicate rows in it. Why is reaching for DISTINCT usually the wrong first move?"
+      back: "Because it will very often make them disappear without telling you where they came from — you have hidden the symptom rather than fixed the cause. Duplicates in a result are usually evidence that the query is producing rows you did not intend (most often a join that matched more than you expected). Find out why they are there first; DISTINCT is for asking \"what distinct values exist\", not for tidying up a result you do not understand."
+
+  # ── 7. ONE MORE RULE THAT CANNOT BE A KOAN ──
+  # Same reason as the WHERE card: PostgreSQL rejects it (42P10), DuckDB allows it.
+  - basic:
+      front: "Why does <code>SELECT DISTINCT \"Country\" FROM \"Customers\" ORDER BY \"CustomerID\"</code> get rejected?"
+      back: "With SELECT DISTINCT, anything you sort by has to appear in the select list. The rows have already been collapsed, so a single Germany row no longer has one \"CustomerID\" to be sorted by — there were eleven. PostgreSQL raises 42P10 (\"for SELECT DISTINCT, ORDER BY expressions must appear in select list\"); DuckDB is permissive and allows it. Sort by something you selected."
+
+  # ── 8. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  - basic:
+      front: "Write the query. A table <code>\"Products\"</code> has the columns <code>\"ProductName\"</code>, <code>\"UnitPrice\"</code> and <code>\"Discontinued\"</code> (a boolean). Produce a price list of the five dearest products still on sale, showing the name under the heading <code>Product</code> and the price with 15% taken off under the heading <code>Trade price</code>, rounded to two decimal places."
+      back: "<code>SELECT \"ProductName\" AS \"Product\",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROUND(\"UnitPrice\" * 0.85, 2) AS \"Trade price\"<br>FROM \"Products\"<br>WHERE \"Discontinued\" = false<br>ORDER BY \"UnitPrice\" DESC<br>LIMIT 5;</code><br><br>Four things to get right: quote both aliases so the headings keep their space and capitals; put ROUND around the WHOLE calculation, not around the price; sort by <code>\"UnitPrice\"</code> or by the alias (ORDER BY can see it) but NOT in the WHERE, which cannot; and the clause order SQL insists on — WHERE, then ORDER BY, then LIMIT."

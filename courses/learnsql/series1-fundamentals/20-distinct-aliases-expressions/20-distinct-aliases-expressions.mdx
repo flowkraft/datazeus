@@ -1,0 +1,405 @@
+---
+title: "Aliases, Expressions & DISTINCT — Make Messy Output Look Like a Report"
+description: "A correct query is only half the job. Name your columns, build the ones the table hasn't got, round money back into money — and learn why a DISTINCT list stops being distinct the moment you add a column to it."
+topic: "learn-sql"
+tags: ["sql", "fundamentals", "alias", "distinct", "expressions"]
+level: "beginner"
+module: "series1-fundamentals"
+order: 20
+date: "2026-08-30"
+published: true
+videoId: "learnsql-series1-20-distinct-aliases-expressions"
+---
+
+## The situation this lesson prepares you for
+
+Somebody asks for the five most valuable lines sitting in the warehouse. You do the thing the last lesson taught you: you ask **by which measure**, and they tell you — by what the stock is worth, price times units on the shelf.
+
+So you write it. You multiply, you sort, you cut to five. The rows are right; you check them one by one.
+
+And then you look at the result and you cannot send it to anybody, because the second column is headed `?column?` and every number in it has four decimal places.
+
+Nothing is broken. **The query is finished and the output is not.** This lesson is the difference between those two things — and it is a bigger difference than it looks, because the person who asked will judge the answer entirely by the second one.
+
+By the end you will be able to name any column you like, build columns your table does not contain, turn a calculation back into money, and ask for one row per *value* instead of one row per *record*. You will also have met the one way that last trick quietly goes wrong.
+
+Every query below runs on the Northwind sample database that ships with DataPallas.
+
+**Open the koans before you read on.** There is a koan for every idea here — a query with a blank for you to fill in. Keep them in a second window and solve each one as you reach it; watching somebody name a column teaches you nothing, and naming one yourself is the whole lesson.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _20
+```
+
+## The query that was right, and unusable
+
+Here is the one from the story:
+
+```sql file=./scripts/stock-value-unnamed.sql
+SELECT "ProductName",
+       "UnitPrice" * "UnitsInStock"
+FROM "Products"
+ORDER BY "UnitPrice" * "UnitsInStock" DESC
+LIMIT 5;
+```
+
+| ProductName | ?column? |
+| ----------- | -------: |
+| Mishi Kobe Niku | 2813.0000 |
+| Boston Crab Meat | 2263.2000 |
+| Chef Antons Cajun Seasoning | 1166.0000 |
+| Ikura | 961.0000 |
+| Tofu | 813.7500 |
+
+Two things to notice, and only one of them is a surprise.
+
+The first: **you asked for a column that does not exist in the table.** There is no stock-value column in `"Products"`. You built one out of two that are there, and the database was perfectly happy to hand it back. That is worth stopping on — the select list is not a list of columns, it is a list of **things to work out for each row**, and a column name is just the simplest possible thing to work out.
+
+The second: the database had to call it something, and it had nothing to go on. **PostgreSQL calls it `?column?`.** DuckDB echoes the arithmetic back at you as `(UnitPrice * UnitsInStock)`. Neither is any use to a reader, and neither engine is being unhelpful — you invented the column, so naming it is your job.
+
+## AS: you name the column
+
+Start with the smallest version of the fix, on a query with no arithmetic in it at all. `AS` gives any column the heading you choose:
+
+```sql file=./scripts/customers-renamed.sql
+SELECT "CompanyName" AS "Customer",
+       "ContactName" AS "Who to ask for"
+FROM "Customers"
+ORDER BY "CompanyName"
+LIMIT 5;
+```
+
+| Customer | Who to ask for |
+| -------- | -------------- |
+| Alfreds Futterkiste | Maria Anders |
+| Ana Trujillo Emparedados y helados | Ana Trujillo |
+| Antonio Moreno Taquería | Antonio Moreno |
+| Around the Horn | Thomas Hardy |
+| Berglunds snabbköp | Christina Berglund |
+
+Nothing about the data changed. Only what it is called on the way out.
+
+Look at the second heading: **`Who to ask for` has spaces and capital letters in it**, and it can only have them because the alias is wrapped in **double quotes** — the same double quotes you have been putting around column names since lesson 2, doing the same job. Without them, `AS Who to ask for` is three words the parser cannot make sense of, and the query fails.
+
+<Callout>
+**A quoted alias is the difference between a result and a report.** `"Stock value"`, `"Trade price"`, `"Who to ask for"` — headings a person reads without being told what they mean. It costs you two characters.
+</Callout>
+
+### One thing to know about *unquoted* aliases
+
+You will see `AS StockValue` written without quotes, and it works. But on PostgreSQL it does not come back as you typed it — **an unquoted identifier is folded to lower case**, so you get a heading called `stockvalue`. DuckDB keeps your capitals.
+
+That is a difference you will trip over exactly once and then never forget. **Quote every alias and the question never comes up.**
+
+## Now name the one the database couldn't
+
+Back to the query that started this. The fix is the one you just learned:
+
+```sql file=./scripts/stock-value.sql
+SELECT "ProductName" AS "Product",
+       "UnitPrice" * "UnitsInStock" AS "Stock value"
+FROM "Products"
+ORDER BY "Stock value" DESC
+LIMIT 5;
+```
+
+| Product | Stock value |
+| ------- | ----------: |
+| **Mishi Kobe Niku** | **2813.0000** |
+| Boston Crab Meat | 2263.2000 |
+| Chef Antons Cajun Seasoning | 1166.0000 |
+| Ikura | 961.0000 |
+| Tofu | 813.7500 |
+
+Now look at the last-but-one line. It says `ORDER BY "Stock value" DESC` — **the sort is using the name you invented**, instead of repeating the multiplication. That is not just tidier. The calculation now exists in exactly one place in the query, so when somebody decides stock value should be based on a different column, there is one line to change instead of two that must be kept in step.
+
+And now read the *data* rather than the syntax. The single most valuable thing in that warehouse is **Mishi Kobe Niku** — twenty-nine units at 97.00 — and it is a line the company has **stopped selling**. Nobody is going to order it, and it is sitting at the top of the list. You could not see that ten minutes ago, and it took one multiplication.
+
+## How far does the name reach?
+
+`ORDER BY` could use the name. The obvious next question is whether `WHERE` can, and the obvious answer is yes — it is right there in the query. Try it:
+
+```sql file=./scripts/stock-value-alias-in-where.sql
+SELECT "ProductName" AS "Product",
+       "UnitPrice" * "UnitsInStock" AS "Stock value"
+FROM "Products"
+WHERE "Stock value" > 1000;
+```
+
+```
+SQL Error [42703]: ERROR: column "Stock value" does not exist
+  Position: 111
+```
+
+The database is not being awkward. **At the moment `WHERE` runs, that column really does not exist yet.**
+
+### The order the database actually works in
+
+You write a query in one order. The database does the work in another, and this is the running order that matters:
+
+1. **`FROM`** — pick up the table.
+2. **`WHERE`** — throw rows away. *The select list has not been read yet, so nothing you named in it exists.*
+3. **`SELECT`** — work out the columns. **This is where your name gets created.**
+4. **`ORDER BY`** — sort what `SELECT` produced, so every name is available.
+
+That is the whole explanation, and it is worth more than the rule it explains: you never have to memorise where an alias works, because you can derive it. It also hands you the next-but-one lesson almost free — when you meet `HAVING` and wonder why `WHERE` cannot filter a total, it is this same running order answering again.
+
+### The fix: say the calculation twice
+
+```sql file=./scripts/stock-value-over-1000.sql
+SELECT "ProductName" AS "Product",
+       "UnitPrice" * "UnitsInStock" AS "Stock value"
+FROM "Products"
+WHERE "UnitPrice" * "UnitsInStock" > 1000
+ORDER BY "Stock value" DESC;
+```
+
+| Product | Stock value |
+| ------- | ----------: |
+| Mishi Kobe Niku | 2813.0000 |
+| Boston Crab Meat | 2263.2000 |
+| Chef Antons Cajun Seasoning | 1166.0000 |
+
+It looks like repetition because it is. The sort keeps the short name; only the filter pays.
+
+<Callout>
+**One engine difference worth knowing, because it will mislead you.** DuckDB *accepts* `WHERE "Stock value" > 1000` and returns those three rows. PostgreSQL rejects it, and so does the SQL standard. If you are trying things in the DuckDB CLI and then running them in CloudBeaver, this is the one that will catch you — **write the calculation out and you are right on every database.**
+</Callout>
+
+## ROUND: arithmetic makes ugly numbers
+
+Sales want the trade price: fifteen percent off list. That is one multiplication.
+
+```sql file=./scripts/trade-price-unrounded.sql
+SELECT "ProductName" AS "Product",
+       "UnitPrice" * 0.85 AS "Trade price"
+FROM "Products"
+ORDER BY "UnitPrice" DESC
+LIMIT 5;
+```
+
+| Product | Trade price |
+| ------- | ----------: |
+| Thuringer Rostbratwurst | 105.221500 |
+| Mishi Kobe Niku | 82.450000 |
+| Gnocchi di nonna Alice | 32.300000 |
+| Camembert Pierrot | 28.900000 |
+| Ikura | 26.350000 |
+
+**The prices went in with four decimal places and came back with six.** `105.221500` is not a price — nobody can be charged it and no report can print it. The answer is not wrong; it is just carrying more precision than the question has.
+
+```sql file=./scripts/trade-price.sql
+SELECT "ProductName" AS "Product",
+       ROUND("UnitPrice" * 0.85, 2) AS "Trade price"
+FROM "Products"
+ORDER BY "UnitPrice" DESC
+LIMIT 5;
+```
+
+| Product | Trade price |
+| ------- | ----------: |
+| Thuringer Rostbratwurst | 105.22 |
+| Mishi Kobe Niku | 82.45 |
+| Gnocchi di nonna Alice | 32.30 |
+| Camembert Pierrot | 28.90 |
+| Ikura | 26.35 |
+
+`ROUND` takes two things: the number, and how many decimal places you want. Two, for money.
+
+**Notice where the brackets go.** `ROUND("UnitPrice" * 0.85, 2)` wraps the *whole calculation*, because what you want rounded is the answer. `ROUND("UnitPrice", 2) * 0.85` rounds the input instead and then multiplies — different arithmetic, and on this data it even looks plausible.
+
+Two more things worth having:
+
+- **`ROUND` changes what comes out of the query. It changes nothing in the table.** The stored price is still `123.7900`. You have rounded the copy you are handing over, which is the only place it was ever a problem.
+- **Both our engines round half away from zero**, so `10.625` becomes `10.63`, not `10.62`. That is not something the SQL standard promises, so do not assume it of an engine you have not checked.
+
+## Text joins up too
+
+An expression does not have to be arithmetic. **Two pipe characters glue text end to end**, and that is how two columns become one line somebody can read.
+
+```sql file=./scripts/call-sheet.sql
+SELECT "ContactName" || ' at ' || "CompanyName" AS "Who to call"
+FROM "Customers"
+ORDER BY "CompanyName"
+LIMIT 5;
+```
+
+| Who to call |
+| ----------- |
+| Maria Anders at Alfreds Futterkiste |
+| Ana Trujillo at Ana Trujillo Emparedados y helados |
+| Antonio Moreno at Antonio Moreno Taquería |
+| Thomas Hardy at Around the Horn |
+| Christina Berglund at Berglunds snabbköp |
+
+The text in the middle is a string of its own, in single quotes, and **the spaces inside those quotes are yours to get right.** `' at '` has one at each end. Write `'at'` instead and the database glues exactly what you gave it, with no error and no warning:
+
+```
+Maria AndersatAlfreds Futterkiste
+```
+
+That is the whole rule for `||`: it joins precisely what you hand it and adds nothing.
+
+<Callout>
+**A warning for later.** If any piece of a `||` is empty — a `NULL` — the *entire* result becomes `NULL`, not just that piece. One missing middle name and the whole line vanishes from your report. `"City"` and `"Country"` are filled in for all twenty-five customers here, so it cannot bite you today; `"Region"` is empty for most of them and would. Series 1 · 45 is where `NULL` gets explained properly.
+</Callout>
+
+## DISTINCT: the other kind of messy
+
+So far the problem has been bad headings and ugly numbers. Here is a different one: the same answer, over and over.
+
+Sales ask which countries the company sells into. You know where that lives, so you ask for it:
+
+```sql file=./scripts/countries-one-per-customer.sql
+SELECT "Country"
+FROM "Customers"
+ORDER BY "Country";
+```
+
+| Country |
+| ------- |
+| Argentina |
+| Austria |
+| France |
+| France |
+| Germany |
+| Germany |
+| Germany |
+| … |
+
+**Twenty-five rows come back — one per customer, not one per country.** Germany is in there eleven times. The question had ten answers and you are about to hand over twenty-five lines.
+
+Nothing is wrong with the query. You asked for every customer's country, and that is exactly what arrived.
+
+```sql file=./scripts/countries-distinct.sql
+SELECT DISTINCT "Country"
+FROM "Customers"
+ORDER BY "Country";
+```
+
+| Country |
+| ------- |
+| Argentina |
+| Austria |
+| France |
+| Germany |
+| Italy |
+| Mexico |
+| Sweden |
+| UK |
+| USA |
+| Venezuela |
+
+**Ten.** `DISTINCT` goes immediately after `SELECT`, and it throws away any row that is a copy of one already returned. Eleven German customers collapse into a single row saying Germany.
+
+## The wrong answer that looks right
+
+Your list goes round. It is useful. And somebody writes back: *this is great — can we see which cities, too?*
+
+So you add the column. The word `DISTINCT` is still sitting right there at the front. Before you read on: **how many rows come back?**
+
+```sql file=./scripts/countries-and-cities.sql
+SELECT DISTINCT "Country", "City"
+FROM "Customers"
+ORDER BY "Country", "City";
+```
+
+| Country | City |
+| ------- | ---- |
+| Argentina | Buenos Aires |
+| Austria | Graz |
+| France | Marseille |
+| France | Nantes |
+| **Germany** | **Aachen** |
+| Germany | Berlin |
+| Germany | Brandenburg |
+| Germany | Cunewalde |
+| … | … |
+
+**Twenty-four.** Adding one column made a `DISTINCT` list more than twice as long, and Germany is back in it eleven times — under a heading that still says which countries we sell into.
+
+No error. No warning. Nothing to notice. And the word `DISTINCT` is still in the query, which is exactly what makes this one dangerous: you would point at it if anybody argued.
+
+> **`DISTINCT` is not a function on the column next to it. It applies to the whole row you selected.**
+
+Two rows are copies only when **every column matches**. Germany-plus-Aachen and Germany-plus-Berlin are two different rows, so both survive — and the country column had no say in it at all. **Every column you add gives the rows one more way to differ, and one more way to stay.**
+
+That is also why `DISTINCT` is a poor tool for "getting rid of duplicates" in general. When a result has rows in it you did not expect, `DISTINCT` will often make them disappear — and it will have hidden the reason rather than fixed it. Series 2 · 06 is about the usual cause.
+
+### When two columns *is* what you meant
+
+None of that makes `SELECT DISTINCT "Country", "City"` a mistake. It is the right query for **"which towns, in which countries, do we have customers in?"** — twenty-four is the correct answer to *that* question. The trap was never the second column; it was the heading that no longer matched the query underneath it.
+
+<Callout>
+**One more engine difference.** With `SELECT DISTINCT`, anything you sort by has to appear in the select list. `SELECT DISTINCT "Country" FROM "Customers" ORDER BY "CustomerID"` is rejected by PostgreSQL (`42P10`) and accepted by DuckDB. The reason is fair enough once you see it: the rows have already been collapsed, so `"CustomerID"` no longer has a single value to sort by.
+</Callout>
+
+## Now build the thing you would actually send
+
+Put the whole lesson into one query — and last lesson's, and the one before that:
+
+```sql file=./scripts/price-list.sql
+SELECT "ProductName" AS "Product",
+       ROUND("UnitPrice", 2) AS "List price",
+       ROUND("UnitPrice" * 0.85, 2) AS "Trade price"
+FROM "Products"
+WHERE "Discontinued" = false
+ORDER BY "UnitPrice" DESC
+LIMIT 5;
+```
+
+| Product | List price | Trade price |
+| ------- | ---------: | ----------: |
+| Gnocchi di nonna Alice | 38.00 | 32.30 |
+| Camembert Pierrot | 34.00 | 28.90 |
+| Ikura | 31.00 | 26.35 |
+| Uncle Bobs Organic Dried Pears | 30.00 | 25.50 |
+| **Tofu** | **23.25** | **19.76** |
+
+Three named headings, two rounded numbers, a filter and a sort. Nothing to explain and nothing to apologise for.
+
+Two details worth pointing at. **The two most expensive products in the catalogue are not on this list** — `WHERE "Discontinued" = false` removed them, because a price list for things nobody can buy is worse than no price list. And **Tofu's trade price is the one `ROUND` actually cut short**: the full number is `19.7625`, and every other trade price on this page was already exact at two places.
+
+## Two more things worth knowing
+
+**`ROUND` on a whole number of places.** `ROUND(x, 0)` gives you a whole number and `ROUND(x)` usually does the same. If you need "always up" or "always down" rather than "to the nearest", those are `CEIL` and `FLOOR`, and they are worth recognising when you meet them.
+
+**Other spellings of `||`.** Some databases offer `CONCAT(a, b, c)`, and PostgreSQL has `format()`. `||` is the standard operator, it is what you will see in other people's SQL, and it works on both of our engines — learn that one and recognise the rest.
+
+## What you can do now
+
+For any query whose output somebody else is going to read:
+
+1. **Name every column you invented.** If it is not a bare column name, it needs an `AS` — and quote the alias so it can have spaces and capitals.
+2. **Round anything that is money**, at the point you produce it, and remember you are rounding the output rather than the data.
+3. **Join text with `||`**, and count the spaces inside the quotes.
+4. **Reach for `DISTINCT` when you want one row per value** — and read your select list before you do, because `DISTINCT` sees all of it.
+5. **Make the heading and the query agree.** Most of the damage in this lesson came from a report whose title said one thing while its select list quietly said another.
+
+Next lesson: **`COUNT`, `SUM`, `AVG`, `MIN` and `MAX`** — because you can calculate *along* a row now, and you still cannot add a column *up*. That is the piece that finally answers "who is our biggest customer".
+
+## The koans: now you write the queries
+
+Each koan is a tiny fill-in-the-blank exercise: a failing test with a `___` where the answer belongs. Fill it in, run it, watch red turn green — and the next one unlocks.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _20
+```
+
+On macOS or Linux, run `./zeus.sh koans learnsql series1 _20` from the same folder. The three arguments are course, series and episode.
+
+> **Says the lesson isn't there?** Your copy of DataZeus predates this lesson — run `.\zeus.bat update` (or `./zeus.sh update`) once to fetch the latest lessons, then run the command again. Koans you have already solved are kept.
+
+The file you edit is:
+
+```
+c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_20\DistinctAliasesExpressionsKoans.groovy
+```
+
+Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
+
+Ten koans, easiest first, in the order this lesson builds them. They deliberately use different tables from the lesson — you price up order lines and tidy the supplier list — because you learn an idea by applying it somewhere new, not by retyping a query you just read. They run on DuckDB: a single file, no server to start.
+
+**One idea here has no koan, on purpose.** The alias that `ORDER BY` can see and `WHERE` cannot is the most useful rule in this lesson, and DuckDB — which the koans run on — happens to allow what PostgreSQL rejects. A koan would go green for the very answer CloudBeaver refuses, so that rule lives here and in the flashcards instead.
