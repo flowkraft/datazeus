@@ -1,0 +1,109 @@
+# Flashcards for Learn SQL · Series 1 · 25 — COUNT, SUM, AVG, MIN, MAX
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki). Git-friendly source;
+# tools/build-anki.py turns it into a .apkg with genanki.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds update the same deck (no duplicates).
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# ── WHAT ANKI IS FOR, AND WHAT IT IS NOT FOR ────────────────────────────────────────
+# Anki is reviewed on a phone, weeks later, with no database open, no CloudBeaver, and
+# the lesson long forgotten. So every card here is SELF-CONTAINED: it carries its own
+# premise. NOT ONE of them asks the learner to run a query, to remember a result from an
+# earlier card, or to know Northwind's schema. Where a card needs a fact — a row count,
+# a query someone handed you, a column that can be empty — the FRONT states it, and the
+# card tests the REASONING, not the recall of data. A card that fails that test is a
+# koan wearing the wrong clothes: the koans are where you type SQL against real rows;
+# this deck is where the rules have to survive without them.
+#
+# THIS DECK IS PARTICULARLY EXPOSED TO THAT, more than any earlier one, because the
+# lesson's evidence is NUMBERS. "79 and 52" means nothing to somebody who no longer
+# remembers what table it was — so every card below that uses a figure states the table
+# size on the front and asks what EXPLAINS the gap, never what the gap was.
+#
+# FILE ORDER IS THE CURRICULUM. Anki introduces new cards in file order, so a learner
+# meeting this deck for the first time meets the ideas in the order they build on each
+# other — the same order as the lesson and the video: what an aggregate is, what each
+# one does, and then the three ways the set of rows underneath it is not what you think.
+#
+# WHAT BELONGS TO A NEIGHBOURING DECK, so the next one does not re-teach it:
+#   · 07 owns types and how they compare. The MIN/MAX-on-text card here is about MIN
+#     and MAX reaching beyond numbers; the danger of a number stored as text is 07's.
+#   · 15 owns ORDER BY. The "name the row" card here is about what an aggregate CANNOT
+#     do and where to go instead — not about how sorting works.
+#   · 30 owns GROUP BY and 35 owns HAVING. Both are named here exactly once, as the
+#     answer to a question this lesson raises, and neither is taught.
+#   · 45 owns NULL and three-valued logic. This deck teaches only the BEHAVIOUR — an
+#     empty cell is not a value, so aggregates skip it — and never the logic.
+
+deck: "DataZeus::Learn SQL::Series 1::25 Aggregate Functions"
+guid: "datazeus-learn-sql-series1-25-aggregate-functions"
+tags: ["datazeus", "learn-sql", "series-1", "sql"]
+
+cards:
+  # ── 1. THE SHAPE CHANGE ──
+  - basic:
+      front: "SELECT, WHERE, ORDER BY and LIMIT all hand back rows. What does an aggregate function hand back, and which five should you know?"
+      back: "One value, however many rows went in — that is what \"aggregate\" means. The five: COUNT (how many), SUM (the total), AVG (the mean), MIN and MAX (the two ends of a column). A query built around them returns a single row, not a table."
+
+  - cloze: "An aggregate function reads many rows and returns {{c1::one}} value. Put several of them in one SELECT and they all describe {{c2::the same set of rows}}."
+
+  # ── 2. WHAT EACH ONE ACTUALLY DOES ──
+  - basic:
+      front: "Do MIN and MAX only work on number columns?"
+      back: "No — they work on anything the database can put in order. On a date column MIN is the earliest and MAX is the latest; on a text column they are first and last alphabetically. Which also means MAX of a column of amounts that were stored as TEXT gives you whichever one starts with the highest digit, not the biggest amount."
+
+  # Stated generically on purpose: the reviewer needs no product table, just the shape of
+  # the mistake. This is the "watch what you are adding up" beat from the lesson.
+  - basic:
+      front: "A colleague adds up the unit-price column of a product table and labels the result \"the value of our catalogue\". Why is that number meaningless, and what would be meaningful?"
+      back: "It is every price TAG added together — a number with no question behind it. Prices do not add up; they apply per unit sold or per unit held. What is meaningful is a sum over an expression: `sum(\"UnitPrice\" * \"UnitsInStock\")` multiplies out on every row first and then totals, which is what the shelves are actually worth. Before writing SUM, say the answer out loud as a sentence — if the sentence is nonsense, so is the query."
+
+  - basic:
+      front: "You average a money column that holds two decimal places, and AVG returns a number with sixteen. Is something wrong?"
+      back: "No. SUM, MIN and MAX hand back a value that was in the table; AVG hands back a CALCULATION, and a calculation has as many digits as the arithmetic produced. It is a full-precision number, not a money amount — rounding it for presentation is a separate job from computing it. (Two engines can even print different tails for the same average, because they carry it in different numeric types.)"
+
+  # ── 3. WHICH ROWS: WHERE RUNS FIRST ──
+  - cloze: "In an aggregate query, {{c1::WHERE}} runs first and the aggregate only ever sees the rows that survived it. Which is why you cannot filter on an aggregate in that clause — at that moment nothing has been counted yet. The clause for that is {{c2::HAVING}}."
+
+  # THE FIRST OF THE TWO CARDS THIS DECK EXISTS FOR. Phrased as two colleagues disagreeing,
+  # because that is how it is met in the wild: two correct queries, two different numbers,
+  # and somebody has to say which question each one answered.
+  - basic:
+      front: "You run MAX on the price column of a product table and report the dearest product at 123.79. A colleague runs a correct query too and says the dearest thing a customer can buy is 38.00. Neither query errored. What happened?"
+      back: "Their query had a WHERE and yours did not — the two dearest lines in that table are DISCONTINUED, so your 123.79 is the price of something nobody can order. An aggregate is an answer about a SET of rows, and WHERE is what chooses the set. Both numbers are correct; only one of them answers the question that was asked. The habit: before you aggregate, say which rows you mean."
+
+  # ── 4. WHICH VALUES: THE ONE THIS DECK EXISTS FOR ──
+  - cloze: "count(*) counts {{c1::rows}}. count(column) counts the {{c2::values}} in that column — and an empty cell is not one, so it is skipped."
+
+  - basic:
+      front: "One table, no WHERE anywhere, and this single query comes back 79 and 52:<br><br><code>SELECT count(*), count(\"ShippedDate\") FROM \"Orders\";</code><br><br>Nothing is broken. Explain the gap."
+      back: "27 of the 79 orders have no shipped date — they were placed and never shipped — and count(column) does not count an empty cell. So count(*) answers \"how many orders are there\" and count(\"ShippedDate\") answers \"how many orders have shipped\", which is a different question that happens to be worth asking. Both are right. Put either number under a heading that means the other one and you have shipped a wrong figure with no error to warn you."
+
+  - basic:
+      front: "SUM, AVG, MIN and MAX all skip empty values, just like count(column). On which one is that genuinely dangerous, and why?"
+      back: "AVG — because skipping empties moves the DENOMINATOR. AVG divides by the number of values it found, not by the number of rows, so an average over a column with gaps is an average of a smaller group than the one you asked about. On SUM, MIN and MAX skipping is almost always what you wanted (there is nothing to add, nothing to compare). Two defences: check whether the column can be empty, and print a count(*) beside any average that matters so the number arrives with its own denominator."
+
+  # ── 5. WHEN THERE IS NOTHING TO AGGREGATE ──
+  - basic:
+      front: "Your WHERE matches no rows at all. What does <code>SELECT count(*), sum(\"Amount\") FROM …</code> return?"
+      back: "ONE row — not zero rows. An aggregate query always returns exactly one row, even when nothing matched; a SELECT without an aggregate would have returned nothing here. And the two columns answer differently: COUNT says 0, because zero of something is a real number. SUM says NOTHING AT ALL — empty, not 0, because there was nothing to add and SQL will not invent a total. AVG, MIN and MAX behave like SUM. This is how a dashboard tile ends up blank instead of showing zero."
+
+  # ── 6. COUNTING THE DIFFERENT ONES ──
+  - cloze: "To count each different value once instead of once per row, DISTINCT goes {{c1::inside the brackets}}, in front of the column: count({{c2::DISTINCT}} \"Country\")."
+
+  # ── 7. THE WALL, AND THE TWO WAYS PAST IT ──
+  - basic:
+      front: "This is rejected by every SQL database:<br><br><code>SELECT \"ProductName\", max(\"UnitPrice\") FROM \"Products\";</code><br><br>Why — and what are the two ways forward?"
+      back: "max() produces ONE value while \"ProductName\" has one per row, and there is no honest way to fit twenty names into one row — so the database refuses rather than picking one. (PostgreSQL: \"must appear in the GROUP BY clause or be used in an aggregate function\".) Two ways forward: to NAME a single row, sort and take one — `ORDER BY \"UnitPrice\" DESC LIMIT 1` — which gives you the row, not just the number. To get one number PER GROUP, per country or per customer, you need GROUP BY, which is what the error message was pointing at."
+
+  - basic:
+      front: "Is <code>count(1)</code> faster than <code>count(*)</code>?"
+      back: "No — they are the same thing and perform identically; so does count('x'). All of them count rows. It is a piece of folklore you will meet in old code and in interviews. Write count(*), and note that count(<em>column</em>) is the one that genuinely differs, because it skips empties."
+
+  # ── 8. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  - basic:
+      front: "Write the query. A table <code>\"Orders\"</code> has the columns <code>\"OrderID\"</code>, <code>\"Freight\"</code>, <code>\"ShipCountry\"</code> and <code>\"ShippedDate\"</code> — the last one is empty until the order ships. For orders sent to Germany, give three labelled numbers: how many there are, how many have actually shipped, and the total freight."
+      back: "<code>SELECT count(*) AS \"Orders\",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;count(\"ShippedDate\") AS \"Shipped\",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;sum(\"Freight\") AS \"Total freight\"<br>FROM \"Orders\"<br>WHERE \"ShipCountry\" = 'Germany';</code><br><br>Three things to get right: the WHERE, which runs first and decides what all three aggregates see; count(*) versus count(\"ShippedDate\"), which is the whole point of showing both; and an alias on every aggregate, or the numbers arrive with no names on them. If no German order existed, this would still return one row — with 0, 0 and an empty total."

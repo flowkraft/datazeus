@@ -1,0 +1,394 @@
+---
+title: "COUNT, SUM, AVG, MIN, MAX — Turning Many Rows Into One Number"
+description: "How many, how much, the biggest, the smallest, the average. Learn the five functions that collapse a table into a single number — and the two invisible things that decide which rows that number is actually about."
+topic: "learn-sql"
+tags: ["sql", "fundamentals", "aggregate-functions", "count"]
+level: "beginner"
+module: "series1-fundamentals"
+order: 25
+date: "2026-08-30"
+published: true
+videoId: "learnsql-series1-25-aggregate-functions"
+---
+
+## The situation this lesson prepares you for
+
+Somebody stops at your desk. "How many orders came in?" "What did we spend on shipping last quarter?" "What's our most expensive product?"
+
+None of those people wants a table. They want **one number**, and they want it in a sentence.
+
+Everything you have written so far hands back rows. `SELECT` picks columns, `WHERE` keeps rows, `ORDER BY` arranges them, `LIMIT` cuts them — and at the end of all of it you still have rows. This lesson is the first time a query hands back a **value**.
+
+The five functions that do it are `COUNT`, `SUM`, `AVG`, `MIN` and `MAX`. They are called **aggregate functions**, and each one reads a whole pile of rows and returns a single answer about the pile.
+
+They are also the first thing in this course that can hand you a **confidently wrong number**. Not an error — a number, correctly calculated, about a set of rows that is not the set you had in mind. By the end of this lesson you will know the two ways that happens and how to check for both.
+
+Every query below runs on the Northwind sample database that ships with DataPallas.
+
+**Open the koans before you read on.** There is a koan for every idea in this lesson — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _25
+```
+
+## Many rows in, one number out
+
+```sql file=./scripts/count-orders.sql
+SELECT count(*) AS "Orders"
+FROM "Orders";
+```
+
+| Orders |
+| -----: |
+| 79 |
+
+One row. One column. Seventy-nine orders.
+
+Look at what just happened to the shape of the result. The `"Orders"` table has 79 rows in it, and this query returned **one**. That is what "aggregate" means: many rows go in, one value comes out.
+
+`count(*)` counts rows. The `*` is not "all columns" here the way it is in `SELECT *` — it means *count the row itself, whatever is in it*. A row with every field empty still counts as a row.
+
+And note the alias. Without `AS "Orders"` your database picks a heading of its own — PostgreSQL calls the column `count` — which is fine for you and useless for anybody you send it to. Aliasing an aggregate is not decoration; it is the difference between a number and a labelled number.
+
+## MIN and MAX: the two ends of a column
+
+```sql file=./scripts/price-range.sql
+SELECT min("UnitPrice") AS "Cheapest",
+       max("UnitPrice") AS "Dearest"
+FROM "Products";
+```
+
+| Cheapest | Dearest |
+| -------: | ------: |
+| 4.5000 | 123.7900 |
+
+Two aggregates in one `SELECT`, and both describe **the same 20 rows**. You can put as many as you like in one query; each one reads the same pile and answers its own question about it.
+
+`MIN` and `MAX` are not only for numbers. They work on **anything the database knows how to order** — which, after the sorting lesson, you already have a feel for:
+
+```sql file=./scripts/first-and-last-order.sql
+SELECT min("OrderDate") AS "First order",
+       max("OrderDate") AS "Latest order"
+FROM "Orders";
+```
+
+| First order | Latest order |
+| ----------- | ------------ |
+| 2022-12-05 | 2024-06-12 |
+
+On a date column, `MIN` is *earliest* and `MAX` is *latest*. On a text column they are *first* and *last* alphabetically — and the same warning from the data types lesson applies, because a number stored as text still sorts like a dictionary. `MAX` of a text column of amounts hands you whichever one starts with the highest digit, not the biggest amount.
+
+## SUM: adding a column up
+
+```sql file=./scripts/total-freight.sql
+SELECT sum("Freight") AS "Total freight"
+FROM "Orders";
+```
+
+| Total freight |
+| ------------: |
+| 3988.5200 |
+
+That is what the company has paid couriers across all 79 orders. `SUM` is the only one of the five that insists on a number — you cannot add up a column of dates or company names, and it will tell you so.
+
+**Watch what you are adding up.** `SUM` will happily total any numeric column, including ones where a total means nothing at all. `sum("UnitPrice")` over the product catalogue returns 574.39, which is a real number and answers no question anybody has: it is every price tag added together. Before you write `SUM`, say the answer out loud as a sentence. If the sentence is nonsense, the query is nonsense.
+
+`SUM` also takes an **expression**, not just a column — so with what you learned last lesson you can add up something the table does not store:
+
+```sql file=./scripts/stock-value.sql
+SELECT sum("UnitPrice" * "UnitsInStock")
+         AS "Stock value"
+FROM "Products";
+```
+
+| Stock value |
+| ----------: |
+| 13771.5000 |
+
+Price times units in stock, multiplied out on every row and then added up. That is what the shelves are worth, and it is not a column anywhere in the database.
+
+## AVG: the total over the count
+
+```sql file=./scripts/average-freight.sql
+SELECT avg("Freight") AS "Average freight"
+FROM "Orders";
+```
+
+| Average freight |
+| --------------: |
+| 50.4875949367088608 |
+
+Sixteen decimal places for a delivery charge.
+
+That is not a bug and it is worth understanding rather than tidying away. `SUM` and `MIN` hand back a value that was in the table. **`AVG` hands back a calculation**, and a calculation has as many digits as the arithmetic produced. It is a full-precision number, not a money amount, and rounding it for presentation is a separate job from computing it.
+
+<Callout>
+Run this on DuckDB and you will see `50.48759493670886` — a slightly shorter tail. The two engines carry averages in different numeric types, so they print a different number of digits for the same value. Anything you round to two or four places will agree everywhere; a full-precision average will not.
+</Callout>
+
+And you already know how to fix it for a reader, because you met `ROUND` last lesson. The same rule applies here as applied there: **you round the answer, not what went into it** — so `ROUND` wraps the whole `avg(...)` call rather than sitting inside it.
+
+```sql file=./scripts/average-freight-rounded.sql
+SELECT ROUND(avg("Freight"), 2)
+         AS "Average freight"
+FROM "Orders";
+```
+
+| Average freight |
+| --------------: |
+| 50.49 |
+
+Which also settles the caveat above: rounded to two places, both engines print exactly `50.49`. Compute at full precision, round when you present.
+
+## The one thing to hold on to
+
+Every number above is an answer about a **set of rows**. And two things decide which rows are in that set, neither of which you can see by looking at the answer:
+
+1. **Which rows survived `WHERE`.**
+2. **Which values were actually there.**
+
+Get either wrong and you get a number, not an error. The rest of this lesson is those two, one at a time, and then what happens when the set turns out to be empty.
+
+## WHERE runs first
+
+"What's our most expensive product?"
+
+```sql file=./scripts/dearest-product.sql
+SELECT max("UnitPrice") AS "Dearest"
+FROM "Products";
+```
+
+| Dearest |
+| ------: |
+| 123.7900 |
+
+That is a true fact about the table, and it is the wrong answer to the question.
+
+Look at what is actually up there. The `"Products"` table has a column this lesson has not needed until now:
+
+```sql file=./scripts/two-dearest-discontinued.sql
+SELECT "ProductName", "UnitPrice", "Discontinued"
+FROM "Products"
+ORDER BY "UnitPrice" DESC
+LIMIT 2;
+```
+
+| ProductName | UnitPrice | Discontinued |
+| ----------- | --------: | ------------ |
+| Thuringer Rostbratwurst | 123.7900 | true |
+| Mishi Kobe Niku | 97.0000 | true |
+
+**Both of them.** `Thuringer Rostbratwurst` costs 123.79 and we do not sell it any more; neither do we sell `Mishi Kobe Niku` at 97.00. So the "most expensive product" is a sausage no customer can order, and it has been sitting at the top of that price list all along.
+
+The `"Products"` table has a `"Discontinued"` column. Use it:
+
+```sql file=./scripts/dearest-on-sale.sql
+SELECT max("UnitPrice") AS "Dearest"
+FROM "Products"
+WHERE "Discontinued" = false;
+```
+
+| Dearest |
+| ------: |
+| 38.0000 |
+
+**38.00, not 123.79.** Same table, same function, same column. The only difference is which rows the aggregate was allowed to see, and the answer fell by two thirds.
+
+> **`WHERE` runs first, and the aggregate only ever sees what survived it.** The row filter happens, and *then* the surviving rows are collapsed into one number.
+
+That order is worth saying out loud because it is what makes `WHERE` the most powerful line in an aggregate query. It is also why the next lesson but one exists: **you cannot put an aggregate inside `WHERE`.** `WHERE count(*) > 5` is not a thing — at the moment `WHERE` runs, there is no count yet, because counting is what happens afterwards. The clause for filtering on an aggregate is `HAVING`, and it gets its own lesson.
+
+Once you are filtering, put everything you want to know in the one query:
+
+```sql file=./scripts/catalogue-on-sale.sql
+SELECT count(*) AS "On sale",
+       min("UnitPrice") AS "Cheapest",
+       max("UnitPrice") AS "Dearest",
+       avg("UnitPrice") AS "Average"
+FROM "Products"
+WHERE "Discontinued" = false;
+```
+
+| On sale | Cheapest | Dearest | Average |
+| ------: | -------: | ------: | ------: |
+| 18 | 4.5000 | 38.0000 | 19.6444444444444444 |
+
+Eighteen products actually on sale, priced 4.50 to 38.00, averaging 19.64. All four aggregates describe **the same eighteen rows**, because they all sit above the same `WHERE`. Over the full catalogue that average is 28.72 — two rows out of twenty were pulling it up by more than nine.
+
+## COUNT(\*) counts rows. COUNT(column) counts values.
+
+This is the one to remember.
+
+```sql file=./scripts/orders-vs-shipped.sql
+SELECT count(*) AS "Orders",
+       count("ShippedDate") AS "Shipped"
+FROM "Orders";
+```
+
+| Orders | Shipped |
+| -----: | ------: |
+| 79 | 52 |
+
+Two counts. One table. No `WHERE` anywhere. **Twenty-seven apart.**
+
+Nothing is broken. You met those 27 orders in the sorting lesson: they were placed and have never shipped, so their `"ShippedDate"` is empty. And:
+
+> **`count(*)` counts rows. `count(column)` counts the values in that column — and an empty cell is not a value, so it is not counted.**
+
+Which means `count("ShippedDate")` is not "how many orders are there" at all. It is "how many orders have a shipped date", which is a completely different question that happens to be worth asking. Both numbers are right. Put either one under a heading that means the other and you have shipped a wrong number.
+
+### And every other aggregate does the same
+
+`SUM`, `AVG`, `MIN` and `MAX` all skip missing values in exactly the same way.
+
+On `SUM`, `MIN` and `MAX` that is almost always what you wanted — there is nothing to add, and nothing to compare. On **`AVG` it moves the denominator**, and that is where it stops being harmless:
+
+> **`AVG` divides by the number of values it found, not by the number of rows.**
+
+You can see the size of that. The total freight bill is 3988.52. Divided by the 79 rows, that is **50.4876**. Divided by 52 — the number of values `"ShippedDate"` has — it would be **76.7023**. Same total, a denominator a third smaller, an answer half as big again. And the word `AVG` looks identical either way.
+
+`"Freight"` itself is filled in on every order, so `avg("Freight")` really is the total over 79 and the two ways of writing it agree exactly. **That agreement is a property of this column, not a rule.** Check the column before you trust the average.
+
+The habit that follows is a small one: **when an average matters, say which rows you mean.**
+
+```sql file=./scripts/average-freight-shipped.sql
+SELECT count(*) AS "Shipped orders",
+       avg("Freight") AS "Average freight"
+FROM "Orders"
+WHERE "ShippedDate" IS NOT NULL;
+```
+
+| Shipped orders | Average freight |
+| -------------: | --------------: |
+| 52 | 51.1696153846153846 |
+
+Now the number comes with its own denominator printed next to it. Anybody reading this knows it is an average over 52 orders, and which 52. That one extra `count(*)` costs nothing and answers the first question a careful reader would have asked.
+
+Note the `IS NOT NULL`. **That is the correct way to test whether a value is present — never write `<> NULL`.** It looks perfectly reasonable and quietly matches nothing at all. Series 1 · 45 covers why; for now, use `IS NULL` and `IS NOT NULL` and trust them.
+
+## When the set is empty
+
+We have never shipped an order to Japan. So what does this do?
+
+```sql file=./scripts/japan-orders.sql
+SELECT count(*) AS "Orders",
+       sum("Freight") AS "Total freight"
+FROM "Orders"
+WHERE "ShipCountry" = 'Japan';
+```
+
+| Orders | Total freight |
+| -----: | ------------- |
+| 0 | |
+
+`WHERE` threw away all 79 rows, and the query **still returned one row.**
+
+That is the third thing an aggregate query does that no other query does: it always returns exactly one row, even when nothing matched. A `SELECT` with no aggregate would have returned nothing at all here — zero rows. This returns one row containing the answer "nothing matched".
+
+And look at how the two functions say it differently:
+
+- **`COUNT` says `0`.** There were no rows, and zero of them is a real number.
+- **`SUM` says nothing at all.** Not `0` — empty. There was nothing to add up, so there is no total, and SQL does not invent one.
+
+`AVG`, `MIN` and `MAX` behave like `SUM` here: empty, not zero. This is a genuine production bug waiting to happen — a dashboard tile that reads "Total freight: " with nothing after it, on the day a filter matches nothing, because somebody assumed a sum always produces a number.
+
+## Counting the different values
+
+"How many countries do we ship to?"
+
+`count("ShipCountry")` will not answer that. It counts values, and Germany appears on 32 separate rows — so it would tell you 79, which is the number of orders.
+
+```sql file=./scripts/countries-we-ship-to.sql
+SELECT count(DISTINCT "ShipCountry") AS "Countries",
+       count("ShipCountry") AS "Orders"
+FROM "Orders";
+```
+
+| Countries | Orders |
+| --------: | -----: |
+| 10 | 79 |
+
+`DISTINCT` goes **inside the brackets**, in front of the column: count each different value once, however many rows carry it. Ten countries, across seventy-nine orders.
+
+You met `DISTINCT` last lesson as a thing that goes after `SELECT` and removes duplicate rows. This is the same idea in a different place, and the placement matters: `SELECT DISTINCT count(...)` is a different query that does not do this.
+
+## The wall: an aggregate and a plain column
+
+Sooner or later everybody writes this. "The most expensive product is 123.79 — fine, tell me which one it is":
+
+```sql file=./scripts/column-with-aggregate.sql
+SELECT "ProductName",
+       max("UnitPrice") AS "Dearest"
+FROM "Products";
+```
+
+```text
+SQL Error [42803]: ERROR: column "Products.ProductName" must appear
+in the GROUP BY clause or be used in an aggregate function
+  Position: 8
+```
+
+An error, at last — and a helpful one, once you see what it is protecting you from.
+
+`max("UnitPrice")` produces **one** value. `"ProductName"` has **twenty**. There is no honest way to put twenty names in one row, so rather than pick one and pretend, the database refuses. Every engine does this; the wording differs, and they all point at the same clause.
+
+There are two ways forward, and you already have one of them:
+
+**To name a single row, sort it and take one.** This is the sorting lesson, and it is the right tool whenever you want the row rather than the number:
+
+```sql file=./scripts/dearest-product-name.sql
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+ORDER BY "UnitPrice" DESC
+LIMIT 1;
+```
+
+| ProductName | UnitPrice |
+| ----------- | --------: |
+| Thuringer Rostbratwurst | 123.7900 |
+
+**To get one number per group** — per country, per customer, per month — you need `GROUP BY`, which is the very next lesson, and which is what that error message has been telling you all along.
+
+## Two more things worth knowing
+
+**`count(1)` is the same as `count(*)`.** You will meet it in older code, along with `count('x')` and other variations. They all count rows and they all perform identically; nothing is being optimised. Write `count(*)`.
+
+**An aggregate with no rows underneath it is not the same as no result.** Worth repeating because it is the one that reaches production: `SELECT sum(...) FROM ... WHERE <matches nothing>` gives you a row containing an empty cell, and whatever reads that row has to cope with an empty cell. A `COUNT` in the same query is the cheapest possible way to tell "nothing matched" from "the total really is zero".
+
+## What you can do now
+
+For any request that ends in a single number:
+
+1. **Pick the function** — how many (`COUNT`), how much in total (`SUM`), typical (`AVG`), the ends (`MIN` / `MAX`).
+2. **Say which rows** with `WHERE`, before you count anything. The aggregate sees what survives.
+3. **Ask whether the column can be empty.** If it can, `count(column)` and `AVG` are quietly working on a smaller set than you think — so count the rows alongside the answer.
+4. **Ask what happens when nothing matches.** `COUNT` gives 0; the other four give you nothing at all.
+5. **Alias every aggregate**, so the number arrives with its name attached.
+
+And one question to ask out loud whenever you send somebody a total: *how many rows is this number about?* If you cannot answer that from the query, neither can they.
+
+Next lesson: **`GROUP BY`** — the same five functions, but one number per customer, per country, per month, instead of one number for the whole table. It is the clause that error message kept pointing at, and it is where these five stop being trivia and start being reporting.
+
+## The koans: now you write the queries
+
+Each koan is a tiny fill-in-the-blank exercise: a failing test with a `___` where the answer belongs. Fill it in, run it, watch red turn green — and the next one unlocks.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series1 _25
+```
+
+On macOS or Linux, run `./zeus.sh koans learnsql series1 _25` from the same folder. The three arguments are course, series and episode.
+
+> **Says the lesson isn't there?** Your copy of DataZeus predates this lesson — run `.\zeus.bat update` (or `./zeus.sh update`) once to fetch the latest lessons, then run the command again. Koans you have already solved are kept.
+
+The file you edit is:
+
+```
+c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_25\AggregateFunctionsKoans.groovy
+```
+
+Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
+
+Ten koans, easiest first, in the order this lesson builds them. They ask the same questions of different columns — the warehouse, the order lines and the customer list, where the lesson worked the order book and the price list. They run on DuckDB: a single file, no server to start.
