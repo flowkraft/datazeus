@@ -43,8 +43,52 @@ import spock.lang.Unroll
  *
  * Convention: the spec runs the SAME *.sql files the lesson and the video show, so the SQL is
  * authored in exactly one place (the lesson's scripts/) and verified here — no drift.
+ *
+ * AND THEN THE KOANS, ALL TEN, in their own section at the bottom. They deliberately do NOT
+ * reuse the lesson's queries — they sort orders by freight and the warehouse by stock, where
+ * the lesson sorts the catalogue by price — so none of the assertions above touches the data
+ * they stand on. Every koan is checked here in its solved form, on both engines, plus the two
+ * claims their HINTS make: what the unsolved koan 5 returns, and that koan 8's two engines
+ * really do disagree until you write the NULLS clause.
  */
 class OrderByAndTopNSpec extends NorthwindGateSpec {
+
+    // --- 0. "A table has no order" — the claim the episode opens on ------------------------
+
+    @Unroll
+    def "[#engine] the three employees come back with no promised order, and there are three of them"() {
+        given: "the lesson-02 query the video and the article both call back to"
+        def rows = sqlFor(engine).rows('SELECT "FirstName", "LastName", "Title" FROM "Employees"')
+
+        expect: "the same three people, in whatever order the engine hands them back"
+        // ORDER-INDEPENDENT ON PURPOSE, and this is the episode's own point turned on itself:
+        // the query has no ORDER BY, so pinning a row order here would assert the very thing
+        // the lesson spends fourteen minutes telling you not to rely on.
+        //
+        // THE SPECIFIC ORDERS THE SLIDE QUOTES — DuckDB "Nancy, Andrew, Janet" and PostgreSQL
+        // "Andrew, Janet, Nancy" — are lesson 05's to prove, and SelectFetchYourDataSpec
+        // carries the caveat: they were verified against the live DataPallas PostgreSQL, and
+        // whether the gate's PostgreSQL reproduces them depends on how it was seeded. What is
+        // true on every engine, and all this lesson actually needs, is that three employees
+        // come back and nothing promised an order.
+        rows.size() == 3
+        rows*.FirstName.toSet() == ["Nancy", "Andrew", "Janet"].toSet()
+
+        where:
+        engine << ENGINES
+    }
+
+    def "the dataset is the small Northwind the lesson quotes: 20 products, 25 customers, 79 orders"() {
+        // Every "twenty-five customers" and "seventy-nine orders" in the article and on the
+        // slides resolves to these three numbers. This is the SMALL Northwind, not the 91-
+        // customer original, so looking an answer up elsewhere gives a different one.
+        expect:
+        ENGINES.every { engine ->
+            sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Products"').n == 20 &&
+            sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Customers"').n == 25 &&
+            sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Orders"').n == 79
+        }
+    }
 
     // --- 1. ORDER BY: ascending is the default -------------------------------------------
 
@@ -345,53 +389,206 @@ class OrderByAndTopNSpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
-    // --- 10. The koans, pinned ------------------------------------------------------------
+    // --- 10. What the KOANS stand on ------------------------------------------------------
+    //
+    // THE KOANS DO NOT REUSE THE LESSON'S QUERIES. The article sorts the product catalogue by
+    // price; the koans sort ORDERS by what they cost us to ship, and then the warehouse by
+    // what is left on the shelf. That is the house convention — pom.xml states it as "the
+    // koans are related practice, not a blanked copy of the gate" — and it exists so a learner
+    // applies the idea somewhere new instead of retyping a query they just watched.
+    //
+    // Which is exactly why the koans need their own assertions. Nothing in the sections above
+    // touches "Freight", "UnitsInStock", "ShipCountry" or "Discontinued", so a shift in that
+    // data would surface as a RED KOAN ON A STUDENT'S SCREEN with a green gate behind it —
+    // the worst possible place to discover it.
+    //
+    // Every koan is asserted with the SQL its solved form produces, on BOTH engines. The koans
+    // run on DuckDB only, but each is written to give the same answer in CloudBeaver against
+    // PostgreSQL; if that stops being true, a learner checking their work is told they are
+    // wrong when they are right. Koan 8 is the deliberate exception and is handled below.
 
     @Unroll
-    def "[#engine] koan 1: the cheapest product is Guarana Fantastica"() {
+    def "[#engine] koans 1 and 2: freight runs from order 8 at 10.0000 up to order 72 at 98.9200"() {
+        given: "koan 1 — ascending is the default, so this is the cheapest delivery we ever paid for"
+        def cheapest = sqlFor(engine).firstRow(
+                'SELECT "OrderID" AS id, "Freight" AS f FROM "Orders" ORDER BY "Freight" LIMIT 1')
+
+        and: "koan 2 — the same column, DESC"
+        def dearest = sqlFor(engine).firstRow(
+                'SELECT "OrderID" AS id, "Freight" AS f FROM "Orders" ORDER BY "Freight" DESC LIMIT 1')
+
         expect:
-        sqlFor(engine).firstRow('SELECT "ProductName" AS n FROM "Products" ORDER BY "UnitPrice" LIMIT 1').n ==
-                "Guarana Fantastica"
+        cheapest.id == 8
+        dec(cheapest.f) == dec("10.0000")
+        dearest.id == 72
+        dec(dearest.f) == dec("98.9200")
+
+        and: "BOTH ENDS ARE UNIQUE — no tie, so LIMIT 1 has exactly one right answer and the"
+        and: "two koans cannot go intermittently red on a student who wrote them correctly"
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Orders" WHERE "Freight" = 10.0000').n == 1
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Orders" WHERE "Freight" = 98.9200').n == 1
 
         where:
         engine << ENGINES
     }
 
     @Unroll
-    def "[#engine] koan 3: the most expensive product costs 123.7900"() {
-        expect:
-        dec(sqlFor(engine).firstRow('SELECT "UnitPrice" AS p FROM "Products" ORDER BY "UnitPrice" DESC LIMIT 1').p) ==
-                dec("123.7900")
+    def "[#engine] koans 3, 4 and 5: the five dearest deliveries, three ways, all the same five"() {
+        given: "koan 3 — ORDER BY + LIMIT"
+        def viaLimit = sqlFor(engine).rows(
+                'SELECT "OrderID" FROM "Orders" ORDER BY "Freight" DESC LIMIT 5')
+
+        and: "koan 4 — the standard spelling of the same idea"
+        def viaFetch = sqlFor(engine).rows(
+                'SELECT "OrderID" FROM "Orders" ORDER BY "Freight" DESC FETCH FIRST 5 ROWS ONLY')
+
+        expect: "the answer all three koans are checked against"
+        viaLimit*.OrderID == [72, 59, 46, 33, 20]
+        viaFetch*.OrderID == [72, 59, 46, 33, 20]
+
+        and: "no tie anywhere near the cut, so the list cannot wobble between runs"
+        // Its own query on purpose: the koans SELECT "OrderID" alone, so the freight values
+        // are simply not in the rows above to be checked.
+        sqlFor(engine).rows('SELECT "Freight" FROM "Orders" ORDER BY "Freight" DESC LIMIT 6')
+                .collect { dec(it.Freight) }.toSet().size() == 6
 
         where:
         engine << ENGINES
     }
 
-    @Unroll
-    def "[#engine] koan 7: alphabetically, Alfreds Futterkiste is first and Toms Spezialitaten last"() {
-        // TWENTY-FIVE customers, not the 91 of the full Northwind — so the answers here are
-        // this dataset's, and looking them up elsewhere gives a different name. Both ends are
-        // asserted because the koan asks for the LAST one, which is the DESC half of the pair.
-        // Plain ASCII initials on purpose: "Toms" and "Alfreds" sort the same under every
-        // collation, where a name starting with an umlaut would not.
-        expect:
-        sqlFor(engine).firstRow('SELECT "CompanyName" AS n FROM "Customers" ORDER BY "CompanyName" LIMIT 1').n ==
-                "Alfreds Futterkiste"
-        sqlFor(engine).firstRow('SELECT "CompanyName" AS n FROM "Customers" ORDER BY "CompanyName" DESC LIMIT 1').n ==
-                "Toms Spezialitäten"
-
-        where:
-        engine << ENGINES
-    }
-
-    @Unroll
-    def "[#engine] koan 9: the heaviest freight bill is order 72, at 98.9200"() {
+    def "koan 5's UNSOLVED form really does mislead, and its hint's number is right"() {
+        // The koan's comment tells the student what to expect if they run it before fixing it:
+        // "orders 1 to 5, and order 5 at 11.6100 is the third CHEAPEST freight bill in the
+        // whole table". A WRONG NUMBER IN A HINT IS WORSE THAN NO HINT — it tells a student
+        // their correct query is wrong. So the claim is checked here.
+        //
+        // NOT @Unroll'd across ENGINES, and this is the same reasoning as the trap slide above:
+        // a query with no ORDER BY has no promised row order, so "orders 1 to 5" is a recording
+        // of what DuckDB happens to return — and DuckDB is the only engine the koans run on.
+        // If it ever changes, the hint is wrong and this is what says so.
         given:
-        def row = sqlFor(engine).firstRow('SELECT "OrderID" AS id, "Freight" AS f FROM "Orders" ORDER BY "Freight" DESC LIMIT 1')
+        def hurried = sqlFor("duckdb").rows('SELECT "OrderID", "Freight" FROM "Orders" LIMIT 5')
+
+        expect: "the five rows the student sees before they fix it"
+        hurried*.OrderID == [1, 2, 3, 4, 5]
+
+        and: "and order 5's freight really is the third cheapest of all 79"
+        dec(hurried.find { it.OrderID == 5 }.Freight) == dec("11.6100")
+        sqlFor("duckdb").rows('SELECT "OrderID" FROM "Orders" ORDER BY "Freight" LIMIT 3')*.OrderID == [8, 21, 5]
+
+        and: "THE POINT: the real top five is nowhere in it"
+        !(72 in hurried*.OrderID)
+    }
+
+    @Unroll
+    def "[#engine] koan 6: two products really are at zero stock, so the tie is real"() {
+        given: "the koan's solved form — stock ascending, ties broken by name"
+        def rows = sqlFor(engine).rows('''SELECT "ProductName" FROM "Products"
+                                          ORDER BY "UnitsInStock", "ProductName" LIMIT 5''')
 
         expect:
-        row.id == 72
-        dec(row.f) == dec("98.9200")
+        rows*.ProductName == ["Gorgonzola Telino", "Thuringer Rostbratwurst", "Scottish Longbreads",
+                              "Aniseed Syrup", "Uncle Bobs Organic Dried Pears"]
+
+        and: "THE TIE IS REAL — without the second key nothing chooses between these two"
+        sqlFor(engine).rows('SELECT "ProductName" FROM "Products" WHERE "UnitsInStock" = 0')*.ProductName.toSet() ==
+                ["Gorgonzola Telino", "Thuringer Rostbratwurst"].toSet()
+
+        and: "and G before T is what the koan's hint tells the student to look for"
+        rows[0].ProductName < rows[1].ProductName
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koan 7: ShipCountry groups the report, freight orders each country"() {
+        given:
+        def rows = sqlFor(engine).rows('''SELECT "OrderID", "ShipCountry", "Freight" FROM "Orders"
+                                          ORDER BY "ShipCountry", "Freight" DESC LIMIT 6''')
+
+        expect:
+        rows*.OrderID == [15, 40, 65, 18, 43, 68]
+
+        and: "the FIRST key decides: Argentina's three, then Austria's three, never interleaved"
+        rows*.ShipCountry == ["Argentina", "Argentina", "Argentina", "Austria", "Austria", "Austria"]
+
+        and: "the second only speaks inside a country, and it speaks DESC"
+        def argentina = rows.findAll { it.ShipCountry == "Argentina" }.collect { dec(it.Freight) }
+        argentina == argentina.sort(false).reverse()
+
+        and: "PLAIN ASCII COUNTRY NAMES on purpose — these sort identically under any collation,"
+        and: "where a name with an umlaut would not and the koan would fail only on one engine"
+        rows*.ShipCountry.every { it ==~ /[A-Za-z ]+/ }
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koan 8 SOLVED: NULLS FIRST puts the backlog on top, identically on both engines"() {
+        given: "the koan's solved form — and the second key is there because all 27 NULLs tie"
+        def rows = sqlFor(engine).rows('''SELECT "OrderID", "ShippedDate" FROM "Orders"
+                                          ORDER BY "ShippedDate" DESC NULLS FIRST, "OrderID" LIMIT 3''')
+
+        expect:
+        rows*.OrderID == [2, 5, 7]
+
+        and: "every one of them is an order that has never shipped"
+        rows.every { it.ShippedDate == null }
+
+        where:
+        engine << ENGINES
+    }
+
+    def "koan 8 UNSOLVED: the engines really do disagree, which is the whole koan"() {
+        // The koan's comment claims that WITHOUT the NULLS clause, PostgreSQL puts the missing
+        // ones first and DuckDB puts them last. That claim IS the exercise, so it is asserted —
+        // per engine, because the two answers differing is the thing being proven.
+        given: "the same query with the blank simply left out"
+        String unsolved = '''SELECT "OrderID", "ShippedDate" FROM "Orders"
+                             ORDER BY "ShippedDate" DESC, "OrderID" LIMIT 3'''
+
+        expect: "DuckDB sorts missing LAST, so you get three orders that really shipped"
+        sqlFor("duckdb").rows(unsolved).every { it.ShippedDate != null }
+
+        and: "PostgreSQL treats NULL as larger than any date, so DESC hands you the backlog"
+        sqlFor("postgres").rows(unsolved).every { it.ShippedDate == null }
+    }
+
+    @Unroll
+    def "[#engine] koan 9: OFFSET 5 is deliveries six to ten, and it repeats nothing from page one"() {
+        given:
+        def pageOne = sqlFor(engine).rows('SELECT "OrderID" FROM "Orders" ORDER BY "Freight" DESC LIMIT 5')
+        def pageTwo = sqlFor(engine).rows('SELECT "OrderID" FROM "Orders" ORDER BY "Freight" DESC LIMIT 5 OFFSET 5')
+
+        expect:
+        pageTwo*.OrderID == [71, 58, 45, 32, 19]
+
+        and: "no order appears on both pages — only true because the sort is stable"
+        pageOne*.OrderID.intersect(pageTwo*.OrderID).isEmpty()
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koan 10: the three lines the warehouse should reorder first"() {
+        given: "the whole query the student writes from scratch: WHERE + two sort keys + LIMIT"
+        def rows = sqlFor(engine).rows('''SELECT "ProductName" FROM "Products"
+                                          WHERE "Discontinued" = false
+                                          ORDER BY "UnitsInStock", "ProductName" LIMIT 3''')
+
+        expect:
+        rows*.ProductName == ["Gorgonzola Telino", "Scottish Longbreads", "Aniseed Syrup"]
+
+        and: "THE WHERE HAS TO MATTER — Thuringer Rostbratwurst is at zero stock too and is"
+        and: "second in koan 6, so a student who forgets the filter gets a visibly different list"
+        sqlFor(engine).firstRow('''SELECT "Discontinued" AS d FROM "Products"
+                                   WHERE "ProductName" = 'Thuringer Rostbratwurst' ''').d
+
+        and: "exactly two discontinued lines, so the filter removes something and not everything"
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Products" WHERE "Discontinued"').n == 2
 
         where:
         engine << ENGINES

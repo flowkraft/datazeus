@@ -8,67 +8,94 @@
 # cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
 # tags:  applied to every card in the file.
 #
-# THESE ARE CARDS, NOT LESSON EXTRACTS. Each one tests a thing you have to RECALL at
-# a keyboard — a rule, a default, a failure mode. The prose that explains WHY lives in
-# the lesson; a card that needs three sentences of context has not been written yet.
+# ── WHAT ANKI IS FOR, AND WHAT IT IS NOT FOR ────────────────────────────────────────
+# Anki is reviewed on a phone, weeks later, with no database open, no CloudBeaver, and
+# the lesson long forgotten. So every card here is SELF-CONTAINED: it carries its own
+# premise. NOT ONE of them asks the learner to run a query, to remember a result from
+# an earlier card, or to know Northwind's schema. Where a card needs a fact — a set of
+# postal codes, a query someone handed you — the FRONT states it, and the card tests
+# the REASONING, not the recall of data. A card that fails that test is a koan wearing
+# the wrong clothes: the koans are where you type SQL against real rows; this deck is
+# where the rules have to survive without them.
+#
+# Rewritten 2026-08-29: the first version leaned on Northwind throughout — it asked
+# what was wrong with a query and expected "Thuringer Rostbratwurst, 123.79" back, and
+# its production card named four columns the reviewer had no way to know. Every such
+# card now states what it needs, or asks the question generically.
+#
+# FILE ORDER IS THE CURRICULUM. Anki introduces new cards in file order, so a learner
+# meeting this deck for the first time meets the ideas in the order they build on each
+# other — the same order as the lesson and the video: ask what the order means, sort,
+# cut, then the three ways a "top five" quietly stops being one.
 #
 # NOTHING HERE DUPLICATES LESSON 07's DECK. Sorting is comparing, so the two lessons
 # touch the same mechanism — but 07 owns "what a type is and how it compares" and this
 # deck owns "what that does to a sorted list". The text-sort card below is deliberately
-# about the SORT, and points at a column, where 07's is about the comparison operator.
+# about the SORT and its surprising row position, where 07's is about the comparison.
 
 deck: "DataZeus::Learn SQL::Series 1::15 ORDER BY and Top N"
 guid: "datazeus-learn-sql-series1-15-order-by-and-top-n"
 tags: ["datazeus", "learn-sql", "series-1", "sql"]
 
 cards:
+  # ── 1. THE QUESTION THAT COMES BEFORE THE QUERY ──
+  - basic:
+      front: "Somebody asks you for \"the top ten\". What do you have to ask back before you can write any SQL at all?"
+      back: "Top ten BY WHAT — which column, and which direction. \"Top\" is not a fact about a table; it is a sort somebody has in mind and has not said out loud. ORDER BY cannot be written until that is answered, which makes it the most useful question in the room."
+
+  # ── 2. ORDER BY: SAYING WHAT ORDER MEANS ──
+  - cloze: "ORDER BY sorts {{c1::ascending}} when you do not name a direction — smallest first, earliest first, A before Z. The word for the other direction is {{c2::DESC}}, and it is what \"biggest\", \"latest\" and \"worst\" all mean."
+
   - basic:
       front: "You run a SELECT with no ORDER BY. What order do the rows come back in?"
-      back: "No promised order at all. A table is a set, not a spreadsheet — there is no row 1. The engine returns whatever was cheapest, and that can change with the data, the query, or the engine. The same Employees query returns Nancy/Andrew/Janet on DuckDB and Andrew/Janet/Nancy on PostgreSQL."
+      back: "No promised order at all. A table is a set of rows, not a spreadsheet — there is no \"row 1\". The engine returns whatever was cheapest for it, and that can change when the data changes, when the query changes, or when you run it on a different database. Two engines holding identical data can hand you the same rows in different orders, and neither is wrong: the query never said."
 
-  - cloze: "ORDER BY sorts {{c1::ascending}} when you do not say otherwise. The word for the other direction is {{c2::DESC}}."
+  # ── 3. CUTTING TO THE TOP FEW ──
+  - cloze: "In a top-N query, {{c1::ORDER BY}} decides WHICH rows come back and {{c2::LIMIT}} decides HOW MANY. You need both, in that order, or you do not have a top N."
 
-  # THE CARD THIS DECK EXISTS FOR. Phrased as the mistake, because that is how it will
-  # be met in the wild — someone hands you a query and you have to spot it in one read.
+  # THE CARD THIS DECK EXISTS FOR. Phrased as the mistake, because that is how it is met
+  # in the wild — someone hands you a query and you have to spot it in one read. The
+  # query is printed on the front, so nothing has to be remembered about the table.
   - basic:
-      front: "`SELECT \"ProductName\", \"UnitPrice\" FROM \"Products\" LIMIT 5;` was written to answer \"our five most expensive products\". What is wrong with it?"
-      back: "There is no ORDER BY, so it is not a top five — it is five rows, and which five is not promised. On Northwind it returns Chai, Chang, Aniseed Syrup, Chef Antons and Scottish Longbreads: the most expensive product (Thuringer Rostbratwurst, 123.79) is missing, and Aniseed Syrup at 10.00 is the third cheapest thing in the catalogue. No error is raised, which is why it survives review."
-
-  - cloze: "In a top-N query, {{c1::ORDER BY}} decides WHICH rows come back and {{c2::LIMIT}} decides HOW MANY. You need both, in that order."
+      front: "A colleague sends you this, saying it answers \"our five most expensive products\":<br><br><code>SELECT \"ProductName\", \"UnitPrice\" FROM \"Products\" LIMIT 5;</code><br><br>What is wrong with it?"
+      back: "There is no ORDER BY, so it is not a top five — it is five rows, and WHICH five is not promised. You get five real products at five real prices, with the expensive ones very likely missing. Nothing errors, nothing warns. That is what makes it dangerous: a query that errors gets fixed in thirty seconds, and a query that quietly answers the wrong question gets forwarded to your boss."
 
   - basic:
-      front: "Your \"five cheapest products\" query has an ORDER BY and still returns a different fifth row some days. Why, and what fixes it?"
-      back: "Two products cost exactly the same (12.5000), so the sort has a tie and nothing decides which one is fifth. Add a second sort key: `ORDER BY \"UnitPrice\", \"ProductName\"`. The rule: if the result is going to somebody, break the tie."
+      front: "LIMIT 5 vs FETCH FIRST 5 ROWS ONLY — what is the difference?"
+      back: "Only which databases accept them; the result is identical. LIMIT is what PostgreSQL, MySQL, DuckDB and SQLite take, and what nearly everyone writes. FETCH FIRST n ROWS ONLY is the SQL standard's spelling. The catch is that LIMIT is NOT in the standard: Oracle and SQL Server reject it (Oracle wants FETCH FIRST; SQL Server uses TOP, or OFFSET … FETCH NEXT). Write LIMIT, and recognise FETCH FIRST in somebody else's query."
+
+  # ── 4. THE THREE WAYS A SORTED QUERY STILL SURPRISES YOU ──
+  - basic:
+      front: "A query that DOES have an ORDER BY still comes back with a different last row on some runs. What is going on, and what fixes it?"
+      back: "Two rows are tied — equal in the column you sorted on — so nothing in the query decides which of them takes the last place, and the engine is entitled to choose differently each time. Fix it with a SECOND sort key: `ORDER BY \"UnitPrice\", \"ProductName\"`. If a sort can tie, break it: a deterministic query returns the same rows in the same order every run, and that is simply better than one that might not."
 
   - basic:
       front: "In `ORDER BY \"Country\", \"CompanyName\"`, what does the second key actually do?"
-      back: "Nothing, until the first key ties. Country decides the order; company name only orders the rows that share a country. Swap the two and you get a different report — every customer alphabetically with countries scattered through it."
+      back: "Nothing — until the first key ties. Country decides the whole shape of the report; company name only orders the rows that share a country. Swap the two and you get a different report: every company alphabetically, with countries scattered through it. Neither is wrong; the ORDER of the keys is how you say which one you meant."
 
   - basic:
-      front: "LIMIT vs FETCH FIRST n ROWS ONLY — what is the difference?"
-      back: "Only which databases take them. FETCH FIRST is the SQL standard spelling and is what Oracle, IBM Db2 and SQL Server want; LIMIT is what PostgreSQL, MySQL, DuckDB and SQLite take, and what nearly everyone writes. Same result. Write LIMIT; recognise FETCH FIRST in other people's queries."
+      front: "A column holds the postal codes '04179', '70563', '8010' and '80805'. You sort it ascending and '8010' — the smallest number of the last three — lands in the MIDDLE. Why?"
+      back: "The column is text, not a number, and text compares character by character like a dictionary. '8' beats '7', so '8010' sorts after '70563'; then '8010' and '80805' split at the fourth character, where '1' comes before '8'. Nothing is broken. The habit: when a sort surprises you, check the TYPE of the column you sorted on before you check anything else — and be alert for amounts imported from a spreadsheet as text, where the same rule silently ruins a \"biggest first\" report."
+
+  # ── 5. WHERE MISSING VALUES GO ──
+  - cloze: "If the column you sort on can be empty, say where empty goes: {{c1::NULLS LAST}} or {{c2::NULLS FIRST}}. Leave it out and the answer depends on which database you happened to run it on."
 
   # The one genuine cross-engine gotcha in Series 1. Worth a card precisely because it
   # cannot be reasoned out — you either know the defaults differ or you get bitten.
   - basic:
-      front: "`ORDER BY \"ShippedDate\" DESC LIMIT 5` on Northwind returns different orders on DuckDB and PostgreSQL. Why?"
-      back: "27 of the 79 orders have never shipped, so ShippedDate is NULL on them, and the two engines put NULLs in different places: DuckDB sorts them last, PostgreSQL treats NULL as larger than any date and puts them first on DESC. Neither is wrong — the standard leaves it open. Say which you want: `DESC NULLS LAST`."
+      front: "The same `ORDER BY \"ShippedDate\" DESC LIMIT 5` returns completely different rows on two databases holding identical data. Some rows have no ShippedDate yet. What explains it?"
+      back: "NULLs, and where each engine files them. The standard leaves the choice to the implementation: DuckDB sorts NULLs last, PostgreSQL treats NULL as larger than any date and so puts them FIRST on DESC. One engine hands you a shipping report and the other hands you a backlog of things that never shipped, and nothing on screen tells you which you are holding. Neither is wrong — the query never said. Say it: `DESC NULLS LAST`."
 
-  - cloze: "If the column you sort on can be empty, say where empty goes: {{c1::NULLS LAST}} or {{c2::NULLS FIRST}}. Otherwise the answer depends on the engine."
-
-  - basic:
-      front: "Why does sorting a column of amounts sometimes put the biggest number in the middle of the report?"
-      back: "Because the column is text, not a number. Text compares character by character like a dictionary, so '8010' sorts after '70563' — '8' beats '7' on the first character. Northwind's PostalCode shows it: Graz 8010 lands between Stuttgart 70563 and München 80805. When a sort surprises you, check the column's type first."
-
+  # ── 6. PAGING, AND ONE THING TO RECOGNISE BUT NOT WRITE ──
   - basic:
       front: "What does OFFSET do, and what does it quietly depend on?"
-      back: "It skips rows you have already shown — `LIMIT 5 OFFSET 5` is page two. It depends on a STABLE order: if the sort leaves ties unbroken, page two can repeat a row from page one and drop another. Same defect as a LIMIT with no ORDER BY, one screen later."
+      back: "It skips rows you have already shown — `LIMIT 5 OFFSET 5` is page two, rows six to ten. It depends entirely on a STABLE order: if the sort leaves ties unbroken, page two can repeat a row from page one and silently drop another. It is the same defect as a LIMIT with no ORDER BY, arriving one screen later."
 
   - basic:
-      front: "You will meet `ORDER BY 2` in old code. What does it mean, and should you write it?"
-      back: "The number is a position in the select list — the second column you selected. It works everywhere, and no: add a column to the front of the select list and the sort silently changes to something else. Name the column."
+      front: "You meet `ORDER BY 2` in old code. What does it mean, and should you write it?"
+      back: "The number is a POSITION in the select list — \"the second column I selected\". It works everywhere, and no, do not write it: add a column to the front of the select list and the sort silently changes to something else. Name the column."
 
-  # PRODUCTION, not recall. The deck's last card should make you type something.
+  # ── 7. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
   - basic:
-      front: "Write the query: the five oldest orders that have never shipped, showing OrderID, CustomerID and OrderDate."
-      back: "`SELECT \"OrderID\", \"CustomerID\", \"OrderDate\" FROM \"Orders\" WHERE \"ShippedDate\" IS NULL ORDER BY \"OrderDate\" LIMIT 5;` — IS NULL, never = NULL. On Northwind the oldest is order 8, placed 2022-12-05."
+      front: "Write the query. A table <code>\"Orders\"</code> has the columns <code>\"OrderID\"</code>, <code>\"CustomerID\"</code>, <code>\"OrderDate\"</code> and <code>\"ShippedDate\"</code> — the last one is empty until the order ships. Give the five oldest orders that have never shipped, showing the first three columns."
+      back: "<code>SELECT \"OrderID\", \"CustomerID\", \"OrderDate\"<br>FROM \"Orders\"<br>WHERE \"ShippedDate\" IS NULL<br>ORDER BY \"OrderDate\"<br>LIMIT 5;</code><br><br>Three things to get right: IS NULL, never `= NULL` (which raises no error and matches nothing at all); ORDER BY ascending, because \"oldest\" means earliest first; and the clause order SQL insists on — WHERE, then ORDER BY, then LIMIT."
