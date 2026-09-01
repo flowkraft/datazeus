@@ -46,11 +46,11 @@ LIMIT 5;
 
 | ProductName | ?column? |
 | ----------- | -------: |
-| Mishi Kobe Niku | 2813.0000 |
-| Boston Crab Meat | 2263.2000 |
-| Chef Antons Cajun Seasoning | 1166.0000 |
-| Ikura | 961.0000 |
-| Tofu | 813.7500 |
+| Mishi Kobe Niku | 2813 |
+| Boston Crab Meat | 2263.2 |
+| Chef Antons Cajun Seasoning | 1166 |
+| Ikura | 961 |
+| Tofu | 813.75 |
 
 Two things to notice, and only one of them is a surprise.
 
@@ -60,30 +60,32 @@ The second: the database had to call it something, and it had nothing to go on. 
 
 ## AS: you name the column
 
-Start with the smallest version of the fix, on a query with no arithmetic in it at all. `AS` gives any column the heading you choose:
+Start with the easy half: **the same query, with one column renamed.** `AS` gives any column the heading you choose:
 
-```sql file=./scripts/customers-renamed.sql
-SELECT "CompanyName" AS "Customer",
-       "ContactName" AS "Who to ask for"
-FROM "Customers"
-ORDER BY "CompanyName"
+```sql file=./scripts/stock-value-first-named.sql
+SELECT "ProductName" AS "Product",
+       "UnitPrice" * "UnitsInStock"
+FROM "Products"
+ORDER BY "UnitPrice" * "UnitsInStock" DESC
 LIMIT 5;
 ```
 
-| Customer | Who to ask for |
-| -------- | -------------- |
-| Alfreds Futterkiste | Maria Anders |
-| Ana Trujillo Emparedados y helados | Ana Trujillo |
-| Antonio Moreno Taquería | Antonio Moreno |
-| Around the Horn | Thomas Hardy |
-| Berglunds snabbköp | Christina Berglund |
+| Product | ?column? |
+| ------- | -------: |
+| Mishi Kobe Niku | 2813 |
+| Boston Crab Meat | 2263.2 |
+| Chef Antons Cajun Seasoning | 1166 |
+| Ikura | 961 |
+| Tofu | 813.75 |
 
-Nothing about the data changed. Only what it is called on the way out.
+**One heading fixed, one to go.** Nothing about the data changed — same five products, same order, same numbers. Only what the first column is *called* on the way out.
 
-Look at the second heading: **`Who to ask for` has spaces and capital letters in it**, and it can only have them because the alias is wrapped in **double quotes** — the same double quotes you have been putting around column names since lesson 2, doing the same job. Without them, `AS Who to ask for` is three words the parser cannot make sense of, and the query fails.
+And note what `AS` is not: it does not create a column, move a column, or change a value. It attaches a label to something on its way out of the query. That is the whole of it.
+
+The quotes are worth a sentence of their own. **A quoted alias can hold spaces and capital letters** — `AS "Stock value"` on the next page, or `AS "Who to ask for"` on a customer list — because the double quotes are the same ones you have been putting around column names since lesson 2, doing the same job. Without them, `AS Stock value` is two words the parser cannot make sense of, and the query fails.
 
 <Callout>
-**A quoted alias is the difference between a result and a report.** `"Stock value"`, `"Trade price"`, `"Who to ask for"` — headings a person reads without being told what they mean. It costs you two characters.
+**A quoted alias is the difference between a result and a report.** `"Stock value"`, `"Price in EUR"`, `"List price"` — headings a person reads without being told what they mean. It costs you two characters.
 </Callout>
 
 ### One thing to know about *unquoted* aliases
@@ -106,15 +108,15 @@ LIMIT 5;
 
 | Product | Stock value |
 | ------- | ----------: |
-| **Mishi Kobe Niku** | **2813.0000** |
-| Boston Crab Meat | 2263.2000 |
-| Chef Antons Cajun Seasoning | 1166.0000 |
-| Ikura | 961.0000 |
-| Tofu | 813.7500 |
+| **Mishi Kobe Niku** | **2813** |
+| Boston Crab Meat | 2263.2 |
+| Chef Antons Cajun Seasoning | 1166 |
+| Ikura | 961 |
+| Tofu | 813.75 |
 
 Now look at the last-but-one line. It says `ORDER BY "Stock value" DESC` — **the sort is using the name you invented**, instead of repeating the multiplication. That is not just tidier. The calculation now exists in exactly one place in the query, so when somebody decides stock value should be based on a different column, there is one line to change instead of two that must be kept in step.
 
-And now read the *data* rather than the syntax. The single most valuable thing in that warehouse is **Mishi Kobe Niku** — twenty-nine units at 97.00 — and it is a line the company has **stopped selling**. Nobody is going to order it, and it is sitting at the top of the list. You could not see that ten minutes ago, and it took one multiplication.
+And now read the *data* rather than the syntax. **One product is carrying more than a third of the value on that list** — 2813 against a five-row total of 8016.95 — which is the kind of thing a report exists to make visible. And the single most valuable line in the warehouse, **Mishi Kobe Niku**, twenty-nine units at 97.00, is one the company has **stopped selling**: nobody is going to order it, and it is sitting at the top. You could not see either of those ten minutes ago, and it took one multiplication.
 
 ## How far does the name reach?
 
@@ -134,14 +136,16 @@ SQL Error [42703]: ERROR: column "Stock value" does not exist
 
 The database is not being awkward. **At the moment `WHERE` runs, that column really does not exist yet.**
 
-### The order the database actually works in
+### The order your clauses take effect
 
-You write a query in one order. The database does the work in another, and this is the running order that matters:
+You write a query in one order. The clauses take effect in another, and this is the running order that matters:
 
 1. **`FROM`** — pick up the table.
-2. **`WHERE`** — throw rows away. *The select list has not been read yet, so nothing you named in it exists.*
+2. **`WHERE`** — throw rows away. *The select list has not been read, so your new name is not available yet.*
 3. **`SELECT`** — work out the columns. **This is where your name gets created.**
-4. **`ORDER BY`** — sort what `SELECT` produced, so every name is available.
+4. **`ORDER BY`** — runs last, so it can use the name.
+
+This is the order the clauses *take effect in*, not a description of the work the database physically does. A query planner is free to reorder, combine and skip steps however it likes, as long as the answer comes out the same. What it may never do is let `WHERE` see a name that `SELECT` has not made yet — and that is the part you can rely on.
 
 That is the whole explanation, and it is worth more than the rule it explains: you never have to memorise where an alias works, because you can derive it. It also hands you the next-but-one lesson almost free — when you meet `HAVING` and wonder why `WHERE` cannot filter a total, it is this same running order answering again.
 
@@ -157,9 +161,9 @@ ORDER BY "Stock value" DESC;
 
 | Product | Stock value |
 | ------- | ----------: |
-| Mishi Kobe Niku | 2813.0000 |
-| Boston Crab Meat | 2263.2000 |
-| Chef Antons Cajun Seasoning | 1166.0000 |
+| Mishi Kobe Niku | 2813 |
+| Boston Crab Meat | 2263.2 |
+| Chef Antons Cajun Seasoning | 1166 |
 
 It looks like repetition because it is. The sort keeps the short name; only the filter pays.
 
@@ -169,52 +173,54 @@ It looks like repetition because it is. The sort keeps the short name; only the 
 
 ## ROUND: arithmetic makes ugly numbers
 
-Sales want the trade price: fifteen percent off list. That is one multiplication.
+The Berlin office wants the same list in euros. Today's rate is `0.9137`, so that is one multiplication.
 
-```sql file=./scripts/trade-price-unrounded.sql
+```sql file=./scripts/eur-price-unrounded.sql
 SELECT "ProductName" AS "Product",
-       "UnitPrice" * 0.85 AS "Trade price"
+       "UnitPrice" * 0.9137 AS "Price in EUR"
 FROM "Products"
 ORDER BY "UnitPrice" DESC
 LIMIT 5;
 ```
 
-| Product | Trade price |
-| ------- | ----------: |
-| Thuringer Rostbratwurst | 105.221500 |
-| Mishi Kobe Niku | 82.450000 |
-| Gnocchi di nonna Alice | 32.300000 |
-| Camembert Pierrot | 28.900000 |
-| Ikura | 26.350000 |
+| Product | Price in EUR |
+| ------- | -----------: |
+| Thuringer Rostbratwurst | 113.106923 |
+| Mishi Kobe Niku | 88.6289 |
+| Gnocchi di nonna Alice | 34.7206 |
+| Camembert Pierrot | 31.0658 |
+| Ikura | 28.3247 |
 
-**The prices went in with four decimal places and came back with six.** `105.221500` is not a price — nobody can be charged it and no report can print it. The answer is not wrong; it is just carrying more precision than the question has.
+**The prices went in with two decimal places, and not one of the five came back as money.** The top row runs to six decimal places. `113.106923` is not a price — nobody can be charged it and no report can print it. The answer is not wrong; it is just carrying more precision than the question has.
 
-```sql file=./scripts/trade-price.sql
+That is worth a moment, because it is where the decimals come from. **Multiplying two exact decimals adds their decimal places together.** A price with two and a rate with four give you six, every time, whether or not you wanted them — and nothing in the query warned you.
+
+```sql file=./scripts/eur-price.sql
 SELECT "ProductName" AS "Product",
-       ROUND("UnitPrice" * 0.85, 2) AS "Trade price"
+       ROUND("UnitPrice" * 0.9137, 2) AS "Price in EUR"
 FROM "Products"
 ORDER BY "UnitPrice" DESC
 LIMIT 5;
 ```
 
-| Product | Trade price |
-| ------- | ----------: |
-| Thuringer Rostbratwurst | 105.22 |
-| Mishi Kobe Niku | 82.45 |
-| Gnocchi di nonna Alice | 32.30 |
-| Camembert Pierrot | 28.90 |
-| Ikura | 26.35 |
+| Product | Price in EUR |
+| ------- | -----------: |
+| Thuringer Rostbratwurst | 113.11 |
+| Mishi Kobe Niku | 88.63 |
+| Gnocchi di nonna Alice | 34.72 |
+| Camembert Pierrot | 31.07 |
+| Ikura | 28.32 |
 
 `ROUND` takes two things: the number, and how many decimal places you want. Two, for money.
 
-**Notice where the brackets go.** `ROUND("UnitPrice" * 0.85, 2)` wraps the *whole calculation*, because what you want rounded is the answer. `ROUND("UnitPrice", 2) * 0.85` rounds the input instead and then multiplies — different arithmetic, and on this data it even looks plausible.
+**Notice where the brackets go.** `ROUND("UnitPrice" * 0.9137, 2)` wraps the *whole calculation*, because what you want rounded is the answer. `ROUND("UnitPrice", 2) * 0.9137` rounds the input instead and then multiplies — different arithmetic, and on this data it even looks plausible.
 
 Two more things worth having:
 
-- **`ROUND` changes what comes out of the query. It changes nothing in the table.** The stored price is still `123.7900`. You have rounded the copy you are handing over, which is the only place it was ever a problem.
+- **`ROUND` changes what comes out of the query. It changes nothing in the table.** The stored price is untouched. You have rounded the copy you are handing over, which is the only place it was ever a problem.
 - **Both our engines round half away from zero**, so `10.625` becomes `10.63`, not `10.62`. That is not something the SQL standard promises, so do not assume it of an engine you have not checked.
 
-## Text joins up too
+## Concatenate text
 
 An expression does not have to be arithmetic. **Two pipe characters glue text end to end**, and that is how two columns become one line somebody can read.
 
@@ -242,10 +248,10 @@ Maria AndersatAlfreds Futterkiste
 That is the whole rule for `||`: it joins precisely what you hand it and adds nothing.
 
 <Callout>
-**A warning for later.** If any piece of a `||` is empty — a `NULL` — the *entire* result becomes `NULL`, not just that piece. One missing middle name and the whole line vanishes from your report. `"City"` and `"Country"` are filled in for all twenty-five customers here, so it cannot bite you today; `"Region"` is empty for most of them and would. Series 1 · 45 is where `NULL` gets explained properly.
+**A warning for later.** If any piece of a `||` is empty — a `NULL` — the *entire* result becomes `NULL`, not just that piece. One missing middle name and the whole line vanishes from your report. `"City"` and `"Country"` are filled in for all twenty-five customers here, so it cannot bite you today; `"Region"` is empty for most of them and would. The <a href="/data-academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL &amp; Three-Valued Logic</a> lesson is where `NULL` gets explained properly.
 </Callout>
 
-## DISTINCT: the other kind of messy
+## DISTINCT: duplicate values
 
 So far the problem has been bad headings and ugly numbers. Here is a different one: the same answer, over and over.
 
@@ -325,7 +331,25 @@ No error. No warning. Nothing to notice. And the word `DISTINCT` is still in the
 
 Two rows are copies only when **every column matches**. Germany-plus-Aachen and Germany-plus-Berlin are two different rows, so both survive — and the country column had no say in it at all. **Every column you add gives the rows one more way to differ, and one more way to stay.**
 
-That is also why `DISTINCT` is a poor tool for "getting rid of duplicates" in general. When a result has rows in it you did not expect, `DISTINCT` will often make them disappear — and it will have hidden the reason rather than fixed it. Series 2 · 06 is about the usual cause.
+If you have been keeping count, one row is missing: twenty-five customers went in and twenty-four came out. That row is the rule working in the other direction. Two customers — *Ana Trujillo Emparedados y helados* and *Antonio Moreno Taquería* — are in the same city, so they hold the same value in **both** of the columns you selected:
+
+| | `"Country"` | `"City"` |
+|---|---|---|
+| Ana Trujillo Emparedados y helados | Mexico | México D.F. |
+| Antonio Moreno Taquería | Mexico | México D.F. |
+
+`Mexico` and `México D.F.` are not two different places here — they are two different **columns**. One holds the country, the other holds the city (México D.F. is Mexico City). Both columns match across the two rows, so `DISTINCT` treats them as copies and keeps one. No other pair of customers in the table matches on both columns, which is why the count drops by exactly one and no further:
+
+```sql
+SELECT "Country", "City", COUNT(*)
+FROM "Customers"
+GROUP BY "Country", "City"
+HAVING COUNT(*) > 1;
+```
+
+Run it and you get a single row back. That is your missing twenty-fifth.
+
+That is also why `DISTINCT` is a poor tool for "getting rid of duplicates" in general. When a result has rows in it you did not expect, `DISTINCT` will often make them disappear — and it will have hidden the reason rather than fixed it. **The usual cause is a join.** When one row on one side matches several rows on the other, every match comes back, and the row count multiplies without anything looking wrong. The <a href="/data-academy/learn-sql/join-fan-out" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Join Fan-Out &amp; Grain</a> lesson is about exactly that. Until then: when extra rows surprise you, find out where they came from before you reach for `DISTINCT`.
 
 ### When two columns *is* what you meant
 
@@ -341,25 +365,27 @@ Put the whole lesson into one query — and last lesson's, and the one before th
 
 ```sql file=./scripts/price-list.sql
 SELECT "ProductName" AS "Product",
-       ROUND("UnitPrice", 2) AS "List price",
-       ROUND("UnitPrice" * 0.85, 2) AS "Trade price"
+       "UnitPrice" AS "List price",
+       ROUND("UnitPrice" * 0.9137, 2) AS "Price in EUR"
 FROM "Products"
 WHERE "Discontinued" = false
 ORDER BY "UnitPrice" DESC
 LIMIT 5;
 ```
 
-| Product | List price | Trade price |
-| ------- | ---------: | ----------: |
-| Gnocchi di nonna Alice | 38.00 | 32.30 |
-| Camembert Pierrot | 34.00 | 28.90 |
-| Ikura | 31.00 | 26.35 |
-| Uncle Bobs Organic Dried Pears | 30.00 | 25.50 |
-| **Tofu** | **23.25** | **19.76** |
+| Product | List price | Price in EUR |
+| ------- | ---------: | -----------: |
+| Gnocchi di nonna Alice | 38 | 34.72 |
+| Camembert Pierrot | 34 | 31.07 |
+| Ikura | 31 | 28.32 |
+| Uncle Bobs Organic Dried Pears | 30 | 27.41 |
+| **Tofu** | **23.25** | **21.24** |
 
-Three named headings, two rounded numbers, a filter and a sort. Nothing to explain and nothing to apologise for.
+Three named headings, a rounded calculation, a filter and a sort. Nothing to explain and nothing to apologise for.
 
-Two details worth pointing at. **The two most expensive products in the catalogue are not on this list** — `WHERE "Discontinued" = false` removed them, because a price list for things nobody can buy is worse than no price list. And **Tofu's trade price is the one `ROUND` actually cut short**: the full number is `19.7625`, and every other trade price on this page was already exact at two places.
+**Notice what is *not* wrapped in `ROUND`.** `"UnitPrice"` is already money in the table, so rounding it would change nothing — you round what you **work out**, not what was already a price. Rounding every column on sight is a habit worth not forming.
+
+Two details worth pointing at. **The two most expensive products in the catalogue are not on this list** — `WHERE "Discontinued" = false` removed them, because a price list for things nobody can buy is worse than no price list. And **Tofu is where `ROUND` is doing the most visible work**: the raw conversion is `21.243525`, which is six decimal places of something nobody could be charged.
 
 ## Two more things worth knowing
 

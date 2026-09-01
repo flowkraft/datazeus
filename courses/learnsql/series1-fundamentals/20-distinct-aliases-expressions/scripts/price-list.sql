@@ -1,6 +1,6 @@
 SELECT "ProductName" AS "Product",
-       ROUND("UnitPrice", 2) AS "List price",
-       ROUND("UnitPrice" * 0.85, 2) AS "Trade price"
+       "UnitPrice" AS "List price",
+       ROUND("UnitPrice" * 0.9137, 2) AS "Price in EUR"
 FROM "Products"
 WHERE "Discontinued" = false
 ORDER BY "UnitPrice" DESC

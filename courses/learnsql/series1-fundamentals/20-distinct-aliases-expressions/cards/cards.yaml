@@ -75,11 +75,11 @@ cards:
 
   # ── 4. ROUNDING ──
   - basic:
-      front: "A price column holds 4 decimal places. You multiply it by 0.85 and the answer comes back with SIX. Is that a bug, and what do you do about it?"
-      back: "Not a bug — multiplying two exact decimals produces a result with more places than either input, so 123.7900 × 0.85 is 105.221500. It is simply more precision than the question has. Wrap the whole calculation: <code>ROUND(\"UnitPrice\" * 0.85, 2)</code>. ROUND takes the number and how many decimal places you want."
+      front: "A price column holds 2 decimal places. You multiply it by an exchange rate of 0.9137 and the answer comes back with SIX. Is that a bug, and what do you do about it?"
+      back: "Not a bug — multiplying two exact decimals ADDS their decimal places together, so a price with 2 times a rate with 4 gives 6: 123.79 × 0.9137 is 113.106923. It is simply more precision than the question has. Wrap the whole calculation: <code>ROUND(\"UnitPrice\" * 0.9137, 2)</code>. ROUND takes the number and how many decimal places you want."
 
   - basic:
-      front: "What is the difference between <code>ROUND(price * 0.85, 2)</code> and <code>ROUND(price, 2) * 0.85</code>?"
+      front: "What is the difference between <code>ROUND(price * 0.9137, 2)</code> and <code>ROUND(price, 2) * 0.9137</code>?"
       back: "The first rounds the ANSWER; the second rounds the INPUT and then multiplies, so it can drift and it is almost never what you meant. Round last — the brackets go around the whole calculation. The two often produce similar-looking numbers, which is exactly why this one goes unnoticed."
 
   - cloze: "ROUND changes what the {{c1::query returns}} — it never changes what is {{c2::stored in the table}}. You are rounding the copy you hand over."
@@ -104,7 +104,7 @@ cards:
       back: "DISTINCT is not a function on the column beside it — it applies to the WHOLE ROW you selected. Two rows are copies only when every column matches, so Germany+Aachen and Germany+Berlin are different rows and both survive; the country column had no say at all. Every column you add gives the rows one more way to differ and one more way to stay. Nothing errored, which is what makes it dangerous: the heading still says countries and the query still says DISTINCT."
 
   - basic:
-      front: "Given that, is <code>SELECT DISTINCT \"Country\", \"City\"</code> a mistake?"
+      front: "A query returns 24 rows for <code>SELECT DISTINCT \"Country\", \"City\"</code> where <code>SELECT DISTINCT \"Country\"</code> alone returned 10. Is the two-column query a mistake?"
       back: "No — it is the right query for \"which towns, in which countries, do we have customers in?\". The trap was never the second column; it was the HEADING that no longer matched the query underneath it. Read your select list and make the title agree with it."
 
   - basic:
@@ -119,5 +119,5 @@ cards:
 
   # ── 8. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
   - basic:
-      front: "Write the query. A table <code>\"Products\"</code> has the columns <code>\"ProductName\"</code>, <code>\"UnitPrice\"</code> and <code>\"Discontinued\"</code> (a boolean). Produce a price list of the five dearest products still on sale, showing the name under the heading <code>Product</code> and the price with 15% taken off under the heading <code>Trade price</code>, rounded to two decimal places."
-      back: "<code>SELECT \"ProductName\" AS \"Product\",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROUND(\"UnitPrice\" * 0.85, 2) AS \"Trade price\"<br>FROM \"Products\"<br>WHERE \"Discontinued\" = false<br>ORDER BY \"UnitPrice\" DESC<br>LIMIT 5;</code><br><br>Four things to get right: quote both aliases so the headings keep their space and capitals; put ROUND around the WHOLE calculation, not around the price; sort by <code>\"UnitPrice\"</code> or by the alias (ORDER BY can see it) but NOT in the WHERE, which cannot; and the clause order SQL insists on — WHERE, then ORDER BY, then LIMIT."
+      front: "Write the query. A table <code>\"Products\"</code> has the columns <code>\"ProductName\"</code>, <code>\"UnitPrice\"</code> and <code>\"Discontinued\"</code> (a boolean). Produce a price list of the five dearest products still on sale, showing the name under the heading <code>Product</code> and the price converted at a rate of 0.9137 under the heading <code>Price in EUR</code>, rounded to two decimal places."
+      back: "<code>SELECT \"ProductName\" AS \"Product\",<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROUND(\"UnitPrice\" * 0.9137, 2) AS \"Price in EUR\"<br>FROM \"Products\"<br>WHERE \"Discontinued\" = false<br>ORDER BY \"UnitPrice\" DESC<br>LIMIT 5;</code><br><br>Four things to get right: quote both aliases so the headings keep their space and capitals; put ROUND around the WHOLE calculation, not around the price; sort by <code>\"UnitPrice\"</code> or by the alias (ORDER BY can see it) but NOT in the WHERE, which cannot; and the clause order SQL insists on — WHERE, then ORDER BY, then LIMIT."

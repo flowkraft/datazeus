@@ -36,6 +36,11 @@ import spock.lang.Stepwise
  *   9    …and the same shape written on purpose
  *   10   the whole query, from scratch
  *
+ * These run on DuckDB. Every one is written so it returns the SAME answer against the
+ * PostgreSQL in CloudBeaver — the two engines agree on every query in this file, and
+ * DistinctAliasesExpressionsSpec asserts each koan's solved form on BOTH of them. Where
+ * they would NOT agree, there is no koan at all; the next section says why.
+ *
  * ── WHY THERE IS NO KOAN FOR "THE ALIAS IN WHERE" ───────────────────────────
  *
  * The lesson spends five slides on it: `ORDER BY` can use a name you invented and

@@ -13,12 +13,13 @@ import java.sql.SQLException
  *
  *    1. stock-value-unnamed          — an expression with no alias, and the name each engine
  *                                      invents for it. THIS IS THE SLIDE episode 15 promised.
- *    2. customers-renamed            — AS on a plain column, and a heading with a space in it
+ *    2. stock-value-first-named      — AS on ONE column of the same query: one heading fixed,
+ *                                      the other still ?column?, which is the slide's hand-off
  *    3. stock-value                  — the expression named, and the alias reused by ORDER BY
  *    4. stock-value-alias-in-where   — THE ERROR: PostgreSQL 42703. DuckDB accepts it.
  *    5. stock-value-over-1000        — the portable fix: say the calculation twice
- *    6. trade-price-unrounded        — arithmetic makes it WORSE: four decimals become six
- *    7. trade-price                  — ROUND(…, 2), and the two engines agree exactly
+ *    6. eur-price-unrounded          — arithmetic makes it WORSE: not one row is money
+ *    7. eur-price                    — ROUND(…, 2), and the two engines agree exactly
  *    8. call-sheet                   — || joins text, and the spaces are the author's job
  *    9. countries-one-per-customer   — 25 rows for a question with 10 answers
  *   10. countries-distinct           — 10
@@ -107,21 +108,25 @@ class DistinctAliasesExpressionsSpec extends NorthwindGateSpec {
     // --- 2. AS on a plain column ----------------------------------------------------------
 
     @Unroll
-    def "[#engine] AS renames a column, and a quoted alias keeps its spaces and capitals"() {
+    def "[#engine] AS on ONE column fixes that heading and leaves the other one ugly"() {
+        // THE SLIDE IS THE HALF-FIXED STATE, so that is what this asserts. The lesson renames
+        // the plain column in Leo's own query and deliberately leaves the computed one alone,
+        // so the viewer SEES what is still broken and Leo can point at it. If this ever came
+        // back with two good headings, the slide's whole hand-off to the next one is gone.
         given:
-        def rows = sqlFor(engine).rows(script("customers-renamed"))
+        def rows = sqlFor(engine).rows(script("stock-value-first-named"))
 
-        expect: "the headings are the ones the author chose, verbatim"
-        // THE SPACES AND THE CAPITAL ARE THE ASSERTION. An UNQUOTED alias would come back
-        // folded to lower case on PostgreSQL ("who to ask for"), which is the gotcha the
-        // article covers and the reason the lesson quotes every alias it writes.
-        labels(engine, script("customers-renamed")) == ["Customer", "Who to ask for"]
+        expect: "the first heading is the author's, verbatim; the second is still the engine's"
+        def cols = labels(engine, script("stock-value-first-named"))
+        cols[0] == "Product"
+        cols[1] == (engine == "postgres" ? "?column?" : "(UnitPrice * UnitsInStock)")
 
-        and: "and the data is untouched — only what it is called changed"
-        rows*.Customer == ["Alfreds Futterkiste", "Ana Trujillo Emparedados y helados",
-                           "Antonio Moreno Taquería", "Around the Horn", "Berglunds snabbköp"]
-        rows*."Who to ask for" == ["Maria Anders", "Ana Trujillo", "Antonio Moreno",
-                                   "Thomas Hardy", "Christina Berglund"]
+        and: "and the data did not move — same five rows, same order, as the unnamed version"
+        rows*.Product == sqlFor(engine).rows(script("stock-value-unnamed"))*.ProductName
+
+        and: "renaming a column changes nothing but the label"
+        rows.collect { dec(it[1]) } ==
+                ["2813.0000", "2263.2000", "1166.0000", "961.0000", "813.7500"].collect { dec(it) }
 
         where:
         engine << ENGINES
@@ -146,8 +151,28 @@ class DistinctAliasesExpressionsSpec extends NorthwindGateSpec {
         named*.Product == unnamed*.ProductName
         named.collect { dec(it."Stock value") } == unnamed.collect { dec(it[1]) }
 
-        and: "the top line really is one the company has stopped selling, which is the payoff"
+        and: "THE CLAIM THE SLIDE MAKES, and it is one the viewer can check against the numbers"
+        and: "on screen: the top line alone is more than a third of the five-row total"
+        // The slide used to claim the top line was DISCONTINUED — true, but invisible on a
+        // two-column result, so a viewer had to take it on faith. It now claims something the
+        // table itself proves, and this is what keeps that honest.
         named.first().Product == "Mishi Kobe Niku"
+        def total = named.collect { dec(it."Stock value") }.sum()
+        dec(named.first()."Stock value") > total / 3
+        total == dec("8016.9500")
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] the discontinued payoff belongs to the report slide, where it is visible"() {
+        // Episode 20 does NOT claim on the stock-value slide that the top line is discontinued,
+        // because that result has no column showing it. The point lands later, on price-list,
+        // where WHERE "Discontinued" = false visibly removes both of the dearest products —
+        // which is asserted in section 8. This test just pins the fact itself so the two slides
+        // cannot drift apart.
+        expect:
         sqlFor(engine).firstRow('''SELECT "Discontinued" AS d FROM "Products"
                                    WHERE "ProductName" = 'Mishi Kobe Niku' ''').d
 
@@ -201,21 +226,30 @@ class DistinctAliasesExpressionsSpec extends NorthwindGateSpec {
     // --- 5. ROUND -------------------------------------------------------------------------
 
     @Unroll
-    def "[#engine] multiplying a 4-decimal price by 0.85 hands back SIX decimal places"() {
+    def "[#engine] multiplying a price by a 4-decimal rate leaves NO row that is money"() {
         given:
-        def rows = sqlFor(engine).rows(script("trade-price-unrounded"))
+        def rows = sqlFor(engine).rows(script("eur-price-unrounded"))
 
-        expect: "the exact strings the slide shows — the trailing zeros are the point"
+        expect: "the exact strings the slide shows, as CloudBeaver prints them"
         // COMPARED AS TEXT ON PURPOSE, and this is the one place in the file where that is
         // right: the slide's whole claim is about how many decimal places come back, and
         // dec() would strip precisely the thing being asserted.
-        rows.collect { it."Trade price".toString() } ==
-                ["105.221500", "82.450000", "32.300000", "28.900000", "26.350000"]
+        //
+        // THE RATE HAS FOUR DECIMALS AND THAT IS WHY THIS TEST EXISTS. It was 0.85 until
+        // 2026-09-01, when the slides moved to CloudBeaver's rendering — and CloudBeaver trims
+        // trailing zeros, so "32.300000" printed as "32.3" and four of these five rows arrived
+        // already looking like money. The slide asked the learner to be shocked by a table that
+        // looked fine. A 4-decimal rate leaves nothing to trim.
+        rows.collect { it."Price in EUR".toString().replaceAll(/0+$/, "") } ==
+                ["113.106923", "88.6289", "34.7206", "31.0658", "28.3247"]
 
-        and: "the input really was four places, so the arithmetic ADDED two"
-        sqlFor(engine).firstRow('''SELECT "UnitPrice" AS p FROM "Products"
-                                   WHERE "ProductName" = 'Thuringer Rostbratwurst' ''')
-                .p.toString() == "123.7900"
+        and: "EVERY row carries more decimals than money has — that is the slide's claim"
+        rows.every { it."Price in EUR".scale() > 2 }
+
+        and: "the input really was two places, so the arithmetic ADDED them"
+        dec(sqlFor(engine).firstRow('''SELECT "UnitPrice" AS p FROM "Products"
+                                       WHERE "ProductName" = 'Thuringer Rostbratwurst' ''')
+                .p) == dec("123.79")
 
         where:
         engine << ENGINES
@@ -224,13 +258,18 @@ class DistinctAliasesExpressionsSpec extends NorthwindGateSpec {
     @Unroll
     def "[#engine] ROUND to two places, and the two engines agree to the last cent"() {
         given:
-        def rows = sqlFor(engine).rows(script("trade-price"))
+        def rows = sqlFor(engine).rows(script("eur-price"))
 
         expect:
         rows*.Product == ["Thuringer Rostbratwurst", "Mishi Kobe Niku", "Gnocchi di nonna Alice",
                           "Camembert Pierrot", "Ikura"]
-        rows.collect { dec(it."Trade price") } ==
-                ["105.22", "82.45", "32.30", "28.90", "26.35"].collect { dec(it) }
+        rows.collect { dec(it."Price in EUR") } ==
+                ["113.11", "88.63", "34.72", "31.07", "28.32"].collect { dec(it) }
+
+        and: "AND EVERY ONE PRINTS AS TWO DECIMALS in CloudBeaver, which trims trailing zeros"
+        // The slide says every row is money now. With the old 0.85 rate ROUND produced 32.30,
+        // which CloudBeaver printed "32.3" — one decimal, and the claim was false on screen.
+        rows.every { it."Price in EUR".toString() ==~ /\d+\.\d\d/ }
 
         and: "ROUND is HALF AWAY FROM ZERO on both engines — 10.625 goes to 10.63, not 10.62"
         // Worth pinning: the two engines agreeing on the half case is not something the SQL
@@ -327,11 +366,57 @@ class DistinctAliasesExpressionsSpec extends NorthwindGateSpec {
         trap*.Country.unique().size() == 10
         trap.size() > countries.size()
 
-        and: "the first six rows the video puts on screen"
-        trap.take(6).collect { [it.Country, it.City] } ==
+        and: "THE NINE ROWS THE VIDEO PUTS ON SCREEN, and they are a true PREFIX of the result"
+        // The slide shows nine rows and then an ellipsis. It must never start part-way down and
+        // mark only the end — that presents rows three to eight as though they were the top,
+        // which is a quiet lie about what the query returned in an episode whose whole subject
+        // is reports that mislead. (It did exactly that until 2026-08-30; this pins it.)
+        trap.take(9).collect { [it.Country, it.City] } ==
                 [["Argentina", "Buenos Aires"], ["Austria", "Graz"],
                  ["France", "Marseille"], ["France", "Nantes"],
-                 ["Germany", "Aachen"], ["Germany", "Berlin"]]
+                 ["Germany", "Aachen"], ["Germany", "Berlin"],
+                 ["Germany", "Brandenburg"], ["Germany", "Cunewalde"],
+                 ["Germany", "Frankfurt a.M."]]
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] THE MISSING TWENTY-FIFTH: exactly one pair matches on BOTH columns, so 25 becomes 24"() {
+        // ADDED 2026-08-31, because the lesson put three counts on screen — 25 customers, 10
+        // countries, 24 country-and-city rows — and never accounted for the last one. A viewer
+        // who subtracts gets 1 and wonders which row vanished. The video and the article now
+        // both answer it, so the gate has to hold the answer still.
+        //
+        // It is also the rule's only POSITIVE instance in this dataset: everywhere else DISTINCT
+        // keeps both rows because some column differs. Here every selected column matches, so one
+        // goes. If Northwind is ever reseeded and a second duplicate pair appears, the arithmetic
+        // in the-rule and in the article silently stops being true — this test fails first.
+        given: "the customers who share a country AND a city"
+        def dupes = sqlFor(engine).rows('''
+                SELECT "Country", "City", count(*) AS n
+                FROM "Customers"
+                GROUP BY "Country", "City"
+                HAVING count(*) > 1
+                ORDER BY "Country", "City"''')
+
+        expect: "exactly one such pair — which is why the count drops by exactly one, and no further"
+        dupes.size() == 1
+        dupes[0].Country == "Mexico"
+        dupes[0].City == "México D.F."
+        dupes[0].n == 2
+
+        and: "the two companies the article names by name"
+        sqlFor(engine).rows('''
+                SELECT "CompanyName" FROM "Customers"
+                WHERE "Country" = 'Mexico' AND "City" = 'México D.F.'
+                ORDER BY "CompanyName"''')*.CompanyName ==
+                ["Ana Trujillo Emparedados y helados", "Antonio Moreno Taquería"]
+
+        and: "so the three counts the lesson shows reconcile: 25 - 1 = 24"
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Customers"').n == 25
+        sqlFor(engine).rows(script("countries-and-cities")).size() == 24
 
         where:
         engine << ENGINES
@@ -361,19 +446,23 @@ class DistinctAliasesExpressionsSpec extends NorthwindGateSpec {
         def rows = sqlFor(engine).rows(script("price-list"))
 
         expect: "three named headings"
-        labels(engine, script("price-list")) == ["Product", "List price", "Trade price"]
+        labels(engine, script("price-list")) == ["Product", "List price", "Price in EUR"]
 
         and: "the five rows on the final slide"
         rows*.Product == ["Gnocchi di nonna Alice", "Camembert Pierrot", "Ikura",
                           "Uncle Bobs Organic Dried Pears", "Tofu"]
         rows.collect { dec(it."List price") } ==
                 ["38.00", "34.00", "31.00", "30.00", "23.25"].collect { dec(it) }
-        rows.collect { dec(it."Trade price") } ==
-                ["32.30", "28.90", "26.35", "25.50", "19.76"].collect { dec(it) }
+        rows.collect { dec(it."Price in EUR") } ==
+                ["34.72", "31.07", "28.32", "27.41", "21.24"].collect { dec(it) }
 
-        and: "TOFU IS THE ROW THE SLIDE HIGHLIGHTS — the only one ROUND actually cut short"
-        dec(sqlFor(engine).firstRow('''SELECT "UnitPrice" * 0.85 AS v FROM "Products"
-                                       WHERE "ProductName" = 'Tofu' ''').v) == dec("19.7625")
+        and: "LIST PRICE IS NOT ROUNDED, and the article makes a point of it — you round what"
+        and: "you work out, and UnitPrice was already money"
+        !script("price-list").contains('ROUND("UnitPrice",')
+
+        and: "TOFU IS THE ROW THE SLIDE HIGHLIGHTS — six decimals before ROUND touches it"
+        dec(sqlFor(engine).firstRow('''SELECT "UnitPrice" * 0.9137 AS v FROM "Products"
+                                       WHERE "ProductName" = 'Tofu' ''').v) == dec("21.243525")
 
         and: "THE WHERE HAS TO MATTER: the two dearest products in the catalogue are both"
         and: "discontinued, so a reader can SEE that the filter removed something"
