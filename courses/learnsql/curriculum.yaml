@@ -205,6 +205,17 @@ excludes:
     where: "covered in Data Modeling, Series 2 · 45. In this course, Series 3 is EXPLAIN and the mechanics, on a query that already exists"
   - topic: "Isolation levels, locking & concurrency"
     where: "covered in Data Ops, Series 2 — Running PostgreSQL in Production. In this course, Series 2 · 40 covers the COMMIT and ROLLBACK basics"
+  # ADDED 2026-09-02. An audit found stored procedures had no episode and NO EXCLUDE anywhere
+  # in the academy — the single most conspicuous silence for a reader arriving from an
+  # enterprise codebase, where a large share of the business logic is in the database.
+  #
+  # IT COULD NOT BE POINTED ANYWHERE UNTIL NOW, and that is why the silence lasted: the
+  # procedural languages share almost no syntax, so one episode here would have been a
+  # PostgreSQL episode wearing a SQL label — the same failure that keeps COPY out of this
+  # course. With an engine course per database, each one now teaches its own, which is the
+  # only honest place for it.
+  - topic: "Stored procedures, functions and triggers"
+    where: "covered in each engine's own course, because the procedural languages share almost no syntax — PostgreSQL, Series 3 · 00; SQL Server, Series 3 · 00; Oracle Database, Series 2 · 00; MySQL & MariaDB, Series 3 · 10. In this course, SQL is what you send, not what runs inside the server"
   - topic: "ROLLUP, CUBE, GROUPING SETS & OLAP cubes"
     where: "covered in Data Warehousing, Series 1 · 30 for the subtotal operators, and Data Warehousing, Series 2 · 20 for cubes"
   # ADDED 2026-09-02 after auditing Amigoscode's 60-episode PostgreSQL course, which spends

@@ -30,6 +30,24 @@
 # correctness idea in this course is easier to see when the thing being checked has finished.
 # Series 4 removes that ending and asks all the same questions again.
 #
+# ── WHAT `core` MEANS HERE, AND THE RULE THAT KEEPS IT HONEST ───────────────────────────
+# Corrected 2026-09-02. Series 2 had drifted to 11 core out of 12, and a flag that excludes
+# almost nothing tells a learner nothing — its ONE job is to let somebody skip. Learn SQL is
+# the reference shape: 12/12, then 10/14, then 0/7, then 0/3. It decays.
+#
+# THE TEST, applied episode by episode: WOULD SOMEBODY BE BLOCKED WITHOUT IT? Not "is it
+# valuable" — everything here is valuable, or it would not be an episode. Blocked.
+#
+# What came off the shortest path, and why:
+#   2 · 00  a style DECISION (a script against a chain of SQL files). Useful, not blocking.
+#   2 · 05  parameterisation is a refactoring improvement, not an unblocker.
+#   2 · 27  personal data is SITUATIONAL — critical the day you touch PII, irrelevant if you
+#           never do. Nothing downstream depends on it.
+#   2 · 40  cross-database was already off, correctly.
+#
+# The curve is now 100% / 71% / 60% / 0%. IF A LATER EDIT PUSHES SERIES 2 BACK ABOVE ~75%,
+# the flag has stopped discriminating again and something should come off.
+#
 # ONE HONEST EXCEPTION, AND IT IS 3 · 15. Log-based CDC reads the database's WAL or binlog,
 # and that feed is unbounded — it IS a stream by episode 20's own definition. What keeps the
 # episode in a batch series is the CADENCE, not the source: an unbounded feed can be consumed
@@ -60,6 +78,14 @@ excludes:
     where: "covered in Analytics Engineering with dbt — this track owns Extract and Load"
   - topic: "cron internals, monitoring, alerting and on-call"
     where: "covered in Data Ops — here a pipeline just gets handed to the scheduler"
+  # ADDED 2026-09-02 after a coverage audit found ZERO mentions of secrets anywhere in this
+  # course and no exclude either. Every episode connects to something and nothing said where
+  # the password lives, which reads as forgotten rather than decided. Data Ops has owned it all
+  # along — Series 1 · 35 is "Permissions, Users & Environment Variables — Secrets a Job Can
+  # Read", with Series 1 · 32 next door for the connection failure that turns out to be
+  # credentials. The gap was the POINTER, not the teaching.
+  - topic: "Where the credentials live — environment variables, secret stores, and file permissions"
+    where: "covered in Data Ops, Series 1 · 35, with Data Ops, Series 1 · 32 for telling a credentials failure apart from a firewall one. In this course a connection is something you are handed, already configured"
 
   # The language the pipeline is written in. Series 2 · 00 uses Groovy, but the track is about
   # the SHAPE of a load, not the syntax — and a reader who wants the language should be sent.
@@ -190,18 +216,94 @@ series:
         slug: scripted-pipelines
         title: "Scripting a Pipeline — When a Script Beats a Chain of SQL Files"
         hands_on: ["koan:author"]
-        core: true
         status: planned
       - n: "05"
         slug: parameterized-and-reusable-jobs
         title: "Parameterized & Reusable Jobs — One Script, Many Tables"
         hands_on: ["koan:complete"]
+        status: planned
+      # ADDED 2026-09-02, and it closes the gap a working engineer hits most often. A coverage
+      # audit found ZERO mentions of schema drift anywhere in the academy, and it was not in the
+      # excludes either — the silence read as forgotten rather than decided.
+      #
+      # THE FAILURE IS THE MOST COMMON WAY A PIPELINE BREAKS OVERNIGHT, and none of it is the
+      # data's fault: the source added a column, renamed one, changed a type, reordered the
+      # CSV, or a vendor "improved" their export. Nothing in the rows is wrong. The SHAPE moved.
+      #
+      # IT SITS BEFORE 10 DELIBERATELY: shape, then values. This episode asks "does the source
+      # still look like what I agreed to read?"; 10 then asks "are the values in it sane?".
+      # Checking values first is how you get a green quality gate on a column that is no longer
+      # the column you think it is.
+      #
+      # WHAT IT OWES:
+      #   DETECT      compare the incoming header or catalog against the shape you expect, at
+      #               the top of the run, and fail before a single row lands. Series 1 · 10
+      #               already does the spreadsheet version of this in one line; here it becomes
+      #               the discipline.
+      #   CLASSIFY    not every drift is equal, and treating them alike is the mistake:
+      #                 a NEW column        usually additive and safe to ignore — until it is
+      #                                     the one carrying the money
+      #                 a RENAMED column    silently becomes a missing column plus a new one
+      #                 a RETYPED column    the worst, because it often still parses
+      #                 a REORDERED column  harmless if you read by name, fatal by position
+      #   RESPOND     fail loudly, quarantine, or absorb — and say which is right for each of
+      #               the four. "Absorb everything" is how a pipeline rots quietly.
+      #
+      # THE TRAP WORTH THE EPISODE: reading by POSITION rather than by NAME. It works for years
+      # and then a source inserts a column in the middle and every value shifts one to the left.
+      # Every row loads. Nothing errors. Every number is wrong.
+      #
+      # SEAM: Series 3 · 35 (data contracts) is the same idea pointed DOWNSTREAM — what your
+      # consumers may rely on. This is upstream: what you may rely on from your sources.
+      - n: "07"
+        slug: schema-drift
+        title: "Schema Drift — When the Source Changes Shape and Every Row Still Loads"
+        hands_on: ["koan:diagnose", "koan:predict"]
         core: true
         status: planned
       - n: "10"
         slug: data-quality-gates
         title: "Data Quality Gates — Nulls, Ranges and Referential Gaps, Before They Land"
         hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # ADDED 2026-09-02, and it is the gap a working engineer hits WEEKLY. A coverage audit
+      # found no episode anywhere on testing a pipeline, and the excludes hand "tested models"
+      # to Analytics Engineering with dbt — but that is dbt's T. THIS COURSE OWNS EXTRACT AND
+      # LOAD AND TESTED NEITHER.
+      #
+      # THE DISTINCTION IS THE EPISODE, and 10 directly above is what makes it land:
+      #     A QUALITY GATE checks THE DATA, at runtime, every night, in production.
+      #     A TEST checks THE CODE, before it ever runs, on data you control.
+      # A reader with gates and no tests finds out their change was wrong by breaking
+      # production politely. That is the whole motivation and it needs no more.
+      #
+      # WHAT IT OWES, and the order matters because most people start at the wrong end:
+      #   THE TRANSFORM IS A FUNCTION      rows in, rows out. Test it with a handful of rows
+      #                                    written by hand, no database required. This is where
+      #                                    05's parameterisation pays off — a parameterised job
+      #                                    is a function, and functions are testable.
+      #   FIXTURES, NOT PRODUCTION         a dozen rows that encode the cases you care about,
+      #                                    including the nasty ones from 07 and 10. Series 2 · 27
+      #                                    is where you get a safe copy if you need real shapes.
+      #   THE ROUND TRIP                   load into a scratch table, assert on what came out.
+      #                                    Slower, fewer of them, and the only way to catch a
+      #                                    MERGE that is subtly wrong.
+      #   THE DIFF                         run old and new against the same input and compare.
+      #                                    The single most useful thing when changing a
+      #                                    transform somebody else wrote.
+      #
+      # WHAT IS WORTH TESTING, said plainly, because the honest answer is "less than you fear":
+      # the transform logic, the edge cases you have actually been burned by, and the shape
+      # contract from 07. NOT the database, not the driver, and not that SELECT * returns rows.
+      #
+      # AND THE ONE THAT SAVES A CAREER: a test that proves the load is IDEMPOTENT — run it
+      # twice against the fixture, assert the table is identical. Series 1 · 30 taught the
+      # property; this is how you stop it regressing six months later.
+      - n: "12"
+        slug: testing-a-pipeline
+        title: "Testing a Pipeline — Catching a Bad Change Before Tonight's Run Does"
+        hands_on: ["koan:author", "koan:rerun"]
         core: true
         status: planned
       - n: "15"
@@ -288,7 +390,6 @@ series:
         slug: personal-data-and-masking
         title: "Personal Data — Masking, Synthetic Rows and a Safe Copy of Production"
         hands_on: ["koan:diagnose", "koan:rerun", "koan:count:queries"]
-        core: true
         status: planned
       # SOURCE (kimball): THE SURROGATE KEY PIPELINE — his name for swapping business keys to warehouse keys at load.
       # CORE, added 2026-08-24: Series 2 - 35 (load order) is core and depends on

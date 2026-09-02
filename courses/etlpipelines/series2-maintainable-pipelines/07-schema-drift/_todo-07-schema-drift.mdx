@@ -1,0 +1,93 @@
+---
+title: "Schema Drift — When the Source Changes Shape and Every Row Still Loads"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-etl-pipelines"
+tags: []
+level: "intermediate"
+module: "series2-maintainable-pipelines"
+order: 7
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/etlpipelines/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/etlpipelines/series2/_07/SchemaDriftKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Whatever the reader learns must still be true away from our tools.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    ETL & Data Pipelines · Pipelines You Can Maintain (intermediate) — "handle bad rows, late data and failures without hand-fixing"
+      before:  Parameterized & Reusable Jobs — One Script, Many Tables
+      THIS:    Schema Drift — When the Source Changes Shape and Every Row Still Loads
+      after:   Data Quality Gates — Nulls, Ranges and Referential Gaps, Before They Land
+    CORE.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: TODO — one sentence, the thing they can do afterwards that they could not before.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     ADDED 2026-09-02, and it closes the gap a working engineer hits most often. A coverage
+     audit found ZERO mentions of schema drift anywhere in the academy, and it was not in the
+     excludes either — the silence read as forgotten rather than decided.
+     THE FAILURE IS THE MOST COMMON WAY A PIPELINE BREAKS OVERNIGHT, and none of it is the
+     data's fault: the source added a column, renamed one, changed a type, reordered the
+     CSV, or a vendor "improved" their export. Nothing in the rows is wrong. The SHAPE moved.
+     IT SITS BEFORE 10 DELIBERATELY: shape, then values. This episode asks "does the source
+     still look like what I agreed to read?"; 10 then asks "are the values in it sane?".
+     Checking values first is how you get a green quality gate on a column that is no longer
+     the column you think it is.
+     WHAT IT OWES:
+       DETECT      compare the incoming header or catalog against the shape you expect, at
+                   the top of the run, and fail before a single row lands. Series 1 · 10
+                   already does the spreadsheet version of this in one line; here it becomes
+                   the discipline.
+       CLASSIFY    not every drift is equal, and treating them alike is the mistake:
+                     a NEW column        usually additive and safe to ignore — until it is
+                                         the one carrying the money
+                     a RENAMED column    silently becomes a missing column plus a new one
+                     a RETYPED column    the worst, because it often still parses
+                     a REORDERED column  harmless if you read by name, fatal by position
+       RESPOND     fail loudly, quarantine, or absorb — and say which is right for each of
+                   the four. "Absorb everything" is how a pipeline rots quietly.
+     THE TRAP WORTH THE EPISODE: reading by POSITION rather than by NAME. It works for years
+     and then a source inserts a column in the middle and every value shifts one to the left.
+     Every row loads. Nothing errors. Every number is wrong.
+     SEAM: Series 3 · 35 (data contracts) is the same idea pointed DOWNSTREAM — what your
+     consumers may rely on. This is upstream: what you may rely on from your sources.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:diagnose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/etlpipelines/series2/_07/SchemaDriftKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then how it is done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it. */}
+
+TODO

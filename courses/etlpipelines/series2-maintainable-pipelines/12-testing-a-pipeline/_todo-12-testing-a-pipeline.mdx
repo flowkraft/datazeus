@@ -1,0 +1,94 @@
+---
+title: "Testing a Pipeline — Catching a Bad Change Before Tonight's Run Does"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-etl-pipelines"
+tags: []
+level: "intermediate"
+module: "series2-maintainable-pipelines"
+order: 12
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/etlpipelines/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/etlpipelines/series2/_12/TestingAPipelineKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Whatever the reader learns must still be true away from our tools.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    ETL & Data Pipelines · Pipelines You Can Maintain (intermediate) — "handle bad rows, late data and failures without hand-fixing"
+      before:  Data Quality Gates — Nulls, Ranges and Referential Gaps, Before They Land
+      THIS:    Testing a Pipeline — Catching a Bad Change Before Tonight's Run Does
+      after:   Deduplication & Conformance — One Customer, One Row
+    CORE.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: TODO — one sentence, the thing they can do afterwards that they could not before.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     ADDED 2026-09-02, and it is the gap a working engineer hits WEEKLY. A coverage audit
+     found no episode anywhere on testing a pipeline, and the excludes hand "tested models"
+     to Analytics Engineering with dbt — but that is dbt's T. THIS COURSE OWNS EXTRACT AND
+     LOAD AND TESTED NEITHER.
+     THE DISTINCTION IS THE EPISODE, and 10 directly above is what makes it land:
+         A QUALITY GATE checks THE DATA, at runtime, every night, in production.
+         A TEST checks THE CODE, before it ever runs, on data you control.
+     A reader with gates and no tests finds out their change was wrong by breaking
+     production politely. That is the whole motivation and it needs no more.
+     WHAT IT OWES, and the order matters because most people start at the wrong end:
+       THE TRANSFORM IS A FUNCTION      rows in, rows out. Test it with a handful of rows
+                                        written by hand, no database required. This is where
+                                        05's parameterisation pays off — a parameterised job
+                                        is a function, and functions are testable.
+       FIXTURES, NOT PRODUCTION         a dozen rows that encode the cases you care about,
+                                        including the nasty ones from 07 and 10. Series 2 · 27
+                                        is where you get a safe copy if you need real shapes.
+       THE ROUND TRIP                   load into a scratch table, assert on what came out.
+                                        Slower, fewer of them, and the only way to catch a
+                                        MERGE that is subtly wrong.
+       THE DIFF                         run old and new against the same input and compare.
+                                        The single most useful thing when changing a
+                                        transform somebody else wrote.
+     WHAT IS WORTH TESTING, said plainly, because the honest answer is "less than you fear":
+     the transform logic, the edge cases you have actually been burned by, and the shape
+     contract from 07. NOT the database, not the driver, and not that SELECT * returns rows.
+     AND THE ONE THAT SAVES A CAREER: a test that proves the load is IDEMPOTENT — run it
+     twice against the fixture, assert the table is identical. Series 1 · 30 taught the
+     property; this is how you stop it regressing six months later.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:author
+      koan:rerun
+      koan file: tests/src/koans/groovy/datazeus/etlpipelines/series2/_12/TestingAPipelineKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then how it is done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it. */}
+
+TODO
