@@ -73,7 +73,7 @@ excludes:
   - topic: "Designing the star schema you load into it"
     where: "covered in Data Modeling, and loaded in Data Warehousing"
   - topic: "Running a cluster — sharding topology, ZooKeeper/Keeper operations, backups"
-    where: "covered in Data Ops for the operational discipline. Series 3 · 10 here covers only what a query author must know about distribution"
+    where: "covered in Data Ops for the operational discipline. In this course, Series 3 · 10 covers only what a query author must know about distribution"
 
 series:
   - slug: series1-clickhouse-essentials

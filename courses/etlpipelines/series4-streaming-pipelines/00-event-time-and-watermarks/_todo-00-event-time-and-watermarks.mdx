@@ -1,0 +1,114 @@
+---
+title: "Event Time, Windows and Watermarks — Deciding When an Answer Is Final"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-etl-pipelines"
+tags: []
+level: "advanced"
+module: "series4-streaming-pipelines"
+order: 0
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/etlpipelines/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/etlpipelines/series4/_00/EventTimeAndWatermarksKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Whatever the reader learns must still be true away from our tools.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    ETL & Data Pipelines · Production Data Flow (advanced)
+      before:  Streaming vs Batch — the DECISION
+      THIS:    Event Time, Windows and Watermarks — the MECHANICS
+      after:   Backfills & Reprocessing — Rewrite History Without Breaking Downstream
+    CORE.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: say what "late" is measured against, and decide when a windowed answer is final.
+    DECISION: it is the mechanics half of the split at 20 — but it earns its place
+    INDEPENDENTLY, and this is the argument:
+
+        2 · 20 IS "Late & Out-of-Order Data — Rows That Arrive After You Reported".
+        LATE RELATIVE TO WHAT? That episode cannot answer its own title without event time,
+        and NOTHING IN THE ACADEMY DEFINES IT.
+
+    An absence another episode has been working around since it was written is not theoretical.
+    It is the same evidence that created episode 20.
+
+    ── SCOPE: THREE IDEAS, NOT A TOUR OF AN API ────────────────────────────
+      1. EVENT TIME vs PROCESSING TIME — when it happened against when you saw it. Every other
+         idea here is a consequence of the gap between the two.
+      2. WINDOWS — you cannot aggregate a thing that never ends, so you cut it into pieces.
+         Tumbling, sliding and session windows: the SHAPES, not any one engine's syntax.
+      3. WATERMARKS — a watermark is a DECISION, not a mechanism: "I believe I have seen
+         everything up to time T, so I am closing this window." Teach that framing first and
+         the rest follows; teach it as a config setting and nothing does.
+
+    STAY ENGINE-FREE. Flink implements this, Beam articulates it best, Spark does it in
+    micro-batches — one sentence naming them, then stop. Those courses own the
+    implementations. This episode owns the concept, and it is the concept the rest of the
+    academy borrows.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:predict
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/etlpipelines/series4/_00/EventTimeAndWatermarksKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition.
+
+    Monday's total changed on Tuesday. Nobody rewrote anything and no job failed — some of
+    Monday's events simply arrived on Tuesday. Whether that is a bug depends entirely on which
+    clock the report was counting by, and most teams have never decided. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere.
+
+    Two clocks, then windows as the way to make an unbounded thing answerable, then the
+    watermark as the moment you commit to an answer. In that order — a reader who meets
+    watermarks before they have felt the gap between the two clocks has no reason to care. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+
+    predict: THE DEMONSTRATION EPISODE 20 PROMISES. The same set of events, windowed by event
+    time and by processing time, side by side. The reader predicts both totals before running
+    either. The out-of-order event is exactly where the two answers separate.
+
+    diagnose: a window that closed before the late arrivals landed. The total is short, the
+    log is clean, and the reader has to work out which of the two clocks the pipeline was
+    actually using. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+
+    THE ACADEMY'S SELECTION RULE, EXACTLY — BOTH WAYS OF GETTING IT WRONG ARE SILENT:
+      CLOSE TOO EARLY  real events arrive after the window shut and are dropped. The total is
+                       wrong, and nothing raises.
+      CLOSE TOO LATE   the number is never final, so a dashboard that must be right by 09:00
+                       is still moving at 11:00.
+    Neither is an error. That is the whole reason this episode exists.
+
+    AND THE ONE THAT IS WORST BECAUSE IT LOOKS RIGHT: a window closed on PROCESSING time gives
+    a Monday total that quietly includes Sunday's late arrivals and excludes its own. The
+    report is wrong at both ends, and wrong differently every day depending on when the data
+    happened to show up. */}
+
+TODO

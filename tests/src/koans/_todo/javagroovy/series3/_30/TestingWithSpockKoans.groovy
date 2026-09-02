@@ -8,7 +8,7 @@ import spock.lang.Stepwise
  * ║  JVM KOANS — Java & Groovy for Data · Series 3 · 30
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
- * Testing Data Code — JUnit and Spock, and What Is Worth Testing
+ * Testing Data Code — Testcontainers and the Database You Actually Ship
  *
  *     zeus.bat koans javagroovy series3 _30     (Windows)
  *     ./zeus.sh koans javagroovy series3 _30    (macOS/Linux)

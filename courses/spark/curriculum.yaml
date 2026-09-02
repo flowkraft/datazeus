@@ -69,7 +69,7 @@ excludes:
   - topic: "MLlib and machine learning"
     where: "not covered; this track moves and shapes data"
   - topic: "Streaming concepts — event time, watermarks, windows"
-    where: "covered in ETL & Data Pipelines, Series 3 · 20 and in Apache Flink. Series 3 · 05 here is Spark's implementation, not the theory"
+    where: "covered in ETL & Data Pipelines, Series 3 · 20 and in Apache Flink. In this course, Series 3 · 05 is Spark's implementation, not the theory"
 
 series:
   - slug: series1-spark-fundamentals

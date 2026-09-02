@@ -98,7 +98,7 @@ series:
       # CLOB/BLOB. DUAL, and why a SELECT needs a FROM.
       - n: "05"
         slug: types-and-the-null-rule
-        title: "Types, DUAL, and the Rule That the Empty String Is NULL"
+        title: "Types and DUAL — The Rule That the Empty String Is NULL"
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         status: planned
@@ -222,7 +222,7 @@ series:
       # parameter-sniffing problem and produces "it is fast for me and slow for them".
       - n: "05"
         slug: optimizer-and-statistics
-        title: "The Optimizer, DBMS_STATS and Bind Variable Peeking"
+        title: "The Optimizer and DBMS_STATS — Statistics, Histograms and Bind Variable Peeking"
         hands_on: ["koan:diagnose", "koan:predict"]
         core: true
         status: planned
@@ -241,7 +241,7 @@ series:
       # genuinely Oracle's strongest analytical feature.
       - n: "15"
         slug: partitioning-and-mviews
-        title: "Partitioning, Parallel Query and Materialized Views With Query Rewrite"
+        title: "Partitioning and Materialized Views — Parallel Query and Query Rewrite"
         hands_on: ["koan:count:scanned", "koan:choose"]
         status: planned
       - n: "20"

@@ -63,7 +63,7 @@ excludes:
   - topic: "SQL itself"
     where: "covered in Learn SQL"
   - topic: "Using SQLite as an analytical engine over files"
-    where: "covered in DuckDB, which is the embedded database built for that question. Series 3 · 05 of Database X vs Database Y compares the two directly"
+    where: "covered in DuckDB, which is the embedded database built for that question. Database X vs Database Y, Series 3 · 05 compares the two directly"
   - topic: "Embedding SQLite in a mobile or desktop application"
     where: "not covered. This track is about the database, not about iOS, Android or Electron"
 
@@ -102,7 +102,7 @@ series:
       # three conventions for storing dates (TEXT ISO-8601, REAL Julian, INTEGER epoch).
       - n: "10"
         slug: rowid-and-dates
-        title: "rowid, INTEGER PRIMARY KEY, and Storing Dates Without a Date Type"
+        title: "rowid and INTEGER PRIMARY KEY — Storing Dates Without a Date Type"
         hands_on: ["koan:predict", "koan:choose"]
         core: true
         status: planned

@@ -360,7 +360,7 @@ series:
       # existing and where the real treatment lives.
       - n: "15"
         slug: engines-and-clustering
-        title: "ColumnStore, Galera and the Engines MySQL Does Not Have"
+        title: "ColumnStore and Galera — The Engines MySQL Does Not Have"
         hands_on: ["koan:choose"]
         status: planned
       # COVER: the optimizer differences that change plans between the two, histogram

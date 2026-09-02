@@ -203,7 +203,7 @@ series:
       # user-defined functions — with the scalar-UDF performance warning and inlining in 2019+.
       - n: "00"
         slug: procedures-and-functions
-        title: "Stored Procedures, TVPs and the Scalar Function That Ruins a Plan"
+        title: "Stored Procedures and TVPs — The Scalar Function That Ruins a Plan"
         hands_on: ["koan:complete", "koan:diagnose"]
         core: true
         status: planned

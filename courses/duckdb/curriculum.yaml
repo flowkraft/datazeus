@@ -96,7 +96,7 @@ excludes:
   - topic: "Designing a star schema to load into it"
     where: "covered in Data Modeling, and loaded in Data Warehousing, Series 1 · 20"
   - topic: "Calling DuckDB from application code"
-    where: "covered in Java & Groovy for Data, Series 2 · 45 and in Python for Data. Here Series 3 · 00 covers the clients only as far as choosing between them"
+    where: "covered in Java & Groovy for Data, Series 2 · 45 and in Python for Data. In this course, Series 3 · 00 covers the clients only as far as choosing between them"
 
 series:
   # ── SERIES 1 ────────────────────────────────────────────────────────────────

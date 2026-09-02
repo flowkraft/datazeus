@@ -248,7 +248,7 @@ excludes:
   # Ops. The half that belongs there is unchanged; what it missed is that a Spring Boot app
   # uses none of it — it schedules ITSELF, in a JVM that is already running. See Series 4 · 30.
   - topic: "cron, systemd timers, and choosing an orchestrator"
-    where: "covered in Data Ops — here the scheduler runs inside your own Spring Boot app, which fails in different ways. Series 4 · 30 and · 35"
+    where: "covered in Data Ops — here the scheduler runs inside your own Spring Boot app, which fails in different ways. In this course, Series 4 · 30 and · 35"
   - topic: "Writing the SQL itself"
     where: "covered in Learn SQL — here the SQL is assumed and the question is how to run it from the JVM"
 
@@ -754,7 +754,7 @@ series:
       - n: "47"
         slug: choosing-database-access
         title: "Choosing Database Access — Picking Between JDBC, jOOQ, MyBatis and DuckDB"
-        short: "Choosing Database Access — JDBC, jOOQ, MyBatis or DuckDB"
+        short: "Choosing Database Access — JDBC, jOOQ, MyBatis, DuckDB"
         hands_on: ["koan:choose", "koan:count:rows-held"]
         core: true
         status: planned

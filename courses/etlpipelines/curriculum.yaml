@@ -3,8 +3,32 @@
 #
 # The job this track teaches: get data from where it is to where it's useful, repeatedly,
 # without losing or duplicating a row. Series 1 moves it safely, Series 2 keeps it
-# maintainable, Series 3 is production flow at volume, and Series 4 asks every one of those
+# maintainable, Series 3 loads a warehouse at volume, and Series 4 asks every one of those
 # questions again for data that never ends.
+#
+# NOTE WHAT IS NOT HERE, because the series names used to imply it: RUNNING the pipeline in
+# production — monitoring, alerting, on-call, choosing and operating a scheduler — is Data
+# Ops', and the excludes below say so. This track hands a pipeline over; it does not sit
+# with the pager.
+#
+# ── SERIES 1 TO 3 ARE BATCH, AND THAT IS A TEACHING CHOICE RATHER THAN THE SUBJECT ──────
+# Say this out loud, because a reader who is not told finishes Series 2 believing they have
+# learned how PIPELINES work rather than how BATCH pipelines work — and then Series 4 has to
+# un-teach instead of extend.
+#
+# MOST OF WHAT SERIES 1 AND 2 TEACH IS GENERAL. Types and casting, quality gates,
+# deduplication, dead letters, surrogate keys, personal data: none of that is batch-specific.
+# A few more are general concerns in a batch SPELLING — staging as a landing table,
+# idempotency as TRUNCATE+INSERT or MERGE, row counts at the end of a run — and Series 4
+# restates each one for unbounded data, which is what its counterpart rule exists for.
+#
+# ONLY ABOUT FIVE ARE GENUINELY BATCH-ONLY: 1 · 35 (polling a watermark column), 1 · 45
+# (handing discrete runs to a scheduler), 2 · 20 (late relative to THE RUN that wanted the
+# row), 2 · 35 (a load order you control) and 2 · 45 (a DAG of discrete tasks).
+#
+# WHY BATCH FIRST: a batch has an end, so you can count what went in and what came out. Every
+# correctness idea in this course is easier to see when the thing being checked has finished.
+# Series 4 removes that ending and asks all the same questions again.
 
 course: learn-etl-pipelines
 track: etlpipelines
@@ -52,10 +76,26 @@ series:
     tagline: build a pipeline that loads data and is safe to run twice
     level: beginner
     episodes:
+      # REFRAMED 2026-09-02, FROM A DECISION INTO AN ORIENTATION. This used to be
+      # "ETL vs ELT — What Moves, What Transforms, and Where", and it asked a reader on their
+      # first episode to CHOOSE between two architectures. That choice needs things they cannot
+      # have yet: what a transform costs, what a warehouse is for, what a load actually looks
+      # like. The course also made the same decision TWICE — here, blind, and again at
+      # Series 3 · 00 once the reader had loaded a warehouse and could judge it.
+      #
+      # So the decision moved to Series 3 · 00, where it belongs, and this episode keeps the
+      # half that genuinely helps on day one: THE SHAPE OF THE THING. Extract, transform, load;
+      # source and target; and the fact that the T can happen in three different places — on
+      # the way out, in the middle, or after landing. Name ETL and ELT as the two common
+      # shapes, show where each puts the T, and DO NOT ask the reader to pick.
+      #
+      # KEEP IT SHORT. Its job is to make episode 05 make sense, and both sibling courses
+      # orient by DOING — Learn SQL opens on a first query, Java & Groovy on a first script.
+      # If this grows past a brisk framing it has become the lecture those two avoid.
       - n: "00"
-        slug: etl-vs-elt
-        title: "ETL vs ELT — What Moves, What Transforms, and Where"
-        hands_on: ["koan:choose"]
+        slug: what-a-pipeline-is
+        title: "What a Pipeline Is — Extract, Transform, Load, and Where Each One Happens"
+        hands_on: ["koan:predict"]
         core: true
         status: planned
       - n: "05"
@@ -176,15 +216,34 @@ series:
       #   effective-date range, and when the real row lands you must UPDATE that row rather
       #   than open a second version — otherwise every fact loaded in between points at a
       #   version that never really existed.
+      # SCOPE NARROWED 2026-09-02, to remove a forward dependency across a series boundary.
+      # This episode's title asks what LATE is measured against, and the answer — event time
+      # against processing time — is not defined until Series 3 · 22. A reader met the question
+      # here and the vocabulary a whole series later.
+      #
+      # THE FIX IS TO KEEP THIS ONE IN BATCH TERMS, where it needs no formalism at all: late
+      # means AFTER THE RUN THAT SHOULD HAVE INCLUDED IT. Monday's load ran at 02:00; the row
+      # turned up at 02:30 carrying Monday's date. Everything in this episode — the
+      # late-arriving fact, the late-arriving dimension, the inferred member — is expressible
+      # that way and always was.
+      # DO NOT introduce event time, windows or watermarks here. Series 3 · 22 does that, and
+      # Series 4 · 15 is this same problem when you do not control the order at all. One line
+      # pointing forward is enough.
       # SOURCE (kimball): LATE-ARRIVING FACTS and LATE-ARRIVING DIMENSIONS, and the INFERRED MEMBER that fixes the second. See the beat above.
       - n: "20"
         slug: late-and-out-of-order-data
-        title: "Late & Out-of-Order Data — Rows That Arrive After You Reported"
+        title: "Late & Out-of-Order Data — Rows That Arrive After the Run That Wanted Them"
         credits:
           - source: kimball
             concept: "LATE-ARRIVING FACTS and LATE-ARRIVING DIMENSIONS, and the INFERRED MEMBER that fixes the second"
         tags: ["kimball"]
         hands_on: ["koan:rerun", "koan:predict"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: errors-retries-dead-letters
+        title: "Errors, Retries & Dead Letters — Fail Without Losing Rows"
+        hands_on: ["koan:capture", "koan:diagnose"]
         core: true
         status: planned
       # ADDED 2026-08-24, and it closes the one genuine mainstream gap a full sweep of all twelve
@@ -212,16 +271,16 @@ series:
       #                 not none. Say that plainly rather than implying masking makes it free.
       # NOT legal advice, and the episode must not pretend to be — name GDPR/CCPA as the reason
       # the question exists and point at whoever owns compliance where the reader works.
-      - n: "22"
+      #
+      # MOVED 2026-09-02 from 22 to 27, so it sits AFTER the bad-data run rather than inside it.
+      # Episodes 10, 15, 20 and 25 are one continuous argument — gate the bad rows, collapse the
+      # duplicates, handle the ones that arrive late, and fail without losing the rest. Privacy
+      # is a different axis, and dropping it into the middle of that run broke a sequence that
+      # otherwise reads as a single idea.
+      - n: "27"
         slug: personal-data-and-masking
         title: "Personal Data — Masking, Synthetic Rows and a Safe Copy of Production"
         hands_on: ["koan:diagnose", "koan:rerun", "koan:count:queries"]
-        core: true
-        status: planned
-      - n: "25"
-        slug: errors-retries-dead-letters
-        title: "Errors, Retries & Dead Letters — Fail Without Losing Rows"
-        hands_on: ["koan:capture", "koan:diagnose"]
         core: true
         status: planned
       # SOURCE (kimball): THE SURROGATE KEY PIPELINE — his name for swapping business keys to warehouse keys at load.
@@ -274,15 +333,40 @@ series:
         core: true
         tags: ["project"]
         status: planned
-  - slug: series3-production-data-flow
-    title: Production Data Flow
+  # RENAMED 2026-09-02, from "Production Data Flow". That name promised OPERATIONS, and this
+  # series has none: no monitoring, no alerting, no on-call, no scheduling. The course's own
+  # excludes give all of that away — "cron internals, monitoring, alerting and on-call:
+  # covered in Data Ops; here a pipeline just gets handed to the scheduler." A series title
+  # that claims a subject its own course has excluded is the worst kind of wrong, because a
+  # reader looking for production operations would stop here and find none.
+  #
+  # WHAT IT ACTUALLY IS, and what its tagline said all along: loading a warehouse — a star
+  # schema, Type 2 history, changes captured from the log — at volume, and being able to redo
+  # the whole month. Every technique in it is batch.
+  #
+  # THE TAGLINE IS UNCHANGED because it was already accurate. Only the title was overselling.
+  - slug: series3-loading-a-warehouse
+    title: Loading a Warehouse
     tagline: load a star schema, track changes, and re-run a whole month
     level: advanced
     episodes:
+      # THIS IS NOW WHERE THE ETL/ELT DECISION IS MADE — moved here 2026-09-02 from Series
+      # 1 · 00, which asked for it before the reader had loaded anything. By this point they
+      # have built a pipeline, staged it, transformed it, made it re-runnable and scheduled it,
+      # and in a moment they will load a star schema. NOW the question means something:
+      #     does the transform run on the way IN, or does raw land first and the warehouse do
+      #     the work?
+      # Teach the trade honestly — pushing down buys warehouse compute, set-based speed and
+      # SQL a team can read; it costs you a warehouse bill and it moves raw data somewhere it
+      # may not be allowed to sit. Series 1 · 00 only NAMES the two shapes; the decision is here.
+      #
+      # RETITLED to match. "ELT — Push the Transform Down into the Warehouse" described only
+      # one of the two answers, which is a poor name for the episode that chooses between them.
       - n: "00"
         slug: elt-push-down
-        title: "ELT — Push the Transform Down into the Warehouse"
-        hands_on: ["koan:equivalent", "koan:count:scanned"]
+        title: "ETL vs ELT — Where the Transform Should Run, Now That You Have Done Both"
+        hands_on: ["koan:choose", "koan:count:scanned"]
+        core: true
         status: planned
       # SOURCE (kimball): Loading a star designed by Kimball's method — see Data Modeling, Series 3.
       - n: "05"
@@ -306,9 +390,32 @@ series:
         hands_on: ["koan:rerun", "koan:predict"]
         core: true
         status: planned
+      # RETITLED 2026-09-02, and for two reasons rather than one. It was "Change Data Capture —
+      # Stream the Deltas Instead of Reloading".
+      #
+      #   1. IT USED A WORD THE COURSE HAD NOT DEFINED. "Stream" appears here and is not
+      #      explained until 20, the very next episode. It is the ONLY place in Series 1 to 3
+      #      where that happens, so it was cheap to remove rather than to excuse.
+      #
+      #   2. WORSE, IT CONTRADICTED THE NEXT EPISODE'S ARGUMENT. Episode 20's thesis is that
+      #      most "we need streaming" turns out to be "we need hourly instead of daily —
+      #      which CDC already gives you". That only holds if CDC IS NOT STREAMING. Log-based
+      #      CDC produces a CHANGE FEED, and you may consume it hourly, nightly or
+      #      continuously; the capture and the cadence are separate choices. A title that
+      #      welds them together teaches a conflation the next episode then has to undo.
+      #
+      # THE NEW TITLE ALSO SEPARATES IT FROM SERIES 1 · 35 ("Incremental Loads & Watermarks —
+      # Only What Changed"), which a reader could otherwise mistake it for. The difference is
+      # exactly the two things now named:
+      #     1 · 35   POLL a watermark column. Cheap, portable, and it CANNOT SEE DELETES —
+      #              a row removed at source simply stays in your warehouse forever.
+      #     3 · 15   read the database's own LOG. Every change, deletes included, without
+      #              querying the table at all.
+      # The episode should make that pair explicit; "deletes included" is the single clearest
+      # reason anyone graduates from one to the other.
       - n: "15"
         slug: change-data-capture
-        title: "Change Data Capture — Stream the Deltas Instead of Reloading"
+        title: "Change Data Capture — Reading the Database's Own Log, Deletes Included"
         hands_on: ["koan:predict"]
         status: planned
       # ADDED 2026-09-02, into a slot that was already EMPTY — this series ran 15 then 25 with
@@ -379,45 +486,11 @@ series:
         hands_on: ["koan:choose"]
         core: true
         status: planned
-      # THE MECHANICS HALF of the split described at 20. This is the episode that DEFINES what
-      # 2 · 20 has been leaning on since it was written: "Late & Out-of-Order Data — Rows That
-      # Arrive After You Reported" cannot say what LATE is measured against without event time,
-      # and nothing in the academy defines it. That is why this is core.
-      #
-      # WHAT IT TEACHES, and it is three ideas rather than a tour of an API:
-      #   1. EVENT TIME vs PROCESSING TIME — when it happened against when you saw it. Every
-      #      other idea here is a consequence of the gap between the two.
-      #   2. WINDOWS. You cannot aggregate a thing that never ends, so you cut it into pieces.
-      #      Tumbling, sliding and session windows, named and shown — the shapes, not any one
-      #      engine's syntax for them.
-      #   3. WATERMARKS. A watermark is a DECISION, not a mechanism: "I believe I have seen
-      #      everything up to time T, so I am closing this window." That framing is what makes
-      #      the rest teachable.
-      #
-      # THE FAILURE, and it is this academy's selection rule exactly — BOTH WAYS OF GETTING IT
-      # WRONG ARE SILENT:
-      #     CLOSE TOO EARLY   real events arrive after the window shut and are dropped. The
-      #                       total is wrong and nothing raises.
-      #     CLOSE TOO LATE    the number is never final, so a dashboard that must be right by
-      #                       09:00 is still moving at 11:00.
-      # Neither is an error. That is the whole reason the episode exists.
-      #
-      # THE DEMONSTRATION 20 PROMISES AND THIS DELIVERS: the same set of events windowed by
-      # event time and by processing time, side by side, with different answers. The
-      # out-of-order event is where they separate, and a reader who predicts both before
-      # running them has the idea.
-      #
-      # STAY ENGINE-FREE. Flink implements this, Beam articulates it best, Spark does it in
-      # micro-batches — name them in a sentence and stop. Those courses own the implementations;
-      # this episode owns the concept, and it is the concept the rest of the academy borrows.
-      #
-      # CORE.
-      - n: "22"
-        slug: event-time-and-watermarks
-        title: "Event Time, Windows and Watermarks — Deciding When an Answer Is Final"
-        hands_on: ["koan:predict", "koan:diagnose"]
-        core: true
-        status: planned
+      # (EVENT TIME, WINDOWS AND WATERMARKS used to sit here at 22. It moved to Series 4 · 00 on
+      # 2026-09-02 — see that episode for the argument. In short: once 2 · 20 was narrowed to its
+      # batch framing, the only thing depending on event time was Series 4, and a core episode
+      # whose only dependents live in a 0-core series is misfiled. Episode 20 above NAMES the
+      # three ideas and hands them over; it does not define them.)
       - n: "25"
         slug: backfills-and-reprocessing
         title: "Backfills & Reprocessing — Rewrite History Without Breaking Downstream"
@@ -510,13 +583,59 @@ series:
   # TITLE: "Streaming Pipelines", plainly. An earlier draft called it "Pipelines That Never
   # End", which is a poetic paraphrase of "unbounded" — nobody scanning for streaming would
   # find it, and it would have been the only clever series title in the academy. Its siblings
-  # are "ETL Fundamentals", "Maintainable Pipelines" and "Production Data Flow". The tagline is
+  # are "ETL Fundamentals", "Pipelines You Can Maintain" and "Loading a Warehouse". The tagline is
   # where the idea gets to be said well.
   - slug: series4-streaming-pipelines
     title: Streaming Pipelines
     tagline: the same correctness, when the data never ends
     level: advanced
     episodes:
+      # MOVED HERE FROM SERIES 3 · 22 ON 2026-09-02, and it now OPENS this series.
+      #
+      # The evidence for the move: once 2 · 20 was narrowed to its batch framing ("after the
+      # run that wanted them"), the ONLY remaining dependent of event time anywhere in the
+      # course was this series — 30 below cannot reconcile "once the watermark has passed"
+      # without it. A CORE episode whose only dependents live in a 0-core series is misfiled.
+      #
+      # It also fixes a backwards dependency: Series 4 used to open on "Staging in a Stream"
+      # while its vocabulary was defined a whole series earlier. The series is now
+      # self-contained — the words first, then every Series 1 and 2 concern asked again.
+      #
+      # WHAT DID NOT MOVE, and deliberately: 3 · 20, the DECISION. Its audience is the reader
+      # who will NOT do this series, and "you probably do not need a stream" is worth most to
+      # exactly that person. Parking it in here would put it where only the already-committed
+      # would find it.
+      #
+      # WHAT IT TEACHES, and it is three ideas rather than a tour of an API:
+      #   1. EVENT TIME vs PROCESSING TIME — when it happened against when you saw it. Every
+      #      other idea in this series is a consequence of the gap between the two.
+      #   2. WINDOWS. You cannot aggregate a thing that never ends, so you cut it into pieces.
+      #      Tumbling, sliding and session windows, named and shown — the shapes, not any one
+      #      engine's syntax for them.
+      #   3. WATERMARKS. A watermark is a DECISION, not a mechanism: "I believe I have seen
+      #      everything up to time T, so I am closing this window." That framing is what makes
+      #      the rest teachable; taught as a config setting, nothing is.
+      #
+      # THE FAILURE, and it is this academy's selection rule exactly — BOTH WAYS OF GETTING IT
+      # WRONG ARE SILENT:
+      #     CLOSE TOO EARLY   real events arrive after the window shut and are dropped. The
+      #                       total is wrong and nothing raises.
+      #     CLOSE TOO LATE    the number is never final, so a dashboard that must be right by
+      #                       09:00 is still moving at 11:00.
+      # Neither is an error. That is the whole reason the episode exists.
+      #
+      # THE DEMONSTRATION SERIES 3 · 20 PROMISES AND THIS DELIVERS: the same set of events
+      # windowed by event time and by processing time, side by side, with different answers.
+      # The out-of-order event is where they separate.
+      #
+      # STAY ENGINE-FREE. Flink implements this, Beam articulates it best, Spark does it in
+      # micro-batches — name them in a sentence and stop. Those courses own the implementations;
+      # this episode owns the concept, and it is the concept the rest of the academy borrows.
+      - n: "00"
+        slug: event-time-and-watermarks
+        title: "Event Time, Windows and Watermarks — Deciding When an Answer Is Final"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
       # COUNTERPART: Series 1 · 15, Staging.
       # COVER: where "raw" lives when there is no landing table. THE LOG IS YOUR STAGING AREA —
       # and unlike a staging table it has a RETENTION WINDOW, so "land raw, transform later"
@@ -524,11 +643,10 @@ series:
       # still re-derive after a week, and what is simply gone.
       # THE DECISION: how long must raw survive for you to be able to fix a bug in the
       # transform? That number is a retention setting, and almost nobody sets it deliberately.
-      - n: "00"
+      - n: "05"
         slug: staging-in-a-stream
         title: "Staging in a Stream — The Log Is Your Raw Layer, and It Expires"
         hands_on: ["koan:choose", "koan:predict"]
-        core: true
         status: planned
       # COUNTERPART: Series 2 · 10 (Data Quality Gates) and 2 · 25 (Errors, Retries & Dead
       # Letters).
@@ -538,11 +656,10 @@ series:
       # was rejected, and a gate on the PROPORTION rejected rather than on any single record.
       # THE FAILURE: one poison record that stops the consumer, so lag grows all night and
       # nothing is processed — the streaming equivalent of a failed batch, but silent.
-      - n: "05"
+      - n: "10"
         slug: bad-records-without-a-human
         title: "Bad Records Without a Human — Quarantine Instead of Stopping the Pipeline"
         hands_on: ["koan:diagnose", "koan:capture"]
-        core: true
         status: planned
       # COUNTERPART: Series 2 · 15, Deduplication & Conformance.
       # COVER: batch dedup scans the table. A stream cannot, so dedup becomes KEYED STATE plus
@@ -550,11 +667,10 @@ series:
       # seven days", and that window is a business decision rather than a technical one.
       # Exactly-once inside the engine against an idempotent key at the sink. State size as the
       # cost, and the unbounded key space that fills a disk.
-      - n: "10"
+      - n: "15"
         slug: deduplication-with-state
         title: "Deduplication With State — One Customer, One Row, Within Seven Days"
         hands_on: ["koan:count:rows-held", "koan:predict"]
-        core: true
         status: planned
       # COUNTERPART: Series 2 · 35, Load Order — Dimensions First, Then Facts.
       # COVER: in batch you control the order and load dimensions first. In a stream YOU DO NOT
@@ -563,11 +679,10 @@ series:
       # with a placeholder and correct later, or reject. Each is a different wrong answer if
       # you pick it by accident.
       # THIS IS THE EPISODE A BATCH PERSON LEAST EXPECTS, and it is where the paradigm bites.
-      - n: "15"
+      - n: "20"
         slug: fact-before-dimension
         title: "The Fact That Arrived Before Its Dimension — Load Order You Do Not Control"
         hands_on: ["koan:predict", "koan:choose"]
-        core: true
         status: planned
       # COUNTERPART: Series 2 · 30, Surrogate Keys & Dimension Lookups.
       # COVER: a batch lookup joins against a dimension that is standing still. A streaming
@@ -577,11 +692,10 @@ series:
       # staleness that cache buys.
       # SEAM: Data Modeling owns SCD Type 2 and 3 · 10 loads one in batch. This is READING one
       # correctly as of an event's own time.
-      - n: "20"
+      - n: "25"
         slug: dimension-lookups-in-flight
         title: "Dimension Lookups in Flight — Joining to a Table That Is Changing Under You"
         hands_on: ["koan:predict", "koan:diagnose"]
-        core: true
         status: planned
       # COUNTERPART: Series 1 · 30, Idempotency — Re-Runnable Loads.
       # COVER: exactly-once inside an engine is real; EXACTLY-ONCE ENDS AT THE EDGE. The moment
@@ -591,11 +705,10 @@ series:
       # everywhere.
       # THE MYTH TO PUNCTURE: most teams who believe they have exactly-once have at-least-once
       # and a unique constraint. That is fine — but they should know which one they have.
-      - n: "25"
+      - n: "30"
         slug: idempotent-sinks
         title: "Idempotent Sinks — Why Exactly-Once Stops at the Edge of the Stream"
         hands_on: ["koan:predict", "koan:diagnose"]
-        core: true
         status: planned
       # COUNTERPART: Series 1 · 40, Row Counts & Logging — Proving the Load Did What You Think.
       # COVER: you cannot count the rows of a thing with no end. So reconciliation becomes
@@ -603,11 +716,10 @@ series:
       # (b) CONSUMER LAG as the continuous health metric, and what a rising lag actually means;
       # (c) end-to-end latency measured in event time rather than wall clock.
       # THE HABIT THIS COURSE INSISTS ON, restated: the job says out loud what it processed.
-      - n: "30"
+      - n: "35"
         slug: reconciling-a-stream
         title: "Reconciling a Stream — Counting Something That Has No End"
         hands_on: ["koan:capture", "koan:count:rows-held"]
-        core: true
         status: planned
       # COUNTERPART: Series 3 · 25, Backfills & Reprocessing.
       # COVER: replay from an offset or a savepoint instead of re-running a date range. What
@@ -616,18 +728,16 @@ series:
       # Reprocessing into a parallel output and switching over, rather than in place.
       # LAMBDA AND KAPPA GET ONE PARAGRAPH EACH, named and not taught — they are the two
       # standard answers to this exact problem and a reader will meet the words.
-      - n: "35"
+      - n: "40"
         slug: replay-and-reprocessing
         title: "Replay and Reprocessing — Rewriting History Without Double-Counting It"
         hands_on: ["koan:rerun", "koan:diagnose"]
-        core: true
         status: planned
       # THE PROJECT, and it deliberately mirrors Series 1 · 50 ("A Load That Is Safe to Run
       # Twice") so the series closes on the same promise as the batch one.
-      - n: "40"
+      - n: "45"
         slug: project-streaming-pipeline
         title: "Project — A Streaming Pipeline That Is Safe to Replay"
         hands_on: ["koan:author", "koan:rerun"]
-        core: true
         tags: ["project"]
         status: planned

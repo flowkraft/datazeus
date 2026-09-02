@@ -8,7 +8,7 @@ import spock.lang.Stepwise
  * ║  KOANS — ETL & Data Pipelines · Series 2 · 20
  * ╚══════════════════════════════════════════════════════════════════════════╝
  *
- * Late & Out-of-Order Data — Rows That Arrive After You Reported
+ * Late & Out-of-Order Data — Rows That Arrive After the Run That Wanted Them
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into

@@ -8,7 +8,7 @@ import spock.lang.Stepwise
  * ║  KOANS — ETL & Data Pipelines · Series 3 · 15
  * ╚══════════════════════════════════════════════════════════════════════════╝
  *
- * Change Data Capture — Stream the Deltas Instead of Reloading
+ * Change Data Capture — Reading the Database's Own Log, Deletes Included
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into

@@ -67,7 +67,7 @@ excludes:
   - topic: "Idempotency and re-runnable loads"
     where: "covered in ETL & Data Pipelines, Series 1 · 30. Assumed here — every backfill depends on it"
   - topic: "Deploying and operating Airflow — executors at scale, Kubernetes, upgrades, HA"
-    where: "covered in Data Ops for the operational discipline. Series 3 · 00 here covers only what an author must know about the executor"
+    where: "covered in Data Ops for the operational discipline. In this course, Series 3 · 00 covers only what an author must know about the executor"
   - topic: "The work the tasks actually do"
     where: "covered in ETL & Data Pipelines, Analytics Engineering with dbt, and the engine tracks. A DAG orchestrates; it does not transform"
 
@@ -84,7 +84,7 @@ series:
       # because every existing codebase uses them.
       - n: "00"
         slug: dags-and-tasks
-        title: "DAGs, Tasks and the File That Is Parsed Every Thirty Seconds"
+        title: "DAGs and Tasks — The File That Is Parsed Every Thirty Seconds"
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         status: planned

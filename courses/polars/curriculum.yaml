@@ -67,7 +67,7 @@ excludes:
   - topic: "pandas' own model — the index, copy against view, SettingWithCopyWarning"
     where: "covered in pandas. Referenced here only where it explains what Polars deliberately does differently"
   - topic: "Distributed execution"
-    where: "covered in Apache Spark. Polars is a single-machine engine, and Series 3 · 15 is honest about where that ends"
+    where: "covered in Apache Spark. Polars is a single-machine engine. In this course, Series 3 · 15 is honest about where that ends"
 
 series:
   - slug: series1-expressions

@@ -8,7 +8,7 @@ import spock.lang.Stepwise
  * ║  KOANS — ETL & Data Pipelines · Series 3 · 00
  * ╚══════════════════════════════════════════════════════════════════════════╝
  *
- * ELT — Push the Transform Down into the Warehouse
+ * ETL vs ELT — Where the Transform Should Run, Now That You Have Done Both
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into

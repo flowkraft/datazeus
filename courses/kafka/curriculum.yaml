@@ -159,7 +159,7 @@ series:
       # Most teams that believe they have exactly-once have at-least-once and a unique key.
       - n: "05"
         slug: delivery-semantics
-        title: "At-Least-Once, Exactly-Once, and What Happens at the Edge of Kafka"
+        title: "Delivery Semantics — At-Least-Once, Exactly-Once, and the Edge of Kafka"
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         status: planned

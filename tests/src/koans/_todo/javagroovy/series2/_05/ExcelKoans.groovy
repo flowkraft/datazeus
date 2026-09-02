@@ -8,7 +8,7 @@ import spock.lang.Stepwise
  * ║  JVM KOANS — Java & Groovy for Data · Series 2 · 05
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
- * Excel with POI — Reading the Spreadsheets Your Business Sends You
+ * Excel with POI — Reading and Writing the Spreadsheets Your Business Needs
  *
  *     zeus.bat koans javagroovy series2 _05     (Windows)
  *     ./zeus.sh koans javagroovy series2 _05    (macOS/Linux)

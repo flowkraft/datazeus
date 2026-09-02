@@ -112,11 +112,11 @@ excludes:
   - topic: "Keeping the server up — backups, failover, pooling, VACUUM tuning, connection limits"
     where: "covered in Data Ops, Series 2, which is ten episodes on running PostgreSQL in production. This track uses the database rather than operating it"
   - topic: "Running a migration against a live table without locking it"
-    where: "covered in Data Ops, Series 2 · 35. Here Series 1 · 30 is only how an extension or a type change is applied"
+    where: "covered in Data Ops, Series 2 · 35. In this course, Series 1 · 30 is only how an extension or a type change is applied"
   - topic: "Deciding what the tables and keys should be"
     where: "covered in Data Modeling. Here the schema exists and the question is which Postgres type and index to give it"
   - topic: "Loading data in from other systems"
-    where: "covered in ETL & Data Pipelines. Here Series 1 · 05 covers COPY only as the client command you will actually type"
+    where: "covered in ETL & Data Pipelines. In this course, Series 1 · 05 covers COPY only as the client command you will actually type"
   - topic: "pgvector and embeddings"
     where: "covered in AI for Data, Series 2, where the embeddings that go in it are also explained"
 

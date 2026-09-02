@@ -68,13 +68,13 @@ prerequisites:
 
 excludes:
   - topic: "Why a lakehouse instead of a warehouse"
-    where: "covered in Data Warehousing, Series 3 · 20, and compared against a columnar server at Series 3 · 35"
+    where: "covered in Data Warehousing, Series 3 · 20, and compared against a columnar server at Data Warehousing, Series 3 · 35"
   - topic: "The engines that read and write these tables"
     where: "covered in Apache Spark, Apache Flink and DuckDB. Here the engine is the client and the format is the subject"
   - topic: "Columnar storage and why Parquet is fast"
     where: "covered in Data Warehousing, Series 2 · 00. Assumed here"
   - topic: "Running a catalog service in production"
-    where: "covered in Data Ops for the operational discipline. Series 2 · 00 here is what a catalog IS and how to choose one"
+    where: "covered in Data Ops for the operational discipline. In this course, Series 2 · 00 is what a catalog IS and how to choose one"
 
 series:
   - slug: series1-how-a-table-format-works
@@ -99,7 +99,7 @@ series:
       # Read the spec for this episode; it is short and clear.
       - n: "05"
         slug: snapshots-and-manifests
-        title: "Snapshots, Manifests and the Pointer Swap That Makes a Commit Atomic"
+        title: "Snapshots and Manifests — The Pointer Swap That Makes a Commit Atomic"
         hands_on: ["koan:predict", "koan:complete"]
         core: true
         status: planned

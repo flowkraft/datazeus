@@ -8,7 +8,7 @@ import spock.lang.Stepwise
  * ║  JVM KOANS — Java & Groovy for Data · Series 4 · 30
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
- * Project — Add a Data Feature to the DataPallas Grails App
+ * Spring Scheduling — Running a Data Job on a Timer Inside Your Application
  *
  *     zeus.bat koans javagroovy series4 _30     (Windows)
  *     ./zeus.sh koans javagroovy series4 _30    (macOS/Linux)
