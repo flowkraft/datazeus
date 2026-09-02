@@ -225,12 +225,30 @@ excludes:
     where: "covered in Data Modeling, Series 2 · 50. In this course, Series 3 · 20 applies a change that has already been designed"
   - topic: "Running a migration against a live database under load — locks, zero downtime"
     where: "covered in Data Ops — here the question is only how the change gets versioned and shipped from your build"
+  # ADDED 2026-09-02. This track was SILENT about running a job twice, which is how a reader
+  # concludes we never thought about it — and it is the one property a scheduled job lives or
+  # dies by, now that Series 4 · 30 and · 35 put one on a timer. The reason it is an exclude
+  # and not an episode: a whole sibling series already owns it. ETL & Data Pipelines Series 1
+  # runs 30 (TRUNCATE+INSERT and MERGE), 35 (watermarks and incremental loads) and 40 (row
+  # counts), then closes on a project whose entire brief is "run it again and prove nothing
+  # changed". There is no JVM-specific residue left over at the job level; the load strategy is
+  # SQL and pipeline shape, not Java.
+  - topic: "Making a load re-runnable — MERGE, watermarks and proving nothing changed"
+    where: "covered in ETL & Data Pipelines, Series 1 · 30 and · 35. In this course, Series 2 · 55 covers only the request-level half — whether it is safe to RETRY a call whose outcome you never learned"
   - topic: "Machine learning — features, training, model selection"
     where: "not covered; this track moves and shapes data. For LLM-era work see AI for Data"
+  # NARROWED 2026-09-02 when 07 grew its reading half. This used to exclude reading PDFs
+  # outright, which stopped being true the moment the episode's title said "Reading and
+  # Writing". What survives is the part that genuinely is a different tool.
+  - topic: "OCR, and getting data out of scanned documents"
+    where: "not covered. Series 2 · 07 teaches you to RECOGNISE that a PDF carries no text layer — which is the decision you actually have to make — but extracting from an image is a different tool and a different problem"
   - topic: "Charts other people read, and dashboards"
     where: "covered in BI & Data Visualization — here you plot only to see the data yourself"
-  - topic: "Scheduling, cron and running jobs in production"
-    where: "covered in Data Ops — this track gets the job ready to be scheduled"
+  # NARROWED 2026-09-02. This used to exclude scheduling outright and send all of it to Data
+  # Ops. The half that belongs there is unchanged; what it missed is that a Spring Boot app
+  # uses none of it — it schedules ITSELF, in a JVM that is already running. See Series 4 · 30.
+  - topic: "cron, systemd timers, and choosing an orchestrator"
+    where: "covered in Data Ops — here the scheduler runs inside your own Spring Boot app, which fails in different ways. Series 4 · 30 and · 35"
   - topic: "Writing the SQL itself"
     where: "covered in Learn SQL — here the SQL is assumed and the question is how to run it from the JVM"
 
@@ -293,6 +311,91 @@ series:
         short: "Nulls & Optional — handling missing data"
         core: true
         status: planned
+      # THE FOURTH PARSING TRAP — added 2026-09-02. The header's ordering note gives the
+      # argument for this episode without naming it: "a wrong date or an unhandled null
+      # silently corrupts a total, so the three parsing traps have to land BEFORE anything
+      # computes a total." Encodings (20), dates (25), nulls (30) — and 35 is where totals
+      # start being computed. A money amount held in a double corrupts a total exactly the
+      # same way, and it was the one of the four that had no episode.
+      #
+      # EVERY NUMBER BELOW WAS RUN, on Temurin JDK 17, 2026-09-02. Two of them killed the
+      # version of this episode that was drafted from memory, which is why they are recorded
+      # here rather than left to the writer to reconstruct.
+      #
+      # WHAT IS *NOT* THE LESSON, and the draft had it as the headline: ACCUMULATION DRIFT IS
+      # REAL BUT TINY. Ten thousand lines of 0.07 in a double sum to 700.000000000091, and a
+      # thousand lines of 19.99 to 19990.000000000135. Both are wrong; neither is visible on a
+      # report rounded to two places. An episode built on "your totals drift" would be
+      # teaching a failure the reader will never actually see, and would be quietly wrong.
+      #
+      # THE LESSON IS THE ROUNDING BOUNDARY, where the error stops being invisible:
+      #     1.005 -> Math.round(v*100)/100.0 gives 1.00,   BigDecimal HALF_UP gives 1.01
+      #     1.015 ->                          gives 1.01,                     gives 1.02
+      #     2.675 ->                          gives 2.68,                     gives 2.68
+      # It is the THIRD line that makes this an episode. The double is not reliably low — it
+      # is unpredictable, because whether the binary value lands just under or just over the
+      # half is a property of that particular number. A rule the reader can hold ("doubles
+      # round down") would be false. There is no rule. That is the finding.
+      #
+      # AND THE RECONCILIATION CHECK THAT CAN NEVER PASS: 0.1 + 0.2 is 0.30000000000000004,
+      # so (0.1 + 0.2) == 0.3 is FALSE. Every job in Series 2 and 3 ends by proving the number
+      # it loaded equals the number it read. Written against doubles, that check either never
+      # goes green or is "fixed" with a tolerance — and a tolerance wide enough to swallow
+      # binary error is wide enough to swallow a missing row.
+      #
+      # THE CONSTRUCTS, all verified:
+      #   new BigDecimal(0.1)     -> 0.1000000000000000055511151231257827021181583404541015625
+      #   BigDecimal.valueOf(0.1) -> 0.1
+      #     The first takes the double's error as its exact value. This is the single most
+      #     common way a codebase that "uses BigDecimal" is still wrong.
+      #   new BigDecimal("2.0").equals(new BigDecimal("2.00")) -> FALSE, compareTo -> 0
+      #     Scale is part of identity, not of value. A test asserting a correct total fails.
+      #     This is also the track's stated Groovy trap arriving with real consequences: the
+      #     header's one warning is that Groovy's == is equals(), so the Groovy spelling of
+      #     this comparison is wrong in a way the Java one is not.
+      #   BigDecimal.ONE.divide(new BigDecimal("3")) -> ArithmeticException, "Non-terminating
+      #     decimal expansion; no exact representable decimal result". Division is the one
+      #     operation that MAKES you choose a scale and a RoundingMode. With (2, HALF_UP): 0.33
+      #
+      # BIGDECIMAL DOES NOT SAVE YOU FROM THE INVOICE THAT WILL NOT FOOT, and the episode must
+      # say so or it becomes "use BigDecimal and stop worrying". Three lines of 10.10, 20.20
+      # and 30.30 at 8.5% tax: the sum of the rounded lines is 65.76 and the rounded sum is
+      # 65.75, IN BOTH TYPES. Verified. That is not a numeric-type bug, it is a decision about
+      # WHERE rounding happens, and every finance system has to make it explicitly. The right
+      # ending for the episode: pick the place, write it down, and reconcile against it.
+      #
+      # LOCALE, found by accident while verifying the above and kept because it is a real
+      # reporting bug: String.format("%.2f", 1.0) printed "1,00" on the machine this was run
+      # on, because %f follows the DEFAULT LOCALE. The same job writes 1.00 on the build server
+      # and 1,00 on a European workstation, which breaks the CSV downstream and shifts a
+      # column. BigDecimal.toString() is locale-independent. Ties straight back to 20.
+      #
+      # THE ONE-FILE-BOTH-LANGUAGES PAYOFF, and it is the best one available in Series 1:
+      # Groovy's decimal literals are BigDecimal, Java's are double, so `0.1 + 0.2` answers
+      # 0.3 in one language and 0.30000000000000004 in the other — in the SAME Spock file,
+      # both green. The header asks koans to demonstrate this track's thesis rather than
+      # assert it; this is that koan.
+      #   VERIFY ON GROOVY 4.0.22 BEFORE WRITING. The claim is documented Groovy semantics but
+      #   no Groovy runtime was available when this was recorded, and the header's rule for
+      #   cross-language claims is that they are verified, not assumed. Same discipline as the
+      #   Flyway licensing line at Series 3 · 20.
+      #
+      # FORWARD LINK: JDBC maps NUMERIC and DECIMAL to BigDecimal, and getDouble() on such a
+      # column silently discards the precision the database was keeping for you. Name it here
+      # in one line; Series 2 · 10 is where the reader meets it.
+      #
+      # NUMBERED 32, on the same reasoning as Series 2 · 07 and · 32: inserting after 30 would
+      # otherwise renumber 35, 40 and 45 and their directories for no gain.
+      #
+      # CORE. The other three traps are core, and this one guards the episode immediately
+      # after it.
+      - n: "32"
+        slug: money-and-bigdecimal
+        title: "Money and BigDecimal — Doing Arithmetic on Amounts and Rounding Them"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        short: "Money & BigDecimal — arithmetic and rounding"
+        core: true
+        status: planned
       - n: "35"
         slug: grouping-and-aggregating
         title: "Grouping and Aggregating — Summarising Rows With groupingBy"
@@ -340,12 +443,126 @@ series:
       #   - merged cells report the value once and blank for the rest of the range
       #   - the streaming reader (SXSSF/event API) and the DOM one behave differently on
       #     exactly the files big enough to matter
+      #
+      # WRITING ADDED 2026-09-02, and it passes the same rule — every trap below ships a file
+      # that OPENS FINE and is wrong in the recipient's hands:
+      #   - setCellValue(String) on a figure. Excel left-aligns it, marks it with a green
+      #     triangle, and SUM() SKIPS IT. Their total is wrong and your file looks perfect.
+      #   - a date without a CellStyle carrying a date format renders as 45678
+      #   - a formula you write is NOT evaluated until Excel opens the file, so anything
+      #     reading cached values downstream sees nothing until evaluateAll() is called
+      #   - SXSSF for large writes keeps a sliding window: rows already flushed cannot be
+      #     revisited, and dispose() is what removes the temp files
+      #   - CellStyles are workbook-scoped, so one created per row hits the 64k ceiling on
+      #     exactly the export big enough to matter
+      # Reading and writing belong in ONE episode rather than two: it is the same object model,
+      # the same gotcha class, and a reader who can do one is two paragraphs from the other.
+      #
       # Not core: whether you need it is decided by your employer, not by the craft.
+      # (PDF is the other half of this pair, at 07 — the document the business wants BACK.)
       - n: "05"
         slug: excel
-        title: "Excel with POI — Reading the Spreadsheets Your Business Sends You"
-        short: "Excel with POI — reading the spreadsheets you get"
+        title: "Excel with POI — Reading and Writing the Spreadsheets Your Business Needs"
+        short: "Excel with POI — reading & writing spreadsheets"
         hands_on: ["koan:predict", "koan:complete"]
+        status: planned
+      # PDF — added 2026-09-02, and it is the OTHER HALF OF 05. Together they are the business
+      # document pair: 05 reads the spreadsheet the business sends and writes the one it asks
+      # for; 07 produces the document it sends to its own customers. Every track in the academy
+      # teaches reading data. This is the only episode anywhere that produces the artifact a
+      # person outside the company actually holds.
+      #
+      # IT IS ALSO THE MOST ON-BRAND EPISODE WE CAN WRITE. The house's entire product is
+      # data -> PDF report -> burst per recipient -> email. A reader who finishes 07 has
+      # written the first stage of ReportBurster.
+      #
+      # TWO LAYERS, TAUGHT IN THIS ORDER, and the order is the argument:
+      #   1. RAW PDFBox. PDPageContentStream, beginText/showText/endText, and coordinates you
+      #      compute yourself. No wrapping, no pagination, no table — a PDF has no such
+      #      concepts, only glyphs at (x, y). Show this ONCE. Its job is to explain why nobody
+      #      builds a report this way, and to make layer 2 legible rather than magical.
+      #   2. openhtmltopdf ON PDFBox. HTML and CSS in, a paginated PDF out. This is what you
+      #      actually do, and it is what WE do: openhtmltopdf-pdfbox is a dependency in
+      #      bkend/reporting/pom.xml, and AbstractReporter.java:729 is the whole pattern —
+      #      FreeMarker renders the template to HTML, then
+      #          new PdfRendererBuilder().withHtmlContent(html, baseUri).toStream(os).run()
+      #      Same shape as the Liquibase episode at Series 3 · 20: the reader is filling in a
+      #      mechanism that already ships in a product they have.
+      #
+      # WHAT MAKES IT A DATA EPISODE AND NOT A LAYOUT TUTORIAL — this is the line to hold, and
+      # the drafting risk is that it becomes a CSS lesson. Every trap below is a wrong number
+      # or a wrong name on a document a customer receives, and none of them throws:
+      #   - A NULL RENDERS AS THE WORD "null" on an invoice you already emailed. Series 1 · 30
+      #     arriving somewhere it cannot be shrugged off.
+      #   - FORMAT THE NUMBERS ONCE, IN ONE PLACE. Currency symbol, grouping separator,
+      #     negatives, decimals, locale. Formatting scattered through a template is how one
+      #     column ends up in a different convention from the column beside it.
+      #   - FONTS ARE WHERE ENCODING COMES BACK. PDFBox's built-in fonts are WinAnsi, so a
+      #     customer named Ștefan or Müller either throws "U+0218 is not available in this
+      #      font" or is silently dropped. You embed a font or you mangle people's names —
+      #     Series 1 · 20, with a customer's name on the line.
+      #   - TOTALS COME FROM THE DATA, NOT FROM THE PAGE. A table that spills across pages
+      #     needs repeated headers, and a subtotal computed per RENDERED PAGE instead of per
+      #     group is a wrong number that survives every review because the document looks right.
+      #   - THE baseUri IS LOAD-BEARING. Relative CSS, images and fonts resolve against it; get
+      #     it wrong and you get an unstyled PDF and no error at all.
+      #
+      # THE READING HALF — added 2026-09-02 with the retitle, and it is NOT a footnote to the
+      # writing half. It passes the same selection rule even more cleanly, because PDF's read
+      # failures are the purest wrong-numbers-not-exceptions in the whole track:
+      #
+      #   THERE ARE NO ROWS AND NO COLUMNS IN A PDF. There are glyphs at (x, y). A "table" is
+      #   something you RECONSTRUCT, and every extraction bug is a consequence of that one
+      #   fact. This is the thesis of the half and the reader must leave with it — make it
+      #   concrete by printing glyph positions before extracting anything.
+      #
+      #   READING ORDER IS NOT DRAWING ORDER. PDFTextStripper walks the content stream in the
+      #   order things were painted, so a two-column layout interleaves — quietly, into text
+      #   that still looks like text. setSortByPosition(true) fixes it.
+      #
+      #   A SCANNED PDF RETURNS AN EMPTY STRING. Not an error. Zero rows and a green job. A
+      #   PDF whose fonts carry no ToUnicode CMap returns confident garbage instead.
+      #
+      # AND THE HOUSE ALREADY PROVES THE HEADLINE TRAP IS REAL — the strongest in-house
+      # evidence anywhere in Series 2. DocumentBurster's PDF engine is PDFBox, and
+      # PdfBurster.java:131 reads:
+      #     stripper.setSortByPosition(ctx.settings.isSortByPosition())
+      # We exposed setSortByPosition AS A USER-FACING SETTING, per report, because it matters
+      # too often to hardcode. That is not a textbook trap — it is a switch our own customers
+      # flip, some of them without ever being told what it does.
+      #
+      # TABULA IS A PARAGRAPH, NOT A SECTION. tabula-java is BUILT ON PDFBox and adds table
+      # heuristics (lattice where there are ruling lines, stream where there is only
+      # whitespace). Name it, say it is a layer above and not an alternative, and move on —
+      # this episode already carries two halves and cannot also carry a third tool.
+      #
+      # THE ORACLE IS THE ROUND TRIP, and it is what makes ONE episode out of two halves
+      # rather than two episodes stapled together: generate the PDF, read it back with
+      # PDFTextStripper, assert on the text. The writing half's correctness is proved by the
+      # reading half's API. Deterministic, no clock, no new machinery.
+      #
+      # WATCH THE SIZE. Raw PDFBox, openhtmltopdf, extraction, fonts, formatting and Tabula is
+      # a lot for one slot. If it will not fit, SPLIT IT — 07 writing, 08 reading — rather than
+      # letting either half become a footnote. That is the rule 05's own comment applies to
+      # Excel ("reading and writing belong in ONE episode... a reader who can do one is two
+      # paragraphs from the other"), and it holds here only while both halves stay honest.
+      #
+      # NUMBERED 07, on the same reasoning as 32: an insertion after 05 would otherwise
+      # renumber thirteen episodes and the cross-references in this file that name Series 2 ·
+      # 10, · 30, · 32 and · 35 by number.
+      #
+      # WHAT WOULD MOVE IT: Series 2's tagline is "nothing pre-cleaned", which is about messy
+      # INPUT, and a PDF you generate has no mess in it. The case for keeping it here is the
+      # pairing with 05 and the fact that a reader at 07 already has everything it needs —
+      # rows in memory from Series 1. If Series 3 ever grows a reporting block around its
+      # project at 3 · 40, this is the episode that should move into it.
+      #
+      # NOT CORE, for the same reason as 05: whether you send PDFs is decided by your employer.
+      - n: "07"
+        slug: pdf
+        title: "PDF with PDFBox — Reading and Writing the Documents and Reports Your Business Needs"
+        short: "PDF with PDFBox — reading & writing documents"
+        hands_on: ["koan:complete", "koan:predict"]
         status: planned
       - n: "10"
         slug: jdbc-basics
@@ -394,12 +611,62 @@ series:
       # (This comment has outlived two moves. It once described "the opinionated pair, 35 and
       # 40" in Series 3. Episode 40 became Series 4; this episode then moved to Series 2,
       # because talking to a database is what Series 2 is FOR and shipping is what Series 3
-      # is for. It is the last of the six ways this course shows you to run a query.)
+      # is for. It is one of the six ways this course shows you to run a query; MyBatis at 32
+      # is the seventh and last.)
       - n: "30"
         slug: sql-first-with-jooq
         title: "jOOQ — Writing SQL in Java That the Compiler Checks"
         hands_on: ["koan:complete"]
         short: "jOOQ — SQL in Java the compiler checks"
+        status: planned
+      # MYBATIS SITS HERE, NOT IN SERIES 4 — added 2026-09-02. Put it through the same two
+      # tests the comment directly above puts jOOQ through, because it is the same question:
+      #   1. LIBRARY, NOT FRAMEWORK. You open a SqlSession and call it; it does not call you.
+      #      The mybatis-spring-boot-starter makes @Mapper interfaces look like Spring Data
+      #      repositories, and that resemblance is the trap — the starter is an integration,
+      #      not the tool. It is a paragraph in Series 4 · 15, not an episode.
+      #   2. IT IS THE SQL-FIRST POSITION. Every query is one you wrote. Filing it beside
+      #      Spring Data and GORM would say it is the same KIND of answer, when it is the
+      #      alternative to them.
+      #
+      # PAIRED WITH jOOQ ON PURPOSE. They are the two SQL-first bets and they bet OPPOSITE
+      # WAYS on one question: should the compiler check the SQL? jOOQ says yes, and charges a
+      # codegen step against a live schema. MyBatis says no, and charges nothing — the SQL is
+      # a string in XML or an annotation, wrong at runtime or not at all. A reader who has
+      # just finished 30 can judge 32 in one sentence, which is the whole reason for adjacency.
+      #
+      # WHY IT EARNS AN EPISODE. This track's selection rule is wrong numbers rather than
+      # exceptions, and MyBatis has a clean one: a nested collection written with `select=`
+      # runs one query per parent row; written with `resultMap=` it runs one query total. Same
+      # feature, one attribute apart. The N+1 is back inside a tool the reader chose in order
+      # to avoid ORMs — and unlike the JPA N+1 at Series 4 · 00, the SQL is fully visible in
+      # both cases, so the counter and the cause are on the same screen.
+      #
+      # THE REST, none of it re-teaching: resultMap folding one join into a nested object
+      # graph, dynamic SQL (<if>, <where>, and <foreach> for the variable-length IN list that
+      # JDBC makes ugly), and one paragraph each on ExecutorType.BATCH and cursor/ResultHandler
+      # streaming — the MyBatis spellings of 35 and 40.
+      #
+      # NUMBERED 32 rather than renumbering 35-70. An insertion after 30 would otherwise cost
+      # eight episodes, their directories, and the cross-references in this file that name
+      # Series 2 · 10, · 30 and · 35 by number. Data Ops set the precedent at its own 32.
+      #
+      # THE ROUND-TRIP COUNTER ARRIVES THREE EPISODES EARLY, and that is fine: the header
+      # defines it at track level, and "how many times did you go to the database" needs no
+      # build-up. koan:complete leads because writing the resultMap is the skill; the counter
+      # is what proves it.
+      #
+      # NOT CORE. Like Excel at 05, whether you need it is decided by whose codebase you
+      # joined. MyBatis is overwhelmingly INHERITED — enterprise Java, hand-tuned SQL, stored
+      # procedures — and the reader who meets it did not choose it.
+      #
+      # THE NAME IS "MyBatis", NOT "Apache MyBatis". It began as Apache iBATIS and left the
+      # foundation in 2010. The Apache part is the licence now, not the owner.
+      - n: "32"
+        slug: mybatis
+        title: "MyBatis — Mapping Hand-Written SQL Onto Java Objects"
+        hands_on: ["koan:complete", "koan:count:roundtrips"]
+        short: "MyBatis — hand-written SQL mapped to objects"
         status: planned
       - n: "35"
         slug: batching-and-transactions
@@ -421,6 +688,76 @@ series:
         hands_on: ["koan:complete", "koan:diagnose"]
         short: "DuckDB from Java — analytics in your process"
         status: planned
+      # THE EPISODE THAT CLOSES THE DATABASE BLOCK — added 2026-09-02, and it exists because
+      # episodes 10 to 45 leave the reader with six true statements and no rule:
+      #     jOOQ is compiler-checked. groovy.sql.Sql is less code. MyBatis maps rows to
+      #     objects. DuckDB is fast for analytics. JDBC is what they all sit on. Streaming
+      #     keeps 2M rows out of the heap.
+      # Every one of those is correct and not one of them answers the question a reader has on
+      # Monday morning: WHICH OF THESE DO I OPEN THE IDE AND TYPE? A reader who cannot answer
+      # that does not have a knowledge gap — they have six tools and no way to pick, which in
+      # practice means they use whichever one they read most recently.
+      #
+      # THE COURSE ALREADY HAS AN ANSWER AND IT IS PARKED WHERE THE CORE READER WILL NOT REACH
+      # IT. Series 4 · 15 stages the comparison — and Series 4 is not core. So a reader who
+      # does the core path, Series 1 to 3, never meets it. That is the whole defect this
+      # episode fixes, and it is why this one is CORE and 4 · 15 is not.
+      #
+      # IT IS NOT THE SAME EPISODE AS SERIES 4 · 15 OR 4 · 50, and all three comments say so:
+      #     HERE       which SQL-first tool — inside the camp this track argues for
+      #     4 · 15     SQL-first VERSUS framework — JdbcTemplate, Spring Data JDBC and
+      #                Spring Data JPA against jOOQ and MyBatis. A deep two-way comparison
+      #                for a reader already committed to a framework.
+      #     4 · 50     the whole map, and the course's closing argument: whether to adopt a
+      #                framework AT ALL, and at which layer. It is allowed to answer "none".
+      # THIS AND 4 · 50 ARE THE COURSE'S DECISION SPINE — one inside the SQL-first camp, one
+      # about whether to leave it. Different question, different reader, neither replaces the
+      # other, and both are core.
+      #
+      # IT IS NOT THE PROJECT AT 70 EITHER, and repurposing that was considered and rejected.
+      # Three reasons: the project was ADDED to fix a documented defect (a series with no
+      # episode that assembles it), it is the only place in Series 2 that teaches the
+      # reconciliation habit, and CHOOSING AND BUILDING ARE DIFFERENT ACTS. A project is
+      # synthesis — put six things together and make one work. This is analysis — hold six
+      # things apart and pick. One cannot stand in for the other, and every other series here
+      # ends on a project.
+      #
+      # PLACED AT 47 because streaming (40) and DuckDB (45) are INPUTS to the decision — "does
+      # the aggregation happen in the database or in DuckDB" and "might this not fit in heap"
+      # are two of the questions. It has to come after both. Numbering follows 07 and 32.
+      #
+      # A RULE, NOT A COMPARISON TABLE. A matrix would be the "list, not a skill" failure that
+      # got Series 4 split out of Series 3 in the first place. The episode is a short sequence
+      # of questions the reader answers about their OWN situation:
+      #   - is the SQL fixed, or assembled at runtime from something a user typed?
+      #   - can you run codegen against the schema in CI? That is jOOQ's price and its payoff,
+      #     and where you cannot, jOOQ is a liability rather than a safety net
+      #   - does this code live a week, or two years and three maintainers?
+      #   - should the aggregation happen in the database — which has the indexes and the data
+      #     — or in DuckDB because you are combining sources the database cannot see?
+      #   - might the result not fit in heap? That forces streaming and rules options out
+      #   - are you already inside Spring? Then JdbcTemplate is free, and taking a dependency
+      #     to save three lines is a cost with no buyer
+      #
+      # AND AN HONEST DEFAULT, because an episode that ends in "it depends" has taught nothing:
+      # the simplest thing that gives you PARAMETERIZATION and STREAMING, and the reader should
+      # be able to say why they deviated from it.
+      #
+      # THE SHAPE HAS A PRECEDENT IN THIS FILE: Series 3 · 20 is described as "a decision
+      # episode and not a tool tutorial" because it keeps Flyway as an honest paragraph. Same
+      # discipline here — every option gets its fair sentence, including the ones the track's
+      # own thesis is lukewarm about.
+      #
+      # THE SECOND KOAN MAKES A WRONG CHOICE VISIBLE rather than arguable: pulling the rows
+      # into Java to aggregate them, against letting the database do it, is a rows-held number.
+      # The reader does not have to take the rule on trust.
+      - n: "47"
+        slug: choosing-database-access
+        title: "Choosing Database Access — Picking Between JDBC, jOOQ, MyBatis and DuckDB"
+        short: "Choosing Database Access — JDBC, jOOQ, MyBatis or DuckDB"
+        hands_on: ["koan:choose", "koan:count:rows-held"]
+        core: true
+        status: planned
       - n: "50"
         slug: apis-and-json
         title: "HTTP and JSON — Reading Data From an API With HttpClient and Jackson"
@@ -428,12 +765,41 @@ series:
         short: "HTTP & JSON — reading data from an API"
         core: true
         status: planned
-      # Episode 40 gets you a 200 response. This is every other response.
-      # Splitting it out rather than swelling 40 is deliberate: the happy path is a page of
+      # Episode 50 gets you a 200 response. This is every other response.
+      # Splitting it out rather than swelling 50 is deliberate: the happy path is a page of
       # code and the failure path is the job, and an episode that teaches both teaches the
       # first one properly and the second one in a footnote.
+      # (Both numbers said 40 until 2026-09-02 — stale from an earlier renumbering.)
       #
-      # The oracle is a counter, reusing the machinery from 2/30 — count the ATTEMPTS.
+      # RETRY SAFETY IS THE OTHER HALF, added 2026-09-02 — and REWRITTEN the same day, because
+      # the first version of this paragraph was a write-side lesson bolted onto a read-side
+      # episode. It talked about retrying a POST and "creating a second order". Nothing in this
+      # track ever POSTs to an API: 50 reads, this fetches, and 70's project reads. The TITLE
+      # is what caught it — an episode called "Fetching From an API Reliably" cannot have
+      # duplicate order creation as its beat. Keep the title; the beat was wrong.
+      #
+      # THE READ-SIDE VERSION IS BETTER HERE, and it is the same failure class as join fan-out:
+      # DUPLICATE AND MISSING ROWS, from a fetch, with nothing thrown.
+      #   - retry page 3 of a paginated feed that changed underneath you and you get rows twice
+      #     or lose them entirely — and the attempt counter this episode already builds shows
+      #     two clean attempts and no error
+      #   - OFFSET pagination does it with no retry at all: one row inserted ahead of your
+      #     position shifts everything down, so page 2 re-serves a row you already read. A
+      #     CURSOR keyed on something stable does not, which is the real reason to prefer it
+      #     and a better one than "it is faster"
+      # That is why "cursor vs offset paging" is in this episode's constructs, and until now it
+      # was there without the reason.
+      #
+      # THE WRITE SIDE GETS ONE PARAGRAPH, marked as the aside it is, because a data job does
+      # occasionally push a result somewhere: GET, PUT and DELETE are idempotent by definition
+      # and free to retry; POST is not, and that is what an IDEMPOTENCY KEY is for. Do not let
+      # it grow — this track has no episode where the reader writes to an API.
+      #
+      # EITHER WAY IT IS THE ONLY PART OF IDEMPOTENCY THIS TRACK OWNS, and the excludes say so.
+      # The job-level question — does re-running the whole load double the rows — belongs to
+      # ETL & Data Pipelines, which spends most of a series on it.
+      #
+      # The oracle is a counter, reusing the machinery from 2 · 35 — count the ATTEMPTS.
       # "Retried forever" and "gave up immediately" are both wrong and both look identical
       # from the outside; the attempt count separates them, and a fixed-delay retry against a
       # rate limiter is countably worse than exponential backoff.
@@ -471,6 +837,12 @@ series:
       # episodes of files, databases and APIs with no episode that assembles them.
       # One job, all three sources, and the reconciliation habit that makes it trustworthy:
       # the number you loaded must equal the number you read, and the job says so out loud.
+      #
+      # IT STAYS A PROJECT. Turning this into the "which tool do I choose" episode was proposed
+      # on 2026-09-02 and rejected — it would have re-opened the very defect the paragraph
+      # above records, and spent the only place in Series 2 that teaches reconciliation. That
+      # episode is 47 instead. What this one owes 47 is one line: the reader APPLIES the rule
+      # from 47 when they pick how to reach the database here, and says out loud why.
       - n: "70"
         slug: project-three-sources
         title: "Project — One Answer From a CSV, a Database and an API"
@@ -553,11 +925,64 @@ series:
         short: "Logging & Failure — what to log when a job breaks"
         core: true
         status: planned
+      # RETITLED AND RE-SPINED 2026-09-02. This was "Testing Data Code — JUnit and Spock, and
+      # What Is Worth Testing", which put the least interesting part in the title: the reader
+      # already writes Spock specs — every koan in this track is one — and JUnit is an
+      # afternoon. THE HARD QUESTION IN TESTING DATA CODE IS WHAT YOU TEST AGAINST, and that is
+      # now the episode.
+      #
+      # THE FAILURE, and it is exactly this track's selection rule: a suite that runs against H2
+      # or another in-memory stand-in PASSES and the job fails in production — or, worse, both
+      # pass and return different rows. Nothing throws at any point. What actually differs, all
+      # of it load-bearing for episodes this course already teaches:
+      #   - UPSERT. ON CONFLICT and the MERGE spellings are not the same statement on a
+      #     stand-in engine, so the one write you most want covered is the one you cannot cover.
+      #   - date and time functions, string functions and casting rules — the quiet ones,
+      #     because they return a DIFFERENT ANSWER rather than an error.
+      #   - JSON support, sequences and identity-column behaviour.
+      #   - the entire dialect surface that Series 2 · 30 (jOOQ) and 2 · 32 (MyBatis) exist to
+      #     let you write. jOOQ's codegen needs the real schema; testing it elsewhere tests
+      #     something else.
+      #
+      # SO THE SPINE IS TESTCONTAINERS: the test starts a real Postgres in a container, runs
+      # against it, throws it away. Same engine as production, no shared dev database, no
+      # cleanup ritual between developers.
+      #
+      # AND THE COSTS, HONESTLY, or the episode is an advert. Containers are slow to start, so a
+      # naive suite pays that per class — reuse and the singleton-container pattern are part of
+      # the lesson, not an appendix. And DOCKER IS NOT ALWAYS THERE: locked-down CI, corporate
+      # laptops, some build agents. That is the real reason teams choose H2, and an episode that
+      # does not say so is not describing the world the reader works in.
+      #
+      # WHICH LEADS TO THE RULE THE EPISODE ACTUALLY TEACHES — A SPLIT, NOT A WINNER:
+      #     AN IN-PROCESS ENGINE (DuckDB, SQLite) for tests about YOUR LOGIC — the transform,
+      #       the parsing, the shaping. Fast, no Docker, and the engine is irrelevant because
+      #       the SQL is trivial.
+      #     THE REAL ENGINE, IN A CONTAINER, for tests about BEHAVIOUR — dialect, migrations,
+      #       generated SQL, round-trip counts, anything where the engine IS the subject.
+      # A reader who can say which of the two a given test belongs in has the skill.
+      #
+      # KEEP THE ORIGINAL EPISODE'S JUDGEMENT, which was good and is not replaced: a transform
+      # and a parser are worth testing, a thin JDBC wrapper mostly is not, and saying which is
+      # which is half the value.
+      #
+      # THIS TRACK'S OWN KOAN SUITE FACES THIS EXACT DECISION AND HAS NEVER RECORDED IT. The
+      # header specifies the koan vocabulary in detail and says nothing about what a database
+      # koan connects to, while roughly twenty episodes across Series 2 and 4 need one. Settle
+      # it while writing this episode and put the answer in the header; the split above is the
+      # obvious candidate.
+      #
+      # SPRING GETS ONE PARAGRAPH, NOT AN EPISODE: @ServiceConnection (Boot 3.1+) reduces all of
+      # this to a single annotation in a @SpringBootTest. Name it, point at Series 4, move on.
+      #
+      # SLUG CHANGED from testing-with-spock, which named the framework rather than the subject
+      # and was wrong the moment the title stopped naming Spock. Free — the episode is
+      # `planned`, and the header's rule only protects PUBLISHED slugs.
       - n: "30"
-        slug: testing-with-spock
-        title: "Testing Data Code — JUnit and Spock, and What Is Worth Testing"
+        slug: testing-data-code
+        title: "Testing Data Code — Testcontainers and the Database You Actually Ship"
         hands_on: ["koan:author"]
-        short: "Testing Data Code — JUnit, Spock, what to test"
+        short: "Testing Data Code — Testcontainers, a real database"
         status: planned
       - n: "35"
         slug: performance-and-memory
@@ -638,7 +1063,9 @@ series:
   # controllers, no DI, no web layer.
   - slug: series4-frameworks
     title: Frameworks, Where They Earn It
-    tagline: use JPA, Hibernate and Spring to talk to a database
+    # TAGLINE WIDENED 2026-09-02, when scheduling arrived at 30. "Talk to a database" stopped
+    # covering the series the moment two of its episodes were about a job running itself.
+    tagline: use JPA, Hibernate and Spring for queries and the jobs that run them
     level: advanced
     episodes:
       # JPA THE SPEC, on its own, because it is not a Spring thing — jakarta.persistence runs
@@ -739,11 +1166,22 @@ series:
       #
       # This is where the old 3/40's real question survives — when is an object graph the
       # right model for your data, and when are you loading rows into entities to do a
-      # GROUP BY the slow way? Choose-koan: one requirement, FOUR implementations —
-      # JdbcTemplate, Spring Data JDBC, Spring Data JPA, and jOOQ from Series 2 · 30. jOOQ
-      # belongs in the comparison even though it lives in another series; this is the one
-      # place the SQL-first position and the framework positions meet head to head, and
-      # leaving it out would rig the answer.
+      # GROUP BY the slow way? Choose-koan: one requirement, FIVE implementations —
+      # JdbcTemplate, Spring Data JDBC, Spring Data JPA, and the two SQL-first ones from
+      # Series 2: jOOQ at 30 and MyBatis at 32. Both belong in the comparison even though they
+      # live in another series; this is the one place the SQL-first position and the framework
+      # positions meet head to head, and leaving them out would rig the answer.
+      # (MyBatis joined the list 2026-09-02. It is also where mybatis-spring-boot-starter gets
+      # its one paragraph — @Mapper interfaces LOOK like Spring Data repositories and are not,
+      # and this is the only page where a reader can see both and tell them apart.)
+      #
+      # THIS IS NOT SERIES 2 · 47, and the two must not drift into each other:
+      #     2 · 47   which SQL-first tool — inside the camp this track argues for. CORE.
+      #     HERE     SQL-first VERSUS framework. Not core, because a reader who never adopts
+      #              a framework does not need it.
+      # 47 exists because this comparison used to be the ONLY one in the course and it sits in
+      # a series most readers will not reach. A reader arriving here has already chosen within
+      # the SQL-first camp; this episode asks whether to leave it.
       #
       # The winner genuinely changes with the requirement. That is the point, and a single
       # right answer would be a lie.
@@ -775,11 +1213,373 @@ series:
         short: "Liquibase in Spring Boot & Grails — run at startup"
         hands_on: ["koan:process:jar", "koan:complete"]
         status: planned
+      # SPRING BATCH — added 2026-09-02. This is the episode about what a JOB IS, and it comes
+      # BEFORE the three scheduling episodes on purpose: 30, 35, 40 and 45 are all about WHEN
+      # something runs, and none of them says anything about what happens INSIDE the run. A
+      # reader who schedules a method that loads 500,000 rows has automated a job that cannot
+      # survive being interrupted.
+      #
+      # WHAT IT ACTUALLY BUYS, and all three are things Series 1-3 left open:
+      #   - CHUNKS. ItemReader -> ItemProcessor -> ItemWriter with a commit interval. This is
+      #     Series 2 · 35 (batching, round trips) and 2 · 40 (streaming, rows held) expressed as
+      #     a framework: the chunk size IS the batch size, and the counters from those episodes
+      #     are the oracle here. No new machinery, and no stopwatch.
+      #   - RESTART. The JobRepository keeps execution state in a database, so a job that died
+      #     at chunk 400 resumes at chunk 400 instead of at zero.
+      #   - RETRY AND SKIP, per item: faultTolerant().retryLimit(n).retry(...), skipLimit,
+      #     skipPolicy. One poisoned row does not have to kill a 500,000-row load.
+      #
+      # AND THE THING WORTH THE EPISODE ON ITS OWN: a job instance is identified by its name
+      # plus its JobParameters, and Spring Batch REFUSES TO RUN A COMPLETED ONE AGAIN —
+      # JobInstanceAlreadyCompleteException. That is idempotency enforced by the framework
+      # rather than by your SQL, which is a genuinely different answer from the one the
+      # excludes hand to ETL & Data Pipelines.
+      #
+      # IT DOES NOT RE-OPEN THAT EXCLUDE, and the seam is worth writing down because it will be
+      # re-argued otherwise:
+      #     ETL 1 · 30 / 35   make the WRITE idempotent — MERGE, watermarks, load strategy
+      #     HERE              remember WHERE YOU GOT TO and WHAT ALREADY RAN — execution state
+      # Orthogonal. A perfect MERGE still needs restart state; Spring Batch still doubles your
+      # rows if the writer does a plain INSERT. Say both in one sentence and move on.
+      #
+      # BE HONEST THAT IT IS HEAVY. Five interfaces, a schema of its own, and a job definition
+      # longer than the load it replaces. For a two-hundred-line nightly script it is the wrong
+      # answer, and the episode has to say when NOT to reach for it or it becomes an advert.
+      # Episode 50 is where that judgement gets tested.
+      #
+      # THE ONE SERIES 4 EPISODE WITH NO PRODUCT ANCHOR, and that is recorded rather than
+      # hidden: JPA, Hibernate, GORM, Liquibase, the crons and the project all point at
+      # something DataPallas ships. Spring Batch is not in the product and not in the
+      # playground pom. It earns its place on the gap it fills, not on a file we can open.
+      #
+      # NOT CORE: the spine is SQL-first plain Java, and this is for a reader already in Spring.
+      - n: "27"
+        slug: spring-batch
+        title: "Spring Batch — Jobs That Process Rows in Chunks and Restart Where They Stopped"
+        short: "Spring Batch — chunked jobs that restart"
+        hands_on: ["koan:count:roundtrips", "koan:process:tool"]
+        status: planned
+      # APACHE BEAM — added 2026-09-02, PAIRED WITH 27, and it belongs in Series 4 rather than
+      # in Series 2 or 3. A first draft put it in Series 2 on the grounds that the DirectRunner
+      # needs no cluster. That was an argument about DEPLOYMENT, and this file's test is about
+      # CONTROL FLOW — the same test the jOOQ comment at Series 2 · 30 applies:
+      #     "It is a LIBRARY, not a framework. You call it; it does not call you. No container,
+      #      no lifecycle, no inversion of control."
+      # Beam fails every clause. You DECLARE a pipeline and hand it to a RUNNER, and the runner
+      # decides when your code executes, on how many threads, in how many instances and in what
+      # order. @Setup -> @StartBundle -> @ProcessElement -> @FinishBundle -> @Teardown is a
+      # lifecycle, the runner is a container, and your DoFn is a callback. That is more
+      # inversion of control than Spring Data has. It is also not the SQL-first position — it
+      # is the do-the-work-in-the-JVM position, which is what the spine argues against for
+      # set-based work. Series 4 on both tests.
+      #
+      # THE PAIR IS THE POINT. 27 and 28 are the two answers to "how do I STRUCTURE a data
+      # job", and they answer differently:
+      #     Spring Batch (27)   chunk-oriented and sequential; your JVM; batch only; restart
+      #                         is the JobRepository's job
+      #     Beam (28)           a graph of transforms; whichever runner you hand it to; batch
+      #                         AND streaming in one model; restart is the runner's problem
+      # Simple to machinery, so Spring Batch first. Adjacent numbers are deliberate and are
+      # house style for a paired set — Learn SQL Series 2 runs 05, 06 and 08 for the same
+      # reason.
+      #
+      # AND UNLIKE 27, IT HAS A PRODUCT ANCHOR, a strong one: the playground ships
+      # src-examples/pipelines with batch and streaming pipelines, JdbcIO, reusable DoFn
+      # transforms and a PipelineController that triggers them over HTTP, with three Beam JARs
+      # in the pom and @Grab guidance for more connectors. The reader is filling in a folder
+      # they already have.
+      #
+      # IT ALSO CLOSES A DANGLING REFERENCE. Episode 35's koan:author asks the reader to
+      # schedule the Beam CustomerIngestionPipeline from that folder, and until now Beam was
+      # named nowhere else in this file OR ANYWHERE IN THE ACADEMY. Teaching it here makes 35
+      # legitimate instead of a pointer at a hole.
+      #
+      # TEACH THE MODEL, NOT THE CLUSTER. DirectRunner only. Pipeline, PCollection, PTransform,
+      # ParDo and a DoFn, plus TextIO and JdbcIO because those are the two the playground uses.
+      # Windowing gets named and deferred: event time, watermarks and late data are a streaming
+      # subject and this track has no streaming series. If the episode starts needing runner
+      # topology or shuffle to make sense, it has stopped being a Java episode — the same
+      # trigger this series' own header sets for the web layer.
+      #
+      # THE koan:diagnose IS BEAM'S OWN BEST TRAP AND IT IS THIS TRACK'S KIND: a DoFn that
+      # caches something in a field. The runner is free to instantiate it many times across
+      # many threads and to reuse instances between bundles, so the cached value is stale or
+      # shared and the output is quietly wrong. Nothing throws. A reader who writes Java as if
+      # it runs once, in order, on one thread will produce exactly this.
+      #
+      # NOT CORE.
+      - n: "28"
+        slug: apache-beam
+        title: "Apache Beam — Describing a Pipeline Once and Letting a Runner Execute It"
+        short: "Apache Beam — a pipeline a runner executes"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        status: planned
+      # SCHEDULING ARRIVES HERE — added 2026-09-02, narrowing the exclude at the top of this
+      # file, which used to send the whole subject to Data Ops. What that exclude got right is
+      # unchanged: cron, systemd timers and choosing an orchestrator are Data Ops' job. What it
+      # missed is that a Spring Boot app uses none of them. It schedules ITSELF, inside a JVM
+      # that is already running, and every failure mode is different:
+      #
+      #   cron forks a fresh process per run.   Spring shares one heap, one pool, one context.
+      #   cron overlaps runs by default.        Spring's default scheduler pool is ONE THREAD,
+      #                                         so a slow dbt run silently delays everything
+      #                                         else on the schedule.
+      #   one crontab on one box, one run.      Two app instances, two runs, nobody told you.
+      #   stdout and stderr, mailed to you.     A log line, and an exception the framework
+      #                                         swallowed.
+      #
+      # Nothing in the right-hand column exists for cron. That is what makes this a skill and
+      # not a second telling, and it is why the Data Ops exclude survives in narrowed form
+      # rather than being deleted.
+      #
+      # IT DOES NOT TRIP THIS SERIES' OWN TRIGGER. The header above says Series 4 stops being a
+      # data series if it needs the web layer, security or DI to make sense. Scheduling is none
+      # of the three, and the thing being scheduled is the data job Series 1-3 spent forty
+      # episodes building. Series 3 · 10 made a job that something ELSE could schedule —
+      # arguments, exit codes, a readable log. This makes the app schedule its own.
+      #
+      # THE COLD OPEN IS A REAL BUG IN OUR OWN PRODUCT. bkend-boot-groovy-playground's
+      # BkendApplication is a bare @SpringBootApplication, and @EnableScheduling appears
+      # nowhere in the tree. Spring Boot does not turn scheduling on for you — its autoconfigured
+      # task scheduler is itself conditional on the bean that @EnableScheduling registers. So
+      # the documented ritual (copy crons.groovy, uncomment @Scheduled, rebuild) produces an app
+      # that starts clean, logs nothing, and never runs your transform. No error. Both blog
+      # posts promise a job that fails loudly; this one fails silently.
+      #
+      # AND THE KOAN CANNOT USE A CLOCK. This is the episode most likely to break the header's
+      # NEVER ASSERT WALL-CLOCK TIME rule, because sleep(2000) then assert-it-ran is the obvious
+      # test and exactly the flake that rule exists to forbid. Assert the TRIGGER instead —
+      # three ways, all instant, all deterministic:
+      #   - CronExpression.parse(expr).next(a fixed instant) is a pure function. It catches
+      #     Spring's SIX fields against crontab's five (the same string means different times in
+      #     the two), 0 0/15 against */15, and a DST spring-forward.
+      #   - ScheduledAnnotationBeanPostProcessor.getScheduledTasks() is EMPTY when
+      #     @EnableScheduling is missing. That is the bug above as one assertion, with no clock.
+      #   - the one-thread trap is a core pool size, or a latch asserting the ORDER two jobs
+      #     interleaved in. Never how long they took.
+      #
+      # THE REST: fixedRate against fixedDelay against cron, the zone attribute, and moving the
+      # expression into application.properties behind ${...} so that changing a schedule is not
+      # a rebuild. Closes on what "one JVM" costs — two instances, two runs, and the pointer to
+      # a database lock. THAT POINTER IS NOW PAID: episode 40 is the lock, and 45 is the
+      # scheduler that does not need one. Leave the cliffhanger in; it is what makes those two
+      # episodes land.
+      #
+      # NOT CORE: the spine is SQL-first data work, and this is a Spring feature.
+      - n: "30"
+        slug: spring-scheduling
+        title: "Spring Scheduling — Running a Data Job on a Timer Inside Your Application"
+        short: "Spring Scheduling — a data job on a timer"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
+      # THE PRODUCT HALF OF 30, and the same shape as 25: the mechanism first, then the same
+      # thing inside what DataPallas actually ships. Here that is the real crons.groovy,
+      # DbtHelper and ExcelHelper in bkend-boot-groovy-playground/src-examples, and the
+      # copy-into-src ritual by which that app activates anything.
+      #
+      # THREE THINGS ONLY THIS EPISODE CAN TEACH, because they need a real product:
+      #   - THE SCHEDULE IS COMPILED IN. Changing "run dbt at 2 a.m." to "3 a.m." means editing
+      #     Groovy and running mvnw package. Move the expression into application.properties
+      #     behind ${...} and it becomes a restart. A genuine improvement to our own example,
+      #     and the reader is the one who makes it.
+      #   - DbtHelper SHELLS OUT to docker compose, so success is an exit code and diagnosis is
+      #     captured stdout — Series 3 · 25 arriving in a real job instead of an exercise.
+      #     koan:capture is the oracle for exactly that.
+      #   - THE EXCEL CRON CANNOT RUN WHERE THE APP RUNS. ExcelHelper drives Excel over COM via
+      #     JACOB, COM is Windows-only, and the playground's normal home is a Linux container. A
+      #     schedule that is correct and can never fire on the box you deployed it to is a
+      #     deployment fact, not a bug, and no generic Spring episode would surface it.
+      #
+      # THE koan:author IS THE src-examples README'S OWN SUGGESTION: schedule the Beam
+      # CustomerIngestionPipeline that ships in the same folder. It joins the two halves of that
+      # folder — the crons and the pipelines — which is what a reader extending DataPallas is
+      # actually going to be doing. (Beam is taught at 28. Until that episode existed this koan
+      # pointed at a technology no course anywhere in the academy covered.)
+      #
+      # AND THE BEAT THIS TRACK ALWAYS DEMANDS: both shipped crons catch Exception and only log
+      # it. That is where a nightly job goes to die quietly, and the episode ends there.
+      #
+      # ONE LINE ON RE-RUNNABILITY, and no more than one. Putting a job on a timer is what
+      # makes "what happens on the second run" urgent — a load that doubles its rows is
+      # harmless run by hand and catastrophic run nightly. Say that, point at ETL & Data
+      # Pipelines Series 1 · 30, and move on. This episode owes the reader the WARNING, not the
+      # lesson; the excludes record why the lesson is not ours.
+      #
+      # CORE. Series 3 shipped a job someone can run. This is the one place in the track where a
+      # job runs without anyone running it, inside the product the reader already has.
+      #
+      # GRAILS IS A PARAGRAPH, NOT AN EPISODE. Grails is Spring Boot underneath, so @Scheduled
+      # behaves identically in grails-playground. Say it once and move on.
+      - n: "35"
+        slug: datapallas-crons
+        title: "DataPallas Crons — Scheduling the dbt Transform and the Excel Refresh"
+        short: "DataPallas Crons — scheduling dbt and Excel"
+        hands_on: ["koan:capture", "koan:author"]
+        core: true
+        status: planned
+      # SHEDLOCK — added 2026-09-02. https://github.com/lukas-krecan/shedlock
+      #
+      # IT COMES BEFORE QUARTZ, and that is a change from the first draft, which had them the
+      # other way round. THE SMALLEST FIX FIRST, THEN THE CATEGORY CHANGE — the same order this
+      # track uses everywhere else: JDBC before jOOQ, the Liquibase CLI at Series 3 · 20 before
+      # the framework wiring at 4 · 25, @Scheduled at 30 before either of these. Episode 30
+      # ends on "two app instances mean two runs and nobody told you". THIS is the one-
+      # annotation answer to exactly that sentence; 45 is what you reach for when the answer
+      # needs to be bigger. Showing the expensive one first would make the cheap one look like
+      # a compromise instead of the default.
+      #
+      # THE DISTINCTION THE EPISODE IS FOR, and it must land in the first thirty seconds:
+      # SHEDLOCK IS NOT A SCHEDULER. You keep @Scheduled exactly as episode 30 taught it, add
+      # @SchedulerLock, and get one table. It adds MUTUAL EXCLUSION, not memory.
+      #
+      # OPEN ON THE README, because the project says it better than we can and a library that
+      # states what it is NOT is rare enough to be worth quoting: "ShedLock is not and will
+      # never be full-fledged scheduler, it's just a lock ... If you need a distributed
+      # scheduler, please use another project (db-scheduler, JobRunr). ... the locks are
+      # time-based and ShedLock assumes that clocks on the nodes are synchronized."
+      # That sentence is also the handover to 45 — the reader is told by the library itself
+      # that a bigger category exists, before we show it to them.
+      #
+      # THE TEST THAT MAKES THE CATEGORY OBVIOUS, and it is the beat that stops a reader
+      # concluding this and Quartz are the same thing with different logos:
+      #     TAKE EVERY NODE DOWN AT 2 A.M.
+      #     ShedLock  -> the job never runs, and nothing anywhere remembers that it should have
+      #     Quartz / db-scheduler -> the row still says "due at 2 a.m."; the first node back
+      #                              picks it up
+      # Here the schedule lives in YOUR CODE and every node fires its own copy; at 45 the
+      # schedule IS a row and nodes claim what is due. Everything else follows from that —
+      # including why lockAtMostFor is a guess you have to make and they do not, and why this
+      # one cares about clock skew at all.
+      #
+      # THE TRAP, and it is this track's kind: lockAtMostFor is a GUESS ABOUT YOUR JOB'S
+      # MAXIMUM RUNTIME, and both ways of guessing wrong are silent. Too short and the lock
+      # expires while the job is still running, so the second instance starts anyway and you
+      # have the duplicate you installed this to prevent — and this one WORSENS WITH TIME,
+      # because jobs get slower as data grows, so the value that was safe in January is wrong
+      # by September. Too long and a job that died holding the lock blocks every later run
+      # until the window passes. Nothing throws either way. lockAtLeastFor is the other half —
+      # it stops a job that finishes in milliseconds from being picked up again by a second
+      # node whose clock is slightly ahead, which is the README's clock caveat arriving as a
+      # real bug.
+      #
+      # NOT CORE.
+      - n: "40"
+        slug: shedlock
+        title: "ShedLock — Locking a Scheduled Task So Only One Instance Runs It"
+        short: "ShedLock — only one instance runs the task"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
+      # QUARTZ — added 2026-09-02, and it is the CATEGORY CHANGE. Episode 30 says a Spring app
+      # schedules itself in one JVM and closes on "the pointer to a database lock"; 40 pays
+      # that with one annotation. This episode is for the reader whom one annotation does not
+      # cover, and it must earn that — a schema and a new mental model is a real price.
+      #
+      # spring-boot-starter-quartz IS ALREADY A DEPENDENCY IN THE PLAYGROUND POM, together with
+      # spring-boot-starter-quartz-test, and nothing uses either. Same hook as the empty
+      # Liquibase changelog at Series 3 · 20: the scaffolding is in the reader's own product and
+      # the file is blank.
+      #
+      # WHAT IT GIVES THAT @Scheduled AND A LOCK STRUCTURALLY CANNOT:
+      #   - A JDBC JOB STORE, so the SCHEDULE ITSELF survives a restart. 40 protects the run;
+      #     this remembers the appointment.
+      #   - MISFIRE POLICY: the app was down at 2 a.m. Do you run late, skip, or run every
+      #     missed occurrence at once? Choosing wrong here is a wrong number, not an error —
+      #     a "catch-up" policy on an hourly job after a day's outage fires twenty-four times.
+      #     With 40 the question cannot even be asked: the moment is simply gone.
+      #   - SCHEDULES AS DATA. Jobs and Triggers are rows, added and changed at runtime. A
+      #     product whose users configure their own report schedules cannot express that as an
+      #     annotation, and that is the half of Quartz worth the most to this house.
+      #
+      # ORDER: after 40, not before — see that episode's comment for the argument.
+      #
+      # THE CATEGORY SPLIT, stated here from the other side of 40. An earlier draft called this
+      # a four-point gradient; it is not. The separating question is WHO DECIDES THAT THE TASK
+      # SHOULD RUN NOW:
+      #   A. THE SCHEDULE LIVES IN YOUR CODE — @Scheduled (30), plus ShedLock (40). Every node
+      #      fires its own trigger and the lock lets one through. Down at 2 a.m. means NOTHING
+      #      RUNS AND NOTHING REMEMBERS.
+      #   B. THE SCHEDULE IS A ROW — Quartz (here) and db-scheduler. Nodes poll and claim what
+      #      is due. Only this category can be given work at RUNTIME.
+      #
+      # db-scheduler IS THE HONEST PARAGRAPH HERE — https://github.com/kagkarlsson/db-scheduler
+      # — same discipline as keeping Flyway honest at Series 3 · 20, and it stops this episode
+      # from reading as "Quartz or nothing". It is CATEGORY B like Quartz, but one table and a
+      # small API instead of many tables, Jobs, Triggers, Calendars and Listeners. Its
+      # distinctive move is a ONE-OFF TASK SCHEDULED AT RUNTIME WITH PAYLOAD DATA — "run this
+      # for order 123 at 14:32" — awkward in Quartz, impossible with @Scheduled, and precisely
+      # the shape of a product that schedules a report for a named recipient.
+      #   QUARTZ AND db-scheduler ARE THE SAME KIND OF THING; the choice is weight. ShedLock is
+      #   a different kind. Do not let the episode present all three as one gradient.
+      #   VERIFY AGAINST THE READMEs BEFORE PUBLISHING. The comparison is from knowledge, not
+      #   from docs open in front of us, and a table count is exactly the claim that ages. Same
+      #   rule as the Flyway licensing line.
+      #
+      # (JobRunr is named in ShedLock's README beside db-scheduler and is deliberately NOT an
+      # episode: background job processing with a dashboard is an application concern, not the
+      # data half.)
+      #
+      # NOT CORE.
+      - n: "45"
+        slug: quartz
+        title: "Quartz — Storing Schedules in a Database and Firing Them Once Across Instances"
+        short: "Quartz — schedules in a database, fired once"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
+      # THE DECISION EPISODE FOR THE WHOLE COURSE — added 2026-09-02 at the track owner's
+      # request, and it is the closing argument rather than another framework.
+      #
+      # WHY IT HAS TO EXIST. This course's job is to present the Java tools and libraries that
+      # matter for data work AND to help a reader decide between them. By the time they reach
+      # here they have been shown, as working answers: plain JDBC, PreparedStatement,
+      # groovy.sql.Sql, jOOQ, MyBatis, DuckDB, JPA, Hibernate, JdbcTemplate, Spring Data JDBC,
+      # Spring Data JPA, GORM, Spring Batch, @Scheduled, Quartz and ShedLock. Sixteen true
+      # statements. Without this episode the course ends by handing someone a toolbox and no
+      # rule, which is the failure Series 2 · 47 was created to fix one series earlier.
+      #
+      # IT PAIRS WITH 2 · 47 AND DOES NOT REPEAT IT:
+      #     2 · 47   which SQL-first tool, INSIDE the camp this track argues for
+      #     HERE     whether to adopt a framework at all, and which layer to adopt it at
+      # Together they are the course's decision spine. Say so in both.
+      #
+      # THE SHAPE IS A RULE, NOT A MATRIX — same discipline as 47 and Series 3 · 20. Sixteen
+      # tools in a comparison table is a reference card, not a lesson. The questions that
+      # actually decide it:
+      #   - is your work SET-BASED (aggregate, join, load) or an OBJECT GRAPH you edit? That
+      #     one question separates the ORM half of this series from everything else, and it is
+      #     the thesis the first three series spent forty episodes earning.
+      #   - are you already inside a framework, or would you be adding one? Adding Spring to
+      #     get JdbcTemplate is a different decision from using the JdbcTemplate you have.
+      #   - does the job need a STRUCTURE, and which one? Sequential and restartable is 27; a
+      #     graph of transforms that a runner executes is 28; and neither is the honest answer
+      #     for a script that finishes in ninety seconds.
+      #   - does the schedule need to outlive the process, or be edited by someone who cannot
+      #     deploy? That is 45. Does it only need to not run twice? That is 40.
+      #   - who maintains this in two years, and can they read it?
+      #
+      # AND IT MUST BE WILLING TO SAY "NONE OF THESE". The honest answer for a large share of
+      # data jobs is a Groovy script with groovy.sql.Sql and a cron entry — Series 1 and 2,
+      # with none of Series 4. An episode at the end of the framework series that cannot reach
+      # that conclusion is an advert for the series it closes.
+      #
+      # CORE, and it is the only episode in Series 4 that is core for a reader who never adopts
+      # a framework — because this is the episode that tells them they do not need to. That is
+      # also why it is not 4 · 15: 15 is a deep two-way comparison for someone already
+      # committed, this is the map for someone deciding whether to commit.
+      - n: "50"
+        slug: choosing-a-framework
+        title: "Choosing a Framework — Picking Between JPA, Spring Data, GORM, Spring Batch and Quartz"
+        short: "Choosing a Framework — which one, and when"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
       # The project only this series can offer: not a toy app, but a data feature added to
       # the Grails playground that ships with the product — domain class, migration, query,
       # test. A reader who finishes this can extend DataPallas, which is the most concrete
       # "productive at work" outcome anywhere in the academy.
-      - n: "30"
+      # (Renumbered 30 -> 40 -> 55 on 2026-09-02 as the series grew by five episodes. Free
+      # while it is `planned`; the header's rule only protects PUBLISHED slugs, and the slug
+      # itself never changed. The project stays last, as it does in every series here.)
+      - n: "55"
         slug: project-datapallas-feature
         title: "Project — Add a Data Feature to the DataPallas Grails App"
         short: "Project — add a data feature to DataPallas"

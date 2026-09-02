@@ -1,0 +1,232 @@
+# The ordered episode list for Apache Flink. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: compute a correct answer over data that never ends, when the
+# time that matters is when the event HAPPENED rather than when it arrived.
+#
+# ============================================================================
+# THE ONE IDEA THIS TRACK EXISTS FOR
+# ============================================================================
+# Every other engine in the academy answers a question about a FINISHED set of rows. Flink
+# answers a question that is never finished, and the entire product follows from one problem:
+# events arrive late, out of order, and sometimes not at all — so WHEN DO YOU DECIDE AN ANSWER
+# IS FINAL? Watermarks are that decision made explicit, and state is what you keep while you
+# wait.
+#
+# A reader who leaves knowing only "Flink is like Spark Streaming but faster" has learned
+# nothing. A reader who leaves able to explain why a window closed early has the skill.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL FLINK DOCUMENTATION
+# ============================================================================
+# nightlies.apache.org/flink's docs run Concepts (Stateful Stream Processing, Timely Stream
+# Processing) then the DataStream API, Table API & SQL, then Deployment and Operations. Its
+# CONCEPTS section is unusually good and is the right order for Series 1.
+#   Concepts .................. Series 1
+#   Table API & SQL ........... Series 2 — taught FIRST of the two APIs, see below
+#   DataStream API ............ Series 2 · 10 onward
+#   Deployment / Operations ... only what a job author needs; Data Ops owns the rest
+#
+# WE DEPART ONCE, DELIBERATELY: the docs lead with the DataStream API. This track leads with
+# FLINK SQL, because a reader arriving from Learn SQL can express most streaming questions in
+# it immediately, and meeting watermarks in SQL is far gentler than meeting them in Java.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL APACHE FLINK DOCUMENTATION. Before writing an
+# episode, open the docs' own page for that topic, use it as the COVERAGE CHECKLIST, and use
+# its VOCABULARY FOR THE NOUNS (watermark, keyed state, checkpoint, savepoint, backpressure).
+# Anything left out should be left out because an academy rule says so — ETL Series 3 · 20 owns
+# the batch-against-streaming decision, Kafka owns the transport, Data Ops owns the cluster —
+# and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the docs page named. A brief is what
+# a writer actually opens; a rule that lives only in this header is a rule that gets forgotten
+# at the exact moment it matters.
+
+course: learn-flink
+track: flink
+title: Apache Flink
+
+prerequisites:
+  - course: learn-etl-pipelines
+    needs: "Series 3 · 20"
+    why: >-
+      That episode defines bounded against unbounded data, event time against processing time,
+      and what a watermark is for. This track is the implementation of all three, and it does
+      not re-teach them.
+  - course: learn-kafka
+    needs: "Series 1"
+    why: >-
+      Almost every Flink job reads from and writes to Kafka. You need topics, partitions and
+      offsets before the source and sink connectors make sense.
+
+excludes:
+  - topic: "Deciding whether you need streaming at all"
+    where: "covered in ETL & Data Pipelines, Series 3 · 20 — and the honest answer there is usually no"
+  - topic: "Event time and watermarks as concepts"
+    where: "covered in ETL & Data Pipelines, Series 3 · 20. Here they are configured and debugged rather than introduced"
+  - topic: "Running a Flink cluster — JobManager sizing, HA, Kubernetes operators"
+    where: "covered in Data Ops for the operational discipline. Here you learn what a JOB AUTHOR must know"
+  - topic: "The transport itself"
+    where: "covered in Apache Kafka"
+
+series:
+  - slug: series1-time-and-state
+    title: Time and State
+    tagline: watermarks, windows, and what the job remembers
+    level: advanced
+    episodes:
+      # COVER: the job graph — sources, transformations, sinks, parallelism, and the fact that
+      # a Flink job RUNS FOREVER rather than finishing. JobManager and TaskManagers. Why
+      # "restart the job" is not a neutral act once there is state.
+      - n: "00"
+        slug: the-model
+        title: "A Job That Never Finishes — Sources, Operators, Sinks and Parallelism"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # THE CENTRAL EPISODE.
+      # COVER: assigning timestamps and watermarks, bounded-out-of-orderness, and what a
+      # watermark actually asserts — "I believe I have seen everything up to time T". Idle
+      # sources and the watermark that never advances (so nothing is ever emitted, and the job
+      # looks hung rather than broken). Allowed lateness and side outputs for what arrives after.
+      # THE TWO FAILURES, both silent: a watermark too tight drops real events; too loose and
+      # results are always late. Neither raises.
+      - n: "05"
+        slug: watermarks
+        title: "Watermarks — Deciding an Answer Is Final, and the Source That Never Advances"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: tumbling, sliding, session and global windows; window assigners and triggers.
+      # Event-time against processing-time windows and the different answers they give for the
+      # same data — which is the demonstration ETL 3 · 20 promises and this episode delivers.
+      - n: "10"
+        slug: windows
+        title: "Windows — Tumbling, Sliding and Session, in Event Time and Processing Time"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: keyed state as the thing that makes streaming different from mapping — ValueState,
+      # ListState, MapState, and that state is PER KEY. State backends and RocksDB for state
+      # larger than memory. TTL, and the unbounded-state failure: a key space that grows forever
+      # (session ids, request ids) and a job that dies of disk exhaustion weeks later.
+      - n: "15"
+        slug: state
+        title: "Keyed State — What the Job Remembers, and the Key Space That Grows Forever"
+        hands_on: ["koan:count:rows-held", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: checkpoints as the automatic fault-tolerance mechanism and savepoints as the
+      # manual one, the difference, and why you take a savepoint before every deploy. Exactly-
+      # once against at-least-once checkpointing, and what end-to-end exactly-once requires of
+      # the SINK (a two-phase commit), which is where the guarantee usually actually breaks.
+      - n: "20"
+        slug: checkpoints-and-savepoints
+        title: "Checkpoints and Savepoints — Restarting Without Losing What the Job Knew"
+        hands_on: ["koan:predict", "koan:process:tool"]
+        core: true
+        status: planned
+
+  - slug: series2-writing-jobs
+    title: Writing Jobs
+    tagline: Flink SQL first, then the DataStream API
+    level: advanced
+    episodes:
+      # COVER: Flink SQL as a first-class API — the same engine, expressed as SQL. Dynamic
+      # tables and the stream/table duality: a stream is a changelog of a table. The SQL client.
+      # WATERMARK declared in DDL, which is where a SQL reader meets it most gently.
+      - n: "00"
+        slug: flink-sql
+        title: "Flink SQL — A Stream as a Changelog of a Table, With WATERMARK in the DDL"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the streaming joins SQL gives you and their state cost — regular joins (which
+      # keep both sides forever unless bounded), interval joins, and temporal/versioned-table
+      # joins for "the price as it was at the time of the order", which is the ASOF join in
+      # streaming form.
+      # THE COST IS THE LESSON: a regular join in a stream is unbounded state.
+      - n: "05"
+        slug: streaming-joins
+        title: "Streaming Joins — Interval and Temporal, and the Regular Join That Never Forgets"
+        hands_on: ["koan:choose", "koan:count:rows-held"]
+        core: true
+        status: planned
+      # COVER: the DataStream API for what SQL cannot express — map, flatMap, keyBy, process
+      # functions, timers, and side outputs. When to drop to it and when not to.
+      - n: "10"
+        slug: datastream-api
+        title: "The DataStream API — ProcessFunction and Timers, for What SQL Cannot Say"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      # COVER: connectors — Kafka source and sink and their offset/checkpoint interaction, the
+      # JDBC sink, the filesystem sink, and CDC connectors. Delivery guarantees per connector,
+      # which vary and are the thing people assume rather than check.
+      - n: "15"
+        slug: connectors
+        title: "Connectors — Kafka, JDBC and CDC, and the Guarantee Each One Actually Gives"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: backpressure — what it is, how to see it in the UI, and the fact that it points
+      # at the SLOWEST operator rather than the one that looks busy. Latency and throughput
+      # metrics. The Flink UI as the diagnostic tool.
+      - n: "20"
+        slug: backpressure
+        title: "Backpressure — Reading the UI to Find Which Operator Is Actually Slow"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        status: planned
+      - n: "25"
+        slug: project-streaming-aggregate
+        title: "Project — A Windowed Aggregate That Survives a Restart and Late Data"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-in-production
+    title: In Production
+    tagline: evolving a job that is always running
+    level: advanced
+    episodes:
+      # COVER: the problem unique to long-running stateful jobs — you cannot just redeploy.
+      # Savepoint, stop, upgrade, restore. State schema evolution and what changes are
+      # compatible. Operator UIDs, and why forgetting to set them makes a job unrestorable —
+      # the single most painful avoidable mistake in Flink.
+      - n: "00"
+        slug: evolving-a-job
+        title: "Upgrading a Running Job — Operator UIDs, and the Restore That Fails Without Them"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: testing streaming logic without a cluster — the test harnesses, deterministic
+      # watermark generation, and asserting on emitted records rather than on timing. Never
+      # assert wall-clock time; drive event time explicitly.
+      - n: "05"
+        slug: testing
+        title: "Testing — Driving Event Time by Hand Instead of Waiting for a Clock"
+        hands_on: ["koan:author", "koan:predict"]
+        status: planned
+      # THE EPISODE THAT KEEPS THE TRACK HONEST.
+      # COVER: the operational bill — a cluster, state storage, checkpoint tuning, on-call for a
+      # job that must never stop. Against that: what you get, which is correctness over late
+      # data that a batch job cannot give at low latency.
+      # WHEN NOT TO: if the requirement is met by a fifteen-minute batch or by CDC into a
+      # warehouse, it is met more cheaply. Flink against Spark Structured Streaming in one
+      # honest paragraph: record-at-a-time and richer state, against micro-batch and a stack
+      # you may already run.
+      - n: "10"
+        slug: when-flink-is-worth-it
+        title: "When Flink Is Worth It — the Bill, and the Batch Job That Would Have Done"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "15"
+        slug: project-end-to-end
+        title: "Project — Kafka In, Windowed Result Out, Upgraded Without Losing State"
+        hands_on: ["koan:author", "koan:process:tool"]
+        core: true
+        tags: ["project"]
+        status: planned

@@ -1,0 +1,143 @@
+---
+title: "PDF with PDFBox — Reading and Writing the Documents and Reports Your Business Needs"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "intermediate"
+module: "series2-real-data"
+order: 7
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: produce an invoice a customer receives, and get trustworthy numbers back out of
+    one somebody sent you.
+
+    THE OTHER HALF OF 05, and the same shape: 05 reads the spreadsheet the business sends and
+    writes the one it asks for; 07 does both for the format the business actually deals in.
+    Between them they are the business-document pair, and 07 is the only episode anywhere in
+    the academy that produces an artefact a person OUTSIDE the company holds.
+
+    ── THE WRITING HALF ────────────────────────────────────────────────────
+    TWO LAYERS, IN THIS ORDER, and the order is the argument:
+      1. RAW PDFBox — PDPageContentStream, showText at coordinates you compute. No wrapping,
+         no pagination, no table, because a PDF has no such concepts. Show this ONCE; its job
+         is to explain why nobody builds a report this way and to make layer 2 legible.
+      2. openhtmltopdf ON PDFBox — HTML and CSS in, paginated PDF out. What you actually do,
+         and what WE do: openhtmltopdf-pdfbox is in bkend/reporting/pom.xml and
+         AbstractReporter.java:729 is the whole pattern — FreeMarker renders the template to
+         HTML, then
+             new PdfRendererBuilder().withHtmlContent(html, baseUri).toStream(os).run()
+
+    ── THE READING HALF — NOT A FOOTNOTE ───────────────────────────────────
+    THE THESIS: THERE ARE NO ROWS AND NO COLUMNS IN A PDF. There are glyphs at (x, y), and a
+    "table" is something you RECONSTRUCT. Every extraction bug follows from that one fact.
+    Make it concrete — print glyph positions before extracting anything.
+
+      READING ORDER IS NOT DRAWING ORDER. PDFTextStripper walks the content stream in paint
+      order, so a two-column layout interleaves — quietly, into text that still looks like
+      text. setSortByPosition(true) fixes it.
+
+      A SCANNED PDF RETURNS AN EMPTY STRING. Not an error. Zero rows, green job. A PDF whose
+      fonts carry no ToUnicode CMap returns confident garbage instead.
+
+    THE HOUSE PROVES THE HEADLINE TRAP IS REAL — the strongest in-house evidence in Series 2.
+    DocumentBurster's PDF engine is PDFBox, and PdfBurster.java:131 reads:
+        stripper.setSortByPosition(ctx.settings.isSortByPosition())
+    We exposed it AS A USER-FACING SETTING, per report, because it matters too often to
+    hardcode. Customers flip it — some without ever being told what it does. Use it.
+
+    TABULA IS A PARAGRAPH. tabula-java is built ON PDFBox and adds table heuristics (lattice
+    where there are ruling lines, stream where there is only whitespace). Name it, say it is a
+    layer above rather than an alternative, move on.
+
+    OUT OF SCOPE: OCR. Recognising that a PDF has no text layer is in scope and is the
+    decision that actually matters; extracting from an image is a different tool.
+
+    HOLD THIS LINE: both halves are DATA lessons, not layout tutorials. The drafting risk on
+    the writing half is that it becomes a CSS lesson.
+
+    WATCH THE SIZE. Raw PDFBox, openhtmltopdf, extraction, fonts, formatting and Tabula is a
+    lot for one slot. IF IT WILL NOT FIT, SPLIT IT — 07 writing, 08 reading — rather than
+    letting either half become a footnote.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:complete
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series2/_07/PdfKoans.groovy
+
+    THE ROUND TRIP IS WHAT MAKES THIS ONE EPISODE rather than two stapled together: generate
+    the PDF, read it back with PDFTextStripper, assert on the text. The writing half's
+    correctness is proved by the reading half's API. Deterministic, no clock.
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety.
+
+    The raw-PDFBox and extraction layers are Java. The template layer is where Groovy's
+    string handling earns its place — say so in one line rather than showing both everywhere. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written.
+
+    complete: finish the generation so the round-tripped text carries the right total and the
+    right customer name.
+
+    predict, and it covers BOTH halves — what does the extracted text say when:
+      · the total is null                → the word "null", on an invoice you already emailed
+      · the customer is named Ștefan     → "U+0218 is not available in this font", or a
+                                           silently dropped glyph
+      · the same two-column PDF is read with sortByPosition false, then true
+    The reader predicts all three before running anything. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here.
+
+    WRITING — five, and every one ships a document that opens fine:
+      · a NULL renders as the word "null". Series 1 · 30, somewhere it cannot be shrugged off.
+      · formatting scattered through the template, so one column disagrees with the next.
+        Format once, in one place.
+      · FONTS ARE WHERE ENCODING COMES BACK. PDFBox's built-ins are WinAnsi, so Ștefan and
+        Müller throw or vanish. Embed a font, or mangle people's names — Series 1 · 20 with a
+        customer's name on the line.
+      · a subtotal computed per RENDERED PAGE instead of per group. Totals come from the data,
+        never from what fit on the page.
+      · a wrong baseUri: relative CSS, images and fonts silently fail to resolve, and you get
+        an unstyled PDF with no error at all.
+
+    READING — a total that is wrong because two columns interleaved looks exactly like a total
+    that is right, and a scanned page yields zero rows without anything throwing.
+
+    THE ENDING TIES BOTH: none of it throws. Reconcile the document against the data that
+    produced it, or the data against a stated subtotal printed on the page itself — or you are
+    emailing a number nobody checked. */}
+
+TODO

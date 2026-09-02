@@ -1,0 +1,110 @@
+---
+title: "Quartz — Storing Schedules in a Database and Firing Them Once Across Instances"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series4-frameworks"
+order: 45
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: a schedule that outlives the process, fires once across instances, and can be
+    changed without a deploy.
+    CONSTRUCTS: the JDBC JobStore, Job and Trigger as separate things, clustering, misfire
+    instructions, JobDataMap.
+
+    IT PAYS AN IOU. Episode 30 says two app instances mean two runs and "nobody told you",
+    and closes on "the pointer to a database lock". The course never paid that. This and 45 do.
+
+    THE HOOK IS IN THE READER'S OWN PRODUCT: spring-boot-starter-quartz and
+    spring-boot-starter-quartz-test are ALREADY dependencies in the playground pom
+    (_apps/flowkraft/bkend-boot-groovy-playground/pom.xml) and nothing uses either. Same shape
+    as the empty Liquibase changelog at Series 3 · 20 — the scaffolding is there and the file
+    is blank.
+
+    WHAT @Scheduled STRUCTURALLY CANNOT DO:
+      - survive a restart: the schedule is a ROW, not a line in a jar
+      - fire once across N instances (clustering) — the failure episode 30 names
+      - MISFIRE POLICY: the app was down at 2 a.m. Run late, skip, or run every missed
+        occurrence at once? Choosing wrong is a wrong number, not an error — a catch-up
+        policy on an hourly job after a day's outage fires twenty-four times.
+      - SCHEDULES AS DATA, added and edited at runtime. A product whose users configure their
+        own report schedules cannot express that as an annotation, and this is the half of
+        Quartz worth the most to this house.
+
+    db-scheduler IS THE HONEST PARAGRAPH — https://github.com/kagkarlsson/db-scheduler — so
+    the episode does not read as "Quartz or nothing". SAME CATEGORY as Quartz (the schedule is
+    a row; nodes poll and claim what is due), but one table and a small API against Quartz's
+    many tables, Jobs, Triggers, Calendars and Listeners. Its distinctive move is a one-off
+    task scheduled at RUNTIME WITH PAYLOAD DATA — "run this for order 123 at 14:32" — which is
+    awkward in Quartz and impossible with @Scheduled.
+      VERIFY AGAINST THE READMEs BEFORE PUBLISHING. The comparison is from knowledge, not from
+      docs open in front of us, and a table count is exactly the claim that ages. Same rule as
+      the Flyway licensing line at Series 3 · 20.
+
+    THE CATEGORY POINT, which episode 40 states from the other side: Quartz and db-scheduler
+    are the SAME KIND of thing and the choice between them is weight. ShedLock is a different
+    kind. Do not present the three as one gradient.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series4/_45/QuartzKoans.groovy
+
+    NO CLOCK — see episode 30. Misfire instructions are a pure function of (policy, scheduled
+    time, actual start), so predict the outcome for each policy against a FIXED downtime
+    window. Never sleep and watch.
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety.
+
+    Groovy, since the playground that already carries the dependency is a Groovy app. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written.
+
+    predict: three misfire policies, one fixed outage window, what fires and how often.
+    The catch-up policy after a day's downtime is the one nobody guesses right.
+
+    diagnose: the same job scheduled on two instances, both firing, and the reader works
+    out which piece of clustering configuration was missing. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here.
+
+    Two instances loading the same file twice; a schedule that quietly vanished when the
+    pod was replaced; and the misfire catch-up that runs an hourly aggregate twenty-four
+    times in one minute and leaves twenty-four times the rows. All silent. */}
+
+TODO

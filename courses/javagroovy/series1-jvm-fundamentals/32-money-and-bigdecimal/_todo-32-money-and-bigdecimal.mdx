@@ -1,0 +1,127 @@
+---
+title: "Money and BigDecimal — Doing Arithmetic on Amounts and Rounding Them"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "beginner"
+module: "series1-jvm-fundamentals"
+order: 32
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: add up money and round it, and be able to say what the total should be.
+    CONSTRUCTS: BigDecimal.valueOf, scale, RoundingMode, compareTo, and the one place in the
+    calculation where rounding is allowed to happen.
+
+    THE FOURTH PARSING TRAP. Encodings (20), dates (25) and nulls (30) are here because the
+    header says a wrong one "silently corrupts a total", and 35 is where totals start being
+    computed. Money in a double corrupts a total the same way. This episode closes that set.
+
+    EVERY NUMBER BELOW WAS RUN on Temurin JDK 17, 2026-09-02. Use these, do not re-derive them
+    from memory — two plausible-sounding claims died against them.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series1/_32/MoneyAndBigDecimalKoans.groovy
+
+    THE ONE-FILE-BOTH-LANGUAGES KOAN, and it is the best one available in Series 1: Groovy's
+    decimal literals are BigDecimal, Java's are double, so `0.1 + 0.2` answers 0.3 in one and
+    0.30000000000000004 in the other — same Spock file, both green. The header asks koans to
+    DEMONSTRATE this track's thesis rather than assert it; this is that koan.
+      VERIFY ON GROOVY 4.0.22 FIRST. Documented Groovy semantics, but no Groovy runtime was
+      available when this brief was written, and the header's rule is verified-not-assumed.
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety.
+
+    Here the comparison IS the teaching, so both languages appear — but say why in one
+    line, because this is the exception to the rule and not a licence to alternate. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written.
+
+    predict: the rounding boundary, three values, before running anything.
+        1.005  ->  Math.round(v*100)/100.0 = 1.00   BigDecimal HALF_UP = 1.01
+        1.015  ->                            1.01                       1.02
+        2.675  ->                            2.68                       2.68
+    THE THIRD LINE IS WHY THIS IS AN EPISODE. The double is not reliably low, it is
+    UNPREDICTABLE — whether the binary value lands just under or just over the half is a
+    property of that particular number. "Doubles round down" would be a false rule. There
+    is no rule, and that is the finding.
+
+    diagnose: the reconciliation check that can never pass. 0.1 + 0.2 is
+    0.30000000000000004, so (0.1 + 0.2) == 0.3 is FALSE. Every job in Series 2 and 3 ends
+    by proving the number it loaded equals the number it read. Written against doubles that
+    check either never goes green, or gets "fixed" with a tolerance — and a tolerance wide
+    enough to swallow binary error is wide enough to swallow a missing row. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here.
+
+    WHAT IS NOT THE LESSON, and say so rather than letting the reader assume it:
+    ACCUMULATION DRIFT IS REAL BUT TINY. Ten thousand lines of 0.07 sum to 700.000000000091;
+    a thousand lines of 19.99 to 19990.000000000135. Both wrong, neither visible on a report
+    rounded to two places. Building the episode on "your totals drift" would teach a failure
+    the reader will never see.
+
+    THE CONSTRUCTS, all verified:
+      new BigDecimal(0.1)     -> 0.1000000000000000055511151231257827021181583404541015625
+      BigDecimal.valueOf(0.1) -> 0.1
+        The first takes the double's error as its exact value, and is the most common way a
+        codebase that "uses BigDecimal" is still wrong.
+      new BigDecimal("2.0").equals(new BigDecimal("2.00")) -> FALSE;  compareTo -> 0
+        Scale is part of identity, not of value, so a test asserting a CORRECT total fails.
+        Also where the header's one Groovy warning bites: Groovy's == is equals().
+      BigDecimal.ONE.divide(new BigDecimal("3")) -> ArithmeticException, "Non-terminating
+        decimal expansion; no exact representable decimal result". Division is the operation
+        that forces you to choose a scale and a RoundingMode. With (2, HALF_UP): 0.33
+
+    BIGDECIMAL DOES NOT SAVE YOU FROM THE INVOICE THAT WILL NOT FOOT, and the episode must
+    say so or it becomes "use BigDecimal and stop worrying". Three lines of 10.10, 20.20 and
+    30.30 at 8.5% tax: sum of the rounded lines is 65.76, rounded sum is 65.75 — IN BOTH
+    TYPES. That is not a numeric-type bug, it is a decision about WHERE rounding happens.
+    Every finance system makes it explicitly. END HERE: pick the place, write it down, and
+    reconcile against it.
+
+    LOCALE, found by accident while verifying the above: String.format("%.2f", 1.0) printed
+    "1,00" on the machine this was run on, because %f follows the DEFAULT LOCALE. The same
+    job writes 1.00 on the build server and 1,00 on a European workstation, breaking the CSV
+    downstream and shifting a column. BigDecimal.toString() is locale-independent. Straight
+    back to episode 20.
+
+    ONE LINE FORWARD, no more: JDBC maps NUMERIC and DECIMAL to BigDecimal, and getDouble()
+    on such a column silently discards the precision the database was keeping. Series 2 · 10
+    is where the reader meets it. */}
+
+TODO

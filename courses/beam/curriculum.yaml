@@ -1,0 +1,231 @@
+# The ordered episode list for Apache Beam. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an engine has a video.
+#
+# The job this track teaches: describe a data pipeline once, in a model that covers batch and
+# streaming together, and hand it to whichever runner your company happens to have.
+#
+# ============================================================================
+# THE HONEST FRAME, AND IT IS UNUSUAL FOR A TOOL COURSE
+# ============================================================================
+# Beam's premise is PORTABILITY: write once, run on Dataflow, Flink or Spark. Two things must
+# be said plainly or this course is marketing.
+#
+#   1. YOU PAY FOR PORTABILITY WHETHER OR NOT YOU USE IT. The abstraction sits above every
+#      runner, so you get the intersection of their capabilities, an extra layer to debug
+#      through, and a model that is harder than writing directly against one engine.
+#   2. ALMOST NOBODY ACTUALLY PORTS. The portability is usually insurance that is never
+#      claimed. Where a team is certain of its runner, writing Flink or Spark directly is
+#      simpler and better supported.
+#
+# SO WHY TEACH IT? Because the MODEL is genuinely the best-articulated account of streaming
+# semantics anywhere — what/where/when/how, and windowing and triggers as separable decisions
+# — and because Beam is what runs on Google Cloud Dataflow, which a great many teams have.
+# A reader who learns the model reads every other streaming system better.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL BEAM DOCUMENTATION
+# ============================================================================
+# beam.apache.org/documentation runs Basics of the Beam model, the Programming Guide
+# (Pipelines, PCollections, Transforms, Windowing, Triggers, State and Timers), then Runners
+# and Patterns. The Programming Guide's order IS this syllabus, and its four questions —
+# WHAT is computed, WHERE in event time, WHEN in processing time, HOW do refinements relate —
+# are the spine of Series 2.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL APACHE BEAM DOCUMENTATION. Before writing an
+# episode, open the Programming Guide's own section for that topic, use it as the COVERAGE
+# CHECKLIST, and use its VOCABULARY FOR THE NOUNS (PCollection, PTransform, ParDo, DoFn,
+# windowing, trigger, pane, runner). Anything left out should be left out because an academy
+# rule says so — ETL Series 3 · 20 owns the batch-against-streaming decision, Flink and Spark
+# own their own engines — and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the guide section named. A brief is
+# what a writer actually opens; a rule that lives only in this header is a rule that gets
+# forgotten at the exact moment it matters.
+#
+# ============================================================================
+# THE SEAM WITH JAVA & GROOVY FOR DATA
+# ============================================================================
+# Java & Groovy Series 4 · 28 teaches the Beam MODEL on the DirectRunner, in one JVM, with no
+# cluster — because DataPallas's playground ships Beam pipelines in src-examples/pipelines and
+# a reader extending it meets them. That episode is the introduction; THIS track is the rest:
+# windowing and triggers in depth, real runners, and the portability question answered.
+
+course: learn-beam
+track: beam
+title: Apache Beam
+
+prerequisites:
+  - course: learn-etl-pipelines
+    needs: "Series 3 · 20"
+    why: >-
+      That episode defines bounded against unbounded data and what event time and watermarks
+      are for. Beam's whole model is an answer to those questions, and this track does not
+      re-teach them.
+
+excludes:
+  - topic: "Whether you need streaming at all"
+    where: "covered in ETL & Data Pipelines, Series 3 · 20"
+  - topic: "Operating a Flink or Spark cluster"
+    where: "covered in Apache Flink and Apache Spark, and in Data Ops for the operational discipline"
+  - topic: "A first introduction to PCollections and DoFns"
+    where: "covered in Java & Groovy for Data, Series 4 · 28, on the DirectRunner. Series 1 here recaps it in one episode and moves on"
+
+series:
+  - slug: series1-the-model
+    title: The Model
+    tagline: pipelines, PCollections and transforms
+    level: advanced
+    episodes:
+      # COVER: Pipeline, PCollection (immutable, distributed, possibly unbounded), PTransform,
+      # and the runner. The INVERSION that defines the library: you DECLARE a graph and the
+      # runner decides when, where and how many times your code runs. @Setup / @StartBundle /
+      # @ProcessElement / @FinishBundle / @Teardown as the lifecycle.
+      # Recap only — Java & Groovy 4 · 28 introduced this.
+      - n: "00"
+        slug: pipelines-and-pcollections
+        title: "Pipelines, PCollections and Runners — You Declare, the Runner Decides"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: ParDo and DoFn, and the composite transforms built on them — GroupByKey,
+      # CoGroupByKey, Combine, Flatten, Partition. Why Combine is not just a fancy GroupByKey:
+      # it can be applied partially before the shuffle, which is the difference between a job
+      # that scales and one that does not.
+      - n: "05"
+        slug: transforms
+        title: "ParDo, GroupByKey and Combine — and Why Combine Scales Where GroupByKey Does Not"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: THE TRAP THIS TRACK MUST TEACH, and it is the one from Java & Groovy 4 · 28.
+      # A DoFn is instantiated many times, across threads and machines, and reused between
+      # bundles — so anything cached in a field is stale, shared, or both, and the output is
+      # quietly wrong with nothing thrown. Serializability requirements. Side inputs as the
+      # correct way to bring in a lookup table, and their size limits.
+      - n: "10"
+        slug: dofn-state-and-side-inputs
+        title: "The DoFn That Cached Something — Serializability and Side Inputs"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: IO connectors — TextIO, FileIO, AvroIO, ParquetIO, JdbcIO, KafkaIO, BigQueryIO.
+      # Writing correctly: the temp-then-rename pattern the runner does for you, and why a
+      # naive sink is not idempotent. Schemas and Row as the typed alternative to raw KVs.
+      - n: "15"
+        slug: io-and-schemas
+        title: "IO Connectors and Schemas — Reading and Writing Without Half-Written Output"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+
+  - slug: series2-time-and-triggers
+    title: Time and Triggers
+    tagline: what, where, when, and how — the four questions
+    level: advanced
+    episodes:
+      # COVER: the Beam model's own framing, which is the clearest in the industry and worth
+      # teaching as a framework rather than as API surface:
+      #   WHAT  is being computed  -> transforms
+      #   WHERE in event time      -> windowing
+      #   WHEN  in processing time -> triggers and watermarks
+      #   HOW   do refinements relate -> accumulation mode
+      # Establish all four before any code, because every later episode is one of them.
+      - n: "00"
+        slug: four-questions
+        title: "What, Where, When and How — the Four Questions Every Streaming Job Answers"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: windowing as assigning each element to one or more windows — fixed, sliding,
+      # sessions, global. Windowing applies to BATCH TOO, which is the insight that makes the
+      # unified model make sense: a bounded input is just one global window.
+      - n: "05"
+        slug: windowing
+        title: "Windowing — Fixed, Sliding and Sessions, and Why Batch Is One Global Window"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: triggers as the answer to "when do I emit" — the default watermark trigger,
+      # early firings for a speculative answer, late firings for what arrives after, and
+      # allowed lateness. Accumulation mode: ACCUMULATING against DISCARDING, and the fact that
+      # choosing wrong double-counts or under-counts with no error at all.
+      # THE PANE is the vocabulary: each firing produces a pane, and panes have to be
+      # reconciled by whatever consumes them.
+      - n: "10"
+        slug: triggers-and-panes
+        title: "Triggers, Panes and Accumulation — the Choice That Silently Double-Counts"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: state and timers in a DoFn for logic windows cannot express — per-key state,
+      # event-time and processing-time timers, and the same unbounded-key-space warning the
+      # Flink track carries. When to reach for this and when a window is enough.
+      - n: "15"
+        slug: state-and-timers
+        title: "State and Timers — Per-Key Logic That Windows Cannot Express"
+        hands_on: ["koan:count:rows-held", "koan:predict"]
+        status: planned
+      - n: "20"
+        slug: project-windowed-pipeline
+        title: "Project — A Windowed Pipeline That Handles Late Data Without Double-Counting"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-runners-and-reality
+    title: Runners and Reality
+    tagline: where it runs, and whether portability was worth it
+    level: advanced
+    episodes:
+      # COVER: the runners and what each actually changes — DirectRunner (testing, and
+      # deliberately non-deterministic to surface exactly the DoFn bugs from 1 · 10), Dataflow,
+      # Flink, Spark. Capability differences and the fact that "portable" does not mean
+      # "identical": triggers, state and IO support vary by runner.
+      # THE PRACTICAL WARNING: test on the runner you will deploy to, not only the DirectRunner.
+      - n: "00"
+        slug: runners
+        title: "Runners — Direct, Dataflow, Flink and Spark, and Where They Differ"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the portability framework — the Fn API, SDK harness containers, and cross-
+      # language transforms. This is how a Python pipeline runs a Java IO, and it is genuinely
+      # clever; it is also where the hardest debugging in Beam lives.
+      - n: "05"
+        slug: portability-framework
+        title: "The Portability Framework — How a Python Pipeline Runs a Java Connector"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
+      # COVER: testing — TestPipeline, PAssert, and TestStream for driving event time and
+      # watermarks by hand. Never assert wall-clock time; advance the watermark explicitly.
+      # This is the episode that makes streaming logic verifiable at all.
+      - n: "10"
+        slug: testing
+        title: "TestStream and PAssert — Driving Watermarks by Hand Instead of Waiting"
+        hands_on: ["koan:author", "koan:predict"]
+        core: true
+        status: planned
+      # THE CLOSING ARGUMENT.
+      # COVER: revisit the premise with everything now known. Beam wins when you are on
+      # Dataflow, when you genuinely need one codebase across batch and streaming, or when the
+      # cross-language story solves a real problem. It loses when you know your runner and
+      # could have written Flink or Spark directly, when the team is small, or when the
+      # abstraction's debugging cost exceeds the portability's value.
+      # SAY THE UNCOMFORTABLE PART: most teams never port, and insurance nobody claims is
+      # still a premium paid.
+      - n: "15"
+        slug: was-portability-worth-it
+        title: "Was Portability Worth It — the Premium on Insurance Nobody Claims"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-batch-and-streaming
+        title: "Project — One Pipeline That Runs Over a File and Over a Stream Unchanged"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        tags: ["project"]
+        status: planned

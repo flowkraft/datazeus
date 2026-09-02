@@ -1,0 +1,87 @@
+---
+title: "MyBatis — Mapping Hand-Written SQL Onto Java Objects"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "intermediate"
+module: "series2-real-data"
+order: 32
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: fold one join into a nested object graph without letting the mapper run the join for you.
+    CONSTRUCTS: SqlSession, the mapper interface, resultMap (association and collection),
+    dynamic SQL (<if>, <where>, and <foreach> for the variable-length IN list), and one
+    paragraph each on ExecutorType.BATCH and cursor/ResultHandler streaming — the MyBatis
+    spellings of 35 and 40, not a re-teaching of them.
+
+    IT IS HERE AND NOT IN SERIES 4, on the same two tests jOOQ was put through at 30:
+    it is a LIBRARY (you open a SqlSession and call it), and it is the SQL-FIRST POSITION,
+    which is the thing Series 4 is measured against rather than a member of it.
+
+    PAIRED WITH jOOQ ON PURPOSE. Two SQL-first bets, opposite answers to one question:
+    should the compiler check the SQL? jOOQ says yes and charges a codegen step against a
+    live schema. MyBatis says no and charges nothing — the SQL is a string, wrong at runtime
+    or not at all. The reader just finished 30 and can judge this in a sentence.
+
+    THE NAME IS "MyBatis". It began as Apache iBATIS and left the foundation in 2010; the
+    Apache part is the licence now, not the owner. Do not write "Apache MyBatis".
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:complete
+      koan:count:roundtrips
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series2/_32/MyBatisKoans.groovy
+
+    The counter arrives three episodes before 35, its first heavy use, and that is fine:
+    the header defines it at track level and "how many times did you go to the database"
+    needs no build-up.
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written.
+
+    THE HEADLINE KOAN: the same nested collection, twice. Written with `select=` it runs one
+    query per parent row; written with `resultMap=` it runs one query total. One attribute
+    apart, 1 against 1,001 on the counter. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here.
+
+    THE N+1 IS BACK, inside a tool the reader chose in order to avoid ORMs — and that is
+    the point. Unlike the JPA N+1 at Series 4 · 00, the SQL is fully visible in both cases,
+    so the counter and the cause sit on the same screen. Nothing throws; the job is just
+    slower every month as the parent table grows. */}
+
+TODO

@@ -1,0 +1,257 @@
+# The ordered episode list for Apache Iceberg & Table Formats.
+# Field docs live in courses/learnsql/curriculum.yaml. `short` is omitted until an episode has
+# a video.
+#
+# The job this track teaches: turn a folder of Parquet files into something that behaves like
+# a table — with transactions, schema changes that do not rewrite the world, and the ability to
+# ask what it looked like last Tuesday.
+#
+# ============================================================================
+# THE PROBLEM THE FORMAT SOLVES, WHICH MUST COME FIRST
+# ============================================================================
+# A "table" in a data lake used to be a directory convention: some Parquet files, a folder
+# layout that encoded partitions, and a metastore holding a rough description. Everything wrong
+# with that follows from having no manifest of what belongs to the table:
+#   - a reader could see a half-written commit, because a write was a file copy
+#   - listing a large prefix on object storage to find the files was slow and expensive
+#   - changing the partitioning meant rewriting every file
+#   - renaming a column broke every consumer, because the name WAS the identity
+#   - there was no way to ask what the table contained an hour ago
+#
+# A table format is a METADATA LAYER that fixes all five. Teach the problem before the product,
+# or the reader learns an API without knowing what it bought.
+#
+# ============================================================================
+# ICEBERG LEADS, BUT THIS IS NOT AN ICEBERG-ONLY COURSE
+# ============================================================================
+# The title says "& Table Formats" deliberately. Delta Lake and Hudi solve the same problem
+# with different designs, and a reader will meet whichever one their platform chose. Series 3
+# compares all three honestly and is explicit that the differences narrow every year.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL ICEBERG DOCUMENTATION
+# ============================================================================
+# iceberg.apache.org/docs runs the Table Spec, then Tables (branching, configuration,
+# evolution, maintenance, partitioning, performance), then the engine integrations (Spark,
+# Flink, Trino) and the catalogs. THE TABLE SPEC IS UNUSUALLY READABLE and is the right source
+# for Series 1 — most Iceberg confusion is metadata-layer confusion.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL APACHE ICEBERG DOCUMENTATION, and the equivalent
+# official docs for Delta and Hudi wherever those are the subject. Before writing an episode,
+# open the spec or docs page for that topic, use it as the COVERAGE CHECKLIST, and use its
+# VOCABULARY FOR THE NOUNS (snapshot, manifest, manifest list, metadata file, partition spec,
+# hidden partitioning). Anything left out should be left out because an academy rule says so —
+# Data Warehousing owns the lakehouse concept, Spark and Flink own their engines — and never
+# because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the spec or docs section named. A
+# brief is what a writer actually opens; a rule that lives only in this header is a rule that
+# gets forgotten at the exact moment it matters.
+#
+# THIS IS THE FASTEST-MOVING SPACE IN THE CATALOGUE — the three formats are converging, and
+# vendors change position often. Date and version every comparison in Series 3, and treat an
+# old episode as unverified.
+
+course: learn-iceberg
+track: iceberg
+title: Apache Iceberg & Table Formats
+
+prerequisites:
+  - course: learn-data-warehousing
+    needs: "Series 3 · 20"
+    why: >-
+      That episode introduces the lakehouse — Parquet and Iceberg queried straight off files.
+      This track is the format layer underneath it in depth, and it assumes you already know
+      why anyone would want a table on object storage in the first place.
+
+excludes:
+  - topic: "Why a lakehouse instead of a warehouse"
+    where: "covered in Data Warehousing, Series 3 · 20, and compared against a columnar server at Series 3 · 35"
+  - topic: "The engines that read and write these tables"
+    where: "covered in Apache Spark, Apache Flink and DuckDB. Here the engine is the client and the format is the subject"
+  - topic: "Columnar storage and why Parquet is fast"
+    where: "covered in Data Warehousing, Series 2 · 00. Assumed here"
+  - topic: "Running a catalog service in production"
+    where: "covered in Data Ops for the operational discipline. Series 2 · 00 here is what a catalog IS and how to choose one"
+
+series:
+  - slug: series1-how-a-table-format-works
+    title: How a Table Format Works
+    tagline: snapshots, manifests, and why a commit is atomic
+    level: advanced
+    episodes:
+      # COVER: the five problems above, demonstrated on a plain Parquet directory before any
+      # format is introduced — a half-written read, a slow LIST, a repartition that rewrites
+      # everything, a rename that breaks a consumer. THEN introduce the idea of a manifest.
+      # The episode earns the rest of the course.
+      - n: "00"
+        slug: the-problem
+        title: "A Folder Is Not a Table — the Five Things That Break Without a Manifest"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the metadata tree, which is the whole product — metadata file, manifest list,
+      # manifests, data files. A SNAPSHOT is a complete list of the files in the table at a
+      # point in time. A commit is an ATOMIC SWAP OF ONE POINTER to a new metadata file, which
+      # is why readers never see a half-written write and why optimistic concurrency works.
+      # Read the spec for this episode; it is short and clear.
+      - n: "05"
+        slug: snapshots-and-manifests
+        title: "Snapshots, Manifests and the Pointer Swap That Makes a Commit Atomic"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: hidden partitioning — the user queries a timestamp and Iceberg derives the
+      # partition, so nobody has to remember to filter on a synthetic dt column. Compare with
+      # the Hive convention where forgetting that filter scans everything. Partition evolution:
+      # change the spec and OLD DATA IS NOT REWRITTEN, because each manifest records the spec it
+      # was written under.
+      # THIS IS THE FEATURE MOST WORTH THE COURSE — it removes a whole class of user error.
+      - n: "10"
+        slug: hidden-partitioning
+        title: "Hidden Partitioning — Querying a Timestamp Without Knowing the Layout"
+        hands_on: ["koan:count:scanned", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: schema evolution done by FIELD ID rather than by name or position, which is why
+      # add, drop, rename and reorder are all safe and free. Type promotion rules. Compare with
+      # the Parquet-by-name convention and the breakage it causes.
+      - n: "15"
+        slug: schema-evolution
+        title: "Schema Evolution by Field ID — Why a Rename Costs Nothing and Breaks Nobody"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: time travel and rollback — reading AS OF a snapshot or timestamp, and rolling
+      # back a bad write. The audit and reproducibility case, which is what a data team actually
+      # uses it for. Branching and tagging for write-audit-publish.
+      - n: "20"
+        slug: time-travel
+        title: "Time Travel, Rollback and Branches — Reading the Table as It Was"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+
+  - slug: series2-running-a-table
+    title: Running a Table
+    tagline: catalogs, writes, and the maintenance nobody warns you about
+    level: advanced
+    episodes:
+      # COVER: the catalog as the thing that holds the current-metadata pointer, and why it is
+      # the one component you cannot avoid choosing. Hive Metastore, JDBC, Glue, Nessie, and the
+      # REST catalog spec as where the ecosystem is going. What changes for a reader depending
+      # on which one they have.
+      - n: "00"
+        slug: catalogs
+        title: "Catalogs — Who Holds the Pointer, and Why You Must Choose One"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: how updates and deletes work on immutable files — copy-on-write against
+      # merge-on-read, position deletes and equality deletes. The trade stated plainly:
+      # copy-on-write makes reads fast and writes expensive, merge-on-read the reverse, and
+      # choosing wrong for your workload is the most consequential Iceberg decision after the
+      # partition spec.
+      - n: "05"
+        slug: copy-on-write-merge-on-read
+        title: "Copy-on-Write Against Merge-on-Read — Deletes on Files That Cannot Change"
+        hands_on: ["koan:choose", "koan:count:scanned"]
+        core: true
+        status: planned
+      # THE EPISODE THAT SAVES PEOPLE FROM A SLOW TABLE SIX MONTHS IN, and the one most
+      # introductions omit entirely.
+      # COVER: maintenance is not optional. Compaction (rewrite_data_files) for the small-files
+      # problem that streaming writes create, snapshot expiry (or metadata grows forever),
+      # orphan file cleanup, and manifest rewriting. What each one costs and how often to run it.
+      # THE FAILURE: a table that got slower every week and nobody knew there was a chore.
+      - n: "10"
+        slug: maintenance
+        title: "Compaction and Expiry — the Maintenance Nobody Tells You Is Mandatory"
+        hands_on: ["koan:count:scanned", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: concurrent writers and optimistic concurrency — two writers, one pointer, and a
+      # retry on conflict. Which operations conflict and which do not. Isolation guarantees, and
+      # the honest limits of them.
+      - n: "15"
+        slug: concurrency
+        title: "Two Writers, One Pointer — Optimistic Concurrency and What Conflicts"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
+      # COVER: reading and writing from the engines a reader actually has — Spark, Flink,
+      # Trino, DuckDB, and pyiceberg for the no-JVM case. What each supports and what it does
+      # not, because support is uneven and assuming parity is the common mistake.
+      - n: "20"
+        slug: engines
+        title: "Engines — Spark, Flink, Trino, DuckDB and pyiceberg, and Their Uneven Support"
+        hands_on: ["koan:choose", "koan:complete"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-a-real-table
+        title: "Project — A Table That Survives a Schema Change, a Bad Write and a Rollback"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-choosing
+    title: Choosing a Format
+    tagline: Iceberg, Delta and Hudi — and whether you need any of them
+    level: advanced
+    episodes:
+      # COVER: Delta Lake's design against Iceberg's — a transaction log of ordered JSON
+      # commits with checkpoints, against a metadata tree with a pointer swap. What that
+      # difference actually causes: Delta's log is simpler and its history is linear;
+      # Iceberg's manifests make partition evolution and multi-engine writes easier.
+      # DATE AND VERSION EVERY CLAIM. These converge yearly.
+      - n: "00"
+        slug: delta-lake
+        title: "Delta Lake — A Transaction Log Instead of a Metadata Tree"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: Hudi's different starting point — it was built for upserts and incremental
+      # pulls, with copy-on-write and merge-on-read table types as first-class and record-level
+      # indexes. Where that still wins: high-frequency upserts on a key, and incremental
+      # consumption downstream.
+      - n: "05"
+        slug: hudi
+        title: "Hudi — Built for Upserts and Incremental Reads First"
+        hands_on: ["koan:choose", "koan:predict"]
+        status: planned
+      # THE DECISION EPISODE, and it follows Database X vs Database Y's rules: say what they
+      # AGREE on first, because it is most of it — ACID on object storage, time travel, schema
+      # evolution, compaction, and broad engine support.
+      # THEN what actually decides it in practice, which is rarely the technology: which engine
+      # you run, which vendor you buy from, and which format your catalog and query engine both
+      # support well today. Say that plainly.
+      - n: "10"
+        slug: choosing
+        title: "Choosing — What All Three Agree On, and What Actually Decides It"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # THE EPISODE THAT KEEPS THE TRACK HONEST, and it is the academy's standing position.
+      # COVER: a table format buys you ACID, evolution and time travel on OBJECT STORAGE, at
+      # the cost of a catalog, a maintenance schedule and a more complicated stack. If the data
+      # fits in a warehouse or a columnar server, that server already gives you all three with
+      # none of the chores.
+      # THE QUESTION: are you on object storage with several engines reading the same data? If
+      # not, ClickHouse or a warehouse is simpler, and DuckDB over plain Parquet is simpler
+      # still. Cite Data Warehousing Series 3 · 35.
+      - n: "15"
+        slug: do-you-need-one
+        title: "Do You Need a Table Format — or Would a Warehouse Have Given You All Three?"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-migrate
+        title: "Project — Turn a Parquet Folder Into a Table Without Rewriting the Data"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        tags: ["project"]
+        status: planned

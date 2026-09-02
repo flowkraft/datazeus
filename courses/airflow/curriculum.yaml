@@ -1,0 +1,253 @@
+# The ordered episode list for Apache Airflow. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: express what must run, in what order, and what to do when a step
+# fails — and be able to re-run last month without breaking anything downstream.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# AIRFLOW IS AN ORCHESTRATOR, NOT A PROCESSING ENGINE. Every serious Airflow problem in the
+# wild comes from moving data inside a task — pulling a table into a pandas DataFrame in the
+# scheduler's worker and writing it back. Airflow's job is to TELL SOMETHING ELSE to do the
+# work, watch whether it succeeded, and know what depends on it.
+#
+# A DAG that does the work itself does not scale, cannot be tested, and turns the orchestrator
+# into a single point of failure for compute it was never designed to do.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL AIRFLOW DOCUMENTATION
+# ============================================================================
+# airflow.apache.org/docs runs Core Concepts (DAGs, Tasks, Operators, Scheduling, XComs,
+# Params), Authoring and Scheduling, Administration and Deployment, then Best Practices. Its
+# Core Concepts section is the right order for Series 1, and its Best Practices page should be
+# read before Series 2 is written.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL APACHE AIRFLOW DOCUMENTATION. Before writing an
+# episode, open the docs' own page for that topic, use it as the COVERAGE CHECKLIST, and use
+# its VOCABULARY FOR THE NOUNS (DAG, task instance, logical date, catchup, XCom, pool, sensor).
+# Anything left out should be left out because an academy rule says so — ETL owns DAGs and
+# idempotency as concepts, Data Ops owns choosing and running a scheduler — and never because
+# it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the docs page named. A brief is what
+# a writer actually opens; a rule that lives only in this header is a rule that gets forgotten
+# at the exact moment it matters.
+#
+# AIRFLOW 2 AND 3 DIFFER SUBSTANTIALLY — the TaskFlow API, datasets/assets and scheduling
+# changed. State the version every claim was checked against; an episode written from Airflow 1
+# memory teaches things that no longer exist.
+#
+# ============================================================================
+# THE SEAM WITH ETL & DATA PIPELINES AND DATA OPS
+# ============================================================================
+#   ETL 2 · 45   owns expressing a pipeline as a DAG, whatever ends up running it.
+#   ETL 1 · 30   owns idempotency and re-runnable loads. This track APPLIES it — backfills are
+#                only safe because the load is idempotent, and that is not re-taught here.
+#   DATA OPS     owns choosing a scheduler at all (3 · 00) and operating one.
+#   HERE         is Airflow itself: the scheduler's model, and authoring for it.
+
+course: learn-airflow
+track: airflow
+title: Apache Airflow
+
+prerequisites:
+  - course: learn-etl-pipelines
+    needs: "Series 1, and Series 2 · 45"
+    why: >-
+      You need a pipeline worth orchestrating, and you need idempotency — because every
+      backfill and every retry in this course is safe only if the load underneath is
+      re-runnable. ETL & Data Pipelines Series 1 · 30 is that lesson and this track assumes it.
+
+excludes:
+  - topic: "Whether to use an orchestrator at all, and which one"
+    where: "covered in Data Ops, Series 3 · 00, which chooses between cron, systemd timers and an orchestrator"
+  - topic: "Idempotency and re-runnable loads"
+    where: "covered in ETL & Data Pipelines, Series 1 · 30. Assumed here — every backfill depends on it"
+  - topic: "Deploying and operating Airflow — executors at scale, Kubernetes, upgrades, HA"
+    where: "covered in Data Ops for the operational discipline. Series 3 · 00 here covers only what an author must know about the executor"
+  - topic: "The work the tasks actually do"
+    where: "covered in ETL & Data Pipelines, Analytics Engineering with dbt, and the engine tracks. A DAG orchestrates; it does not transform"
+
+series:
+  - slug: series1-dags-and-scheduling
+    title: DAGs and Scheduling
+    tagline: the model, and the date that is not today
+    level: intermediate
+    episodes:
+      # COVER: DAG, task, operator, task instance, and the DAG file as PYTHON THAT IS PARSED
+      # REPEATEDLY — so top-level code runs on every parse, and an API call at module scope
+      # will hammer something every thirty seconds. That is the first real trap.
+      # The TaskFlow API (@dag, @task) as the modern way, with classic operators alongside
+      # because every existing codebase uses them.
+      - n: "00"
+        slug: dags-and-tasks
+        title: "DAGs, Tasks and the File That Is Parsed Every Thirty Seconds"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # THE EPISODE THAT PREVENTS THE MOST CONFUSION IN THE PRODUCT.
+      # COVER: the logical date (formerly execution_date) is the START of the interval, so a
+      # daily DAG for the 1st RUNS AT THE END of the 1st. data_interval_start/end as the
+      # modern, clearer names. Why using datetime.now() inside a task is the cardinal sin:
+      # it makes the task non-deterministic and every backfill wrong.
+      # THE RULE: a task should compute from its interval, never from the wall clock.
+      - n: "05"
+        slug: logical-date
+        title: "The Logical Date — Why the Run for Monday Happens on Tuesday, and now() Is a Bug"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: schedule expressions (cron, timedelta, presets), start_date, and CATCHUP — which
+      # defaults on and will launch a hundred runs the moment you unpause a DAG with an old
+      # start_date. max_active_runs. Backfill from the CLI, and the fact that it is only safe
+      # because the load is idempotent.
+      - n: "10"
+        slug: scheduling-and-catchup
+        title: "Schedules, catchup and Backfills — the Hundred Runs You Did Not Mean to Start"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: dependencies with >> and <<, task groups, and TRIGGER RULES — all_success is the
+      # default, and all_done / one_failed / none_failed_min_one_success are how you express
+      # cleanup and branching. BranchPythonOperator and the skipped-downstream surprise.
+      - n: "15"
+        slug: dependencies-and-trigger-rules
+        title: "Dependencies and Trigger Rules — Branching, Cleanup, and Why Downstream Skipped"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: XComs for passing SMALL values between tasks, and the hard rule that they are
+      # metadata and not a data channel — they live in the Airflow database, and pushing a
+      # DataFrame through one is the classic way to fill it. Pass a POINTER (a path, a key, a
+      # table name), never the payload. Connections and Variables, and secrets backends.
+      - n: "20"
+        slug: xcoms-and-connections
+        title: "XComs Carry Pointers, Not Data — and Where Credentials Belong"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-first-dag
+        title: "Project — A DAG That Is Safe to Re-Run for Any Day Last Month"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-authoring-well
+    title: Authoring Well
+    tagline: orchestrate, do not compute
+    level: advanced
+    episodes:
+      # THE TRACK'S THESIS EPISODE.
+      # COVER: the operator zoo, and choosing the one that makes something ELSE do the work —
+      # SQL operators against the warehouse, dbt, a Spark submit, a container. Against the
+      # antipattern: PythonOperator pulling a table into pandas on the worker.
+      # Deferrable operators and the async triggerer, which is how a job waits without holding
+      # a worker slot.
+      - n: "00"
+        slug: operators
+        title: "Choosing an Operator — Make Something Else Do the Work"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: sensors as "wait for a condition", poke against reschedule mode, and the
+      # classic outage: a hundred sensors in poke mode occupying every worker slot so nothing
+      # else can run. Deferrable sensors as the modern fix. Timeouts, and the sensor that waits
+      # forever for a file that will never arrive.
+      - n: "05"
+        slug: sensors
+        title: "Sensors — The Hundred Pokes That Filled Every Worker Slot"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: retries, retry_delay and exponential backoff; on_failure_callback and alerting;
+      # SLAs and their limitations. Task-level against DAG-level timeouts. What a retry means
+      # for a task that is not idempotent — which is the whole reason the prerequisite exists.
+      - n: "10"
+        slug: retries-and-alerts
+        title: "Retries, Timeouts and Alerts — and What a Retry Does to a Non-Idempotent Task"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: dynamic task mapping (.expand) as the modern replacement for generating tasks in
+      # a loop at parse time — one task per file, decided at runtime. The old pattern and why it
+      # made the DAG file slow and the graph unstable.
+      - n: "15"
+        slug: dynamic-task-mapping
+        title: "Dynamic Task Mapping — One Task Per File, Decided at Runtime"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      # COVER: datasets/assets as data-aware scheduling — a DAG that runs when an upstream DAG
+      # produced something, rather than on a clock guess. Why this replaces the fragile
+      # ExternalTaskSensor pattern and the "schedule it 20 minutes later and hope" habit.
+      - n: "20"
+        slug: data-aware-scheduling
+        title: "Datasets — Running When the Data Is Ready Instead of Guessing a Time"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: testing DAGs — import-time validation as the cheapest useful test, unit-testing
+      # the callable separately from the operator, and dag.test(). Linting for the top-level
+      # code trap from 1 · 00. Structuring a repo so the logic is importable and testable
+      # outside Airflow entirely.
+      - n: "25"
+        slug: testing-dags
+        title: "Testing DAGs — Keep the Logic Outside Airflow So It Can Be Tested at All"
+        hands_on: ["koan:author", "koan:diagnose"]
+        status: planned
+      - n: "30"
+        slug: project-multi-dag
+        title: "Project — Two DAGs Where One Runs Because the Other Produced Something"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-running-it
+    title: Running It
+    tagline: what an author must know about the machinery
+    level: advanced
+    episodes:
+      # COVER: the architecture as far as an author needs it — scheduler, webserver, workers,
+      # metadata database, triggerer. Executors (Local, Celery, Kubernetes) and what each
+      # changes about how your task runs and where its logs are. Parallelism, pools and
+      # priority_weight as the way to stop one DAG starving everything else.
+      - n: "00"
+        slug: executors-and-pools
+        title: "Executors and Pools — Where Your Task Runs, and Stopping One DAG Starving the Rest"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: reading the UI when something is wrong — grid and graph views, task logs, and
+      # the states that confuse people (queued against running, up_for_retry, upstream_failed,
+      # and the dreaded zombie task). Clearing tasks to re-run part of a DAG.
+      - n: "05"
+        slug: debugging-a-run
+        title: "Debugging a Run — Task States, Zombies, and Clearing to Re-Run Part of a DAG"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # THE EPISODE THAT KEEPS THE TRACK HONEST.
+      # COVER: what Airflow costs — a database, a scheduler, workers, and an upgrade path that
+      # has broken people before. When a cron entry and a shell script genuinely are enough
+      # (one job, no dependencies, no backfills), and when they are not (a graph, retries,
+      # backfills, and a team that needs to see what ran).
+      # AND THE ALTERNATIVES, named fairly: Dagster, Prefect, and the warehouse-native
+      # schedulers. This track does not need to pretend Airflow is the only answer.
+      - n: "10"
+        slug: is-airflow-worth-it
+        title: "Is Airflow Worth It — the Cron Entry That Would Have Done, and the Alternatives"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "15"
+        slug: project-production-dag
+        title: "Project — Take a Fragile Chain of Cron Jobs and Express It as One DAG"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        tags: ["project"]
+        status: planned

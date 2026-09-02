@@ -1,0 +1,253 @@
+# The ordered episode list for Oracle Database. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: be productive in the database you INHERIT. Nobody chooses Oracle
+# on a greenfield project any more; they arrive at a company that has run it for twenty years,
+# and the schema, the PL/SQL and the conventions are already there. This track is written for
+# that reader.
+#
+# ============================================================================
+# THIS IS A DELTA TRACK
+# ============================================================================
+#     WOULD THIS SENTENCE BE FALSE ON POSTGRESQL?
+# Learn SQL owns SQL. What passes the test here: users-are-schemas, DUAL, NUMBER and VARCHAR2,
+# the empty-string-is-NULL rule, sequences, MERGE, PL/SQL, and an optimizer with hints.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL ORACLE DOCUMENTATION
+# ============================================================================
+# The Oracle Database documentation set is split by book — Concepts, SQL Language Reference,
+# PL/SQL Language Reference, Administrator's Guide, SQL Tuning Guide. Follow those books and
+# their vocabulary:
+#   Concepts + SQL Language Reference ..... Series 1
+#   PL/SQL Language Reference ............. Series 2
+#   SQL Tuning Guide ...................... Series 3
+#   Administrator's Guide ................. not this course — Data Ops
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL ORACLE DOCUMENTATION. Before writing an episode,
+# open the book that owns that topic (Concepts, SQL Language Reference, PL/SQL Language
+# Reference, SQL Tuning Guide), use its section as the COVERAGE CHECKLIST, and use its
+# VOCABULARY FOR THE NOUNS. Anything left out should be left out because an academy rule says
+# so — Learn SQL owns the SQL, and the Administrator's Guide is Data Ops' and not ours — and
+# never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, naming the book and the section. A brief
+# is what a writer actually opens; a rule that lives only in this header is a rule that gets
+# forgotten at the exact moment it matters.
+#
+# ============================================================================
+# LICENSING, AND HOW THIS TRACK HANDLES IT
+# ============================================================================
+# Oracle's licensing shapes what a reader is allowed to DO, which makes it a technical
+# constraint here and not a commercial aside. Two rules:
+#   1. TEACH AGAINST FREE EDITIONS. Oracle Database Free (formerly XE) and the free
+#      container images are what a learner can actually install. Everything in Series 1 and 2
+#      must work there, and where Series 3 needs more, say so.
+#   2. NAME THE PAID-FEATURE TRAPS. Diagnostics and Tuning Pack — which is what AWR, ASH and
+#      parts of Enterprise Manager belong to — is separately licensed, and running those views
+#      on an unlicensed database is a real audit finding. Series 3 · 00 says this out loud and
+#      teaches the free alternatives first.
+# WE ARE NOT LAWYERS AND THE EPISODE MUST NOT PRETEND OTHERWISE: state the trap, point at the
+# reader's own licence, and move on. Verify current terms before publishing; Oracle changes them.
+
+course: learn-oracle
+track: oracle
+title: Oracle Database
+
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1 and Series 2"
+    why: >-
+      This track assumes you can already write the query. What it teaches is Oracle's dialect,
+      its object model and its procedural language — the things that make SQL you know behave
+      in a way you did not expect.
+
+excludes:
+  - topic: "SQL itself"
+    where: "covered in Learn SQL"
+  - topic: "Database administration — RMAN, Data Guard, patching, storage, RAC operations"
+    where: "not covered. This track is for the person writing queries and PL/SQL, not the DBA"
+  - topic: "Choosing Oracle for a new system"
+    where: "covered in Database X vs Database Y, Series 1 · 05, which is honest about how much of that decision is the licence"
+
+series:
+  - slug: series1-oracle-essentials
+    title: Oracle Essentials
+    tagline: the object model, the types, and the rules that surprise everyone
+    level: intermediate
+    episodes:
+      # COVER: SQLcl (the modern SQL*Plus) and SQL Developer. The connect string forms —
+      # EZConnect, TNS, and why tnsnames.ora still exists. SET commands that make output
+      # readable. DESCRIBE. Then the object model a Postgres reader trips over: A USER IS A
+      # SCHEMA, there is no separate CREATE SCHEMA worth using, and a "database" means the
+      # whole instance. CDB/PDB in one paragraph.
+      - n: "00"
+        slug: connecting-and-the-object-model
+        title: "SQLcl and the Object Model — A User Is a Schema, and What 'Database' Means Here"
+        hands_on: ["koan:capture", "koan:complete"]
+        core: true
+        status: planned
+      # THE EPISODE THAT PREVENTS THE MOST WRONG ANSWERS.
+      # COVER: THE EMPTY STRING IS NULL. '' = NULL in Oracle and nowhere else in this
+      # catalogue, so WHERE name = '' matches nothing, and a NOT NULL column happily rejects an
+      # empty string. Then NUMBER (arbitrary precision, and NUMBER without precision is not
+      # DECIMAL), VARCHAR2 vs CHAR and the blank-padding difference, DATE ALWAYS HAS A TIME
+      # COMPONENT (another silent wrong-answer generator), TIMESTAMP WITH LOCAL TIME ZONE, and
+      # CLOB/BLOB. DUAL, and why a SELECT needs a FROM.
+      - n: "05"
+        slug: types-and-the-null-rule
+        title: "Types, DUAL, and the Rule That the Empty String Is NULL"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: sequences and .NEXTVAL, the modern GENERATED AS IDENTITY, and the trigger-based
+      # pattern you will find in every legacy schema. MERGE as Oracle's upsert — it is the
+      # standard statement and Oracle's implementation is the mature one. INSERT ALL for
+      # multi-table inserts. RETURNING INTO.
+      - n: "10"
+        slug: sequences-and-merge
+        title: "Sequences, IDENTITY and MERGE — Generated Keys and Upserts"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the data dictionary as the thing you will live in when you inherit a schema —
+      # USER_/ALL_/DBA_ prefixes and what each means, USER_TAB_COLUMNS, USER_CONSTRAINTS,
+      # USER_INDEXES, USER_SOURCE for finding PL/SQL by content. How to reconstruct a table's
+      # DDL with DBMS_METADATA.
+      # THE SKILL: reading a schema nobody documented is most of the job on an inherited system.
+      - n: "15"
+        slug: the-data-dictionary
+        title: "The Data Dictionary — Reading a Schema Nobody Documented"
+        hands_on: ["koan:complete", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: analytic functions (Oracle invented much of this), CONNECT BY as the older
+      # hierarchy syntax you WILL meet, alongside recursive CTEs which are the portable answer.
+      # DECODE and NVL as the older spellings of CASE and COALESCE. The (+) outer join operator
+      # in legacy code, and how to read it.
+      # FRAMED AS READING SKILLS: know it, do not write new code with it.
+      - n: "20"
+        slug: legacy-sql-you-will-meet
+        title: "CONNECT BY, DECODE and (+) — Reading the SQL Already in the Codebase"
+        hands_on: ["koan:equivalent", "koan:predict"]
+        status: planned
+      - n: "25"
+        slug: project-explore-a-schema
+        title: "Project — Take an Unfamiliar Oracle Schema and Answer a Question From It"
+        hands_on: ["koan:author"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-plsql
+    title: PL/SQL
+    tagline: the procedural language the codebase is already written in
+    level: advanced
+    episodes:
+      # COVER: why PL/SQL matters here more than PL/pgSQL does in the Postgres track — on an
+      # inherited Oracle system a large share of the business logic IS in the database, and you
+      # do not get to choose otherwise. Blocks, DECLARE/BEGIN/EXCEPTION/END, variables and
+      # %TYPE/%ROWTYPE, IF/LOOP/CASE.
+      - n: "00"
+        slug: plsql-basics
+        title: "PL/SQL Blocks — %TYPE, %ROWTYPE and the Shape of the Language"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: procedures, functions, and PACKAGES — the spec/body split, which is the unit of
+      # organisation in every real Oracle codebase and has no Postgres equivalent. Package
+      # state and its session lifetime. Invoker vs definer rights.
+      - n: "05"
+        slug: packages
+        title: "Packages — The Spec, the Body, and the Unit Every Oracle Codebase Is Built From"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: explicit and implicit cursors, cursor FOR loops, and then the thing that makes
+      # PL/SQL fast or slow — BULK COLLECT and FORALL. The context switch between the PL/SQL
+      # and SQL engines is the cost, and row-at-a-time loops are the classic performance bug in
+      # inherited code. LIMIT on BULK COLLECT to bound memory.
+      # SEAM: this is the same lesson as batching in the language tracks, in Oracle's spelling.
+      - n: "10"
+        slug: cursors-and-bulk
+        title: "Cursors, BULK COLLECT and FORALL — Why Row-at-a-Time PL/SQL Is Slow"
+        hands_on: ["koan:count:roundtrips", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: exceptions — predefined, user-defined, RAISE_APPLICATION_ERROR, and the
+      # WHEN OTHERS THEN NULL antipattern that silently swallows every error in the system.
+      # Autonomous transactions and their one legitimate use (logging), plus their misuse.
+      - n: "15"
+        slug: exceptions
+        title: "Exceptions — and the WHEN OTHERS That Swallows Everything"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        status: planned
+      # COVER: triggers, and Oracle's mutating-table error, which is the one that stops people.
+      # Compound triggers as the modern answer. Then dynamic SQL: EXECUTE IMMEDIATE, bind
+      # variables, and DBMS_SQL — with injection treated as a real risk, because dynamic SQL in
+      # PL/SQL is where it happens.
+      - n: "20"
+        slug: triggers-and-dynamic-sql
+        title: "Triggers, Mutating Tables and Dynamic SQL — Where Injection Actually Happens"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        status: planned
+      - n: "25"
+        slug: project-package
+        title: "Project — Write a Package That Loads and Reconciles a Table"
+        hands_on: ["koan:author", "koan:count:roundtrips"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-performance
+    title: Performance
+    tagline: reading a real plan, and the tools you are licensed to use
+    level: advanced
+    episodes:
+      # COVER: the licensing warning FIRST — AWR and ASH belong to the Diagnostics and Tuning
+      # Pack and running them unlicensed is an audit finding. Then the free tools that do most
+      # of the job: EXPLAIN PLAN and DBMS_XPLAN.DISPLAY, and crucially
+      # DBMS_XPLAN.DISPLAY_CURSOR with the ACTUAL plan and A-Rows against E-Rows.
+      # THE ONE NUMBER: estimated rows against actual rows, same as every other engine.
+      - n: "00"
+        slug: reading-a-plan
+        title: "DBMS_XPLAN — The Plan Oracle Actually Used, and Which Tools You May Run"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the cost-based optimizer, statistics via DBMS_STATS, histograms, and bind
+      # variable peeking plus adaptive cursor sharing — which is Oracle's version of the
+      # parameter-sniffing problem and produces "it is fast for me and slow for them".
+      - n: "05"
+        slug: optimizer-and-statistics
+        title: "The Optimizer, DBMS_STATS and Bind Variable Peeking"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: B-tree, bitmap (and why bitmap indexes are for read-mostly warehouses only —
+      # they serialise concurrent DML), function-based, composite, and index-organised tables.
+      # Invisible indexes for testing a drop.
+      - n: "10"
+        slug: indexes
+        title: "Indexes — B-tree, Bitmap, and Why Bitmap Belongs Only in a Warehouse"
+        hands_on: ["koan:choose", "koan:count:scanned"]
+        core: true
+        status: planned
+      # COVER: hints as a last resort and a maintenance liability — the same discipline the
+      # Postgres and MySQL tracks apply. Then partitioning (range, list, hash, interval) and
+      # partition pruning, and parallel query. Materialized views with query rewrite, which is
+      # genuinely Oracle's strongest analytical feature.
+      - n: "15"
+        slug: partitioning-and-mviews
+        title: "Partitioning, Parallel Query and Materialized Views With Query Rewrite"
+        hands_on: ["koan:count:scanned", "koan:choose"]
+        status: planned
+      - n: "20"
+        slug: project-tune
+        title: "Project — Make an Inherited Query Fast Without Rewriting the Application"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned

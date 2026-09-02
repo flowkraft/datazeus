@@ -1,0 +1,260 @@
+# The ordered episode list for ClickHouse. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: run analytical queries over billions of rows on a server you
+# control, and understand why the same table is ten times smaller and a hundred times faster
+# than it was in Postgres — and what you gave up to get that.
+#
+# ============================================================================
+# THIS IS A DELTA TRACK — the test every episode must pass
+# ============================================================================
+#     WOULD THIS SENTENCE BE FALSE ON POSTGRESQL?
+# Learn SQL owns SQL and is never re-taught. What passes the test here is the storage engine,
+# the sorting key, the table engines, materialized views that are insert triggers, and a
+# consistency model that is genuinely weaker in exchange for speed.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL CLICKHOUSE DOCUMENTATION
+# ============================================================================
+# clickhouse.com/docs is the default shape — its order, groupings and above all its
+# VOCABULARY (parts, granules, marks, mutations, projections). Its own top-level split maps
+# almost directly onto the series here:
+#   Getting Started / Interfaces ...... Series 1
+#   Engines (Table Engines) ........... Series 2 — the heart of the product
+#   SQL Reference / Functions ......... folded into Series 1 and 3 where each is used
+#   Managing Data / Operations ........ Series 3, and Data Ops owns the rest
+#
+# THE ONE PLACE WE DEPART: the docs treat MergeTree as one entry among many table engines.
+# Here it is Series 1 · 10, before anything else, because a reader who does not understand the
+# sorting key understands nothing else about this database.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL CLICKHOUSE DOCUMENTATION. Before writing an
+# episode, open the docs' own page for that topic, use it as the COVERAGE CHECKLIST, and use
+# its VOCABULARY FOR THE NOUNS (parts, granules, marks, mutations, projections). Anything left
+# out should be left out because an academy rule says so — Learn SQL owns the SQL, Data
+# Warehousing owns columnar storage, Data Ops owns running the cluster — and never because it
+# was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the specific docs page named. A brief
+# is what a writer actually opens; a rule that lives only in this header is a rule that gets
+# forgotten at the exact moment it matters.
+#
+# CLICKHOUSE SHIPS MONTHLY — state the version every claim was checked against.
+#
+# ============================================================================
+# THE SEAM WITH DATA WAREHOUSING
+# ============================================================================
+#   DATA WAREHOUSING  uses ClickHouse to teach WAREHOUSING — star schemas, pre-aggregation,
+#                     the DuckDB benchmark. The engine is the demonstration (2 · 10, 2 · 15,
+#                     3 · 05, 3 · 15).
+#   THIS TRACK        teaches CLICKHOUSE — its engines, its sorting key, its mutations, its
+#                     failure modes. The engine is the subject.
+# Nothing here repeats "why columnar is fast" — that is Data Warehousing Series 2 · 00.
+
+course: learn-clickhouse
+track: clickhouse
+title: ClickHouse
+
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1 and Series 2"
+    why: >-
+      Every episode is a query over a large table. You need aggregates, joins and window
+      functions already; what this track teaches is why they are fast here, and the two or
+      three places this engine will not do what you expect.
+
+excludes:
+  - topic: "SQL itself"
+    where: "covered in Learn SQL"
+  - topic: "Why columnar storage is fast for analytics"
+    where: "covered in Data Warehousing, Series 2 · 00. Assumed here"
+  - topic: "Designing the star schema you load into it"
+    where: "covered in Data Modeling, and loaded in Data Warehousing"
+  - topic: "Running a cluster — sharding topology, ZooKeeper/Keeper operations, backups"
+    where: "covered in Data Ops for the operational discipline. Series 3 · 10 here covers only what a query author must know about distribution"
+
+series:
+  - slug: series1-clickhouse-essentials
+    title: ClickHouse Essentials
+    tagline: MergeTree, the sorting key, and getting data in
+    level: intermediate
+    episodes:
+      # COVER: what ClickHouse is FOR — an OLAP engine that answers aggregate questions over
+      # huge tables, and is deliberately bad at the things an OLTP database is good at. The
+      # clickhouse-client, clickhouse-local for querying files without a server, and the HTTP
+      # interface. FORMAT clauses (Pretty, JSONEachRow, CSVWithNames) as a first-class feature.
+      - n: "00"
+        slug: what-clickhouse-is
+        title: "ClickHouse — What It Is For, and What It Is Deliberately Bad At"
+        hands_on: ["koan:choose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: the type system and why it matters more here than elsewhere — fixed-width
+      # integers sized deliberately (UInt8 vs Int64 changes storage by 8x), LowCardinality for
+      # repeated strings, Nullable and WHY IT COSTS (a second column, and it defeats some
+      # optimisations), Enum, Date vs DateTime vs DateTime64.
+      # THE RULE: in a row store, types are correctness. Here they are also the compression.
+      - n: "05"
+        slug: types-and-compression
+        title: "Types as Compression — LowCardinality, Fixed Widths, and the Cost of Nullable"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # THE CENTRAL EPISODE OF THE COURSE. Everything else depends on it.
+      # COVER: MergeTree — ORDER BY as the sorting key (not an index in the B-tree sense),
+      # parts and granules, the sparse primary index, and marks. PARTITION BY and how it is a
+      # DIFFERENT thing from the sorting key, which everyone conflates. Why the first column of
+      # ORDER BY decides almost everything about which queries are fast.
+      # THE FAILURE: a sorting key chosen to match a Postgres primary key, and a table that
+      # scans everything for every query.
+      - n: "10"
+        slug: mergetree-and-sorting-key
+        title: "MergeTree — The Sorting Key Decides Which Queries Are Fast"
+        hands_on: ["koan:count:scanned", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: getting data in, and the rule that governs everything — INSERT IN LARGE BATCHES.
+      # Each insert makes a part; thousands of small inserts make thousands of parts and the
+      # merge process cannot keep up ("too many parts"). async_insert as the managed answer.
+      # INSERT ... SELECT, and reading from files/S3/URL directly.
+      # SEAM: ETL owns load strategy; this is what this engine requires of one.
+      - n: "15"
+        slug: inserting-data
+        title: "Inserts — Why Row-at-a-Time Kills This Database, and What to Do Instead"
+        hands_on: ["koan:diagnose", "koan:count:roundtrips"]
+        core: true
+        status: planned
+      # COVER: the SQL extras worth knowing — the -If, -Array, -State/-Merge aggregate function
+      # combinators, uniqExact vs uniq (approximate, and when approximate is fine), argMax as
+      # the "latest row per group" answer, arrayJoin, and WITH FILL for gap filling.
+      # THE COMBINATORS ARE THE IDEA: ClickHouse composes aggregate functions rather than
+      # adding syntax, and once a reader sees that the function list stops looking arbitrary.
+      - n: "20"
+        slug: aggregate-combinators
+        title: "Aggregate Combinators — -If, -State and argMax, and Why the Function List Composes"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      - n: "25"
+        slug: project-load-and-query
+        title: "Project — Load a Large Table and Make One Question Fast"
+        hands_on: ["koan:author", "koan:count:scanned"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-engines-and-views
+    title: Table Engines and Materialized Views
+    tagline: the family of engines, and views that fire on insert
+    level: advanced
+    episodes:
+      # COVER: the MergeTree family as a set of answers to "what should happen to rows with the
+      # same sorting key" — ReplacingMergeTree (dedupe, EVENTUALLY), SummingMergeTree,
+      # AggregatingMergeTree, CollapsingMergeTree and VersionedCollapsing.
+      # THE TRAP THAT MUST LAND: "eventually" is real. ReplacingMergeTree does not deduplicate
+      # on read unless you ask (FINAL, or an aggregate that tolerates it), so a naive SELECT
+      # returns duplicates for an unbounded time. That is a wrong number with no error.
+      - n: "00"
+        slug: mergetree-family
+        title: "The MergeTree Family — Replacing, Summing, Collapsing, and What 'Eventually' Means"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: a materialized view here is an INSERT TRIGGER, not a cached SELECT — the single
+      # most misunderstood thing in ClickHouse, and the dbt curriculum already flags it. It sees
+      # only the rows being inserted, never existing data, and never a DELETE. TO tables,
+      # populating history separately, and the AggregatingMergeTree + -State/-Merge pattern.
+      - n: "05"
+        slug: materialized-views
+        title: "Materialized Views Are Insert Triggers — Not Cached Queries"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: projections as an alternative sort order stored alongside the table, and when
+      # they beat a second table. Skip indexes (minmax, set, bloom_filter) — what they can and
+      # cannot do, and why they are hints rather than indexes.
+      - n: "10"
+        slug: projections-and-skip-indexes
+        title: "Projections and Skip Indexes — A Second Sort Order Without a Second Table"
+        hands_on: ["koan:count:scanned", "koan:choose"]
+        status: planned
+      # COVER: engines that are not storage — Dictionary (fast key-value lookups joined into
+      # queries, the idiomatic replacement for a dimension join), and the integration engines
+      # (PostgreSQL, MySQL, S3, Kafka) that let ClickHouse read another system as a table.
+      # SEAM: the Kafka engine is named here; Apache Kafka owns the broker.
+      - n: "15"
+        slug: dictionaries-and-integrations
+        title: "Dictionaries and Integration Engines — Reading Other Systems as Tables"
+        hands_on: ["koan:complete", "koan:choose"]
+        status: planned
+      # COVER: JOINs, and why this is the section a Postgres reader most needs. The right table
+      # is loaded into memory; join order is not optimised the way they expect; join_algorithm.
+      # The idiomatic alternatives: dictionaries, denormalisation, and one big table.
+      # SEAM: Data Warehousing Series 2 · 40 measures star vs one-big-table. Cite it.
+      - n: "20"
+        slug: joins
+        title: "JOINs — Why the Right Table Goes in Memory, and What to Do Instead"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-rollup-pipeline
+        title: "Project — A Raw Table, a Materialized View, and a Rollup That Stays Correct"
+        hands_on: ["koan:author", "koan:predict"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-running-queries-well
+    title: Running Queries Well
+    tagline: reading the plan, mutations, and the guarantees you do not get
+    level: advanced
+    episodes:
+      # COVER: EXPLAIN (PLAN, PIPELINE, ESTIMATE), system.query_log as the real tool, and the
+      # numbers that matter — rows read against rows returned, bytes read, and parts scanned.
+      # How to see whether the sorting key was used at all.
+      - n: "00"
+        slug: reading-queries
+        title: "EXPLAIN and system.query_log — Finding Out What the Query Actually Read"
+        hands_on: ["koan:count:scanned", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: ALTER TABLE ... UPDATE/DELETE are MUTATIONS — asynchronous, rewriting whole
+      # parts, not transactional, and visible in system.mutations. Lightweight DELETE and its
+      # different trade. Why a workload that updates rows is a workload for another database.
+      # TTL as the idiomatic deletion mechanism.
+      - n: "05"
+        slug: mutations-and-ttl
+        title: "Mutations and TTL — Updates That Rewrite Parts, and Deletes That Are Not Deletes"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: what a query author must know about a cluster — Distributed tables over shards,
+      # ReplicatedMergeTree, and the two-level query (partial aggregation per shard, merged on
+      # the initiator). Why GROUP BY is cheap across shards and JOIN and exact DISTINCT are not.
+      # SEAM: operating the cluster is Data Ops. This is the query author's half.
+      - n: "10"
+        slug: distributed-queries
+        title: "Distributed Tables — What Changes About Your Query When There Are Shards"
+        hands_on: ["koan:predict", "koan:choose"]
+        status: planned
+      # THE EPISODE THAT KEEPS THE TRACK HONEST.
+      # COVER: no foreign keys, no real cross-table transactions, eventual deduplication,
+      # asynchronous mutations, weak UPDATE support, and a JOIN model that punishes normalised
+      # schemas. Each of these is a deliberate trade for scan speed — say what was bought.
+      # THEN: the workloads that should not be here at all, and the common production shape,
+      # which is Postgres for the application and ClickHouse for analytics, fed by CDC.
+      - n: "15"
+        slug: what-you-gave-up
+        title: "What You Gave Up — No Foreign Keys, No Transactions, and Eventual Everything"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-tune-a-table
+        title: "Project — Redesign a Slow Table Around Its Real Query"
+        hands_on: ["koan:author", "koan:count:scanned"]
+        core: true
+        tags: ["project"]
+        status: planned

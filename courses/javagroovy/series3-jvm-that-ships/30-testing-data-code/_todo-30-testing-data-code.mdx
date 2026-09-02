@@ -1,0 +1,107 @@
+---
+title: "Testing Data Code — Testcontainers and the Database You Actually Ship"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series3-jvm-that-ships"
+order: 30
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: decide what a data test runs against, and write tests that would actually have
+    caught the bug.
+
+    RE-SPINED 2026-09-02. This was "JUnit and Spock, and What Is Worth Testing", which led on
+    the least interesting part — the reader already writes Spock specs (every koan here is
+    one) and JUnit is an afternoon. THE HARD QUESTION IS WHAT YOU TEST AGAINST.
+
+    THE FAILURE, and it is this track's selection rule exactly: a suite that runs against H2
+    or another in-memory stand-in PASSES and the job fails in production — or worse, both
+    pass and return different rows. Nothing throws. What genuinely differs:
+      · UPSERT — ON CONFLICT and the MERGE spellings are not the same statement on a stand-in,
+        so the one write you most want covered is the one you cannot cover
+      · date/time and string functions, and casting rules — the quiet ones, because they
+        return a DIFFERENT ANSWER rather than an error
+      · JSON, sequences, identity-column behaviour
+      · the whole dialect surface Series 2 · 30 (jOOQ) and 2 · 32 (MyBatis) exist to let you
+        write. jOOQ's codegen needs the real schema; testing it elsewhere tests something else.
+
+    THE SPINE IS TESTCONTAINERS: the test starts a real Postgres in a container, runs against
+    it, throws it away. Same engine as production, no shared dev database, no cleanup ritual
+    between developers.
+
+    AND THE COSTS, HONESTLY, or this is an advert. Containers are slow to start, so a naive
+    suite pays that per class — reuse and the singleton-container pattern are part of the
+    lesson. And DOCKER IS NOT ALWAYS THERE: locked-down CI, corporate laptops, some build
+    agents. That is the real reason teams pick H2, and an episode that does not say so is not
+    describing the world the reader works in.
+
+    THE RULE THE EPISODE ACTUALLY TEACHES IS A SPLIT, NOT A WINNER:
+      IN-PROCESS (DuckDB, SQLite)   tests about YOUR LOGIC — the transform, the parsing, the
+                                    shaping. Fast, no Docker, engine irrelevant.
+      REAL ENGINE IN A CONTAINER    tests about BEHAVIOUR — dialect, migrations, generated
+                                    SQL, round-trip counts. Anywhere the engine IS the subject.
+    A reader who can say which of the two a given test belongs in has the skill.
+
+    KEEP THE ORIGINAL JUDGEMENT, which was good and is not replaced: a transform and a parser
+    are worth testing; a thin JDBC wrapper mostly is not. Saying which is which is half the
+    value of the episode.
+
+    THIS TRACK'S OWN KOANS FACE THIS DECISION AND HAVE NEVER RECORDED IT — the curriculum
+    header specifies the koan vocabulary in detail and never says what a database koan
+    connects to, while roughly twenty episodes across Series 2 and 4 need one. Settle it while
+    writing this and put the answer in the header. The split above is the obvious candidate.
+
+    SPRING IS ONE PARAGRAPH: @ServiceConnection (Boot 3.1+) reduces all of this to a single
+    annotation in a @SpringBootTest. Name it, point at Series 4, move on.
+
+    DROPPED: a "mutation" koan that ran the learner's spec against a seeded-buggy implementation to
+    prove the test catches something. It is the only honest way to grade a test, and it is too
+    clever — running a spec from inside a spec is exactly the kind of test infrastructure a course
+    acquires and then has to maintain forever.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:author
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series3/_30/TestingDataCodeKoans.groovy
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here. */}
+
+TODO

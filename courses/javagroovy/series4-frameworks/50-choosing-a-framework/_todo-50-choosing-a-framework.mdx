@@ -1,0 +1,112 @@
+---
+title: "Choosing a Framework — Picking Between JPA, Spring Data, GORM, Spring Batch and Quartz"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series4-frameworks"
+order: 50
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: given a real job, decide what to build it with — including deciding to use none of
+    this series.
+
+    THIS IS THE COURSE'S CLOSING ARGUMENT, not another framework. By the time a reader
+    arrives here they have been shown, as working answers: plain JDBC, PreparedStatement,
+    groovy.sql.Sql, jOOQ, MyBatis, DuckDB, JPA, Hibernate, JdbcTemplate, Spring Data JDBC,
+    Spring Data JPA, GORM, Spring Batch, @Scheduled, Quartz and ShedLock. SIXTEEN TRUE
+    STATEMENTS. Without this episode the course ends by handing someone a toolbox and no rule
+    — the exact failure Series 2 · 47 was created to fix one series earlier.
+
+    IT PAIRS WITH 2 · 47 AND DOES NOT REPEAT IT:
+      2 · 47   which SQL-first tool, INSIDE the camp this track argues for
+      HERE     whether to adopt a framework at all, and at which layer
+    Together they are the course's decision spine.
+
+    A RULE, NOT A MATRIX — same discipline as 47 and Series 3 · 20. Sixteen tools in a table
+    is a reference card, not a lesson. The questions that actually decide it:
+      - is the work SET-BASED (aggregate, join, load) or an OBJECT GRAPH you edit? That one
+        question separates the ORM half of this series from everything else, and it is the
+        thesis the first three series spent forty episodes earning.
+      - are you already inside a framework, or would you be ADDING one? Using the
+        JdbcTemplate you have is a different decision from adopting Spring to get it.
+      - does the job need a STRUCTURE, and which one? Sequential and restartable is 27; a
+        graph of transforms that a runner executes is 28; and neither is the honest answer
+        for a script that finishes in ninety seconds.
+      - does the schedule need to outlive the process, or be edited by someone who cannot
+        deploy? That is 45. Does it only need to not run twice? That is 40. The separating
+        question is WHO DECIDES THE TASK SHOULD RUN NOW — your code, or a row.
+      - who maintains this in two years, and can they read it?
+
+    IT MUST BE WILLING TO SAY "NONE OF THESE". The honest answer for a large share of data
+    jobs is a Groovy script with groovy.sql.Sql and a cron entry — Series 1 and 2, none of
+    Series 4. An episode at the end of the framework series that cannot reach that conclusion
+    is an advert for the series it closes. This is the beat to protect in review.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series4/_50/ChoosingAFrameworkKoans.groovy
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition.
+
+    Give three or four REQUIREMENTS, not tools, and make the reader arrive at a different
+    answer for each. At least one of them should resolve to "no framework". */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety.
+
+    Keep code SHORT here. It is evidence for a decision, not the subject — the same warning
+    2 · 47 carries. If this beat grows past a screen per option, the episode has turned back
+    into the tutorials it is meant to sit above. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written.
+
+    choose: one requirement, several stacks, pick and defend. Then change ONE condition —
+    the schema is no longer yours, the job must survive a restart, a second instance
+    appears — and make the reader notice the answer moved.
+
+    diagnose: a stack that is wrong for its stated requirement, and the reader names which
+    question was skipped. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here.
+
+    LIKE 2 · 47, THE FAILURE HERE IS NOT A WRONG NUMBER — it is the wrong stack, chosen by
+    recency or by resume, and the bill arriving months later. An ORM adopted for a job that
+    only ever aggregates; Spring Batch's five interfaces wrapped around a two-hundred-line
+    script; Quartz's schema installed to solve a problem one ShedLock annotation solved. Say
+    that plainly rather than manufacturing a wrong total — dressing it up would be exactly
+    what the header's title rules ban. */}
+
+TODO

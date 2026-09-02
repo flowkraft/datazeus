@@ -1,0 +1,120 @@
+---
+title: "Choosing Database Access — Picking Between JDBC, jOOQ, MyBatis and DuckDB"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "intermediate"
+module: "series2-real-data"
+order: 47
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: given a real job, pick one of the six ways this series taught and say why.
+
+    THE PROBLEM IT SOLVES. Episodes 10 to 45 leave the reader six TRUE STATEMENTS and no rule:
+      jOOQ is compiler-checked.  groovy.sql.Sql is less code.  MyBatis maps rows to objects.
+      DuckDB is fast for analytics.  JDBC is what they all sit on.  Streaming keeps 2M rows
+      out of the heap.
+    Every one is correct. Not one answers "which of these do I open the IDE and type on
+    Monday?" A reader who cannot answer that has six tools and no way to pick — which in
+    practice means they use whichever one they read most recently.
+
+    A RULE, NOT A COMPARISON TABLE. A matrix here would be the "list, not a skill" failure
+    that got Series 4 split out of Series 3. The episode is a short sequence of questions the
+    reader answers about their OWN situation:
+      - is the SQL fixed, or assembled at runtime from something a user typed?
+      - can you run codegen against the schema in CI? That is jOOQ's price AND its payoff;
+        where you cannot, jOOQ is a liability rather than a safety net.
+      - does this code live a week, or two years and three maintainers?
+      - should the aggregation happen in the database, which has the indexes and the data —
+        or in DuckDB, because you are combining sources the database cannot see?
+      - might the result not fit in heap? That forces streaming and rules options out.
+      - are you already inside Spring? Then JdbcTemplate is free, and taking a dependency to
+        save three lines is a cost with no buyer.
+
+    AND AN HONEST DEFAULT, because an episode ending in "it depends" has taught nothing:
+    THE SIMPLEST THING THAT GIVES YOU PARAMETERIZATION AND STREAMING — and the reader should
+    be able to say why they deviated from it.
+
+    EVERY OPTION GETS ITS FAIR SENTENCE, including the ones this track's thesis is lukewarm
+    about. Precedent: Series 3 · 20 is "a decision episode and not a tool tutorial" because it
+    keeps Flyway as an honest paragraph. Same discipline.
+
+    NOT THE SAME EPISODE AS SERIES 4 · 15:
+      HERE     which SQL-first tool — inside the camp this track argues for. Core.
+      4 · 15   SQL-first VERSUS framework. Not core.
+    NOT THE PROJECT AT 70 EITHER. Choosing and building are different acts; 70 stays a
+    project and APPLIES the rule from here.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:count:rows-held
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series2/_47/ChoosingDatabaseAccessKoans.groovy
+
+    The second koan makes a wrong choice VISIBLE rather than arguable: pulling the rows into
+    Java to aggregate them, against letting the database do it, is a rows-held number. The
+    reader does not have to take the rule on trust.
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition.
+
+    Use a Monday-morning shape: one stated requirement, and the reader has to pick.
+    Something like "last quarter's order lines, revenue per customer, written to a CSV" —
+    then vary ONE input (the SQL is now built from a user's filter; the schema is not yours;
+    it has to run for two years) and watch the right answer move. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety.
+
+    The same requirement in three or four of the six, side by side and SHORT. The code is
+    evidence for the decision, not the subject — if this beat grows past a screen each, the
+    episode has turned back into the tutorial it is meant to sit above. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written.
+
+    choose: one requirement, several implementations, pick one and defend it. Then change
+    a single condition and make the reader notice the answer changed.
+
+    count:rows-held: aggregate in Java against aggregate in the database. The rule stops
+    being an opinion the moment the number is on screen. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here.
+
+    THE FAILURE IS NOT A WRONG NUMBER HERE — it is the wrong tool, chosen by recency, and
+    the bill arriving months later: jOOQ adopted where codegen cannot run in CI, so the
+    schema and the generated classes drift; a two-year service written with the throwaway
+    script's API; 2M rows pulled into the heap because the aggregation went in the wrong
+    place. Say this plainly rather than manufacturing a wrong total — it is the one episode
+    in the series whose cost is measured in months, and pretending otherwise would be the
+    kind of dressing-up the header's title rules ban. */}
+
+TODO

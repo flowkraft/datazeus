@@ -1,0 +1,255 @@
+# The ordered episode list for Apache Spark. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: work on data that genuinely does not fit on one machine — and,
+# just as importantly, recognise the far more common case where it does.
+#
+# ============================================================================
+# THE THESIS, AND IT IS THE ACADEMY'S STATED POSITION
+# ============================================================================
+# This academy pushes work DOWN — Analytics Engineering with dbt says outright "it is not
+# Spark. The warehouse does 100% of the work", Data Warehousing puts compute in DuckDB and
+# ClickHouse, ETL & Data Pipelines is SQL-first. A Spark track that ignores that contradicts
+# four sibling courses.
+#
+# So this track opens by asking WHETHER YOU NEED IT (Series 1 · 00) and closes by asking again
+# with evidence (Series 3 · 15). The honest answer for a large share of readers is no: one
+# machine with DuckDB or ClickHouse beats a small cluster on most workloads, and a cluster
+# brings an operational bill that never goes away.
+#
+# THAT IS NOT A REASON TO SKIP THE COURSE. Spark is what a huge number of companies already
+# run, and the reader's job is often to work in one they did not choose — which is the same
+# framing the Oracle track uses.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL SPARK DOCUMENTATION
+# ============================================================================
+# spark.apache.org/docs is organised as Programming Guides (SQL/DataFrames, Structured
+# Streaming), then Deploying, Tuning and Configuration. Follow that:
+#   SQL, DataFrames and Datasets Guide ...... Series 1 and 2
+#   Performance Tuning / Web UI ............. Series 2
+#   Structured Streaming Programming Guide .. Series 3 · 05
+#   Cluster Mode Overview / Deploying ....... Series 3, only as far as a job author needs
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL APACHE SPARK DOCUMENTATION. Before writing an
+# episode, open the relevant Programming Guide section, use it as the COVERAGE CHECKLIST, and
+# use its VOCABULARY FOR THE NOUNS (partition, shuffle, stage, executor, narrow and wide
+# transformation, Catalyst, AQE). Anything left out should be left out because an academy rule
+# says so — Learn SQL owns the SQL, ETL owns load patterns, Data Ops owns running the cluster —
+# and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the guide section named. A brief is
+# what a writer actually opens; a rule that lives only in this header is a rule that gets
+# forgotten at the exact moment it matters.
+#
+# TEACH THE DATAFRAME API, NOT RDDs. RDDs are the legacy layer; they get one paragraph so a
+# reader can recognise them in old code, and nothing more.
+
+course: learn-spark
+track: spark
+title: Apache Spark
+
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1 and Series 2"
+    why: >-
+      Spark is a SQL engine with a DataFrame API on top. Every optimisation lesson here is one
+      about joins, grouping and cardinality, so you need those before the distribution part
+      makes any sense.
+
+excludes:
+  - topic: "SQL itself"
+    where: "covered in Learn SQL"
+  - topic: "Running and sizing a cluster — YARN, Kubernetes, autoscaling, cost"
+    where: "covered in Data Ops for the operational discipline. Here you only learn what a JOB AUTHOR must know about executors and partitions"
+  - topic: "The RDD API"
+    where: "not covered beyond recognising it. The DataFrame API is what you write today"
+  - topic: "MLlib and machine learning"
+    where: "not covered; this track moves and shapes data"
+  - topic: "Streaming concepts — event time, watermarks, windows"
+    where: "covered in ETL & Data Pipelines, Series 3 · 20 and in Apache Flink. Series 3 · 05 here is Spark's implementation, not the theory"
+
+series:
+  - slug: series1-spark-fundamentals
+    title: Spark Fundamentals
+    tagline: whether you need it, and the model if you do
+    level: intermediate
+    episodes:
+      # THE FIRST EPISODE IS THE DECISION, and it is unusual to open a tool course this way.
+      # COVER: what Spark actually is (a distributed query engine), what it costs (JVM startup,
+      # serialisation, shuffle over a network, a cluster to operate), and the threshold where
+      # that becomes worth it. Then the honest alternatives in order: the database, DuckDB,
+      # Polars, one large machine. Cite Data Warehousing Series 3 · 35's benchmark.
+      # THE RULE: "the data got big" almost never means you need a cluster.
+      - n: "00"
+        slug: do-you-need-spark
+        title: "Do You Need Spark — and the Three Cheaper Answers to Try First"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the execution model as the vocabulary everything else uses — driver and
+      # executors, jobs, stages and tasks, PARTITIONS as the unit of parallelism, and narrow
+      # against wide transformations. Lazy evaluation and actions. Why a count() at the wrong
+      # moment re-runs everything.
+      - n: "05"
+        slug: the-execution-model
+        title: "Driver, Executors, Partitions — and Why an Action Re-Runs Everything"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the DataFrame API and Spark SQL as the same thing with two syntaxes — select,
+      # filter, withColumn, groupBy, join, and the fact that spark.sql() over a temp view is
+      # equally valid and often clearer. Schemas: inferring against declaring, and why
+      # inferSchema on CSV reads the file twice. RDDs named and dismissed in one paragraph.
+      - n: "10"
+        slug: dataframes-and-sql
+        title: "DataFrames and Spark SQL — Two Syntaxes, One Engine"
+        hands_on: ["koan:equivalent", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: reading and writing — Parquet as the default and CSV as the thing to convert
+      # away from, partitioned folder layouts, partition pruning, and the small-files problem
+      # that a naive write creates. save modes, and why overwrite is more dangerous than it
+      # looks.
+      - n: "15"
+        slug: reading-and-writing
+        title: "Reading and Writing — Partitioned Layouts, and the Small-Files Problem You Just Made"
+        hands_on: ["koan:count:scanned", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: PySpark against Scala against SQL — what actually differs. Python UDFs cross a
+      # process boundary and serialise every row, which is the performance cliff; pandas UDFs
+      # (Arrow-based) narrow it; built-in functions avoid it entirely.
+      # THE RULE: reach for a built-in expression before a UDF, every time.
+      - n: "20"
+        slug: udfs
+        title: "UDFs — Why a Python UDF Is a Cliff, and What pandas UDFs Fix"
+        hands_on: ["koan:predict", "koan:equivalent"]
+        status: planned
+      - n: "25"
+        slug: project-first-job
+        title: "Project — A Job Over Partitioned Parquet That Reads Only What It Needs"
+        hands_on: ["koan:author", "koan:count:scanned"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-making-it-fast
+    title: Making It Fast
+    tagline: the shuffle, the skew, and reading the UI
+    level: advanced
+    episodes:
+      # THE CENTRAL EPISODE OF THE COURSE.
+      # COVER: the shuffle — what it is (repartitioning across the network), what causes it
+      # (join, groupBy, distinct, orderBy, repartition), and why it dominates the runtime of
+      # almost every slow Spark job. Reading stage boundaries as shuffle boundaries.
+      # spark.sql.shuffle.partitions and why its default of 200 is wrong for both small and
+      # large jobs.
+      - n: "00"
+        slug: the-shuffle
+        title: "The Shuffle — What Causes It, and Why It Is Almost Always the Slow Part"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the Spark UI as the diagnostic tool — stages, tasks, the event timeline, and the
+      # single most useful signal, the task duration distribution. explain() and the physical
+      # plan. Spotting spill to disk.
+      - n: "05"
+        slug: the-ui-and-plans
+        title: "The Spark UI and explain() — Finding Which Stage Is Actually Slow"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: join strategies — broadcast hash join, sort-merge join, and shuffle hash join —
+      # and when each is chosen. Broadcasting a small dimension as the single highest-value
+      # optimisation in Spark, the autoBroadcastJoinThreshold, and the broadcast() hint.
+      # SEAM: Data Warehousing owns the star schema; this is how a star join executes here.
+      - n: "10"
+        slug: joins
+        title: "Join Strategies — Broadcast the Small Side, and When Spark Will Not"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: skew — one key with far more rows than the rest, so one task runs for an hour
+      # while 199 finish in seconds. How to see it (task duration distribution), and the fixes:
+      # AQE skew join handling, salting, and separating the hot key.
+      # THIS IS THE MOST COMMON REAL-WORLD SPARK PROBLEM after the shuffle, and it looks like
+      # "Spark is slow" rather than like a data problem, which is why it needs its own episode.
+      - n: "15"
+        slug: skew
+        title: "Data Skew — One Task Running for an Hour While the Other 199 Finished"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: caching and persistence — cache() against persist() and the storage levels, when
+      # caching helps (a DataFrame used several times in one job) and when it is a waste or
+      # actively harmful. Checkpointing to break a long lineage. AQE and what it now does
+      # automatically that used to be manual tuning.
+      - n: "20"
+        slug: caching-and-aqe
+        title: "Caching and Adaptive Query Execution — What You No Longer Have to Tune"
+        hands_on: ["koan:predict", "koan:choose"]
+        status: planned
+      - n: "25"
+        slug: project-tune
+        title: "Project — Take a Slow Job and Halve It, With the UI as Evidence"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-in-production
+    title: In Production
+    tagline: tables, streaming, and an honest verdict
+    level: advanced
+    episodes:
+      # COVER: Spark over a lakehouse table format — Delta, Iceberg and Hudi from Spark's side,
+      # ACID on files, time travel, MERGE INTO, and OPTIMIZE/compaction as the answer to the
+      # small-files problem from Series 1 · 15.
+      # SEAM: Apache Iceberg & Table Formats owns the formats; this is Spark's use of them.
+      - n: "00"
+        slug: lakehouse-tables
+        title: "Delta and Iceberg From Spark — MERGE INTO, Time Travel and Compaction"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: Structured Streaming as the same DataFrame API over an unbounded input —
+      # readStream, triggers, output modes, and checkpointing as the thing that makes it
+      # restartable. MICRO-BATCH is the model, and the honest comparison with Flink's
+      # record-at-a-time processing belongs here in one paragraph.
+      # SEAM: ETL Series 3 · 20 owns event time and watermarks as theory. Do not re-teach them.
+      - n: "05"
+        slug: structured-streaming
+        title: "Structured Streaming — The Same API Over an Unbounded Table, in Micro-Batches"
+        hands_on: ["koan:predict", "koan:complete"]
+        status: planned
+      # COVER: shipping a job — spark-submit, packaging dependencies, configuration and the
+      # precedence order, and testing (a local SparkSession, small fixtures, and asserting the
+      # row count in equals the row count out). Reading logs across a driver and executors.
+      - n: "10"
+        slug: shipping-a-job
+        title: "spark-submit, Configuration and Tests — Handing a Job to Someone Else"
+        hands_on: ["koan:process:tool", "koan:author"]
+        status: planned
+      # THE CLOSING ARGUMENT, and the episode this track exists to be able to give honestly.
+      # COVER: revisit Series 1 · 00 with everything now known. Where Spark genuinely wins —
+      # data beyond one machine, an existing cluster and team, a lakehouse already in Delta or
+      # Iceberg, workloads mixing SQL and arbitrary code. Where it loses — anything that fits
+      # on one machine, low latency, small teams, and interactive analysis.
+      # THE MEASUREMENT: the same job on Spark and on DuckDB, at three data sizes, with the
+      # crossover point found rather than asserted. That number is the course's contribution.
+      - n: "15"
+        slug: when-spark-wins
+        title: "When Spark Wins — Finding the Crossover Point Instead of Assuming It"
+        hands_on: ["koan:choose", "koan:count:scanned"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-end-to-end
+        title: "Project — A Job That Reads a Lakehouse Table, Reconciles, and Writes One Back"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned

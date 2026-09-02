@@ -1,0 +1,70 @@
+---
+title: "Larger Than Memory — Spilling, memory_limit, and What Actually Has to Fit"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-duckdb"
+tags: []
+level: "advanced"
+module: "series2-analytical-sql"
+order: 10
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/duckdb/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/duckdb/series2/_10/LargerThanMemoryKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official DuckDB documentation (duckdb.org/docs).
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Learn SQL owns the SQL, Data Warehousing owns columnar storage),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    This is a DELTA track: every sentence should be one that would be FALSE on another engine.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: what "larger than memory" actually means — the buffer manager, temp_directory,
+     memory_limit, and the operators that can spill (sort, hash join, aggregate) against the
+     ones that cannot. How to tell you are spilling. Why a 200 GB Parquet scan works on a
+     laptop and a 200 GB self-join may not.
+     THE PRACTICAL RULE: projection and predicate pushdown mean the file size is not the
+     working set — read fewer columns and you can go much further than you expect.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:count:rows-held
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/duckdb/series2/_10/LargerThanMemoryKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

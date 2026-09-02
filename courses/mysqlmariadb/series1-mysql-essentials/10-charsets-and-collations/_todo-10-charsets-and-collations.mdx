@@ -1,0 +1,70 @@
+---
+title: "utf8mb4 and Collations — Why utf8 Is Not UTF-8, and Why That JOIN Is Slow"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-mysql-mariadb"
+tags: []
+level: "intermediate"
+module: "series1-mysql-essentials"
+order: 10
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/mysqlmariadb/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/mysqlmariadb/series1/_10/CharsetsAndCollationsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official MySQL Reference Manual (dev.mysql.com/doc) — MariaDB's Knowledge Base for Series 4.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Learn SQL owns the SQL, Data Ops owns running the server),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    This is a DELTA track: every sentence should be one that would be FALSE on another engine.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: utf8 IS NOT UTF-8 — the historical `utf8` is three bytes and cannot store an
+     emoji or some CJK characters; utf8mb4 is the real one, and is the default only from
+     8.0. Collations: utf8mb4_general_ci vs unicode_ci vs 0900_ai_ci, and what case- and
+     accent-insensitivity mean for a unique index. THE JOIN THAT WILL NOT USE AN INDEX
+     because the two columns have different collations — a real, common, invisible
+     performance bug. Charset at server, database, table and column level.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/mysqlmariadb/series1/_10/CharsetsAndCollationsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

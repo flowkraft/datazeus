@@ -1,0 +1,376 @@
+# The ordered episode list for MySQL & MariaDB. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: work confidently in the engine that still runs most of the web,
+# and stop it silently changing your data. MySQL's defaults have improved enormously since 5.7
+# and its reputation has not caught up in either direction — a reader needs to know which of
+# the old horror stories are fixed, which are one setting away from returning, and which are
+# still true.
+#
+# ============================================================================
+# THIS IS A DELTA TRACK — the same rule as every course in this catalogue
+# ============================================================================
+# Learn SQL teaches SQL. Nothing here re-teaches SELECT, JOIN or GROUP BY. Every episode has
+# to pass one test:
+#
+#     WOULD THIS SENTENCE BE FALSE ON POSTGRESQL?
+#
+# If it is equally true anywhere, it belongs in Learn SQL.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL MySQL REFERENCE MANUAL
+# ============================================================================
+# The manual is the default shape — its order, its groupings and its vocabulary — because a
+# reader who finishes this lives in dev.mysql.com/doc afterwards, and learning MySQL in the
+# manual's own shape means they already know where to look. Use MariaDB's own Knowledge Base
+# the same way for Series 4.
+#
+# THE MANUAL'S PARTS, and where each lands here:
+#   Language Structure, Data Types, Functions .... Series 1
+#   Character Sets and Collations ................ Series 1 · 10, pulled EARLY (see below)
+#   Optimization ................................. Series 2
+#   Storage Engines .............................. Series 1 · 20, also pulled early
+#   Stored Programs, Triggers, Events ............ Series 3
+#   Installation, Server Administration,
+#     Security, Backup, Replication .............. Data Ops — not this course
+#
+# THE TWO PLACES WE DEPART, both for the same reason: the manual files
+# CHARACTER SETS and STORAGE ENGINES late, as reference chapters, and in practice both decide
+# whether your data survives and whether your query uses an index. They are moved into Series 1
+# so a reader meets them before they can be bitten. sql_mode is likewise promoted to 05 rather
+# than living in Server Administration, because every episode after it depends on which mode
+# you are in.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH LESSON SHOULD FOLLOW THE OFFICIAL MySQL
+# REFERENCE MANUAL — and MariaDB's own Knowledge Base for Series 4 — not only this file's
+# series order. Before writing an episode, open the manual's own section for that topic, use
+# it as the coverage checklist, and use its vocabulary for the nouns. Where you leave
+# something out it should be because an academy rule says so (Learn SQL owns the SQL, Data Ops
+# owns running the server), not because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the specific manual section named.
+# A brief is what a writer actually opens; a rule that lives only in this header is a rule
+# that gets forgotten at the exact moment it matters.
+#
+# AND FOR SERIES 4 IT IS DOUBLE: every divergence claim must be checked against BOTH manuals
+# on the day it is written, with the versions stated. This is the fastest-ageing series in the
+# course.
+#
+# ============================================================================
+# ONE COURSE FOR BOTH, WITH THE FORK AS A CLOSING SERIES — decided 2026-09-02
+# ============================================================================
+# Two courses would be near-clones: through Series 1 to 3 the dialect, the storage engine, the
+# index model and the optimizer vocabulary are shared, and a reader who has to pick a course
+# before knowing which engine they are on is being asked the wrong question first.
+#
+# So: teach the shared engine properly, then spend a short series on WHERE THEY HAVE ACTUALLY
+# DIVERGED. That series matters more each year — "MariaDB is a drop-in replacement for MySQL"
+# was true in 2012, is no longer true past MySQL 8.0 and MariaDB 10.x, and a reader who
+# believes it will write JSON code that compiles on one and behaves differently on the other.
+#
+# THE SERIES IS SHORT ON PURPOSE. It is a differences list, and a differences list that grows
+# past six episodes has become a second course by stealth.
+#
+# ============================================================================
+# THE THING THIS TRACK IS REALLY ABOUT: SILENT COERCION
+# ============================================================================
+# Postgres refuses. MySQL historically accepted, truncated and carried on. Modern defaults fix
+# most of it, but the mechanism is still there, one sql_mode away, and every managed provider
+# sets it differently. That is why sql_mode is episode 05 and not an appendix: it is the single
+# setting that decides whether this database tells you when it changes your data.
+
+course: learn-mysql-mariadb
+track: mysqlmariadb
+title: MySQL & MariaDB
+
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1 and Series 2"
+    why: >-
+      You need to be able to write joins and aggregates before this is useful. The subject
+      here is not how to query — it is what this engine does with your query and your data
+      that another one would not.
+
+excludes:
+  - topic: "SQL itself — SELECT, JOIN, GROUP BY, CTEs and window functions"
+    where: "covered in Learn SQL. Here the question is what MySQL does differently, including which versions have them at all"
+  - topic: "Running the server — backups, replication topology, failover, my.cnf tuning"
+    where: "covered in Data Ops, Series 2. That series uses PostgreSQL, and the operational skills transfer even though the commands do not"
+  - topic: "Deciding what the tables and keys should be"
+    where: "covered in Data Modeling. Here the schema exists and the question is which MySQL type and index to give it"
+  - topic: "Loading data in from other systems"
+    where: "covered in ETL & Data Pipelines"
+
+series:
+  # ── SERIES 1 ────────────────────────────────────────────────────────────────
+  - slug: series1-mysql-essentials
+    title: MySQL Essentials
+    tagline: the client, the settings, and the types that change your data
+    level: intermediate
+    episodes:
+      # COVER: the mysql client — \G for vertical output on a wide row, SHOW commands as the
+      # catalog you will actually use (SHOW CREATE TABLE is the single most useful one, because
+      # it prints the engine, the charset and every index at once), SOURCE, and information_schema
+      # as the portable alternative. --safe-updates. Reading a MySQL error number.
+      - n: "00"
+        slug: the-client-and-catalog
+        title: "The mysql Client — SHOW CREATE TABLE and Reading What You Actually Have"
+        hands_on: ["koan:capture", "koan:complete"]
+        core: true
+        status: planned
+      # THE MOST IMPORTANT EPISODE IN THE COURSE, and it is at 05 because everything after it
+      # depends on which mode you are in.
+      # COVER: sql_mode as the switch that decides whether this database refuses bad data or
+      # quietly fixes it. STRICT_TRANS_TABLES — without it, a value too long for the column is
+      # TRUNCATED and the insert succeeds with a warning nobody reads. ONLY_FULL_GROUP_BY, and
+      # why MySQL used to let you SELECT a column that was not in the GROUP BY and return an
+      # arbitrary row's value. NO_ZERO_DATE and '0000-00-00'. How to check yours
+      # (SELECT @@sql_mode), that it differs between session and global, and that every managed
+      # provider picks a different default.
+      # THE FAILURE: a column that is one character short, a name silently cut, and a customer
+      # record that no longer matches the source system.
+      - n: "05"
+        slug: sql-mode
+        title: "sql_mode — Whether This Database Tells You It Changed Your Data"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: utf8 IS NOT UTF-8 — the historical `utf8` is three bytes and cannot store an
+      # emoji or some CJK characters; utf8mb4 is the real one, and is the default only from
+      # 8.0. Collations: utf8mb4_general_ci vs unicode_ci vs 0900_ai_ci, and what case- and
+      # accent-insensitivity mean for a unique index. THE JOIN THAT WILL NOT USE AN INDEX
+      # because the two columns have different collations — a real, common, invisible
+      # performance bug. Charset at server, database, table and column level.
+      - n: "10"
+        slug: charsets-and-collations
+        title: "utf8mb4 and Collations — Why utf8 Is Not UTF-8, and Why That JOIN Is Slow"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the numeric family and that INT(11) does not mean eleven digits (display width,
+      # deprecated). DECIMAL for money. The date family, and DATETIME vs TIMESTAMP — TIMESTAMP
+      # converts to and from the session time zone and has a 2038 limit; DATETIME does neither.
+      # ENUM and SET, and why ENUM is a schema change waiting to happen. TEXT/BLOB sizes.
+      # IMPLICIT CONVERSION, which deserves its own beat: `WHERE varchar_col = 0` compares as
+      # numbers and matches every non-numeric row, silently and with a full scan.
+      - n: "15"
+        slug: types-and-coercion
+        title: "Types and Implicit Conversion — DATETIME vs TIMESTAMP, and Comparisons That Lie"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: InnoDB as the answer, and MyISAM as the thing you will meet in an old schema and
+      # should migrate (no transactions, table-level locks, no crash recovery). What the engine
+      # choice actually changes. MEMORY and ARCHIVE in one line each. How to find out what you
+      # have (SHOW TABLE STATUS) and how to convert one safely.
+      - n: "20"
+        slug: storage-engines
+        title: "Storage Engines — InnoDB, and the MyISAM Tables You Will Inherit"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: AUTO_INCREMENT and its gaps — a rolled-back transaction consumes the value, and
+      # before 8.0 the counter was held in memory and RESET ON RESTART, so ids could be reused.
+      # INSERT ... ON DUPLICATE KEY UPDATE and the conflict target being any unique key, which
+      # makes it less precise than Postgres's ON CONFLICT. REPLACE INTO and why it is a delete
+      # plus an insert (it fires ON DELETE CASCADE — a genuine data-loss trap). INSERT IGNORE
+      # swallowing real errors, not just duplicates. LAST_INSERT_ID().
+      - n: "25"
+        slug: keys-and-upsert
+        title: "AUTO_INCREMENT and ON DUPLICATE KEY UPDATE — Writes, Gaps and REPLACE's Trap"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "30"
+        slug: project-audit-a-schema
+        title: "Project — Audit an Inherited Schema and Fix What It Is Silently Doing"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  # ── SERIES 2 ────────────────────────────────────────────────────────────────
+  - slug: series2-indexes-and-the-optimizer
+    title: Indexes and the Optimizer
+    tagline: the clustered primary key, and reading an EXPLAIN
+    level: advanced
+    episodes:
+      # THE CENTRAL FACT OF INNODB, and everything else in this series follows from it.
+      # COVER: the table IS the primary key index — rows are stored in PK order — and every
+      # SECONDARY index stores the PK as its pointer. Three consequences: a wide PK makes every
+      # secondary index wider; a random PK (UUIDv4) turns inserts into page splits all over the
+      # tree; and a query covered by a secondary index plus the PK needs no table lookup.
+      # This is why "just use a UUID primary key" is a decision with a cost, and where to say it.
+      - n: "00"
+        slug: clustered-index
+        title: "The Clustered Primary Key — Why Your Choice of PK Changes Every Index"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: EXPLAIN's columns and which ones matter — type (const/eq_ref/ref/range/index/ALL),
+      # key, rows, filtered, and Extra (Using index = covering; Using filesort; Using temporary).
+      # EXPLAIN ANALYZE (8.0.18+) for actual timings, and FORMAT=JSON for cost.
+      # THE TWO STRINGS TO FEAR IN Extra: "Using filesort" and "Using temporary" on a large set.
+      - n: "05"
+        slug: reading-explain
+        title: "EXPLAIN — type, key, rows, and the Two Words in Extra That Matter"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: composite indexes and the leftmost-prefix rule. Covering indexes ("Using index").
+      # Index for ORDER BY and how a mismatched direction defeats it. Prefix indexes on long
+      # text and what they cost. Functional indexes (8.0) and generated-column indexes as the
+      # older workaround. Invisible indexes for testing a drop safely.
+      - n: "10"
+        slug: index-design
+        title: "Composite and Covering Indexes — The Leftmost Prefix Rule"
+        hands_on: ["koan:count:scanned", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: how the optimizer decides — index statistics, ANALYZE TABLE, histograms (8.0).
+      # Why it sometimes picks a full scan and is right. Index hints (USE/FORCE/IGNORE INDEX)
+      # and optimizer hints, plus the discipline: a hint is a lie you have to maintain, so fix
+      # the statistics or the index first. The optimizer_switch flags worth knowing.
+      - n: "15"
+        slug: the-optimizer
+        title: "The Optimizer — Statistics, Histograms and When a Full Scan Is Right"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        status: planned
+      # COVER: finding the slow one — the slow query log, performance_schema, and sys schema
+      # views (sys.statements_with_full_scans is the fastest way to a real answer). EXPLAIN on
+      # a running query. What to measure before changing anything.
+      - n: "20"
+        slug: finding-slow-queries
+        title: "Finding the Slow Query — The Slow Log, performance_schema and sys"
+        hands_on: ["koan:capture", "koan:diagnose"]
+        status: planned
+      - n: "25"
+        slug: project-index-a-workload
+        title: "Project — Index a Real Workload, and Prove Each Index Earns Its Place"
+        hands_on: ["koan:author", "koan:count:scanned"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  # ── SERIES 3 ────────────────────────────────────────────────────────────────
+  - slug: series3-beyond-queries
+    title: Beyond Queries
+    tagline: JSON, generated columns and code in the database
+    level: advanced
+    episodes:
+      # COVER: the native JSON type (binary, validated) — ->, ->>, JSON_EXTRACT,
+      # JSON_TABLE for turning a document into rows, JSON_CONTAINS. You cannot index a JSON
+      # column directly: you index a GENERATED COLUMN over it, which is the pattern to teach.
+      # NOTE FOR SERIES 4: this is the biggest single divergence with MariaDB — flagged here,
+      # explained there.
+      - n: "00"
+        slug: json
+        title: "The JSON Type — JSON_TABLE, and Indexing a Document Through a Generated Column"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      # COVER: VIRTUAL vs STORED generated columns, what each costs, and the two jobs they do —
+      # indexing an expression, and giving a JSON attribute a real column's ergonomics.
+      # CHECK constraints, which were parsed and IGNORED before 8.0.16 — a genuine trap in an
+      # older schema, where the constraint exists in the DDL and does nothing.
+      - n: "05"
+        slug: generated-columns
+        title: "Generated Columns and CHECK Constraints — Including the Ones That Did Nothing"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
+      # COVER: stored procedures and functions, the DELIMITER dance, IN/OUT/INOUT, handlers and
+      # SIGNAL. DETERMINISTIC and why it matters for replication. Triggers, and that MySQL has
+      # only one per timing per table historically. Events as the built-in scheduler, and
+      # event_scheduler being off by default — a job that never runs and never says so.
+      # THE HONEST WARNING, same as the Postgres track carries: database code is harder to
+      # test, review and version than application code. Say when it is worth it.
+      - n: "10"
+        slug: routines-triggers-events
+        title: "Stored Routines, Triggers and Events — Code in the Database, and Its Costs"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        status: planned
+      # COVER: what arrived in 8.0 and reshapes how you write MySQL — CTEs (including
+      # recursive), window functions, LATERAL. Why so much MySQL code in the wild is written
+      # without them, and how to recognise the old workarounds (the session-variable running
+      # total, the self-join rank) so you can replace them.
+      # SEAM: Learn SQL teaches these. This episode is version availability and migration.
+      - n: "15"
+        slug: what-arrived-in-8
+        title: "CTEs and Window Functions in 8.0 — and the Workarounds They Replace"
+        hands_on: ["koan:equivalent", "koan:complete"]
+        status: planned
+      # COVER: FULLTEXT indexes on InnoDB, MATCH ... AGAINST, natural language vs boolean mode,
+      # and the minimum token length that silently drops short words. Then the honest limits,
+      # and when the answer is a real search engine.
+      - n: "20"
+        slug: fulltext-search
+        title: "FULLTEXT Search — MATCH AGAINST, Boolean Mode, and Where It Runs Out"
+        hands_on: ["koan:complete", "koan:choose"]
+        status: planned
+
+  # ── SERIES 4 ────────────────────────────────────────────────────────────────
+  # SHORT ON PURPOSE — a differences list, not a second course. If it grows past six episodes
+  # it has become one by stealth, and the fix is to cut it back rather than to split the track.
+  #
+  # THE FRAME FOR THE WHOLE SERIES: "drop-in replacement" was true in 2012 and is not true now.
+  # A reader's practical question is never "which is better" — it is "will this statement
+  # behave the same on the other one", and that is what every episode here answers.
+  - slug: series4-mariadb
+    title: Where MariaDB Differs
+    tagline: the same roots, and the places they have grown apart
+    level: advanced
+    episodes:
+      # COVER: the 2009 fork and why it happened, the version-number split (MariaDB 5.5 tracked
+      # MySQL 5.5; 10.x is its own line and no longer maps), and the practical rule — up to
+      # MySQL 5.5/5.6 they are interchangeable, from MySQL 8.0 and MariaDB 10.2 onward they are
+      # not. What "compatible" now means in practice: the wire protocol and most of the dialect,
+      # but not the newer features on either side. Connector and tooling differences.
+      - n: "00"
+        slug: the-fork
+        title: "The Fork — What 'Drop-In Replacement' Used to Mean, and What It Means Now"
+        hands_on: ["koan:choose"]
+        core: true
+        status: planned
+      # THE BIGGEST SINGLE DIVERGENCE, and the reason this series exists.
+      # COVER: MySQL's JSON is a native binary type. MariaDB's JSON is an ALIAS FOR LONGTEXT
+      # with a CHECK constraint — same column definition, different storage, different
+      # performance, different function behaviour, and no binary comparison. Code written
+      # against one runs against the other and behaves differently, with no error. Then the
+      # function-name differences and JSON_TABLE availability.
+      - n: "05"
+        slug: json-divergence
+        title: "JSON — A Native Binary Type on One, LONGTEXT With a CHECK on the Other"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: what MariaDB has and MySQL does not — CREATE SEQUENCE, system-versioned
+      # (temporal) tables with AS OF queries, which is genuinely the most interesting thing in
+      # either engine for anyone who has hand-rolled SCD Type 2, INVISIBLE columns, and the
+      # returning clause on INSERT/DELETE.
+      # SEAM: ETL 3 · 10 and Data Modeling own SCD Type 2 as a pattern; here it is a feature.
+      - n: "10"
+        slug: mariadb-only-features
+        title: "Sequences and System-Versioned Tables — What Only MariaDB Has"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      # COVER: storage engines as the clearest philosophical split — Aria, ColumnStore (a real
+      # columnar engine inside MariaDB, for analytics), Spider, MyRocks. Then Galera as built-in
+      # synchronous clustering. What MySQL answers with instead (InnoDB Cluster, HeatWave).
+      # SEAM: Data Warehousing owns columnar analytics; this is one line about ColumnStore
+      # existing and where the real treatment lives.
+      - n: "15"
+        slug: engines-and-clustering
+        title: "ColumnStore, Galera and the Engines MySQL Does Not Have"
+        hands_on: ["koan:choose"]
+        status: planned
+      # COVER: the optimizer differences that change plans between the two, histogram
+      # implementations, and MariaDB's optimizer_switch flags. Then the practical close: how to
+      # write SQL that behaves the same on both, what to test when you are asked to migrate,
+      # and the honest answer that a migration is a testing exercise rather than a config change.
+      - n: "20"
+        slug: writing-for-both
+        title: "Writing SQL That Behaves the Same on Both — and Testing a Migration"
+        hands_on: ["koan:equivalent", "koan:author"]
+        core: true
+        tags: ["project"]
+        status: planned

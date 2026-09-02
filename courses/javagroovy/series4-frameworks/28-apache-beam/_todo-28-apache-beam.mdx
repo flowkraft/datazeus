@@ -1,0 +1,115 @@
+---
+title: "Apache Beam — Describing a Pipeline Once and Letting a Runner Execute It"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series4-frameworks"
+order: 28
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: read a CSV, reshape it and write it to a table as a declared pipeline rather than
+    as a loop you control.
+    CONSTRUCTS: Pipeline, PCollection, PTransform, ParDo and a DoFn, TextIO and JdbcIO.
+
+    IT IS IN SERIES 4 BECAUSE IT IS A FRAMEWORK, and the test is the one the jOOQ comment at
+    Series 2 · 30 applies: "You call it; it does not call you." Beam fails every clause. You
+    DECLARE a pipeline and hand it to a RUNNER, which decides when your code runs, on how many
+    threads, in how many instances, in what order. @Setup -> @StartBundle -> @ProcessElement ->
+    @FinishBundle -> @Teardown is a lifecycle; the runner is a container; your DoFn is a
+    callback. More inversion of control than Spring Data has.
+    (A first draft filed it in Series 2 because the DirectRunner needs no cluster. That is an
+    argument about DEPLOYMENT; the test is about CONTROL FLOW.)
+
+    PAIRED WITH 27 — the two answers to "how do I STRUCTURE a data job":
+      Spring Batch (27)  chunk-oriented, sequential; your JVM; batch only; restart is the
+                         JobRepository's job
+      Beam (28)          a graph of transforms; whichever runner you hand it to; batch AND
+                         streaming in one model; restart is the runner's problem
+    Simple to machinery, so Spring Batch first.
+
+    THE PRODUCT ANCHOR IS STRONG, and stronger than 27's, which has none: the playground ships
+    src-examples/pipelines with batch and streaming pipelines, JdbcIO, reusable DoFn transforms
+    (CsvParserFn, ValidationFn) and a PipelineController that triggers them over HTTP. Three
+    Beam JARs are in the pom and the README documents @Grab for more connectors. The reader is
+    filling in a folder they already have.
+
+    IT CLOSES A DANGLING REFERENCE: episode 35's koan:author asks the reader to schedule the
+    Beam CustomerIngestionPipeline from that folder, and until now Beam was named nowhere else
+    in the curriculum OR ANYWHERE IN THE ACADEMY.
+
+    TEACH THE MODEL, NOT THE CLUSTER. DirectRunner only. Windowing gets NAMED AND DEFERRED —
+    event time, watermarks and late data are a streaming subject and this track has no
+    streaming series. If the episode starts needing runner topology or shuffle to make sense,
+    it has stopped being a Java episode; that is the same trigger this series' header sets for
+    the web layer.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:complete
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series4/_28/ApacheBeamKoans.groovy
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety.
+
+    Groovy, because the playground's pipelines are Groovy and this episode fills in that
+    folder. Say it in one line and move on. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written.
+
+    complete: finish a DoFn so the pipeline produces the right rows. DirectRunner, in
+    process, deterministic — no cluster and no clock.
+
+    diagnose: BEAM'S OWN BEST TRAP, and it is this track's kind. A DoFn that caches
+    something in a field — a counter, a running total, a lazily-built lookup map. The runner
+    is free to instantiate the DoFn many times across many threads and to reuse instances
+    between bundles, so the cached value is stale or shared and the output is quietly wrong.
+    NOTHING THROWS. A reader who writes Java as if it runs once, in order, on one thread
+    produces exactly this — and that misconception is the whole reason the episode is in
+    the framework series. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here.
+
+    THE FIELD-STATE BUG ABOVE IS THE HEADLINE: a total accumulated in a DoFn field is
+    whatever one arbitrary instance happened to see, and it looks like a plausible number.
+
+    THEN THE ONE THAT COSTS MONTHS RATHER THAN ROWS, and it belongs to episode 50: Beam is a
+    portability abstraction, and you pay for portability whether or not you use it. If the
+    job will only ever run in one JVM against one database, a plain loop is shorter, easier
+    to debug and easier to hand over. Say so here rather than letting the episode read as an
+    advert — the same discipline 27 carries. */}
+
+TODO

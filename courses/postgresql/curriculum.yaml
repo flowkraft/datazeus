@@ -1,0 +1,508 @@
+# The ordered episode list for PostgreSQL. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: be the person on the team who actually knows Postgres — not
+# more SQL, but what is TRUE HERE and nowhere else. The types the standard does not have,
+# the five index kinds and which one the question wants, why the planner ignored your index,
+# and the extensions that turn it into a search engine, a time-series database or an API.
+#
+# ============================================================================
+# THIS IS A DELTA TRACK. READ THIS BEFORE ADDING AN EPISODE.
+# ============================================================================
+# Learn SQL teaches SQL. This track NEVER re-teaches SELECT, JOIN, GROUP BY, window
+# functions or CTEs — a reader arrives already able to write them. Every episode here has to
+# pass one test:
+#
+#     WOULD THIS SENTENCE BE FALSE ON MySQL OR ORACLE?
+#
+# If it would be equally true anywhere, it belongs in Learn SQL and not here. That test is
+# what stops eleven database tracks becoming eleven copies of Learn SQL with the vendor name
+# swapped, which is the single biggest risk in this whole catalogue.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL POSTGRESQL DOCUMENTATION
+# ============================================================================
+# The manual is the default shape for this course — its chapter order, its groupings, and
+# above all its VOCABULARY. Two reasons. A reader who finishes this track then lives in
+# postgresql.org/docs for years, so learning Postgres in the manual's own shape means they
+# already know where to look. And its maintainers have thought harder about how Postgres
+# decomposes than we will.
+#
+# THE MANUAL'S PARTS, and where each one lands here:
+#   I.   Tutorial ................. skipped — Learn SQL owns it
+#   II.  The SQL Language ......... Series 1 (data types, functions, DDL specifics) and the
+#                                   parts of Series 2 about indexes
+#   III. Server Administration .... mostly Data Ops; only CREATE EXTENSION (1 · 35) and
+#                                   template/locale facts survive here
+#   IV.  Client Interfaces ........ Series 1 · 00 (psql), and the language tracks own the rest
+#   V.   Server Programming ....... Series 3 (functions, triggers, PL/pgSQL, FDWs)
+#   VI.  Reference ................ lookup, not reading order — used as a coverage checklist
+#   VII. Internals ................ only where it explains a plan (visibility map, statistics)
+#
+# THE THREE PLACES WE DEPART, and each is an academy rule rather than a preference:
+#   1. Part I and most of Part II's query chapters are Learn SQL's, not ours (delta track).
+#   2. Part III is Data Ops' — see the seam below.
+#   3. INDEXES ARE PULLED FORWARD into their own series with the planner. The manual files
+#      them under Part II and the planner under Part VII, and separating the two is exactly
+#      what makes people add indexes that never get used.
+# Series 4 and 5 have no counterpart in the manual at all, because TimescaleDB and Supabase
+# have their own; follow theirs there.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH LESSON SHOULD FOLLOW THE OFFICIAL POSTGRESQL
+# DOCUMENTATION — not only this file's series order. Before writing an episode, open the
+# manual's own section for that topic and use it as the coverage checklist, and use its
+# vocabulary for the nouns. Where you leave something out, it should be because an academy
+# rule says so (Learn SQL owns the SQL, Data Ops owns administration), not because it was
+# missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the specific manual section named.
+# A brief is what a writer actually opens; a rule that lives only in this header is a rule
+# that gets forgotten at the exact moment it matters.
+#
+# ============================================================================
+# THE SEAM WITH DATA OPS — the one that will be argued, so it is settled here
+# ============================================================================
+# Data Ops Series 2 is literally "Running PostgreSQL in Production" — ten episodes on
+# transactions and ACID, isolation levels, MVCC and VACUUM, locks and deadlocks, pooling,
+# memory configuration, backup and restore, zero-downtime migrations, roles and grants, and
+# replication. That is a lot of Postgres, and none of it is repeated here.
+#
+#     DATA OPS runs the SERVER.        Is it up, is it backed up, will this migration lock,
+#                                      how many connections, when does VACUUM run.
+#     THIS TRACK uses the DATABASE.    Which type, which index, why that plan, which
+#                                      extension, how do I write a function.
+#
+# MVCC IS THE ONE THAT OVERLAPS and it is allowed to, in one direction only: Data Ops owns
+# bloat and VACUUM tuning; here it appears only as much as is needed to explain why an
+# index-only scan sometimes is not one (the visibility map) — a paragraph inside Series 2,
+# never an episode. If a draft here starts discussing autovacuum settings, it has crossed.
+#
+# ============================================================================
+# TIMESCALEDB AND SUPABASE ARE SERIES, NOT COURSES
+# ============================================================================
+# Both ARE Postgres. TimescaleDB is an extension; Supabase is a hosted platform with
+# PostgREST, GoTrue and Realtime bolted on. Filing either as its own course would tell a
+# reader they are peers of PostgreSQL, and the first useful thing to know about both is that
+# they are not — everything in Series 1 to 3 is still true inside them.
+#
+# THEY COME LAST for the same reason Series 4 of Java & Groovy comes last: a reader can only
+# judge what an extension or a platform buys them once they have seen what it replaces.
+#
+# WHAT WOULD SPLIT THEM OUT: if either series needs episodes that are no longer about
+# Postgres — Supabase's auth flows, its edge functions as a JavaScript runtime, its client
+# SDKs — it has stopped being a Postgres series and belongs in its own track. The line held
+# here is the DATA HALF: schema, RLS, and the API that is generated from them.
+
+course: learn-postgresql
+track: postgresql
+title: PostgreSQL
+
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1 and Series 2"
+    why: >-
+      This track starts where Learn SQL stops. You need to be able to write a join, a
+      GROUP BY and a window function before any of it is useful, because none of that is
+      taught again here — the subject is what Postgres does that other engines do not.
+
+excludes:
+  - topic: "SQL itself — SELECT, JOIN, GROUP BY, CTEs and window functions"
+    where: "covered in Learn SQL. Here you already write them, and the question is what Postgres adds"
+  - topic: "Keeping the server up — backups, failover, pooling, VACUUM tuning, connection limits"
+    where: "covered in Data Ops, Series 2, which is ten episodes on running PostgreSQL in production. This track uses the database rather than operating it"
+  - topic: "Running a migration against a live table without locking it"
+    where: "covered in Data Ops, Series 2 · 35. Here Series 1 · 30 is only how an extension or a type change is applied"
+  - topic: "Deciding what the tables and keys should be"
+    where: "covered in Data Modeling. Here the schema exists and the question is which Postgres type and index to give it"
+  - topic: "Loading data in from other systems"
+    where: "covered in ETL & Data Pipelines. Here Series 1 · 05 covers COPY only as the client command you will actually type"
+  - topic: "pgvector and embeddings"
+    where: "covered in AI for Data, Series 2, where the embeddings that go in it are also explained"
+
+series:
+  # ── SERIES 1 ────────────────────────────────────────────────────────────────
+  # The everyday surface: what you type, and the things that behave differently from what a
+  # reader who learned SQL on another engine expects. Ordered by how soon it bites you.
+  - slug: series1-postgres-essentials
+    title: PostgreSQL Essentials
+    tagline: the client, the types, and what Postgres has that the standard does not
+    level: intermediate
+    episodes:
+      # COVER: psql as the client you WILL be given on a server with no GUI. \d \dt \d+ \l \c,
+      # \x expanded output (the single most useful thing for a wide row), \timing, \e to edit
+      # in $EDITOR, \copy versus server-side COPY and why one needs no file permissions,
+      # ~/.psqlrc, and \watch. Also: how to read a psql error — Postgres error messages name
+      # the constraint and give a HINT, and reading them is a skill.
+      # DO NOT cover CloudBeaver here; the academy rule is that a track teaches a skill and
+      # demonstrates it in a tool, and psql is the one that is on every server.
+      - n: "00"
+        slug: psql
+        title: "psql — The Client You Get on a Server With No GUI"
+        hands_on: ["koan:capture", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: numeric/decimal vs real/double precision, and money (do not use it — say why).
+      # text vs varchar(n) vs char(n), and why Postgres people default to text. timestamptz vs
+      # timestamp, which is THE type mistake in this engine: timestamptz stores an instant and
+      # converts on the way out, timestamp stores a wall clock and means nothing without a
+      # zone. interval. The boolean input forms. Casting with :: and CAST.
+      # THE FAILURE: a report that shifts by hours when the server's TimeZone changes, because
+      # the column was timestamp without time zone.
+      - n: "05"
+        slug: types-that-differ
+        title: "Types — numeric, text, and Why timestamptz Is Not timestamp"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: JSONB vs JSON (binary, deduplicated, indexable vs stored verbatim) and when a
+      # column should be either. The operators: -> ->> #> @> ? and jsonb_path_query. Turning
+      # documents into rows with jsonb_to_recordset and jsonb_array_elements. When JSONB is the
+      # right answer (genuinely variable attributes, third-party payloads you did not design)
+      # and when it is a column you were too lazy to add.
+      # SEAM: Data Modeling owns "should this be JSON at all"; Learn SQL Series 3 · 15 owns
+      # querying JSON generically. Here it is Postgres's own operators and indexing.
+      - n: "10"
+        slug: jsonb
+        title: "JSONB — Storing and Querying Documents Inside a Relational Table"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: arrays as a real column type — ANY, unnest, array_agg, containment. Range types
+      # (tstzrange, daterange) and the EXCLUDE constraint that makes double-booking impossible
+      # at the database level, which is the one genuinely delightful Postgres feature nobody
+      # meets. Enums, and their upgrade problem. Composite and domain types, briefly.
+      # NOT CORE: real, useful, and you can do the job without them.
+      - n: "15"
+        slug: arrays-ranges-enums
+        title: "Arrays, Ranges and Enums — Column Types Other Engines Do Not Have"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      # COVER: a database contains SCHEMAS contains tables — and "schema" here does not mean
+      # what it means in Learn SQL or MySQL, which is the confusion to clear first. public,
+      # search_path and how it silently decides which table you hit, qualified names, and
+      # per-tenant schemas as a pattern. Then privileges only as far as GRANT on a schema.
+      # THE FAILURE: two tables named the same in different schemas, and a job that read the
+      # wrong one for a month because search_path differed between the app and psql.
+      - n: "20"
+        slug: schemas-and-search-path
+        title: "Schemas and search_path — Which Table You Actually Hit"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: serial (legacy) vs GENERATED ... AS IDENTITY (standard, preferred) and why new
+      # tables should use identity. How sequences are NOT transactional — a rolled-back insert
+      # still consumes the number, so gaps are normal and an "invoice number with no gaps"
+      # requirement cannot be met this way. currval/nextval/setval. RETURNING to get the id
+      # back in one round trip instead of two.
+      - n: "25"
+        slug: sequences-and-identity
+        title: "Sequences, IDENTITY and RETURNING — Generated Keys and the Gaps in Them"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: INSERT ... ON CONFLICT DO NOTHING / DO UPDATE, the conflict target, and EXCLUDED.
+      # Why it needs a unique index to work at all. MERGE (Postgres 15+) and how it differs.
+      # UPDATE ... FROM, DELETE ... USING — the Postgres spellings of an update-from-a-join.
+      # SEAM: ETL owns idempotent LOADS as a strategy; here it is the statement and what it
+      # does to one table.
+      - n: "30"
+        slug: upsert-and-writes
+        title: "ON CONFLICT, MERGE and UPDATE ... FROM — Writes the Standard Does Not Give You"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: CREATE EXTENSION and that most of Postgres's reputation is extensions —
+      # pg_stat_statements (find the slow query), pg_trgm (fuzzy matching), postgres_fdw,
+      # uuid-ossp/pgcrypto, hstore (legacy, say so), PostGIS and pgvector by name with pointers.
+      # How to see what is available, and the fact that a managed provider decides for you.
+      - n: "35"
+        slug: extensions
+        title: "Extensions — CREATE EXTENSION and What Ships With Postgres"
+        hands_on: ["koan:complete"]
+        core: true
+        status: planned
+      - n: "40"
+        slug: project-postgres-schema
+        title: "Project — Take a Generic Schema and Make It Properly Postgres"
+        hands_on: ["koan:author"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  # ── SERIES 2 ────────────────────────────────────────────────────────────────
+  # Learn SQL Series 3 · 20 and · 25 teach that a plan exists and that an index costs
+  # something. This series is the Postgres specifics: five index kinds, and a planner whose
+  # decisions you can read and predict.
+  - slug: series2-indexes-and-the-planner
+    title: Indexes and the Planner
+    tagline: five index kinds, and why the planner ignored yours
+    level: advanced
+    episodes:
+      # COVER: EXPLAIN vs EXPLAIN ANALYZE vs EXPLAIN (ANALYZE, BUFFERS). Reading a plan tree
+      # from the inside out. ESTIMATED rows against ACTUAL rows — the single most useful number
+      # on the page, because a large gap is the cause of most bad plans. Seq Scan vs Index Scan
+      # vs Index Only Scan vs Bitmap Heap Scan, and the three join strategies.
+      # WHY A SEQ SCAN IS OFTEN RIGHT, said early: on a small table it is faster, and readers
+      # who do not hear this add indexes that never get used.
+      - n: "00"
+        slug: reading-a-plan
+        title: "EXPLAIN (ANALYZE, BUFFERS) — Reading a Postgres Plan Tree"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: B-tree as the default and what it can serve — equality, range, sorting, and the
+      # LEADING COLUMN RULE for a composite index, which is the single highest-value fact in
+      # this series. Why (a, b) helps a query on a and not one on b. Index-only scans and the
+      # visibility map (the ONE place MVCC appears here — see the header's seam note).
+      # Covering indexes with INCLUDE.
+      - n: "05"
+        slug: btree-indexes
+        title: "B-tree Indexes — Composite Keys and the Leading Column Rule"
+        hands_on: ["koan:count:scanned", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: GIN for "many values in one row" — JSONB containment, arrays, full-text — and
+      # its write cost plus fastupdate. GiST for ranges, geometry and nearest-neighbour. The
+      # pg_trgm case: GIN or GiST turns LIKE '%foo%' from a seq scan into an index scan, which
+      # is the answer to a question every application team eventually asks.
+      - n: "10"
+        slug: gin-and-gist
+        title: "GIN and GiST — Indexing JSONB, Arrays, Text Search and Ranges"
+        hands_on: ["koan:count:scanned", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: PARTIAL indexes (WHERE) — tiny, and perfect for "the 2% of rows that are
+      # pending". EXPRESSION indexes, and the rule that the index expression must MATCH the
+      # query expression exactly or it is not used — lower(email) is the classic. BRIN for
+      # naturally ordered big tables (append-only time series), where the index is kilobytes.
+      # UNIQUE as an index rather than a constraint, and CREATE INDEX CONCURRENTLY.
+      - n: "15"
+        slug: partial-expression-brin
+        title: "Partial, Expression and BRIN Indexes — Smaller Indexes That Do More"
+        hands_on: ["koan:choose", "koan:count:scanned"]
+        status: planned
+      # COVER: why the planner chose wrong. ANALYZE and pg_statistic, n_distinct, most common
+      # values, and CREATE STATISTICS for correlated columns (city and postcode) where Postgres
+      # otherwise multiplies selectivities and underestimates by orders of magnitude.
+      # random_page_cost and effective_cache_size as the two settings worth understanding.
+      # THE DISCIPLINE: never fix a plan with a hint (Postgres has none, deliberately) — fix
+      # the statistics, the index or the query.
+      - n: "20"
+        slug: statistics-and-the-planner
+        title: "Statistics — Why the Planner Estimated 3 Rows and Got 300,000"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: declarative partitioning by range/list/hash, partition pruning at plan time and
+      # at execution time, attaching and detaching a partition as the cheap way to drop a
+      # month, and indexes on partitioned tables. WHEN NOT TO: partitioning a table that fits
+      # comfortably is a cost with no benefit — say so plainly.
+      - n: "25"
+        slug: partitioning
+        title: "Declarative Partitioning — Splitting a Big Table and Pruning at Query Time"
+        hands_on: ["koan:count:scanned", "koan:choose"]
+        status: planned
+      - n: "30"
+        slug: project-make-it-fast
+        title: "Project — Take a Slow Query and Make It Fast, With Evidence"
+        hands_on: ["koan:author", "koan:count:scanned"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  # ── SERIES 3 ────────────────────────────────────────────────────────────────
+  # The parts of Postgres that are not SELECT — where it stops being a place to keep rows and
+  # starts being somewhere logic and search live.
+  - slug: series3-beyond-queries
+    title: Beyond Queries
+    tagline: functions, triggers, search and change feeds
+    level: advanced
+    episodes:
+      # COVER: CREATE FUNCTION in SQL and in PL/pgSQL, and the difference. Parameters, RETURNS
+      # TABLE, set-returning functions. Volatility (IMMUTABLE / STABLE / VOLATILE) and why it
+      # changes whether the planner can use your function in an index. Exceptions. LANGUAGE sql
+      # functions being inlinable, which PL/pgSQL ones are not.
+      # THE HONEST WARNING: logic in the database is harder to test, version and review than
+      # logic in the application. Say when it is worth it (data-adjacent, set-based, needed by
+      # several clients) and when it is not.
+      - n: "00"
+        slug: functions-and-plpgsql
+        title: "Functions and PL/pgSQL — Logic That Lives in the Database"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      # COVER: BEFORE/AFTER, ROW/STATEMENT, the trigger function contract (NEW, OLD, RETURN).
+      # The three honest uses: audit trails, maintaining a denormalised column, and enforcing a
+      # rule a constraint cannot express. Then the costs: invisible action at a distance, order
+      # dependence between triggers, and what they do to a bulk load.
+      - n: "05"
+        slug: triggers
+        title: "Triggers — Audit Trails, Derived Columns and What They Cost on a Bulk Load"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
+      # COVER: tsvector and tsquery, to_tsvector with a language configuration, the @@ operator,
+      # ts_rank, and highlighting with ts_headline. A GIN index on a generated tsvector column.
+      # pg_trgm and similarity for fuzzy matching and typo tolerance — different problem,
+      # different tool, and knowing which one the requirement is.
+      # THE POSITION: this is good enough to make an Elasticsearch cluster unnecessary for a
+      # large share of applications, and saying that is the point of the episode.
+      - n: "10"
+        slug: full-text-search
+        title: "Full-Text Search — tsvector, Ranking, and Fuzzy Matching With pg_trgm"
+        hands_on: ["koan:complete", "koan:choose"]
+        status: planned
+      # COVER: LISTEN/NOTIFY as an in-database pub/sub, its at-most-once nature, the payload
+      # size limit, and that a disconnected listener misses everything — which is exactly why
+      # it is not a queue. Then the outbox pattern as the durable alternative.
+      # SEAM: ETL & Data Pipelines Series 3 · 15 owns CDC as a strategy; this is Postgres's own
+      # mechanism, and logical replication at 20 is the industrial version.
+      - n: "15"
+        slug: listen-notify
+        title: "LISTEN/NOTIFY — Telling an Application Something Changed"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
+      # COVER: the write-ahead log as the source of truth for change feeds, wal_level=logical,
+      # publications and subscriptions, replication slots and the disk they will fill if a
+      # consumer goes away — the one that takes a database down. Logical decoding as what
+      # Debezium reads.
+      # SEAM: Data Ops owns physical replication for availability. This is replication as a
+      # DATA MOVEMENT tool.
+      - n: "20"
+        slug: logical-replication
+        title: "Logical Replication — Publications, Slots and the Feed CDC Tools Read"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        status: planned
+      # COVER: postgres_fdw and file_fdw — querying another database or a CSV as if it were a
+      # table. What gets pushed down to the remote side and what does not, which is the whole
+      # performance story. IMPORT FOREIGN SCHEMA.
+      - n: "25"
+        slug: foreign-data-wrappers
+        title: "Foreign Data Wrappers — Querying Another Database as a Table"
+        hands_on: ["koan:complete", "koan:count:roundtrips"]
+        status: planned
+      - n: "30"
+        slug: project-search-and-feed
+        title: "Project — A Searchable Table That Tells You When It Changes"
+        hands_on: ["koan:author"]
+        tags: ["project"]
+        status: planned
+
+  # ── SERIES 4 ────────────────────────────────────────────────────────────────
+  # THE FIRST THING TO SAY: TimescaleDB is an EXTENSION. Everything in Series 1 to 3 is still
+  # true, a hypertable is still a table, and your existing SQL still runs. A reader who thinks
+  # they are learning a new database will not understand why anything works.
+  - slug: series4-timescaledb
+    title: TimescaleDB
+    tagline: the same Postgres, reshaped for time-series
+    level: advanced
+    episodes:
+      # COVER: what a time-series workload actually is (append-heavy, queried by time range,
+      # rarely updated) and why an ordinary table struggles at volume. create_hypertable, chunks
+      # as the automatic partitions underneath, chunk_time_interval and how to choose it.
+      # Then: WHEN YOU DO NOT NEED THIS. Declarative partitioning plus BRIN (Series 2 · 15 and
+      # · 25) covers a lot of it, and the episode has to say so or it is an advert.
+      - n: "00"
+        slug: hypertables
+        title: "Hypertables — Automatic Partitioning for Time-Series Tables"
+        hands_on: ["koan:predict", "koan:choose"]
+        status: planned
+      # COVER: time_bucket as the workhorse, and time_bucket_gapfill with locf and interpolate
+      # for the gaps that break a chart. first/last aggregates. The point: these are the
+      # questions time-series data is always asked, spelled shorter.
+      - n: "05"
+        slug: time-series-functions
+        title: "time_bucket and Gapfill — The Questions Time-Series Data Is Always Asked"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      # COVER: continuous aggregates as incrementally maintained materialized views, refresh
+      # policies, and real-time aggregation (the view plus the not-yet-materialized tail).
+      # SEAM: Data Warehousing Series 2 · 35 owns materialized views and incremental
+      # aggregation as a concept; this is Timescale's implementation of it.
+      - n: "10"
+        slug: continuous-aggregates
+        title: "Continuous Aggregates — A Rollup That Maintains Itself"
+        hands_on: ["koan:count:scanned", "koan:predict"]
+        status: planned
+      # COVER: columnar compression on older chunks and the order-by/segment-by choice that
+      # decides the ratio, what becomes read-only once compressed, and retention policies that
+      # drop chunks instead of deleting rows — which is why it is instant.
+      - n: "15"
+        slug: compression-and-retention
+        title: "Compression and Retention — Shrinking Old Chunks and Dropping Them Whole"
+        hands_on: ["koan:predict", "koan:choose"]
+        status: planned
+      - n: "20"
+        slug: project-timescale
+        title: "Project — A Metrics Table That Stays Fast for a Year"
+        hands_on: ["koan:author"]
+        tags: ["project"]
+        status: planned
+
+  # ── SERIES 5 ────────────────────────────────────────────────────────────────
+  # SAME FIRST SENTENCE AS SERIES 4: Supabase IS Postgres, hosted, with an API generated from
+  # your schema. Everything in Series 1 to 3 still applies, and the reason to teach it here
+  # rather than as its own course is that its central idea — the schema IS the API and RLS IS
+  # the authorization — only makes sense to someone who knows Postgres.
+  #
+  # SCOPE: THE DATA HALF ONLY. No auth UI flows, no client SDK tour, no edge functions as a
+  # JavaScript runtime. If the series starts needing those, it has stopped being Postgres.
+  - slug: series5-supabase
+    title: Supabase
+    tagline: Postgres with an API generated from your schema
+    level: advanced
+    episodes:
+      # COVER: what is actually in the box — Postgres, PostgREST, GoTrue, Realtime, Storage —
+      # and that every one of them reads your schema. The consequence a reader must leave with:
+      # ON THIS PLATFORM, SCHEMA DESIGN IS API DESIGN, and a sloppy table is a sloppy endpoint.
+      # The local stack via the CLI, and migrations as files rather than clicks in the studio.
+      - n: "00"
+        slug: what-supabase-is
+        title: "Supabase — Hosted Postgres Where the Schema Generates the API"
+        hands_on: ["koan:complete"]
+        status: planned
+      # COVER: RLS as the whole authorization model — ENABLE ROW LEVEL SECURITY, policies per
+      # command, USING versus WITH CHECK (read visibility versus write permission, the
+      # distinction people get wrong), auth.uid(), and the anon/authenticated/service_role keys.
+      # THE FAILURE THAT MATTERS: a table with RLS enabled and no policy denies everything,
+      # while a table with RLS NOT enabled on a public schema exposes everything to anyone with
+      # the anon key. Both are silent, and one of them is a data breach.
+      # SEAM: Data Ops Series 2 · 40 teaches roles, grants and RLS as database administration.
+      # Here RLS is the application's entire permission system.
+      - n: "05"
+        slug: row-level-security
+        title: "Row-Level Security — Policies as the Only Thing Between Your Table and the Internet"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: PostgREST's mapping — tables and views to endpoints, the filter syntax, embedded
+      # resources following foreign keys, and RPC over SQL functions (Series 3 · 00 paying off).
+      # Views as the way to shape a response without exposing a table. What it will NOT do, and
+      # when to write a function instead.
+      - n: "10"
+        slug: postgrest-api
+        title: "The Generated API — Tables, Views and Functions as Endpoints"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      # COVER: Realtime as logical replication (Series 3 · 20 paying off) turned into websocket
+      # messages — and that RLS applies to the stream too, which is the part people get wrong.
+      # Postgres Changes vs Broadcast vs Presence, and their different guarantees.
+      - n: "15"
+        slug: realtime
+        title: "Realtime — Logical Replication Delivered to a Browser, With RLS Still Applied"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
+      # COVER: files in Storage are rows in a Postgres table, so bucket permissions are RLS
+      # policies like anything else. Then the data-half view of Edge Functions: use them when a
+      # request needs to do something SQL cannot, and not as a place to put queries.
+      - n: "20"
+        slug: storage-and-functions
+        title: "Storage and Edge Functions — Where Files and Server-Side Work Fit"
+        hands_on: ["koan:complete"]
+        status: planned
+      - n: "25"
+        slug: project-supabase-app
+        title: "Project — A Multi-Tenant Schema Nobody Can Read Across"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned

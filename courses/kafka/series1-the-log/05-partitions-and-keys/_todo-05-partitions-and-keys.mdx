@@ -1,0 +1,71 @@
+---
+title: "Partitions and Keys — Ordering Is Only Guaranteed Within a Partition"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-kafka"
+tags: []
+level: "intermediate"
+module: "series1-the-log"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/kafka/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/kafka/series1/_05/PartitionsAndKeysKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Apache Kafka documentation (kafka.apache.org/documentation) — its Design section especially.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (ETL owns CDC and dead letters as concepts, Data Ops owns running the brokers),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    Kafka is a LOG, not a queue. If a sentence would be true of a message queue, check it.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE MOST CONSEQUENTIAL DESIGN DECISION A USER MAKES.
+     COVER: partitions as the unit of parallelism AND of ordering. ORDER IS GUARANTEED ONLY
+     WITHIN A PARTITION, so the key you choose decides what is ordered relative to what.
+     Keying by customer id keeps one customer's events in order; keying randomly does not.
+     Partition count as a decision that is hard to change later.
+     THE FAILURE: an update processed before the insert it depends on, because they were
+     keyed differently. No error, wrong final state.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/kafka/series1/_05/PartitionsAndKeysKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

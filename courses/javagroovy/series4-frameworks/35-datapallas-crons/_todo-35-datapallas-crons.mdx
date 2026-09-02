@@ -1,0 +1,106 @@
+---
+title: "DataPallas Crons — Scheduling the dbt Transform and the Excel Refresh"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series4-frameworks"
+order: 35
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: turn on, and then improve, the two scheduled jobs DataPallas already ships.
+    THE PRODUCT HALF OF 30, and the same shape as 25: the mechanism first, then the same thing
+    inside what DataPallas actually ships.
+
+    THE REAL FILES, all in _apps/flowkraft/bkend-boot-groovy-playground/src-examples:
+      crons/crons.groovy          — two @Scheduled methods, both commented out
+      helpers/DbtHelper.groovy    — docker compose run --rm dbt-transform run
+      helpers/ExcelHelper.groovy  — JACOB/COM, RefreshAll, save, close
+      pipelines/                  — the Beam pipelines the koan:author schedules
+    The copy-into-src ritual is how that app activates anything; teach it as the product's own
+    mechanism, not as a workaround.
+
+    THREE THINGS ONLY THIS EPISODE CAN TEACH, because they need a real product:
+      1. THE SCHEDULE IS COMPILED IN. Changing "run dbt at 2 a.m." to "3 a.m." means editing
+         Groovy and running mvnw package. Move it into application.properties behind ${...} and
+         it becomes a restart. A genuine improvement to our own example — the reader makes it.
+      2. DbtHelper SHELLS OUT, so success is an exit code and diagnosis is captured stdout.
+         Series 3 · 25 arriving in a real job instead of an exercise.
+      3. THE EXCEL CRON CANNOT RUN WHERE THE APP RUNS. COM is Windows-only and the playground's
+         normal home is a Linux container. A schedule that is correct and can never fire on the
+         box you deployed it to is a deployment fact, not a bug.
+
+    GRAILS IS A PARAGRAPH, NOT AN EPISODE. Grails is Spring Boot underneath, so @Scheduled
+    behaves identically in grails-playground. Say it once and move on.
+
+    ONE LINE ON RE-RUNNABILITY, AND NO MORE THAN ONE. Putting a job on a timer is what makes
+    "what happens on the second run" urgent — a load that doubles its rows is harmless run by
+    hand and catastrophic run nightly. Say that, point at ETL & Data Pipelines Series 1 · 30,
+    move on. This episode owes the reader the WARNING, not the lesson; the curriculum excludes
+    record why the lesson is not ours.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:capture
+      koan:author
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series4/_35/DatapallasCronsKoans.groovy
+
+    STILL NO CLOCK — see 30. capture asserts on what the job PRINTED when the shelled-out
+    command failed; author is the src-examples README's own suggestion, scheduling the Beam
+    CustomerIngestionPipeline that ships in the same folder.
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety.
+
+    Groovy throughout, and for once no justification is needed: the playground is a
+    Groovy Spring Boot app and these are its own files. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written.
+
+    capture: DbtHelper's exit-code and stdout handling, against a stubbed command —
+    "dbt failed and said why" must be distinguishable from "dbt never ran".
+
+    author: add a third cron that runs the Beam CustomerIngestionPipeline, joining the
+    two halves of src-examples — the crons and the pipelines. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here.
+
+    THE BEAT THIS TRACK ALWAYS DEMANDS: both shipped crons catch Exception and only log it.
+    That is where a nightly job goes to die quietly — the dashboard keeps rendering, the
+    numbers keep being last week's, and nobody is paged. End the episode here.
+
+    ALSO: the Excel refresh scheduled on a Linux container, correct and inert. */}
+
+TODO

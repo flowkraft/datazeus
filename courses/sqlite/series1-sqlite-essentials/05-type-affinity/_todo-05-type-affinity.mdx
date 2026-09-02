@@ -1,0 +1,71 @@
+---
+title: "Type Affinity — Why a Column Will Accept Almost Anything, and STRICT Tables"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-sqlite"
+tags: []
+level: "beginner"
+module: "series1-sqlite-essentials"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/sqlite/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/sqlite/series1/_05/TypeAffinityKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official SQLite documentation (sqlite.org) — including its 'Quirks, Caveats and Gotchas' page.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Learn SQL owns the SQL),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    This is a DELTA track: every sentence should be one that would be FALSE on another engine.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE EPISODE THAT PREVENTS THE MOST WRONG DATA, and the one genuine trap in the engine.
+     COVER: TYPE AFFINITY — a column does not enforce a type, it prefers one, so a TEXT
+     column will accept the number 42 and an INTEGER column will accept 'banana'. The five
+     storage classes and the affinity rules. Why 'CREATE TABLE t (x BANANA)' is legal.
+     Then STRICT tables (3.37+), which are the fix and should be the default advice now.
+     THE FAILURE: a CSV import that puts strings in a numeric column, and a SUM that
+     silently ignores them.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/sqlite/series1/_05/TypeAffinityKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

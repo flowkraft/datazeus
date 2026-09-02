@@ -1,0 +1,245 @@
+# The ordered episode list for SQL Server. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: work well in the database at the centre of most Microsoft shops
+# — T-SQL as its own dialect, an optimizer with a plan cache that will surprise you, and the
+# clustered index that decides how every table behaves.
+#
+# ============================================================================
+# THIS IS A DELTA TRACK
+# ============================================================================
+#     WOULD THIS SENTENCE BE FALSE ON POSTGRESQL?
+# Learn SQL owns SQL. What passes here: T-SQL's own constructs, the clustered index, the plan
+# cache and parameter sniffing, statistics, TRY/CATCH and error handling, temp tables against
+# table variables, and columnstore.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL MICROSOFT DOCUMENTATION
+# ============================================================================
+# Microsoft Learn's SQL Server docs split into Transact-SQL reference, Relational databases
+# (indexes, statistics, query processing), Development, and Administration. Follow those:
+#   Transact-SQL reference ................ Series 1 and Series 3
+#   Indexes / Statistics / Query processing Series 2
+#   Administration ........................ not this course — Data Ops
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL MICROSOFT SQL SERVER DOCUMENTATION. Before writing
+# an episode, open the docs' own page for that topic, use it as the COVERAGE CHECKLIST, and use
+# its VOCABULARY FOR THE NOUNS (clustered index, heap, plan cache, cardinality estimation).
+# Anything left out should be left out because an academy rule says so — Learn SQL owns the
+# SQL, Data Ops owns backup, HA and configuration — and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the specific docs page named. A brief
+# is what a writer actually opens; a rule that lives only in this header is a rule that gets
+# forgotten at the exact moment it matters.
+#
+# TEACH AGAINST WHAT A LEARNER CAN INSTALL: Developer Edition (free, full-featured) and the
+# Linux container image. Note where a feature is Enterprise-only rather than assuming it.
+
+course: learn-sql-server
+track: sqlserver
+title: SQL Server
+
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1 and Series 2"
+    why: >-
+      You need to be able to write the query already. This track is about T-SQL's own
+      spellings, and about why the server chose the plan it chose.
+
+excludes:
+  - topic: "SQL itself"
+    where: "covered in Learn SQL"
+  - topic: "Administration — backups, Always On, security configuration, agent jobs"
+    where: "not covered. Data Ops owns the operational discipline; this track is for the person writing queries and procedures"
+  - topic: "SSIS, SSRS and SSAS"
+    where: "not covered. ETL & Data Pipelines owns the load patterns and BI & Data Visualization owns reporting; the products themselves are out of scope"
+
+series:
+  - slug: series1-tsql-essentials
+    title: T-SQL Essentials
+    tagline: the dialect, the types, and the settings that change results
+    level: intermediate
+    episodes:
+      # COVER: sqlcmd and Azure Data Studio / SSMS. Database-schema-object naming and the
+      # dbo default. Then the T-SQL constructs Learn SQL does not teach: TOP with TIES,
+      # OFFSET/FETCH, variables and SET/SELECT assignment, IIF and CHOOSE, STRING_AGG,
+      # and the batch separator GO, which is a client construct and not T-SQL at all.
+      - n: "00"
+        slug: tsql-and-the-client
+        title: "T-SQL and the Client — GO Is Not SQL, and Other Things Nobody Tells You"
+        hands_on: ["koan:capture", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: the types that misbehave — DATETIME's 3.33ms rounding against DATETIME2,
+      # the difference between VARCHAR and NVARCHAR and what happens when you mix them
+      # (implicit conversion that DEFEATS AN INDEX, a silent performance bug), MONEY (avoid),
+      # and DECIMAL precision in division. Collation, case-insensitivity by default, and what
+      # that means for a unique key and for a JOIN across databases with different collations.
+      - n: "05"
+        slug: types-and-collation
+        title: "Types and Collation — NVARCHAR Conversions That Silently Defeat an Index"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: MERGE, and the honest warning that it has a long history of bugs and many
+      # practitioners avoid it — teach the INSERT/UPDATE alternative alongside. OUTPUT clause,
+      # which is genuinely excellent and has no direct Postgres equivalent for capturing both
+      # sides. IDENTITY, SCOPE_IDENTITY vs @@IDENTITY (the classic wrong-value trap), and
+      # SEQUENCE objects.
+      - n: "10"
+        slug: writes-and-identity
+        title: "MERGE, OUTPUT and SCOPE_IDENTITY — Writes and Getting the Key Back"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: SET options that change RESULTS and plans — ANSI_NULLS, ANSI_PADDING,
+      # QUOTED_IDENTIFIER, ARITHABORT — and the fact that they differ between SSMS and an
+      # application connection, which is the real reason "it is fast in SSMS and slow in the
+      # app". NOCOUNT. Isolation defaults, and READ_COMMITTED_SNAPSHOT as the setting that
+      # makes SQL Server behave the way a Postgres reader expects.
+      - n: "15"
+        slug: set-options
+        title: "SET Options and Isolation — Why It Is Fast in SSMS and Slow in the Application"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the system catalog — sys.tables, sys.columns, sys.indexes, sys.dm_* views, and
+      # INFORMATION_SCHEMA as the portable but weaker option. sp_help and sp_helptext for
+      # reading an inherited procedure.
+      - n: "20"
+        slug: system-catalog
+        title: "sys Views and DMVs — Reading a Database You Did Not Build"
+        hands_on: ["koan:complete", "koan:capture"]
+        status: planned
+      - n: "25"
+        slug: project-explore
+        title: "Project — Answer a Question From an Unfamiliar SQL Server Database"
+        hands_on: ["koan:author"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-indexes-and-plans
+    title: Indexes and Plans
+    tagline: the clustered index, statistics, and the plan cache
+    level: advanced
+    episodes:
+      # COVER: the clustered index IS the table (as in InnoDB), heaps as the alternative and
+      # why they are usually wrong, and how the clustering key propagates into every
+      # nonclustered index. Key choice: narrow, static, ever-increasing — and what a random
+      # GUID does to page splits and fragmentation.
+      - n: "00"
+        slug: clustered-index
+        title: "The Clustered Index Is the Table — and Its Key Is in Every Other Index"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: reading an actual execution plan — estimated against actual rows (the one
+      # number), scan against seek, key lookups and why a covering index with INCLUDE removes
+      # them, and the warnings the plan itself shows you. Live Query Statistics.
+      - n: "05"
+        slug: reading-plans
+        title: "Execution Plans — Seeks, Scans, Key Lookups and Estimated Against Actual"
+        hands_on: ["koan:diagnose", "koan:count:scanned"]
+        core: true
+        status: planned
+      # THE EPISODE THAT HAS NO REAL POSTGRES EQUIVALENT, and the single most common SQL
+      # Server performance surprise.
+      # COVER: plans are cached and reused; the cached plan was compiled for the FIRST
+      # parameter value it saw, so a query that is fast for one customer is catastrophic for
+      # another. How to spot it, and the fixes in order of preference — better statistics,
+      # OPTIMIZE FOR, RECOMPILE, and Query Store plan forcing.
+      - n: "10"
+        slug: parameter-sniffing
+        title: "Parameter Sniffing — Why the Same Query Is Fast for One Customer and Not Another"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: statistics, auto-update thresholds and why a large table's stats go stale,
+      # cardinality estimation and the legacy vs new estimator, and filtered statistics.
+      # Query Store as the built-in record of what ran and which plan it used — the single
+      # most useful feature added to the product in a decade.
+      - n: "15"
+        slug: statistics-and-query-store
+        title: "Statistics and Query Store — Finding the Regression and Proving It"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: index design — composite key order, INCLUDE columns, filtered indexes, and the
+      # missing-index DMV plus the warning that its suggestions are naive and will happily
+      # recommend twelve overlapping indexes. Index maintenance in one paragraph, pointing at
+      # Data Ops.
+      - n: "20"
+        slug: index-design
+        title: "Index Design — Key Order, INCLUDE, and Why the Missing-Index DMV Lies to You"
+        hands_on: ["koan:choose", "koan:count:scanned"]
+        status: planned
+      # COVER: columnstore indexes — clustered for a fact table, nonclustered for HTAP —
+      # batch mode execution, segment elimination, and when a rowstore table should simply get
+      # a columnstore index instead of being moved to another system.
+      # SEAM: Data Warehousing owns columnar as a concept.
+      - n: "25"
+        slug: columnstore
+        title: "Columnstore Indexes — Analytics Without Leaving SQL Server"
+        hands_on: ["koan:count:scanned", "koan:choose"]
+        status: planned
+      - n: "30"
+        slug: project-tune
+        title: "Project — Diagnose and Fix a Slow Query With Query Store as Evidence"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-programming
+    title: Programming SQL Server
+    tagline: procedures, errors and set-based thinking
+    level: advanced
+    episodes:
+      # COVER: stored procedures as the unit most SQL Server codebases are built from,
+      # parameters and defaults, table-valued parameters (the good way to pass a set in), and
+      # user-defined functions — with the scalar-UDF performance warning and inlining in 2019+.
+      - n: "00"
+        slug: procedures-and-functions
+        title: "Stored Procedures, TVPs and the Scalar Function That Ruins a Plan"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: TRY/CATCH, ERROR_* functions, THROW against RAISERROR, XACT_ABORT and
+      # XACT_STATE, and the doomed-transaction case. The failure: a procedure that catches an
+      # error, logs it and returns success, so the caller commits a half-finished load.
+      - n: "05"
+        slug: errors-and-transactions
+        title: "TRY/CATCH and XACT_ABORT — Errors That Do Not Leave Half a Load Committed"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: temp tables against table variables — statistics exist for one and not the
+      # other, which is why a table variable is fast at 10 rows and disastrous at 100,000.
+      # CTEs, and the fact that a CTE is not a temp table. tempdb contention in one paragraph.
+      - n: "10"
+        slug: temp-tables
+        title: "Temp Tables and Table Variables — The Statistics One of Them Does Not Have"
+        hands_on: ["koan:predict", "koan:count:scanned"]
+        core: true
+        status: planned
+      # COVER: cursors and WHILE loops as the thing to replace, and the set-based rewrite for
+      # each common shape — running totals with window functions, the update-from-join, and
+      # batching a large DELETE to avoid lock escalation.
+      # THIS IS THE TRACK'S THESIS EPISODE: most inherited T-SQL is a loop that wanted to be a
+      # set operation.
+      - n: "15"
+        slug: set-based-rewrites
+        title: "Replacing Cursors — The Set-Based Rewrite for Each Loop You Will Inherit"
+        hands_on: ["koan:equivalent", "koan:count:scanned"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-rewrite
+        title: "Project — Rewrite an Inherited Cursor Procedure and Prove It Matches"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        tags: ["project"]
+        status: planned

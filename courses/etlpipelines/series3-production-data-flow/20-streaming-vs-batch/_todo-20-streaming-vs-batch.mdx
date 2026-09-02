@@ -1,0 +1,123 @@
+---
+title: "Streaming vs Batch — Unbounded Data, Event Time and When You Need a Stream"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-etl-pipelines"
+tags: []
+level: "advanced"
+module: "series3-production-data-flow"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/etlpipelines/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/etlpipelines/series3/_20/StreamingVsBatchKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    ETL & Data Pipelines · Production Data Flow (advanced) — "load a star schema, track changes, and re-run a whole month"
+      before:  Change Data Capture — Stream the Deltas Instead of Reloading
+      THIS:    Streaming vs Batch — Unbounded Data, Event Time and When You Need a Stream
+      after:   Backfills & Reprocessing — Rewrite History Without Breaking Downstream
+    CORE.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: decide whether a requirement actually needs a stream, and say what "late" means.
+    DECISION: it fills a slot that was ALREADY EMPTY (this series ran 15 then 25), and it
+    exists because TWO EPISODES LEAN ON A CONCEPT NOTHING IN THE ACADEMY DEFINES:
+      · 15, directly before this, says "STREAM the deltas" and never says what a stream is.
+      · 2 · 20 is "Late & Out-of-Order Data — Rows That Arrive After You Reported". Late
+        RELATIVE TO WHAT? It needs event time versus processing time, defined nowhere.
+    An absence that two episodes already work around is not theoretical.
+
+    ── SCOPE, AND THE LINE NOT TO CROSS ────────────────────────────────────
+    Engine-free, in this order:
+      1. BOUNDED vs UNBOUNDED — a batch has an end, a stream does not. Everything else
+         follows, including why "run it more often" is a different thing from streaming.
+      2. EVENT TIME vs PROCESSING TIME — when it happened against when you saw it.
+      3. WINDOWS AND WATERMARKS — you cannot aggregate an infinite thing, so you cut it into
+         windows, and a watermark is how you decide enough late data has arrived to close
+         one. Close too early and you lose rows; close too late and the number is never
+         final. Both are wrong answers, not errors.
+
+    THEN THE THREE TOOLS, ONE PARAGRAPH EACH, named for what they ARE and not taught:
+      Kafka  a LOG — transport. Not a queue, and not a processor.
+      Spark  a distributed BATCH engine, with streaming added as micro-batches.
+      Flink  an event-time STREAM processor; the model above is closest to its own.
+    The Tools, Platforms & Libraries catalogue owns teaching these. THE LINE: if this
+    episode starts explaining partitions, consumer groups, checkpoints or shuffle, it has
+    become those courses and must be cut back to a paragraph each.
+
+    ── THE THESIS — ALREADY THE HOUSE LINE, DO NOT SOFTEN IT ───────────────
+    Analytics Engineering with dbt says it outright ("it is not Spark. The warehouse does
+    100% of the work"); Data Warehousing pushes compute into DuckDB and ClickHouse; this
+    track is SQL-first throughout. So:
+        STREAMING IS A MODELLING DECISION BEFORE IT IS A TOOLING DECISION, and most
+        "we need streaming" turns out to be "we need hourly instead of daily" — which CDC
+        at 15 already gives you, with none of these three.
+    An episode that cannot reach that conclusion contradicts three sibling courses.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:choose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/etlpipelines/series3/_20/StreamingVsBatchKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition.
+
+    Somebody asks for "real-time" dashboards. Find out what they actually mean — how stale
+    is too stale, and what decision changes if the number is an hour old. That conversation
+    is the episode's real subject. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in.
+
+    Bounded vs unbounded, event time vs processing time, windows and watermarks — in that
+    order, with no tool named until all three are in place. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one.
+
+    choose: several requirements, and the reader picks batch, smaller-window batch, CDC, or
+    a genuine stream. Most should resolve to something other than a stream — and one
+    genuinely should not, or the koan is rigged.
+
+    predict: the same set of events, windowed by event time and by processing time, and the
+    reader predicts both results before running them. The out-of-order event is where the
+    two answers separate. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+
+    A window closed on processing time gives a Monday total that quietly includes Sunday's
+    late arrivals and excludes its own. Nothing errors; the daily report is simply wrong at
+    both ends, and it is wrong differently every day depending on when the data showed up.
+
+    THE OTHER FAILURE IS ORGANISATIONAL and belongs here too: a team that adopts Kafka and
+    Flink to satisfy a requirement a fifteen-minute batch would have met, and now maintains
+    a streaming platform to produce a daily report. */}
+
+TODO

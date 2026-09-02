@@ -1,0 +1,249 @@
+# The ordered episode list for Polars. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: write dataframe code that a query optimiser can improve. Polars
+# is the library you CHOOSE, against pandas as the one you inherit, and the reason to choose it
+# is not that it is faster — it is that expressions and lazy evaluation let the engine see the
+# whole query before running any of it.
+#
+# ============================================================================
+# THE THESIS: THE EXPRESSION API IS THE POINT, NOT THE SPEED
+# ============================================================================
+# Most Polars introductions are benchmarks. That is the least interesting thing about it and
+# it ages badly. The durable idea is that you DESCRIBE a computation as expressions, hand it
+# to a lazy frame, and an optimiser does predicate pushdown, projection pushdown and common
+# subexpression elimination before a single row is read — the same relationship a SQL engine
+# has with your query, which is why a reader who has done Learn SQL already understands it.
+#
+# A reader who ports pandas code line by line gets a faster pandas and misses all of this. The
+# track is built to prevent that.
+#
+# ============================================================================
+# THE SEAM WITH PYTHON FOR DATA AND WITH pandas
+# ============================================================================
+#   PYTHON FOR DATA   positions polars as "what you CHOOSE" against pandas as "what you
+#                     INHERIT", and demonstrates the job in pandas.
+#   THE pandas TRACK  teaches that library's own model — the index, copy-against-view, dtypes.
+#   THIS TRACK        teaches expressions, lazy evaluation and the optimiser.
+# The comparison itself lives in both tracks' closing episodes and must stay honest in each.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL POLARS USER GUIDE
+# ============================================================================
+# docs.pola.rs's User Guide is the shape: Getting started, Concepts (data types, data
+# structures, expressions, lazy vs eager, streaming), Expressions, Transformations, Lazy API,
+# IO, Integrations, Migrating from pandas. Its "Concepts" section in particular is exactly the
+# order this track needs.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL POLARS USER GUIDE. Before writing an episode, open
+# the guide's own section for that topic, use it as the COVERAGE CHECKLIST, and use its
+# VOCABULARY FOR THE NOUNS (expression, context, lazy frame, projection pushdown, streaming).
+# Anything left out should be left out because an academy rule says so — Python for Data owns
+# doing the job, Learn SQL owns the SQL — and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the guide section named. A brief is
+# what a writer actually opens; a rule that lives only in this header is a rule that gets
+# forgotten at the exact moment it matters.
+#
+# POLARS IS PRE-1.0 IN SPIRIT EVEN AFTER 1.0 — the API still moves. State the version every
+# claim was checked against, and re-verify before publishing rather than trusting this file.
+
+course: learn-polars
+track: polars
+title: Polars
+
+prerequisites:
+  - course: learn-python
+    needs: "Series 1"
+    why: >-
+      You need Python and some dataframe experience. Knowing pandas is not required, but if you
+      do know it, Series 1 · 00 is about unlearning the index.
+
+excludes:
+  - topic: "Python itself and doing a data job end to end"
+    where: "covered in Python for Data"
+  - topic: "pandas' own model — the index, copy against view, SettingWithCopyWarning"
+    where: "covered in pandas. Referenced here only where it explains what Polars deliberately does differently"
+  - topic: "Distributed execution"
+    where: "covered in Apache Spark. Polars is a single-machine engine, and Series 3 · 15 is honest about where that ends"
+
+series:
+  - slug: series1-expressions
+    title: Expressions
+    tagline: describing a computation instead of performing one
+    level: intermediate
+    episodes:
+      # COVER: what a Polars DataFrame is — columns, dtypes, AND NO INDEX. For a pandas reader
+      # this is the whole first lesson: alignment does not happen, joins are explicit, and a
+      # great deal of index-wrangling code simply disappears. Arrow memory underneath, and why
+      # that makes zero-copy interchange with DuckDB and Arrow possible.
+      - n: "00"
+        slug: no-index
+        title: "There Is No Index — What Changes When Alignment Stops Being Implicit"
+        hands_on: ["koan:predict", "koan:equivalent"]
+        core: true
+        status: planned
+      # THE CENTRAL EPISODE. Everything else follows from it.
+      # COVER: an expression is a DESCRIPTION of a computation, not a value — pl.col("a") does
+      # nothing on its own. Contexts (select, with_columns, filter, group_by.agg) are where an
+      # expression is evaluated. Expressions compose and parallelise. Why this is the same idea
+      # as a SQL SELECT list and why that comparison helps a Learn SQL reader immediately.
+      - n: "05"
+        slug: expressions-and-contexts
+        title: "Expressions and Contexts — pl.col() Does Nothing Until You Give It a Context"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the expression toolkit — when/then/otherwise, over() for window functions
+      # without a group_by, arithmetic and comparison, sort_by, and the namespaces (.str, .dt,
+      # .list, .struct). Expression expansion: one expression applied to many columns with
+      # pl.col(pl.Int64) or a regex, which has no pandas equivalent and removes most loops.
+      - n: "10"
+        slug: the-toolkit
+        title: "when/then, over() and Namespaces — One Expression Across Many Columns"
+        hands_on: ["koan:complete", "koan:equivalent"]
+        core: true
+        status: planned
+      # COVER: dtypes, including nested List and Struct as first-class types — Polars handles
+      # nested data natively where pandas falls back to object. Null handling: THERE IS ONE
+      # NULL, not the NaN/None/pd.NA mess, and NaN is a distinct float value rather than a
+      # missing marker. That distinction is a genuine correctness improvement, so say so.
+      - n: "15"
+        slug: dtypes-and-nulls
+        title: "dtypes, List and Struct — and One Null Instead of Three Kinds of Missing"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: joins (the how= set including the semi/anti joins pandas lacks), and the
+      # validate= argument for catching a fan-out. concat and its strategies. group_by with
+      # expression aggregations, and the fact that agg returns lists naturally.
+      # SEAM: Learn SQL Series 2 · 06 owns fan-out and grain as a concept.
+      - n: "20"
+        slug: joins-and-groupby
+        title: "Joins and group_by — Semi, Anti, and Catching a Fan-Out With validate"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-rewrite-in-expressions
+        title: "Project — Rewrite a Loop-Heavy Script as One Expression Pipeline"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-lazy-and-the-optimiser
+    title: Lazy Evaluation and the Optimiser
+    tagline: let the engine see the whole query first
+    level: advanced
+    episodes:
+      # COVER: eager against lazy — pl.read_csv against pl.scan_csv, and .collect() as the only
+      # thing that runs anything. Why lazy should be the default and eager the exception, which
+      # is the opposite of how most people start.
+      - n: "00"
+        slug: lazy-basics
+        title: "scan Against read — Nothing Runs Until You Call collect()"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: explain() and show_graph() — reading the optimised plan. The optimisations that
+      # matter: predicate pushdown (your filter reaches the file scan), projection pushdown
+      # (unread columns are never read), slice pushdown, and common subexpression elimination.
+      # THE DEMONSTRATION: the same query eager and lazy, with the columns and rows actually
+      # read as the number. That is the whole argument for the library, made once, with
+      # evidence rather than a benchmark.
+      - n: "05"
+        slug: reading-the-plan
+        title: "explain() — Predicate and Projection Pushdown, and Proving They Happened"
+        hands_on: ["koan:count:scanned", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the patterns that BREAK optimisation and are therefore worth knowing — collect()
+      # in the middle of a pipeline, map_elements (a Python callback, which is a wall the
+      # optimiser cannot see through), and mixing eager frames into a lazy chain.
+      # THE RULE: if you reach for map_elements, look for the expression first.
+      - n: "10"
+        slug: breaking-the-optimiser
+        title: "map_elements and Early collect() — The Two Ways to Blind the Optimiser"
+        hands_on: ["koan:diagnose", "koan:equivalent"]
+        core: true
+        status: planned
+      # COVER: streaming/out-of-core execution — what it means, which operations support it,
+      # and how to tell whether yours did. Larger-than-memory work on one machine, and the
+      # honest limits of it. sink_parquet as the streaming write.
+      - n: "15"
+        slug: streaming
+        title: "Streaming — Larger Than Memory on One Machine, and Which Operations Support It"
+        hands_on: ["koan:count:rows-held", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: IO and interoperability — Parquet, CSV, JSON, Delta and Iceberg readers, hive
+      # partitioning, and reading from a database. Zero-copy Arrow interchange with DuckDB and
+      # pandas, and why converting to pandas at the end of a pipeline is usually the wrong move.
+      - n: "20"
+        slug: io-and-interop
+        title: "IO and Arrow Interop — Handing Data to DuckDB Without Copying It"
+        hands_on: ["koan:complete", "koan:count:rows-held"]
+        status: planned
+      - n: "25"
+        slug: project-lazy-pipeline
+        title: "Project — A Lazy Pipeline Over a Folder of Parquet, With the Plan as Evidence"
+        hands_on: ["koan:author", "koan:count:scanned"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-in-practice
+    title: In Practice
+    tagline: migrating, testing, and where it ends
+    level: advanced
+    episodes:
+      # COVER: the migration guide's own contents — the pandas idioms that have no direct
+      # translation and should not be translated: the index, inplace=, apply row-wise,
+      # SettingWithCopy workarounds, and chained assignment. What to do instead in each case.
+      # THE WARNING: porting line by line produces a faster pandas and misses the point.
+      - n: "00"
+        slug: migrating-from-pandas
+        title: "Migrating From pandas — The Idioms Not to Translate"
+        hands_on: ["koan:equivalent", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: testing dataframe code — assert_frame_equal and its strictness options, why
+      # dtype and column-order differences are usually real bugs rather than noise, and
+      # building small fixtures inline. Then the reconciliation habit the academy uses
+      # everywhere: the row count in must equal the row count out, asserted.
+      - n: "05"
+        slug: testing
+        title: "Testing — assert_frame_equal, and Asserting the Row Count Rather Than Hoping"
+        hands_on: ["koan:author", "koan:diagnose"]
+        status: planned
+      # COVER: Polars SQL — sql() over frames, and where it helps (a team that thinks in SQL,
+      # or a query already written). Its limits against a real engine. The honest placement:
+      # if the whole job is SQL over files, DuckDB is the better tool, and saying so costs this
+      # track nothing.
+      - n: "10"
+        slug: polars-sql
+        title: "Polars SQL — When It Helps, and When DuckDB Is the Better Answer"
+        hands_on: ["koan:choose", "koan:equivalent"]
+        status: planned
+      # THE EPISODE THAT KEEPS THE TRACK HONEST.
+      # COVER: the ceiling — one machine, and an ecosystem far smaller than pandas's, which
+      # matters more than speed when a library you need only has a pandas integration. When to
+      # stay on pandas (small data, a team that knows it, a dependency that demands it), when
+      # Polars wins (large single-machine work, repeated pipelines), and when neither is the
+      # answer and the work belongs in the database.
+      - n: "15"
+        slug: where-polars-ends
+        title: "Where Polars Ends — One Machine, a Smaller Ecosystem, and When to Stay Put"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-port-and-prove
+        title: "Project — Port a pandas Job and Prove the Numbers Match"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        tags: ["project"]
+        status: planned

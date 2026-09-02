@@ -1,0 +1,106 @@
+---
+title: "ShedLock — Locking a Scheduled Task So Only One Instance Runs It"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series4-frameworks"
+order: 40
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: keep the @Scheduled job from episode 30 and stop two instances running it at once.
+    CONSTRUCTS: @SchedulerLock, lockAtMostFor, lockAtLeastFor, the lock table, the
+    LockProvider. https://github.com/lukas-krecan/shedlock
+
+    OPEN ON THE README, because the project says it better than we can, and a library that
+    states what it is NOT is rare enough to be worth quoting:
+      "ShedLock is not and will never be full-fledged scheduler, it's just a lock ... If you
+       need a distributed scheduler, please use another project (db-scheduler, JobRunr). ...
+       the locks are time-based and ShedLock assumes that clocks on the nodes are
+       synchronized."
+
+    THE DISTINCTION, IN THE FIRST THIRTY SECONDS: Quartz REPLACES @Scheduled; ShedLock SITS ON
+    TOP of it. You keep episode 30's code, add one annotation, and get one table. If all you
+    need is "do not run twice across two instances" — which is most of what a reader actually
+    wants from 45 — then Quartz is a scheduler, a schema and a new mental model bought to
+    solve a one-row problem.
+
+    THE TEST THAT MAKES THE CATEGORY OBVIOUS, and it is the beat that stops a reader
+    concluding this and Quartz are the same thing with different logos:
+        TAKE EVERY NODE DOWN AT 2 A.M.
+        ShedLock              -> the job never runs, and nothing anywhere remembers it should
+                                 have. The moment is gone.
+        Quartz / db-scheduler -> the row still says "due at 2 a.m."; the first node back
+                                 picks it up.
+    Here the schedule lives in YOUR CODE and every node fires its own copy; there the schedule
+    IS a row and nodes claim what is due. Everything else follows from that — including why
+    lockAtMostFor is a guess you have to make and they do not, and why this one cares about
+    clock skew at all.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series4/_40/ShedLockKoans.groovy
+
+    NO CLOCK — see episode 30. Two "instances" are two calls against one lock table, and the
+    assertion is how many times the task body ran. Never a sleep.
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written.
+
+    predict: two instances, one lock table, the task body counts its own executions.
+    Predict the count with the annotation and without it before running either.
+
+    diagnose: a lockAtMostFor that is shorter than the job. Both instances end up running,
+    the lock did nothing, and nothing in the log says so. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here.
+
+    lockAtMostFor IS A GUESS ABOUT YOUR JOB'S MAXIMUM RUNTIME, and both ways of guessing
+    wrong are silent:
+      TOO SHORT — the lock expires while the job is still running, the second instance
+        starts anyway, and you get exactly the duplicate you installed this to prevent.
+        This is the one that bites, because jobs get slower as data grows: the value that
+        was safe in January is wrong by September, and nothing warns you.
+      TOO LONG  — a job that died holding the lock blocks every later run until the window
+        passes. A nightly job with a 24-hour window skips a whole day.
+    lockAtLeastFor is the other half: it stops a job that finishes in milliseconds from
+    being picked up again by a second node whose clock is slightly ahead — which is the
+    README's clock-synchronisation caveat arriving as a real bug. */}
+
+TODO

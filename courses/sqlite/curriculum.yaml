@@ -1,0 +1,220 @@
+# The ordered episode list for SQLite. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: use the most deployed database in the world on purpose rather
+# than by accident — know exactly what you give up without a server, and recognise the large
+# set of jobs where that is nothing at all.
+#
+# ============================================================================
+# THE THESIS: SQLITE'S REPUTATION IS THE MOST WRONG OF ANY ENGINE IN THIS CATALOGUE
+# ============================================================================
+# "SQLite is a toy" is folklore. It is a full SQL engine with ACID transactions, window
+# functions, CTEs, JSON and full-text search, and on a single machine it will out-run a
+# client/server database for many workloads because there is no network and no IPC.
+#
+# THE REAL LIMIT IS ONE WRITER AND NO NETWORK, and that is essentially the whole list. This
+# track's job is to make a reader able to say, precisely, whether their application needs
+# concurrent writers from more than one machine — because if it does not, the operational
+# saving is enormous, and if it does, no amount of tuning helps.
+#
+# THE COUNTERWEIGHT, so the track is not an advert: type affinity is a genuine trap, and the
+# absence of a network is genuinely disqualifying for a large class of systems. Both get a
+# full episode.
+#
+# ============================================================================
+# THIS IS A DELTA TRACK
+# ============================================================================
+#     WOULD THIS SENTENCE BE FALSE ON POSTGRESQL?
+# Learn SQL owns SQL. What passes here: the file format, type affinity, WAL and the writer
+# lock, the limited ALTER TABLE, and the deliberate absence of a server.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL SQLITE DOCUMENTATION
+# ============================================================================
+# sqlite.org's own documentation is unusually opinionated and unusually good — it has pages
+# called "Appropriate Uses For SQLite", "Datatypes In SQLite", "Write-Ahead Logging" and
+# "Quirks, Caveats and Gotchas". Those pages ARE this syllabus and should be followed closely.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL SQLITE DOCUMENTATION. Before writing an episode,
+# open sqlite.org's own page for that topic, use it as the COVERAGE CHECKLIST, and use its
+# VOCABULARY FOR THE NOUNS (type affinity, rowid, WAL, journal mode). Anything left out should
+# be left out because an academy rule says so — Learn SQL owns the SQL — and never because it
+# was missed. The "Quirks, Caveats and Gotchas" page in particular should be read end to end
+# before Series 1 is written; it is a list of everything this course exists to prevent.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the specific page named. A brief is
+# what a writer actually opens; a rule that lives only in this header is a rule that gets
+# forgotten at the exact moment it matters.
+
+course: learn-sqlite
+track: sqlite
+title: SQLite
+
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1"
+    why: >-
+      Series 1 of Learn SQL is enough — SELECT, WHERE, JOIN and GROUP BY. SQLite's SQL is
+      mostly unremarkable, which is the point; what this track teaches is the engine around it.
+
+excludes:
+  - topic: "SQL itself"
+    where: "covered in Learn SQL"
+  - topic: "Using SQLite as an analytical engine over files"
+    where: "covered in DuckDB, which is the embedded database built for that question. Series 3 · 05 of Database X vs Database Y compares the two directly"
+  - topic: "Embedding SQLite in a mobile or desktop application"
+    where: "not covered. This track is about the database, not about iOS, Android or Electron"
+
+series:
+  - slug: series1-sqlite-essentials
+    title: SQLite Essentials
+    tagline: one file, no server, and the type system that will surprise you
+    level: beginner
+    episodes:
+      # COVER: the shape — a C library, a single file, no process, no port, no user. The
+      # sqlite3 CLI and its dot-commands (.schema .tables .mode .import .dump .backup), which
+      # are a client feature and not SQL. The file format's stability guarantee, which is why
+      # it is a recommended archival format. In-memory databases and :memory:.
+      - n: "00"
+        slug: what-sqlite-is
+        title: "SQLite — A Database That Is a File, a Library and No Process at All"
+        hands_on: ["koan:complete", "koan:capture"]
+        core: true
+        status: planned
+      # THE EPISODE THAT PREVENTS THE MOST WRONG DATA, and the one genuine trap in the engine.
+      # COVER: TYPE AFFINITY — a column does not enforce a type, it prefers one, so a TEXT
+      # column will accept the number 42 and an INTEGER column will accept 'banana'. The five
+      # storage classes and the affinity rules. Why 'CREATE TABLE t (x BANANA)' is legal.
+      # Then STRICT tables (3.37+), which are the fix and should be the default advice now.
+      # THE FAILURE: a CSV import that puts strings in a numeric column, and a SUM that
+      # silently ignores them.
+      - n: "05"
+        slug: type-affinity
+        title: "Type Affinity — Why a Column Will Accept Almost Anything, and STRICT Tables"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: rowid as the real primary key of every ordinary table, INTEGER PRIMARY KEY as
+      # the alias for it, WITHOUT ROWID tables and when they help. AUTOINCREMENT and why the
+      # docs tell you not to use it. The absence of a real BOOLEAN, DATE or TIME type and the
+      # three conventions for storing dates (TEXT ISO-8601, REAL Julian, INTEGER epoch).
+      - n: "10"
+        slug: rowid-and-dates
+        title: "rowid, INTEGER PRIMARY KEY, and Storing Dates Without a Date Type"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: foreign keys are OFF BY DEFAULT and must be enabled per connection with
+      # PRAGMA foreign_keys = ON — a genuine surprise that means an inherited database may
+      # contain orphans. The limited ALTER TABLE and the twelve-step table-rebuild the docs
+      # prescribe. CHECK constraints, and generated columns.
+      - n: "15"
+        slug: constraints-and-alter
+        title: "Foreign Keys Are Off by Default — and ALTER TABLE Barely Exists"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: the PRAGMA surface a working person needs — journal_mode, synchronous,
+      # foreign_keys, busy_timeout, cache_size, and PRAGMA integrity_check / optimize.
+      # ANALYZE and how SQLite's query planner uses sqlite_stat1, plus EXPLAIN QUERY PLAN,
+      # which is far more readable than most engines' plans.
+      - n: "20"
+        slug: pragmas-and-plans
+        title: "PRAGMAs and EXPLAIN QUERY PLAN — The Settings That Actually Matter"
+        hands_on: ["koan:diagnose", "koan:count:scanned"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-a-real-database
+        title: "Project — Build a Small Database That Enforces Its Own Rules"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-concurrency-and-limits
+    title: Concurrency and Limits
+    tagline: one writer, and knowing exactly when that is a problem
+    level: intermediate
+    episodes:
+      # COVER: the locking model plainly — rollback journal against WAL, and what WAL changes
+      # (readers no longer block the writer). ONE WRITER AT A TIME, always. SQLITE_BUSY and
+      # busy_timeout, and why "database is locked" is the error everyone meets. Transactions,
+      # and BEGIN IMMEDIATE as the fix for the upgrade deadlock nobody expects.
+      - n: "00"
+        slug: wal-and-locking
+        title: "WAL and the Single Writer — Why 'Database Is Locked' Happens, and BEGIN IMMEDIATE"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the honest performance picture — no network hop means SQLite beats a client
+      # /server database on many single-machine workloads, and batching writes in one
+      # transaction is the difference between hundreds and hundreds of thousands of inserts a
+      # second. Prepared statements. Indexes work as expected; there is no magic here.
+      - n: "05"
+        slug: performance
+        title: "Performance — No Network Hop, and Why One Transaction Beats Ten Thousand"
+        hands_on: ["koan:count:roundtrips", "koan:predict"]
+        core: true
+        status: planned
+      # THE DECISION EPISODE, and the reason the track exists.
+      # COVER: the docs' own "Appropriate Uses For SQLite" page as the spine. Where it is
+      # RIGHT — application file format, embedded devices, a website's read-mostly database,
+      # test fixtures, a cache, data analysis on one machine. Where it is WRONG — many
+      # concurrent writers, access over a network filesystem (which corrupts, and is the one
+      # genuinely dangerous misuse), and multi-machine access of any kind.
+      # THE QUESTION THAT DECIDES IT: do you need concurrent writers from more than one
+      # machine? Everything else is negotiable.
+      - n: "10"
+        slug: when-sqlite-is-right
+        title: "When SQLite Is the Right Answer — and the One Misuse That Corrupts Data"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: backup and durability — the online backup API and VACUUM INTO rather than
+      # copying the file while it is open (which is the other way people lose data). Litestream
+      # and replication approaches in one paragraph, named rather than taught.
+      - n: "15"
+        slug: backup-and-durability
+        title: "Backups — VACUUM INTO and the Backup API, and Why Copying the File Is Not One"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        status: planned
+
+  - slug: series3-more-than-you-expect
+    title: More Than You Expect
+    tagline: JSON, full-text search and extensions
+    level: intermediate
+    episodes:
+      # COVER: the JSON functions (json_extract, the -> and ->> operators, json_each,
+      # json_tree) and JSONB storage in recent versions. Indexing a JSON path through a
+      # generated column, which is the same pattern as MySQL's.
+      - n: "00"
+        slug: json
+        title: "JSON in SQLite — Querying Documents and Indexing a Path"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      # COVER: FTS5 — virtual tables, MATCH, ranking with bm25, external-content tables so the
+      # index does not duplicate the data, and the trigram tokenizer. This is genuinely good
+      # and removes the need for a search service in a great many applications.
+      - n: "05"
+        slug: full-text-search
+        title: "FTS5 — Real Full-Text Search Inside the File"
+        hands_on: ["koan:complete", "koan:choose"]
+        status: planned
+      # COVER: window functions, CTEs including recursive, UPSERT (ON CONFLICT, borrowed from
+      # Postgres), RETURNING, and generated columns — the modern SQL people assume SQLite does
+      # not have. Then the extension mechanism, and math/uuid extensions in one line.
+      - n: "10"
+        slug: modern-sql
+        title: "Window Functions, UPSERT and RETURNING — The Modern SQL People Assume Is Missing"
+        hands_on: ["koan:complete", "koan:equivalent"]
+        status: planned
+      - n: "15"
+        slug: project-searchable-app-db
+        title: "Project — A Searchable Application Database in a Single File"
+        hands_on: ["koan:author"]
+        core: true
+        tags: ["project"]
+        status: planned

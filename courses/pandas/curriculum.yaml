@@ -1,0 +1,247 @@
+# The ordered episode list for pandas. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: read and fix pandas code you did not write. This is THE LIBRARY
+# YOU INHERIT — open any existing notebook or script at a new job and it is pandas — so the
+# skill is not "get a result", it is knowing what the library actually did to your data.
+#
+# ============================================================================
+# THE SEAM WITH PYTHON FOR DATA — settled here so it is not re-argued
+# ============================================================================
+#   PYTHON FOR DATA   teaches THE JOB in Python, and uses pandas as the vehicle. Its Series 1
+#                     tagline is "Python basics, then pandas", and pandas is the declared
+#                     default through 25/30/35/40, Series 2 · 35 and Series 3 · 30.
+#   THIS TRACK        teaches THE LIBRARY — the index model, copy against view, dtypes,
+#                     what groupby is really doing, merge semantics, reshaping, memory.
+#
+# The test every episode must pass:
+#     WOULD THIS SENTENCE BE TRUE OF ANY DATAFRAME LIBRARY?
+# If yes, it belongs in Python for Data, not here. "How to filter rows" is theirs. "Why this
+# filter returned a copy and your assignment vanished" is ours.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL PANDAS DOCUMENTATION
+# ============================================================================
+# pandas.pydata.org's User Guide is the shape to follow, and its section names ARE this
+# syllabus: Indexing and selecting data, MultiIndex, Merge/join/concatenate, Group by,
+# Reshaping and pivot tables, Working with missing data, Time series, Scaling to large
+# datasets, Enhancing performance.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL PANDAS DOCUMENTATION. Before writing an episode,
+# open the User Guide's own section for that topic, use it as the COVERAGE CHECKLIST, and use
+# its VOCABULARY FOR THE NOUNS (Index, dtype, view, chained assignment, split-apply-combine).
+# Anything left out should be left out because an academy rule says so — Python for Data owns
+# doing the job, Learn SQL owns the SQL — and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the User Guide section named. A brief
+# is what a writer actually opens; a rule that lives only in this header is a rule that gets
+# forgotten at the exact moment it matters.
+#
+# PANDAS 2.x AND COPY-ON-WRITE CHANGED THE ANSWERS. Copy-on-write became the default in 3.0 and
+# it removes SettingWithCopyWarning as a category of problem. State the version for every claim
+# in Series 1 · 10; an episode written from pre-2.0 memory will teach a workaround for a bug
+# that no longer exists.
+
+course: learn-pandas
+track: pandas
+title: pandas
+
+prerequisites:
+  - course: learn-python
+    needs: "Series 1"
+    why: >-
+      You need Python and a first pass at pandas before this is useful. Python for Data teaches
+      you to do the job with it; this track is what the library is doing underneath while you do.
+
+excludes:
+  - topic: "Python itself, notebooks, and doing a data job end to end"
+    where: "covered in Python for Data — this track assumes all of it"
+  - topic: "Plotting and visualization"
+    where: "covered in BI & Data Visualization, and in Python for Data for the exploratory case"
+  - topic: "When to use polars instead"
+    where: "covered in Polars, and the comparison itself belongs there rather than being argued from one side"
+  - topic: "Machine learning with scikit-learn"
+    where: "not covered; this track moves and shapes data"
+
+series:
+  - slug: series1-the-model
+    title: The Model Underneath
+    tagline: the index, dtypes, and why your assignment vanished
+    level: intermediate
+    episodes:
+      # COVER: Series and DataFrame as an Index plus typed columns, and that THE INDEX IS THE
+      # THING that makes pandas different from a table. Alignment: arithmetic between two
+      # Series aligns on the index, not on position, which produces NaN out of nowhere for
+      # anyone thinking in SQL. reset_index, set_index, and why so much pandas code is
+      # index-wrangling.
+      - n: "00"
+        slug: the-index
+        title: "The Index — Alignment, and Where the NaNs Came From"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: loc against iloc against [] and the rules that decide what each returns. Boolean
+      # masks. The trap: df[df.a > 1]['b'] = 0 is chained assignment and silently does nothing
+      # (pre-3.0) or raises (post). MultiIndex — creating it, slicing it with xs and IndexSlice,
+      # and why it is the most-hated feature in the library.
+      - n: "05"
+        slug: selection
+        title: "loc, iloc and MultiIndex — Selecting Rows Without Guessing"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # THE EPISODE THAT EXPLAINS THE MOST INHERITED BUGS.
+      # COVER: copy against view, SettingWithCopyWarning, why the same code sometimes warns and
+      # sometimes does not, and COPY-ON-WRITE as the fix — default from 3.0, opt-in in 2.x.
+      # State versions throughout. The rule that survives every version: assign in one step
+      # with .loc, never in two.
+      - n: "10"
+        slug: copy-and-view
+        title: "Copy Against View — SettingWithCopyWarning, and What Copy-on-Write Changed"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: dtypes and why they decide correctness and memory — int64 against float64 and
+      # the fact that a NaN forces a column to float (so integer ids become 3.0), object dtype
+      # as "anything, slowly", nullable extension dtypes (Int64, boolean, string), category for
+      # repeated strings, and the Arrow-backed dtypes in 2.x.
+      # THE FAILURE: an id column read from CSV as float, then joined, and matching nothing.
+      - n: "15"
+        slug: dtypes
+        title: "dtypes — Why One Missing Value Turned Your Integer IDs Into Floats"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: NaN against None against pd.NA against NaT, and the three-way mess that results.
+      # How each aggregation treats missing values (skipna), fillna/dropna/interpolate, and the
+      # comparison rule — NaN != NaN — which is the same three-valued-logic lesson Learn SQL
+      # teaches, in another spelling.
+      - n: "20"
+        slug: missing-data
+        title: "NaN, None and pd.NA — Three Kinds of Missing, and What Each Aggregate Does"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-audit-a-notebook
+        title: "Project — Audit an Inherited Notebook and Find What It Silently Did"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-reshaping-and-joining
+    title: Reshaping and Joining
+    tagline: groupby, merge, and the row counts that change behind you
+    level: advanced
+    episodes:
+      # COVER: split-apply-combine as the actual model. agg against transform against apply —
+      # what each returns and why transform is the one people need and never find. Named
+      # aggregation. Multiple columns, multiple functions. as_index and the reset_index reflex.
+      # Why apply is slow and usually avoidable.
+      - n: "00"
+        slug: groupby
+        title: "groupby — agg, transform and apply, and Which One You Actually Wanted"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: merge how= semantics against SQL joins, on/left_on/right_on, and the two
+      # arguments nobody uses and everybody needs: indicator=True to see which side each row
+      # came from, and validate='one_to_one'/'one_to_many' to make a fan-out an ERROR instead
+      # of a silent row explosion.
+      # SEAM: Learn SQL Series 2 · 06 owns join fan-out and grain as a concept. This is the
+      # pandas spelling, and validate= is the tool that catches it.
+      - n: "05"
+        slug: merge
+        title: "merge — indicator and validate, and Catching a Fan-Out Before It Doubles a Total"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: pivot against pivot_table (and why the second one aggregates and the first
+      # raises on duplicates), melt as the inverse, stack and unstack as the MultiIndex
+      # versions, and crosstab. The wide-against-long distinction, which is the idea behind all
+      # of them.
+      - n: "10"
+        slug: reshaping
+        title: "pivot, melt, stack — Wide Against Long, and Which Function Does Which"
+        hands_on: ["koan:complete", "koan:equivalent"]
+        core: true
+        status: planned
+      # COVER: concat and its axis/join/keys arguments, and the difference between concat and
+      # merge that people conflate. Aligning on the index again. Duplicate index values and the
+      # errors they cause later.
+      - n: "15"
+        slug: concat
+        title: "concat — Stacking Frames, and the Duplicate Index That Bites Later"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
+      # COVER: DatetimeIndex, resample as groupby-over-time, rolling and expanding windows,
+      # shift and diff for period-over-period, and time zones — tz_localize against tz_convert,
+      # which is the pair everyone gets backwards.
+      - n: "20"
+        slug: time-series
+        title: "Time Series — resample, rolling, and tz_localize Against tz_convert"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-reshape
+        title: "Project — Turn Three Awkward Files Into One Table That Reconciles"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-performance-and-scale
+    title: Performance and Scale
+    tagline: where the memory went, and when to stop using pandas
+    level: advanced
+    episodes:
+      # COVER: measuring rather than guessing — memory_usage(deep=True), and why object dtype
+      # is the answer almost every time. category and downcasting. Reading a CSV in chunks,
+      # usecols and dtype= at read time, which is far cheaper than fixing it afterwards.
+      - n: "00"
+        slug: memory
+        title: "Where the Memory Went — memory_usage(deep=True) and object dtype"
+        hands_on: ["koan:count:rows-held", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: vectorisation as the only real performance rule, iterrows and itertuples and why
+      # the first is a mistake, apply as a loop wearing a method name, and where numpy
+      # operations beat all of it. eval and query in one paragraph. Method chaining and pipe as
+      # a readability tool rather than a speed one — say which is which honestly.
+      - n: "05"
+        slug: vectorisation
+        title: "Vectorisation — Why iterrows Is a Loop and apply Usually Is Too"
+        hands_on: ["koan:equivalent", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: file formats from pandas's side — CSV against Parquet for round-tripping dtypes
+      # (a CSV loses every type you carefully set), Feather/Arrow, and read_sql with chunksize.
+      # SEAM: the DuckDB track owns querying files; this is pandas's own IO.
+      - n: "10"
+        slug: io-and-formats
+        title: "Reading and Writing — Why a CSV Round Trip Loses Every dtype You Set"
+        hands_on: ["koan:predict", "koan:complete"]
+        status: planned
+      # THE EPISODE THAT KEEPS THE TRACK HONEST.
+      # COVER: the ceiling. pandas is single-threaded and holds everything in memory, with a
+      # rule of thumb of roughly 5-10x the file size in RAM. The options when you hit it, in
+      # order of increasing disruption: fix your dtypes, read in chunks, push the work into SQL
+      # or DuckDB, switch to polars, and only then distribute.
+      # SAY IT PLAINLY: "the data got big" almost never means you need a cluster.
+      - n: "15"
+        slug: where-pandas-runs-out
+        title: "Where pandas Runs Out — and the Four Cheaper Answers Before a Cluster"
+        hands_on: ["koan:choose", "koan:count:rows-held"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-make-it-fit
+        title: "Project — Make a Job That Ran Out of Memory Finish on the Same Machine"
+        hands_on: ["koan:author", "koan:count:rows-held"]
+        core: true
+        tags: ["project"]
+        status: planned

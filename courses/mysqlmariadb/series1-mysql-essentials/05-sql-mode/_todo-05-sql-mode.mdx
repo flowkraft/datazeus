@@ -1,0 +1,75 @@
+---
+title: "sql_mode — Whether This Database Tells You It Changed Your Data"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-mysql-mariadb"
+tags: []
+level: "intermediate"
+module: "series1-mysql-essentials"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/mysqlmariadb/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/mysqlmariadb/series1/_05/SqlModeKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official MySQL Reference Manual (dev.mysql.com/doc) — MariaDB's Knowledge Base for Series 4.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Learn SQL owns the SQL, Data Ops owns running the server),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    This is a DELTA track: every sentence should be one that would be FALSE on another engine.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE MOST IMPORTANT EPISODE IN THE COURSE, and it is at 05 because everything after it
+     depends on which mode you are in.
+     COVER: sql_mode as the switch that decides whether this database refuses bad data or
+     quietly fixes it. STRICT_TRANS_TABLES — without it, a value too long for the column is
+     TRUNCATED and the insert succeeds with a warning nobody reads. ONLY_FULL_GROUP_BY, and
+     why MySQL used to let you SELECT a column that was not in the GROUP BY and return an
+     arbitrary row's value. NO_ZERO_DATE and '0000-00-00'. How to check yours
+     (SELECT @@sql_mode), that it differs between session and global, and that every managed
+     provider picks a different default.
+     THE FAILURE: a column that is one character short, a name silently cut, and a customer
+     record that no longer matches the source system.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/mysqlmariadb/series1/_05/SqlModeKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

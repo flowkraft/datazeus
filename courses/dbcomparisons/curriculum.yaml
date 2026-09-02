@@ -1,0 +1,304 @@
+# The ordered episode list for Database X vs Database Y.
+# Field docs live in courses/learnsql/curriculum.yaml. `short` is omitted until an episode
+# has a video.
+#
+# The job this track teaches: pick the right engine for a stated requirement, and be able to
+# defend it. One pairwise comparison per episode, decided on evidence rather than folklore.
+#
+# ============================================================================
+# WHY THIS COURSE EXISTS AND THE OTHER EIGHT CANNOT DO ITS JOB
+# ============================================================================
+# Every other track in this catalogue teaches ONE engine well, and therefore cannot answer
+# "which of these should I use" — an engine's own documentation never says "use the other one",
+# and neither does a course written from it. That gap is exactly the one Java & Groovy for Data
+# fills at Series 2 · 47 and 4 · 50, one level down: teach the tools, then teach the choice.
+#
+# THE FAILURE THIS PREVENTS IS NOT A WRONG NUMBER, and the track has to be honest about that.
+# It is a wrong engine, chosen by recency, by a conference talk or by whoever on the team spoke
+# loudest, with the bill arriving eighteen months later in migration cost. That is the same
+# shape as Java & Groovy 2 · 47's ending, and it is stated the same way.
+#
+# ============================================================================
+# THE RULES THAT KEEP THIS FROM BECOMING A LEAGUE TABLE
+# ============================================================================
+# 1. ONE PAIR PER EPISODE. Not "the five best databases" — a comparison of five things is a
+#    ranking, and a ranking has a winner, and a winner is a lie. Two at a time, and the reader
+#    can hold both in their head.
+#
+# 2. EVERY EPISODE MUST NAME WHAT THE PAIR AGREES ON, FIRST. Most of the surface is identical:
+#    both do ACID, both do joins, both have indexes, both are fast enough. An episode that
+#    opens on the differences makes two engines look further apart than they are, which is how
+#    a team ends up migrating for a reason that turns out not to exist.
+#
+# 3. THE ANSWER MUST BE ABLE TO BE "IT DOES NOT MATTER". For a great many applications the
+#    honest verdict between two mature row-stores is "use the one your team already runs", and
+#    an episode that cannot reach that conclusion is selling something.
+#
+# 4. NO BENCHMARK WITHOUT THE QUERY AND THE DATA. A number without the workload beside it is
+#    marketing. Where this track measures, it measures the same Northwind on both, says the
+#    hardware, and publishes the query — the standard Data Warehousing Series 3 · 35 already
+#    sets for DuckDB against ClickHouse.
+#
+# 5. DATE EVERY CLAIM. This is the fastest-ageing course in the academy: MySQL got CTEs in 8.0,
+#    Postgres got parallel query and then MERGE, DuckDB changes every release. Every comparison
+#    states the versions it was true of, and a stale one is worse than none.
+#
+# ============================================================================
+# THE STRUCTURE, AND THE ONE PLACE OFFICIAL DOCS CANNOT HELP
+# ============================================================================
+# Every other course in this catalogue follows its product's official documentation. THIS ONE
+# HAS NO OFFICIAL DOCUMENTATION TO FOLLOW, and that is worth saying rather than leaving as an
+# apparent inconsistency: there is no neutral manual for "Postgres versus MySQL", and every
+# vendor comparison that exists was written by one of the two vendors.
+#
+# So the structure here is BY KIND OF DECISION instead, which is the shape the reader's actual
+# question arrives in: two of the same kind (S1), two of different kinds (S2), and the ones
+# where the sameness is the surprise (S3). Within an episode, use BOTH engines' own vocabulary
+# and say when they use different words for the same thing — half of all database arguments are
+# two people using one word for two things.
+#
+# ORDER WITHIN A PAIR TITLE: alphabetical, always, so nobody reads the running order as a
+# verdict.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# Every other course in these two catalogues follows its product's official documentation.
+# THIS ONE HAS NO SINGLE MANUAL TO FOLLOW — see above — so the rule is not dropped, it is
+# DOUBLED, and it still applies to EACH INDIVIDUAL LESSON rather than only to the series order:
+#
+#   EVERY CLAIM IN A COMPARISON MUST BE CHECKED AGAINST BOTH ENGINES' OFFICIAL DOCUMENTATION
+#   ON THE DAY IT IS WRITTEN, and the versions stated in the lesson.
+#
+# Before writing an episode, open BOTH manuals' own sections for the topic and use them as the
+# COVERAGE CHECKLIST — one on each side — and use each engine's own VOCABULARY FOR THE NOUNS
+# when speaking about it, saying so explicitly where the two use different words for the same
+# thing. Anything left out should be left out because an academy rule says so — each engine's
+# own course in this catalogue owns teaching it properly — and never because it was missed.
+#
+# Vendor comparison pages, benchmark blog posts and conference talks are SOURCES ABOUT A
+# CLAIM, never the claim itself — each was written by someone with a side. Where the two
+# manuals use different words for the same thing, say so; half of all database arguments are
+# two people using one word for two things.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS. A brief is what a writer actually opens,
+# and this is the course where an unchecked sentence does the most damage — a wrong comparison
+# does not merely teach the wrong fact, it sends a team down an eighteen-month migration.
+
+course: learn-database-comparisons
+track: dbcomparisons
+title: Database X vs Database Y
+
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1 and Series 2"
+    why: >-
+      Every comparison here is made by running the same query on both engines and reading what
+      comes back. You do not need to know either engine in advance — each episode teaches what
+      it needs — but you do need to be able to read the query and know the right answer.
+
+excludes:
+  - topic: "Learning either engine properly"
+    where: "covered in that engine's own course in this catalogue — PostgreSQL, MySQL & MariaDB, DuckDB, ClickHouse and the rest. Here you only meet as much of each as the comparison needs"
+  - topic: "Which cloud to run it on, and what it costs there"
+    where: "not covered. Pricing changes faster than we could keep it true, and it is a procurement question rather than an engineering one"
+  - topic: "Migrating between two engines once you have chosen"
+    where: "not covered as a project. Series 1 · 20 covers what a migration between two row-stores actually costs, which is the part that belongs in a decision"
+  - topic: "Designing the schema you will put in whichever one you pick"
+    where: "covered in Data Modeling"
+
+series:
+  # ── SERIES 1 ────────────────────────────────────────────────────────────────
+  # Two of the same kind. These are the comparisons people actually argue about, and the ones
+  # where the honest answer is most often "it does not matter as much as you think".
+  - slug: series1-row-store-vs-row-store
+    title: Row-Store vs Row-Store
+    tagline: the arguments teams actually have, settled on evidence
+    level: intermediate
+    episodes:
+      # THE FLAGSHIP COMPARISON, and the one that sets the tone for the whole course.
+      # AGREES ON: ACID, MVCC, joins, window functions, CTEs, JSON columns, replication,
+      # foreign keys, and being fast enough for almost anything. Say all of that first.
+      # GENUINELY DIFFERS: strictness by default (sql_mode against a server that simply
+      # refuses); the clustered primary key, which changes how you choose a PK and what a
+      # secondary index costs; index kinds — Postgres has five, MySQL has B-tree and FULLTEXT;
+      # extensions as a whole culture against a single-vendor feature set; JSON depth;
+      # DDL transactionality, where Postgres can roll a migration back and MySQL cannot.
+      # THE QUESTION THAT DECIDES IT: is the workload doing anything Postgres's index types or
+      # extensions exist for — and if not, who already runs one of them?
+      - n: "00"
+        slug: mysql-vs-postgresql
+        title: "MySQL vs PostgreSQL — Strictness, Index Kinds, and What Actually Differs"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # AGREES ON: everything a normal application does.
+      # GENUINELY DIFFERS: cost and licensing, which is the real subject and has to be met
+      # head-on rather than hinted at; PL/SQL's maturity against PL/pgSQL; partitioning and
+      # RAC as an availability story; the empty-string-is-NULL rule, which is Oracle's alone and
+      # silently changes query results; the tooling and staffing market around each.
+      # SAY IT PLAINLY: most Oracle-to-Postgres migrations are driven by licence cost, not by a
+      # technical deficiency, and pretending otherwise makes the episode useless to the person
+      # who has actually been asked to evaluate it.
+      - n: "05"
+        slug: oracle-vs-postgresql
+        title: "Oracle vs PostgreSQL — Where the Difference Is Technical and Where It Is the Licence"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # AGREES ON: T-SQL and PL/pgSQL are more alike than either camp admits; both have mature
+      # planners, columnstore options and solid tooling.
+      # GENUINELY DIFFERS: the plan cache and parameter sniffing, which has no real Postgres
+      # equivalent and is the single most common SQL Server performance surprise; clustered
+      # indexes again; the ecosystem gravity of the Microsoft stack; and licensing per core.
+      - n: "10"
+        slug: sql-server-vs-postgresql
+        title: "SQL Server vs PostgreSQL — Plan Caching, Clustered Indexes and Ecosystem Gravity"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # THE MOST PRACTICAL EPISODE IN THE SERIES, because it is the one a reader is usually
+      # asked to answer with a deadline attached.
+      # COVER: what a migration between two row-stores actually costs — the schema is the easy
+      # part; the expensive parts are stored routines, the dialect inside application code,
+      # collation and case-sensitivity changes that alter results, autocommit and isolation
+      # defaults, and the test suite you do not have. Tooling (pgloader and friends) and what it
+      # cannot do. Then the honest verdict: a migration is a testing exercise, and the estimate
+      # everybody gives is wrong by the size of the application, not the size of the database.
+      - n: "20"
+        slug: what-a-migration-costs
+        title: "What a Migration Actually Costs — the Schema Is the Easy Part"
+        hands_on: ["koan:diagnose", "koan:author"]
+        core: true
+        status: planned
+
+  # ── SERIES 2 ────────────────────────────────────────────────────────────────
+  # Two of different kinds. Here the differences are real and structural, so the episodes are
+  # less about folklore and more about matching a workload to a storage model.
+  - slug: series2-row-vs-columnar
+    title: Row vs Columnar
+    tagline: when the storage model is the whole answer
+    level: advanced
+    episodes:
+      # THE FOUNDATION EPISODE for the series — one page, no products, so the four comparisons
+      # after it have shared vocabulary.
+      # COVER: row storage against columnar, and the three consequences — which queries read
+      # less, what compression can do when a column is one type, and why updates are cheap in
+      # one model and awkward in the other. OLTP and OLAP as workload shapes rather than
+      # product categories.
+      # SEAM: Data Warehousing Series 1 · 00 and 2 · 00 own this properly. Here it is the
+      # shortest version that makes the comparisons readable, and it links there.
+      - n: "00"
+        slug: the-storage-model
+        title: "The Storage Model — What Rows and Columns Each Make Cheap"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # AGREES ON: SQL, ACID-ish expectations, and being a database you can run yourself.
+      # GENUINELY DIFFERS: everything about writes. ClickHouse wants large batched inserts and
+      # punishes row-at-a-time; updates and deletes are mutations rather than operations; there
+      # are no foreign keys and no real transactions across tables. Against that: aggregate
+      # scans that are one to two orders of magnitude faster, and ten-times compression.
+      # THE QUESTION THAT DECIDES IT: does anything update a row after it is written?
+      # THE ANSWER IS USUALLY BOTH, and say so — the common production shape is Postgres for
+      # the application and ClickHouse for analytics, fed by CDC (ETL Series 3 · 15).
+      - n: "05"
+        slug: clickhouse-vs-postgresql
+        title: "ClickHouse vs PostgreSQL — Batched Inserts, No Foreign Keys, and Scans That Fly"
+        hands_on: ["koan:choose", "koan:count:scanned"]
+        core: true
+        status: planned
+      # AGREES ON: more than people expect — DuckDB is ACID, transactional and a real database.
+      # GENUINELY DIFFERS: process model above all. DuckDB is a library with one writer;
+      # Postgres is a server with hundreds of connections. That single fact answers most of the
+      # question, and the episode should land it before anything about speed.
+      # THE MISUSE TO NAME: DuckDB as an application backend. It is the most common mistake
+      # made with it, and it is a process-model mistake rather than a performance one.
+      - n: "10"
+        slug: duckdb-vs-postgresql
+        title: "DuckDB vs PostgreSQL — A Library With One Writer Against a Server With Hundreds"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # THE COMPARISON THE ACADEMY ALREADY HAS EVIDENCE FOR, so this episode reads that
+      # evidence rather than generating new folklore.
+      # AGREES ON: columnar storage, vectorised execution, excellent compression, and beating a
+      # row-store on analytical scans by a wide margin.
+      # GENUINELY DIFFERS: one process against a cluster; embedded against served; ad-hoc
+      # analysis on files against a system that owns its storage and serves many users.
+      # SEAM: Data Warehousing Series 3 · 35 is the benchmark on the same star schema. This
+      # episode is the DECISION; do not re-run the benchmark, cite it.
+      - n: "15"
+        slug: duckdb-vs-clickhouse
+        title: "DuckDB vs ClickHouse — Both Columnar, and Almost Nothing Else in Common"
+        hands_on: ["koan:choose", "koan:count:scanned"]
+        core: true
+        status: planned
+
+  # ── SERIES 3 ────────────────────────────────────────────────────────────────
+  # The pairs where the interesting finding is how much is SHARED — a Postgres wearing a
+  # different name, or a small database that is bigger than its reputation.
+  - slug: series3-same-engine-different-clothes
+    title: Same Engine, Different Clothes
+    tagline: the comparisons where the surprise is the sameness
+    level: advanced
+    episodes:
+      # THE EPISODE MOST LIKELY TO CHANGE A READER'S MIND, because SQLite's reputation is the
+      # most wrong of any engine here.
+      # AGREES ON: full SQL, ACID with WAL, window functions, CTEs, JSON, and enough speed for
+      # a very large share of applications.
+      # GENUINELY DIFFERS: one writer and no network. That is essentially the whole list.
+      # THE HONEST FINDING: "SQLite is a toy" is folklore, and the real question is whether the
+      # application needs concurrent writers from more than one machine. If it does not, the
+      # operational saving is enormous. Type affinity is the one genuine trap and must be named.
+      - n: "00"
+        slug: sqlite-vs-postgresql
+        title: "SQLite vs PostgreSQL — What You Actually Give Up Without a Server"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # AGREES ON: both are embedded, single-file, in-process, no server. People therefore
+      # assume they are alternatives, and they are not.
+      # GENUINELY DIFFERS: storage model and intent — SQLite is row-oriented for transactional
+      # application state; DuckDB is columnar for analytical questions. Inserting a million rows
+      # one at a time favours one; aggregating them favours the other by orders of magnitude.
+      # THE RULE THE READER LEAVES WITH: they are complements, not competitors, and using each
+      # for the other's job is the mistake.
+      - n: "05"
+        slug: sqlite-vs-duckdb
+        title: "SQLite vs DuckDB — Both Embedded, Built for Opposite Questions"
+        hands_on: ["koan:choose", "koan:count:scanned"]
+        status: planned
+      # AGREES ON: it is Postgres. All of it. The extension does not replace the engine.
+      # GENUINELY DIFFERS: chunking, continuous aggregates, columnar compression on old chunks,
+      # and time-series functions.
+      # THE QUESTION THAT DECIDES IT, and it is the useful one: how much of this can declarative
+      # partitioning plus BRIN plus a materialized view already do? Often most of it, and a
+      # reader deserves to know that before adding a dependency.
+      - n: "10"
+        slug: timescaledb-vs-postgresql
+        title: "TimescaleDB vs Plain PostgreSQL — What the Extension Adds That Partitioning Does Not"
+        hands_on: ["koan:choose", "koan:predict"]
+        status: planned
+      # AGREES ON: it is Postgres, and everything you know still applies.
+      # GENUINELY DIFFERS: the schema becomes a public API, RLS becomes the authorization
+      # system, and operational responsibility moves to a vendor. Those are architectural
+      # decisions, not features.
+      # THE RISK TO NAME HONESTLY: a platform that generates an API from your schema means a
+      # schema mistake is an exposure, and lock-in is real but smaller than usual — the data is
+      # in Postgres and can be dumped.
+      - n: "15"
+        slug: supabase-vs-self-hosted
+        title: "Supabase vs Self-Hosted PostgreSQL — What Changes When the Schema Is the API"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # THE CAPSTONE: not another pair, but the method, so the reader can run a comparison this
+      # course never wrote.
+      # COVER: turn the requirement into questions with answers (concurrent writers? does a row
+      # change after it is written? how much data, and how much of it does one query touch? who
+      # operates it?). Build the same small workload on both. Measure with the query published.
+      # Write down what you decided AND WHAT WOULD CHANGE IT — which is the same discipline
+      # every curriculum.yaml in this academy uses on itself.
+      - n: "20"
+        slug: project-run-your-own-comparison
+        title: "Project — Run a Comparison This Course Never Wrote"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        tags: ["project"]
+        status: planned

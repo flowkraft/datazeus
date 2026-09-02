@@ -1,0 +1,298 @@
+# The ordered episode list for DuckDB. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: stop moving data before you can ask a question of it. DuckDB
+# runs inside the process you are already in, reads Parquet, CSV and JSON where they lie, and
+# answers analytical questions on more data than fits in memory — with no server, no load step
+# and no credentials.
+#
+# ============================================================================
+# THE THESIS, AND IT IS THE ACADEMY'S OWN POSITION
+# ============================================================================
+# The reflex when data gets big is to reach for a cluster. For a very large share of real
+# workloads that is the wrong reflex, and DuckDB is the clearest demonstration of why: one
+# machine, columnar storage and a good vectorised engine will out-run a small Spark cluster on
+# anything that fits on a modern laptop — which is most things.
+#
+# This is not a contrarian position invented here. Analytics Engineering with dbt says it
+# outright ("it is not Spark. The warehouse does 100% of the work"), Data Warehousing pushes
+# compute into DuckDB and ClickHouse, and ETL & Data Pipelines Series 3 · 20 makes the reader
+# choose. This track is where the claim gets MEASURED rather than asserted.
+#
+# THE EPISODE THAT KEEPS IT HONEST is Series 3 · 15: where DuckDB runs out. A track that
+# cannot say that is an advert.
+#
+# ============================================================================
+# THIS IS A DELTA TRACK — the test every episode must pass
+# ============================================================================
+#     WOULD THIS SENTENCE BE FALSE ON POSTGRESQL?
+# Learn SQL teaches SQL and is not re-taught here. DuckDB's own SQL extras (ASOF joins, PIVOT,
+# QUALIFY, GROUP BY ALL, SELECT * EXCLUDE) pass the test and are the whole of Series 2 · 00.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL DUCKDB DOCUMENTATION
+# ============================================================================
+# duckdb.org/docs is the default shape — its sections, its groupings and its vocabulary —
+# because a reader who finishes this lives in those docs afterwards, and its own "Data Import",
+# "SQL", "Extensions", "Guides" and "Operations Manual" split maps almost directly onto the
+# three series here:
+#   Data Import / CSV / Parquet / JSON ....... Series 1
+#   SQL (statements, expressions, functions) . Series 2
+#   Extensions, Clients, Operations Manual ... Series 3
+#
+# THE ONE PLACE WE DEPART: the docs put Installation and Client APIs first, because that is
+# what an arriving developer needs. This course puts QUERYING FILES first (Series 1 · 05) and
+# the clients late (3 · 10), because the reason to care about DuckDB at all is that you can
+# query a folder without installing a stack — and leading with client APIs buries the argument.
+# The Operations Manual's own limits section is the backbone of 3 · 15.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH LESSON SHOULD FOLLOW THE OFFICIAL DUCKDB
+# DOCUMENTATION — not only this file's series order. Before writing an episode, open the
+# docs' own page for that topic, use it as the coverage checklist, and use its vocabulary for
+# the nouns. Where you leave something out it should be because an academy rule says so (Learn
+# SQL owns the SQL, Data Warehousing owns columnar storage), not because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the specific docs page named. A
+# brief is what a writer actually opens; a rule that lives only in this header is a rule that
+# gets forgotten at the exact moment it matters.
+#
+# DUCKDB MOVES FAST — features land and syntax settles between releases more than in any other
+# engine in this catalogue. State the version every claim was checked against, and treat a
+# two-year-old episode as unverified rather than as true.
+#
+# ============================================================================
+# THE SEAM WITH DATA WAREHOUSING — settled here so it is not re-argued
+# ============================================================================
+# Data Warehousing Series 2 · 05 is "DuckDB — An Analytical Warehouse That Runs Inside Your
+# Process", and Series 2 · 40, · 45 and 3 · 35 measure it against ClickHouse.
+#
+#     DATA WAREHOUSING  uses DuckDB to teach WAREHOUSING — columnar storage, star schemas,
+#                       pre-aggregation, the benchmark. The engine is the demonstration.
+#     THIS TRACK        teaches DUCKDB — its file formats, its SQL dialect, its extensions,
+#                       its clients, and where it stops.
+#
+# Java & Groovy Series 2 · 45 and Python for Data both call it from a language; neither teaches
+# the engine. Nothing here repeats the columnar-storage explanation — that is Data Warehousing
+# Series 2 · 00 and this track links to it.
+
+course: learn-duckdb
+track: duckdb
+title: DuckDB
+
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1 and Series 2"
+    why: >-
+      Every episode here is a query. You need joins, GROUP BY and window functions already —
+      what this track adds is where the data can live, and the analytical SQL that other
+      engines make you write the long way.
+
+excludes:
+  - topic: "SQL itself — SELECT, JOIN, GROUP BY, CTEs and window functions"
+    where: "covered in Learn SQL. Here the subject is DuckDB's own additions to it"
+  - topic: "Why columnar storage is fast for analytics"
+    where: "covered in Data Warehousing, Series 2 · 00. This track assumes it and gets on with using it"
+  - topic: "Designing a star schema to load into it"
+    where: "covered in Data Modeling, and loaded in Data Warehousing, Series 1 · 20"
+  - topic: "Calling DuckDB from application code"
+    where: "covered in Java & Groovy for Data, Series 2 · 45 and in Python for Data. Here Series 3 · 00 covers the clients only as far as choosing between them"
+
+series:
+  # ── SERIES 1 ────────────────────────────────────────────────────────────────
+  - slug: series1-duckdb-essentials
+    title: DuckDB Essentials
+    tagline: query the files you already have, without loading them anywhere
+    level: intermediate
+    episodes:
+      # COVER: the shape of the thing — an in-process library, not a server. No port, no user,
+      # no daemon. In-memory vs a .duckdb file, and that a database file is a single portable
+      # artefact you can email. The CLI, .mode and .timer, and reading a query result that is
+      # already formatted. One concurrency sentence up front, because it decides everything
+      # later: one writer, many readers, one process.
+      - n: "00"
+        slug: what-duckdb-is
+        title: "DuckDB — A Database With No Server, Inside the Process You Already Have"
+        hands_on: ["koan:complete", "koan:capture"]
+        core: true
+        status: planned
+      # THE EPISODE THAT SELLS THE TRACK, and it is early on purpose.
+      # COVER: SELECT * FROM 'file.parquet' — querying a file directly, with no CREATE TABLE and
+      # no load. Globs ('data/*.parquet'), hive partitioning, and reading a folder as one table.
+      # read_csv with auto-detection, and read_csv with explicit columns for when detection is
+      # wrong. read_json. The filename pseudo-column.
+      # THE POINT: the load step you were about to write is often not needed at all.
+      - n: "05"
+        slug: querying-files-directly
+        title: "Querying Parquet, CSV and JSON Where They Lie — No Load Step"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: CSV is where real data arrives broken, and DuckDB's sniffer is good but not
+      # magic. Sample size and why a type is wrong only for rows beyond it. Explicit `columns`,
+      # `types`, dateformat. ignore_errors and store_rejects, which turn a failing load into a
+      # table of what failed — the feature that makes DuckDB usable on genuinely dirty files.
+      # union_by_name for files whose columns drifted between months.
+      # SEAM: ETL owns data quality as a discipline; this is the reader's tool for it.
+      - n: "10"
+        slug: messy-csv
+        title: "Messy CSV — Type Sniffing, Rejected Rows and Files Whose Columns Drifted"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: writing back out. COPY ... TO with FORMAT PARQUET, compression choice, and
+      # PARTITION_BY writing a hive-partitioned folder tree. EXPORT DATABASE. When to persist
+      # into a .duckdb file instead of re-reading the source every time, and the trade
+      # (portability and freshness against speed).
+      - n: "15"
+        slug: writing-files
+        title: "COPY TO — Writing Parquet, Partitioned Folders and a Portable Database File"
+        hands_on: ["koan:complete", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: types worth knowing because they change how you model — LIST, STRUCT and MAP as
+      # first-class columns, and UNNEST. Reading nested Parquet and nested JSON without
+      # flattening it first. DECIMAL vs DOUBLE for money (same rule as everywhere). ENUM.
+      # Timestamps and time zones, and the ICU extension for the rest.
+      - n: "20"
+        slug: nested-types
+        title: "LIST, STRUCT and MAP — Nested Data as Columns, Without Flattening First"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      - n: "25"
+        slug: project-answer-from-files
+        title: "Project — Answer a Question From a Folder of Files, With No Database"
+        hands_on: ["koan:author"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  # ── SERIES 2 ────────────────────────────────────────────────────────────────
+  - slug: series2-analytical-sql
+    title: Analytical SQL
+    tagline: the dialect extras, and data larger than memory
+    level: advanced
+    episodes:
+      # COVER: the "friendly SQL" set, and each one earns its place by removing a real
+      # annoyance — SELECT * EXCLUDE (col), REPLACE, GROUP BY ALL and ORDER BY ALL, QUALIFY for
+      # filtering a window function without a wrapping subquery, column aliases usable later in
+      # the same SELECT, and trailing commas.
+      # SAY THE COST OUT LOUD: none of this is portable. Write it in an analysis, think twice in
+      # a query that has to run somewhere else too. That honesty is what makes the episode a
+      # lesson rather than a feature list.
+      - n: "00"
+        slug: friendly-sql
+        title: "QUALIFY, GROUP BY ALL and EXCLUDE — DuckDB's Own SQL, and What It Costs in Portability"
+        hands_on: ["koan:equivalent", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: ASOF JOIN — join to the most recent row at or before a timestamp, which is THE
+      # time-series join and is otherwise a correlated subquery or a window function most people
+      # get subtly wrong. Then the classic use: prices, rates and readings joined to events.
+      # PIVOT and UNPIVOT as statements rather than hand-written CASE columns.
+      # SEAM: Learn SQL Series 3 · 05 teaches portable pivoting; this is the shorthand.
+      - n: "05"
+        slug: asof-and-pivot
+        title: "ASOF JOIN and PIVOT — The Time-Series Join, and Cross-Tabs Without CASE"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: what "larger than memory" actually means — the buffer manager, temp_directory,
+      # memory_limit, and the operators that can spill (sort, hash join, aggregate) against the
+      # ones that cannot. How to tell you are spilling. Why a 200 GB Parquet scan works on a
+      # laptop and a 200 GB self-join may not.
+      # THE PRACTICAL RULE: projection and predicate pushdown mean the file size is not the
+      # working set — read fewer columns and you can go much further than you expect.
+      - n: "10"
+        slug: larger-than-memory
+        title: "Larger Than Memory — Spilling, memory_limit, and What Actually Has to Fit"
+        hands_on: ["koan:count:rows-held", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: EXPLAIN and EXPLAIN ANALYZE in DuckDB and how the plan reads differently from a
+      # row-store's — vectorised operators, and the numbers that matter being rows scanned and
+      # columns touched rather than index lookups. Parquet row-group statistics and predicate
+      # pushdown: why a WHERE on a sorted column reads a fraction of the file. Zone maps.
+      # WHY THERE IS ALMOST NO INDEX ADVICE HERE, and say it plainly: this engine does not want
+      # your indexes, and a reader arriving from Postgres or MySQL will try to add them.
+      - n: "15"
+        slug: plans-and-pushdown
+        title: "EXPLAIN ANALYZE and Pushdown — Why This Engine Does Not Want Your Indexes"
+        hands_on: ["koan:count:scanned", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: transactions and the concurrency model, stated properly because it decides where
+      # DuckDB fits — ACID, but ONE WRITER, and a single process holding the file. Multiple
+      # readers of a read-only file. Why this is fine for analytics and disqualifying for an
+      # application backend, which is the single most common misuse.
+      - n: "20"
+        slug: concurrency
+        title: "One Writer — The Concurrency Model, and Why This Is Not an Application Database"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
+      - n: "25"
+        slug: project-analysis
+        title: "Project — A Multi-File Analysis That Would Not Fit in Memory"
+        hands_on: ["koan:author", "koan:count:rows-held"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  # ── SERIES 3 ────────────────────────────────────────────────────────────────
+  - slug: series3-in-the-real-stack
+    title: In the Real Stack
+    tagline: extensions, other databases, and where it runs out
+    level: advanced
+    episodes:
+      # COVER: INSTALL/LOAD and the extension model. httpfs for querying Parquet over S3 or
+      # HTTPS without downloading it. The postgres, mysql and sqlite scanners — attach a live
+      # database and join its tables to your Parquet files in one query, which is the single
+      # most useful thing in this series. spatial. Community extensions and the trust question.
+      - n: "00"
+        slug: extensions-and-attach
+        title: "Extensions and ATTACH — Joining a Live Postgres Table to a Parquet File"
+        hands_on: ["koan:complete", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: DuckDB as the query engine over a lakehouse — reading Iceberg and Delta tables,
+      # what snapshot isolation and time travel mean from the reader's side, and the limits of
+      # each connector today.
+      # SEAM: Data Warehousing Series 3 · 20 introduces the lakehouse; Apache Iceberg & Table
+      # Formats owns the format itself. This is DuckDB's view of it.
+      - n: "05"
+        slug: lakehouse-formats
+        title: "Reading Iceberg and Delta — DuckDB as the Engine Over a Lakehouse"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        status: planned
+      # COVER: choosing a client and what changes between them — the CLI for exploration,
+      # Python for notebooks (and the zero-copy Arrow / dataframe interchange that makes it
+      # fast), JDBC for the JVM, WASM in a browser. The relational API as an alternative to
+      # strings. What does NOT change: it is the same engine and the same file.
+      # SEAM: the language tracks own writing the application code.
+      - n: "10"
+        slug: clients
+        title: "The Clients — CLI, Python, JDBC and WASM, and What Changes Between Them"
+        hands_on: ["koan:choose", "koan:complete"]
+        status: planned
+      # THE EPISODE THAT KEEPS THE TRACK HONEST. It is not optional and it is not core, because
+      # its job is judgement rather than skill.
+      # COVER: the four walls, said plainly. (1) Concurrent writers — one process, so it is not
+      # an application backend. (2) Data that genuinely exceeds one machine, where ClickHouse or
+      # a warehouse wins. (3) Serving many concurrent users, which needs a server. (4) Long-lived
+      # shared state that several services write.
+      # THEN THE OTHER HALF: how far one machine actually goes, with numbers, because most
+      # readers underestimate it by an order of magnitude and reach for a cluster they do not
+      # need. That measurement is this track's contribution to the academy's thesis.
+      - n: "15"
+        slug: where-it-runs-out
+        title: "Where DuckDB Runs Out — and How Far One Machine Actually Goes"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-replace-a-pipeline
+        title: "Project — Replace a Small Pipeline With a Single Query"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        tags: ["project"]
+        status: planned

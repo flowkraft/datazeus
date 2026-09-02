@@ -1,0 +1,191 @@
+# The ordered episode list for IBM Db2. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: be useful on Db2 quickly, because you almost certainly did not
+# choose it. Db2 sits under a very large share of banking, insurance and retail, often on
+# z/OS, and the people asked to work with it usually arrive from Postgres or SQL Server.
+#
+# ============================================================================
+# THIS IS A DELTA TRACK
+# ============================================================================
+#     WOULD THIS SENTENCE BE FALSE ON POSTGRESQL?
+# Learn SQL owns SQL. What passes here: SYSIBM.SYSDUMMY1, the catalog, isolation levels spelled
+# UR/CS/RS/RR, SQLCODEs, EXPLAIN via explain tables, tablespaces and bufferpools as things a
+# query author must know about, and the LUW/z-OS split.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL IBM DOCUMENTATION
+# ============================================================================
+# IBM Documentation splits Db2 by SQL reference, Administration, Performance tuning, and
+# Application development, and — crucially — splits everything again by PLATFORM: Db2 for LUW
+# (Linux, UNIX, Windows) against Db2 for z/OS. Those are different products with a shared
+# dialect, and the docs never let you forget it.
+#
+# NEITHER DO WE. Every episode states which platform it is true of. Teaching Db2 as one thing
+# is the fastest way to teach something false, and the reader on a mainframe is exactly the
+# reader most likely to be here.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL IBM DB2 DOCUMENTATION. Before writing an episode,
+# open IBM Documentation's own section for that topic AND FOR THE RIGHT PLATFORM, use it as the
+# COVERAGE CHECKLIST, and use its VOCABULARY FOR THE NOUNS (tablespace, bufferpool, package,
+# bind, SQLCODE). Anything left out should be left out because an academy rule says so — Learn
+# SQL owns the SQL, Data Ops owns operating the server — and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, naming the section and the platform. A
+# brief is what a writer actually opens; a rule that lives only in this header is a rule that
+# gets forgotten at the exact moment it matters.
+#
+# TEACH AGAINST WHAT A LEARNER CAN RUN: Db2 Community Edition and the container image, which
+# are LUW. Where a z/OS behaviour differs and cannot be demonstrated, say so explicitly rather
+# than implying the reader can try it.
+
+course: learn-db2
+track: db2
+title: IBM Db2
+
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1 and Series 2"
+    why: >-
+      Db2's SQL is close to the standard, so most of what you know transfers directly. This
+      track is the remainder — the catalog, the isolation vocabulary, the error codes and the
+      platform differences.
+
+excludes:
+  - topic: "SQL itself"
+    where: "covered in Learn SQL"
+  - topic: "Database administration — backup and recovery, HADR, storage groups, security"
+    where: "not covered. Data Ops owns the operational discipline"
+  - topic: "COBOL, CICS and mainframe application development"
+    where: "not covered. Series 1 · 20 explains what a bound package is because a query author meets one, and stops there"
+
+series:
+  - slug: series1-db2-essentials
+    title: Db2 Essentials
+    tagline: connecting, the catalog, and the dialect differences
+    level: intermediate
+    episodes:
+      # COVER: the platform split first, because everything else depends on it — Db2 for LUW
+      # against Db2 for z/OS, what is shared (the dialect, mostly) and what is not (storage,
+      # utilities, tooling, some limits). Then connecting: the db2 CLP, CLPPlus, and JDBC.
+      # SCHEMA defaults to your user name, and CURRENT SCHEMA.
+      - n: "00"
+        slug: platforms-and-connecting
+        title: "LUW and z/OS — One Dialect, Two Products, and How to Connect to Each"
+        hands_on: ["koan:capture", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: SYSIBM.SYSDUMMY1 as Db2's DUAL, and the VALUES statement as the better answer.
+      # Types: DECIMAL and the fact that a finance schema will be full of it, VARCHAR vs CHAR
+      # blank padding, TIMESTAMP precision, GRAPHIC/VARGRAPHIC in older schemas, and the
+      # EBCDIC/ASCII collation surprise when reading z/OS data.
+      - n: "05"
+        slug: types-and-sysdummy
+        title: "SYSIBM.SYSDUMMY1, DECIMAL and Collation — The Dialect's Own Corners"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: the catalog — SYSCAT views on LUW, SYSIBM on z/OS, and the ones you actually
+      # use (TABLES, COLUMNS, INDEXES, REFERENCES, ROUTINES). DESCRIBE. How to reconstruct
+      # DDL with db2look. Reading an inherited schema is most of the job here too.
+      - n: "10"
+        slug: the-catalog
+        title: "SYSCAT and SYSIBM — Reading a Schema You Inherited"
+        hands_on: ["koan:complete", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: identity columns, sequences, and the SELECT FROM FINAL TABLE construct, which
+      # is Db2's elegant answer to RETURNING and has no equivalent in most engines. MERGE.
+      # FETCH FIRST n ROWS ONLY as the standard spelling of LIMIT, which Db2 had long before
+      # most others.
+      - n: "15"
+        slug: writes-and-final-table
+        title: "SELECT FROM FINAL TABLE — Db2's Answer to RETURNING, and MERGE"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: what a query author must understand about static SQL and BIND — a package is a
+      # pre-compiled access plan, and on z/OS a great deal of SQL is static and bound rather
+      # than prepared at runtime. Why that changes when the plan is chosen, and why a REBIND
+      # can change performance without anyone changing code. Dynamic SQL by contrast.
+      # THIS HAS NO EQUIVALENT IN ANY OTHER TRACK, and it explains a class of production
+      # surprise a Postgres reader would never predict.
+      - n: "20"
+        slug: packages-and-bind
+        title: "Packages and BIND — When the Access Plan Was Chosen, and Why a REBIND Changes It"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
+      - n: "25"
+        slug: project-explore
+        title: "Project — Answer a Question From an Unfamiliar Db2 Schema"
+        hands_on: ["koan:author"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-concurrency-and-performance
+    title: Concurrency and Performance
+    tagline: isolation spelled UR/CS/RS/RR, and reading an access plan
+    level: advanced
+    episodes:
+      # COVER: Db2's isolation vocabulary, which is the same four ANSI levels under different
+      # names — UR (uncommitted read), CS (cursor stability, the default), RS (read stability),
+      # RR (repeatable read, which in Db2 means SERIALIZABLE). The mapping table is the
+      # episode: a reader who knows Postgres levels needs the translation, not a re-teaching.
+      # Then lock escalation and currently committed semantics.
+      # SEAM: Data Ops Series 2 · 05 owns isolation as a concept, on Postgres. This is the
+      # translation and the Db2-specific behaviour.
+      - n: "00"
+        slug: isolation-levels
+        title: "UR, CS, RS and RR — The Same Four Levels Under Different Names"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: SQLCODEs as the diagnostic surface — negative is an error, positive is a
+      # warning, zero is success, and +100 means no rows. The ones you will meet (-911 deadlock
+      # or timeout with its reason code, -803 duplicate key, -204 not found, -407 null into
+      # not-null). db2diag and how to get the full message.
+      # THE SKILL: reading an SQLCODE is the fastest route to a cause on this platform.
+      - n: "05"
+        slug: sqlcodes
+        title: "Reading SQLCODEs — -911, -803, +100 and What Each One Is Telling You"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: EXPLAIN in Db2 — explain tables must exist first (EXPLAIN.DDL), db2exfmt to
+      # format, and db2expln. Reading the access plan: table scan against index scan, join
+      # methods, and the estimated cardinality against reality. Visual Explain in one line.
+      - n: "10"
+        slug: explain
+        title: "EXPLAIN, Explain Tables and db2exfmt — Getting an Access Plan Out of Db2"
+        hands_on: ["koan:diagnose", "koan:count:scanned"]
+        core: true
+        status: planned
+      # COVER: RUNSTATS and why a Db2 plan is only as good as its statistics — this is the
+      # single most common cause of a sudden slowdown on this platform. Index design, include
+      # columns, and MDC (multidimensional clustering) as a Db2-specific answer for warehouse
+      # tables. REORG in one paragraph, pointing at Data Ops.
+      - n: "15"
+        slug: runstats-and-indexes
+        title: "RUNSTATS and Index Design — Why the Plan Was Fine Last Month"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: what a query author must know about physical layout — tablespaces, bufferpools
+      # and page size, and how they explain otherwise inexplicable performance differences
+      # between two similar tables. BLU Acceleration (column-organized tables) as Db2's
+      # columnar option, named and placed against Data Warehousing.
+      - n: "20"
+        slug: tablespaces-and-blu
+        title: "Tablespaces, Bufferpools and BLU — The Physical Layer You Cannot Ignore"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      - n: "25"
+        slug: project-tune
+        title: "Project — Diagnose a Slow Db2 Query From Its Access Plan"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned

@@ -1,0 +1,100 @@
+---
+title: "Spring Scheduling — Running a Data Job on a Timer Inside Your Application"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series4-frameworks"
+order: 30
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: make the data job of Series 1-3 run on a timer, inside the app, without cron.
+    CONSTRUCTS: @EnableScheduling, @Scheduled(cron/fixedRate/fixedDelay/zone), Spring's SIX-field
+    cron expression, spring.task.scheduling.pool.size, and ${...} to move the expression out of
+    the code and into application.properties.
+
+    THE SEAM WITH DATA OPS, which owns cron, systemd timers and orchestrator choice. This episode
+    is not a Java-flavoured retelling of that: a Spring app schedules ITSELF, in a JVM that is
+    already running, and none of the failures below exist for cron —
+      - cron forks a fresh process; Spring shares one heap, one pool, one context
+      - Spring's default scheduler pool is ONE THREAD, so a slow job silently delays the next
+      - two app instances mean two runs of the same job, and nothing says so
+      - the output is a log line and a swallowed exception, not mailed stdout
+
+    SERIES 3 · 10 made a job something ELSE could schedule — arguments, exit codes, a readable
+    log. This makes the app schedule its own.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series4/_30/SpringSchedulingKoans.groovy
+
+    NO CLOCK. The header's NEVER ASSERT WALL-CLOCK TIME rule is under maximum pressure here —
+    sleep(2000) then assert-it-ran is the obvious test and exactly the flake the rule forbids.
+    Assert the TRIGGER instead, three ways, all instant and deterministic:
+      - CronExpression.parse(expr).next(a FIXED instant) is a pure function
+      - ScheduledAnnotationBeanPostProcessor.getScheduledTasks() is EMPTY with no @EnableScheduling
+      - the one-thread trap is a core pool size, or a latch asserting the ORDER two jobs
+        interleaved in — never how long they took
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety.
+
+    Groovy is the honest default HERE, against the track's own rule, because the
+    playground this leads into is a Groovy Spring Boot app. Say so in one line. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written.
+
+    predict: given an expression and a fixed instant, what is the next fire time?
+    This is where Spring's SIX fields meet crontab's five — the same string means
+    different times in the two — plus the two spellings of "every fifteen minutes"
+    (Spring's 0 0/15 against the crontab step syntax), and a DST spring-forward.
+
+    diagnose: the app is up, the annotation is there, the log is empty. Why? */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here.
+
+    THE COLD OPEN, and it is a real bug in our own product: bkend-boot-groovy-playground's
+    BkendApplication is a bare @SpringBootApplication with no @EnableScheduling anywhere in the
+    tree. Spring Boot does not turn scheduling on for you — its autoconfigured task scheduler is
+    itself conditional on the bean @EnableScheduling registers. So the documented ritual (copy
+    crons.groovy, uncomment @Scheduled, rebuild) yields an app that starts clean, logs nothing,
+    and never runs your transform. No error, no stack trace, stale dashboards.
+
+    THEN: a schedule whose expression is compiled into the jar, so changing 2 a.m. to 3 a.m.
+    means a rebuild. And two instances of the app running the same nightly load twice. */}
+
+TODO

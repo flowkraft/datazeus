@@ -310,6 +310,50 @@ series:
         title: "Change Data Capture — Stream the Deltas Instead of Reloading"
         hands_on: ["koan:predict"]
         status: planned
+      # ADDED 2026-09-02, into a slot that was already EMPTY — this series ran 15 then 25 with
+      # no comment explaining the gap. It fills it because TWO EPISODES ALREADY LEAN ON A
+      # CONCEPT NOTHING IN THE ACADEMY DEFINES:
+      #   15 (directly above) says "STREAM the deltas" and never says what a stream is.
+      #   2 · 20 is "Late & Out-of-Order Data — Rows That Arrive After You Reported". Late
+      #     RELATIVE TO WHAT? That episode needs event time versus processing time, and no
+      #     episode anywhere defines the difference.
+      # An absence two episodes work around is not theoretical.
+      #
+      # WHAT IT TEACHES, in this order, and all of it engine-free:
+      #   1. BOUNDED vs UNBOUNDED. A batch has an end; a stream does not. Everything else
+      #      follows from that one difference, including why "just run it more often" is a
+      #      different thing from streaming.
+      #   2. EVENT TIME vs PROCESSING TIME — when it happened against when you saw it. This is
+      #      the definition 2 · 20 borrows.
+      #   3. WINDOWS AND WATERMARKS. You cannot aggregate an infinite thing, so you cut it into
+      #      windows; a watermark is how you decide that enough late data has arrived to close
+      #      one. Closing too early loses rows, closing too late means the number is never
+      #      final — and both are wrong answers rather than errors.
+      #
+      # THEN THE THREE TOOLS, ONE PARAGRAPH EACH, NAMED FOR WHAT THEY ARE and not taught:
+      #   Kafka  a LOG — transport. Not a queue, and not a processor.
+      #   Spark  a distributed BATCH engine, with streaming bolted on as micro-batches.
+      #   Flink  an event-time STREAM processor; the model above is closest to its own.
+      # The Tools catalogue owns teaching them. If this episode starts explaining partitions,
+      # consumer groups or shuffle, it has become those courses and must be cut back.
+      #
+      # THE THESIS, AND IT IS ALREADY THE HOUSE LINE so it needs no inventing — Analytics
+      # Engineering with dbt says it outright ("it is not Spark. The warehouse does 100% of the
+      # work"), Data Warehousing pushes compute into DuckDB and ClickHouse, and this track is
+      # SQL-first throughout:
+      #     STREAMING IS A MODELLING DECISION BEFORE IT IS A TOOLING DECISION, and most
+      #     "we need streaming" turns out to be "we need hourly instead of daily" — which CDC
+      #     at 15 already gives you, with none of these three.
+      # The koan:choose is where that gets tested rather than asserted: requirements where the
+      # honest answer is a smaller batch window, and one where it genuinely is not.
+      #
+      # CORE, because 15 and 2 · 20 depend on it.
+      - n: "20"
+        slug: streaming-vs-batch
+        title: "Streaming vs Batch — Unbounded Data, Event Time and When You Need a Stream"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
       - n: "25"
         slug: backfills-and-reprocessing
         title: "Backfills & Reprocessing — Rewrite History Without Breaking Downstream"

@@ -1,0 +1,107 @@
+---
+title: "Spring Batch — Jobs That Process Rows in Chunks and Restart Where They Stopped"
+description: "TODO — one plain sentence from THE TASK beat. Same rules as the title: say what you will be able to do, no rhetorical devices."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series4-frameworks"
+order: 27
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: write a load that survives being interrupted, and can be run again.
+    CONSTRUCTS: ItemReader / ItemProcessor / ItemWriter, the chunk (commit interval), the
+    JobRepository, JobParameters, faultTolerant() with retryLimit and skipLimit.
+
+    THIS IS THE "WHAT IS A JOB" EPISODE, and it comes BEFORE 30, 35, 40 and 45 on purpose:
+    those four are all about WHEN something runs and none of them says anything about what
+    happens inside the run. Scheduling a method that loads 500,000 rows automates a job that
+    cannot survive an interruption.
+
+    WHAT IT BUYS, all of it left open by Series 1-3:
+      CHUNKS    — Series 2 · 35 (batching, round trips) and 2 · 40 (streaming, rows held) as a
+                  framework. The chunk size IS the batch size, so the counters from those two
+                  episodes are the oracle here. No new machinery, no stopwatch.
+      RESTART   — the JobRepository keeps execution state in a database, so a job that died at
+                  chunk 400 resumes at chunk 400 rather than at zero.
+      RETRY/SKIP— per item. One poisoned row need not kill a 500,000-row load.
+      IDENTITY  — a job instance is (name + JobParameters), and Spring Batch REFUSES to run a
+                  completed one again: JobInstanceAlreadyCompleteException. Idempotency
+                  enforced by the framework instead of by your SQL.
+
+    THE SEAM WITH ETL & DATA PIPELINES, one sentence in the article, no more:
+      ETL 1 · 30 / 35   make the WRITE idempotent — MERGE, watermarks, load strategy
+      HERE              remember WHERE YOU GOT TO and WHAT ALREADY RAN — execution state
+    Orthogonal. A perfect MERGE still needs restart state; this still doubles your rows if the
+    writer does a plain INSERT.
+
+    BE HONEST THAT IT IS HEAVY. Five interfaces, a schema of its own, and a job definition
+    longer than the load it replaces. For a two-hundred-line nightly script it is the wrong
+    answer. Say when NOT to reach for it, or the episode is an advert. Episode 50 tests that
+    judgement.
+
+    NO PRODUCT ANCHOR, and do not manufacture one. Every other episode in this series points at
+    something DataPallas ships; Spring Batch is in neither the product nor the playground pom.
+    It earns its place on the gap it fills.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:count:roundtrips
+      koan:process:tool
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series4/_27/SpringBatchKoans.groovy
+   ========================================================================== */}
+
+## The task this episode gives you
+
+{/* BEAT 1 — the data job the reader can do afterwards. Concrete, not a definition. */}
+
+TODO
+
+## The code
+
+{/* BEAT 2 — Java is the default; show Groovy only where it removes real ceremony,
+    and say in one line why. Do not alternate for variety. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koan above, or the reason there isn't one.
+    If this beat cannot be written, the episode is not ready to be written.
+
+    count:roundtrips: the chunk size IS the commit frequency. Chunk 1 against chunk 1000
+    over the same load is a number, not an opinion — and it is the same counter the reader
+    already used at 2 · 35.
+
+    process:tool: run the job twice with the same JobParameters. The second run does not
+    re-load anything; it refuses. Deterministic, instant, no clock. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the failure this prevents, and how you would notice it in real data.
+    Every episode in this track earns its place by preventing a wrong number or a
+    job that dies at 3 a.m. Name that here.
+
+    THE FAILURE IT PREVENTS: a load that died at row 400,000 of 500,000 and was simply run
+    again from the top — so 400,000 rows are now in the table twice, and nothing threw.
+
+    THE FAILURE IT CAUSES, and say this too: JobParameters identity means a job whose
+    parameters never change will refuse to run a second time, which is astonishing the first
+    time it happens in production. The usual fix is a run date or a run id parameter — and
+    the moment you add one, you have opted out of the very protection you came for. Make the
+    reader see both sides. */}
+
+TODO

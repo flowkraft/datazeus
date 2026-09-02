@@ -21,8 +21,38 @@ published: false
     Java-or-Groovy rule, the ordering rationale and the title rules.
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
-    GOAL: keep fetching when the API misbehaves, and get every page.
-    CONSTRUCTS: exponential backoff, jitter, Retry-After, idempotency, cursor vs offset paging.
+    GOAL: keep fetching when the API misbehaves, and get every row exactly once across
+    every page.
+    CONSTRUCTS: exponential backoff, jitter, Retry-After, cursor vs offset paging,
+    idempotency keys.
+
+    RETRY SAFETY IS A BEAT, NOT A WORD IN A LIST — the construct line said "idempotency" and
+    nothing else until 2026-09-02, which is how a construct gets shipped as a mention.
+    The episode is incomplete without it: everything else here teaches how HARD to retry and
+    never asks what a retry does to the ROWS.
+
+    THE BEAT IS READ-SIDE, and it is the same failure class as join fan-out — duplicate and
+    missing rows, from a fetch, with nothing thrown:
+      - retry page 3 of a feed that changed underneath you and you get rows twice or lose
+        them entirely. The attempt counter this episode already builds shows two clean
+        attempts and no error.
+      - OFFSET pagination does it with no retry at all: one row inserted ahead of your
+        position shifts everything down, so page 2 re-serves a row you already read. A CURSOR
+        keyed on something stable does not — which is the real reason to prefer it, and a
+        better one than "it is faster".
+    That is why cursor-vs-offset is in the constructs, and until now it was there without
+    the reason.
+
+    THE WRITE SIDE IS ONE PARAGRAPH, and marked as an aside: GET, PUT and DELETE are
+    idempotent by definition and free to retry; POST is not, and that is what an IDEMPOTENCY
+    KEY is for. DO NOT LET IT GROW. Nothing in this track writes to an API — 50 reads, this
+    fetches, 70's project reads — and an earlier draft of this brief made POST retries the
+    headline, which contradicted the episode's own title.
+
+    THIS IS THE ONLY PART OF IDEMPOTENCY THIS TRACK OWNS, and the curriculum excludes say so.
+    The job-level question — does re-running the whole load double the rows — is ETL & Data
+    Pipelines, Series 1 · 30 and · 35. Do not let this beat grow into that lesson either.
+
     KOAN ORACLE: reuse the round-trip counter from 35 and COUNT THE ATTEMPTS. "Retried forever"
     and "gave up immediately" are both wrong and look identical from outside; the attempt count
     separates them, and fixed-delay retry against a rate limiter is countably worse than backoff.
