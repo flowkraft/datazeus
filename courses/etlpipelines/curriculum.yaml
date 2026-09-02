@@ -319,16 +319,39 @@ series:
       #     episode anywhere defines the difference.
       # An absence two episodes work around is not theoretical.
       #
-      # WHAT IT TEACHES, in this order, and all of it engine-free:
+      # SPLIT INTO 20 AND 22 ON 2026-09-02. As first drafted this one episode carried
+      # bounded-against-unbounded, event time against processing time, windows, watermarks,
+      # three tools and the thesis — and its own brief already warned it was at risk of
+      # becoming the Kafka and Flink courses. It was proposed instead to add a BATCH episode
+      # and a STREAMING episode in front of it. That was rejected, and the reason is worth
+      # keeping because it is a question anyone would ask again:
+      #
+      #   A DEDICATED BATCH EPISODE WOULD TEACH THE COURSE BACK TO ITSELF. Series 1 and 2 are
+      #   twenty-three episodes and every one of them is batch — load a CSV, staging, transform
+      #   with SQL, idempotency, watermarks, row counts, the scheduler, DAGs, load order. A
+      #   reader arriving here has BUILT about two dozen batch pipelines. Explaining batch at
+      #   episode thirty-four inverts the course.
+      #   A DEDICATED STREAMING EPISODE WOULD DUPLICATE. It is either this episode's first half
+      #   or it is Flink's course.
+      #
+      # SO THE SPLIT IS BY CONCEPT DEPTH, NOT BY PARADIGM:
+      #     20 (here)  THE DECISION — is your data bounded, and do you actually need a stream
+      #     22         THE MECHANICS — event time, windows and watermarks
+      # 22 earns its own place independently: 2 · 20 "Late & Out-of-Order Data" leans on event
+      # time and nothing in the academy defines it, which is the same evidence that created
+      # this episode in the first place.
+      #
+      # WHAT THIS ONE TEACHES, engine-free:
       #   1. BOUNDED vs UNBOUNDED. A batch has an end; a stream does not. Everything else
       #      follows from that one difference, including why "just run it more often" is a
       #      different thing from streaming.
-      #   2. EVENT TIME vs PROCESSING TIME — when it happened against when you saw it. This is
-      #      the definition 2 · 20 borrows.
-      #   3. WINDOWS AND WATERMARKS. You cannot aggregate an infinite thing, so you cut it into
-      #      windows; a watermark is how you decide that enough late data has arrived to close
-      #      one. Closing too early loses rows, closing too late means the number is never
-      #      final — and both are wrong answers rather than errors.
+      #   2. WHEN IS A BATCH COMPLETE — the one genuinely batch-shaped question the course
+      #      never asks. How do you know all of Monday's data arrived before Monday's load
+      #      runs? Arrival signals, a sentinel file, wait-then-run. ONE PARAGRAPH: the
+      #      machinery is Airflow's sensors and the late-data half is 2 · 20.
+      #   3. THE DECISION ITSELF, which is what the koan:choose tests.
+      # Event time, windows and watermarks are NAMED here and DEFINED at 22. Name them; do not
+      # start explaining them, or the split has undone itself.
       #
       # THEN THE THREE TOOLS, ONE PARAGRAPH EACH, NAMED FOR WHAT THEY ARE and not taught:
       #   Kafka  a LOG — transport. Not a queue, and not a processor.
@@ -347,11 +370,51 @@ series:
       # The koan:choose is where that gets tested rather than asserted: requirements where the
       # honest answer is a smaller batch window, and one where it genuinely is not.
       #
-      # CORE, because 15 and 2 · 20 depend on it.
+      # CORE, because 15 depends on it and because the decision it teaches is one every reader
+      # will be asked to make.
       - n: "20"
         slug: streaming-vs-batch
-        title: "Streaming vs Batch — Unbounded Data, Event Time and When You Need a Stream"
-        hands_on: ["koan:choose", "koan:predict"]
+        title: "Streaming vs Batch — Is Your Data Bounded, and Do You Need a Stream?"
+        hands_on: ["koan:choose"]
+        core: true
+        status: planned
+      # THE MECHANICS HALF of the split described at 20. This is the episode that DEFINES what
+      # 2 · 20 has been leaning on since it was written: "Late & Out-of-Order Data — Rows That
+      # Arrive After You Reported" cannot say what LATE is measured against without event time,
+      # and nothing in the academy defines it. That is why this is core.
+      #
+      # WHAT IT TEACHES, and it is three ideas rather than a tour of an API:
+      #   1. EVENT TIME vs PROCESSING TIME — when it happened against when you saw it. Every
+      #      other idea here is a consequence of the gap between the two.
+      #   2. WINDOWS. You cannot aggregate a thing that never ends, so you cut it into pieces.
+      #      Tumbling, sliding and session windows, named and shown — the shapes, not any one
+      #      engine's syntax for them.
+      #   3. WATERMARKS. A watermark is a DECISION, not a mechanism: "I believe I have seen
+      #      everything up to time T, so I am closing this window." That framing is what makes
+      #      the rest teachable.
+      #
+      # THE FAILURE, and it is this academy's selection rule exactly — BOTH WAYS OF GETTING IT
+      # WRONG ARE SILENT:
+      #     CLOSE TOO EARLY   real events arrive after the window shut and are dropped. The
+      #                       total is wrong and nothing raises.
+      #     CLOSE TOO LATE    the number is never final, so a dashboard that must be right by
+      #                       09:00 is still moving at 11:00.
+      # Neither is an error. That is the whole reason the episode exists.
+      #
+      # THE DEMONSTRATION 20 PROMISES AND THIS DELIVERS: the same set of events windowed by
+      # event time and by processing time, side by side, with different answers. The
+      # out-of-order event is where they separate, and a reader who predicts both before
+      # running them has the idea.
+      #
+      # STAY ENGINE-FREE. Flink implements this, Beam articulates it best, Spark does it in
+      # micro-batches — name them in a sentence and stop. Those courses own the implementations;
+      # this episode owns the concept, and it is the concept the rest of the academy borrows.
+      #
+      # CORE.
+      - n: "22"
+        slug: event-time-and-watermarks
+        title: "Event Time, Windows and Watermarks — Deciding When an Answer Is Final"
+        hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         status: planned
       - n: "25"
