@@ -394,18 +394,33 @@ series:
   # never see it. It is also CORE and Series 4 is 0-core, so filing it there would put the one
   # core episode at the head of an optional series.
   #
-  # MOVING 20 LATER IN THIS SERIES was considered on 2026-09-02 — to sit just before the
-  # project, as the bridge into Series 4 — and REJECTED ON COST, not on principle. The
-  # position at 42 is arguably slightly better; the price is renumbering an address that FIVE
-  # OTHER COURSES cite. "Series 3 · 20" is not a unique address in this academy: it also names
-  # Java & Groovy's Liquibase episode, Learn SQL's EXPLAIN, Data Warehousing's lakehouse and
-  # Data Modeling's own. Forty-five files mention the string and only thirty-five qualify it
-  # with a course name. That is a lot of exposure for a modest gain, and 20 reads well where
-  # it is: 15 teaches a technique that raises the question and 20 answers it.
+  # THE DECISION EPISODE WAS MOVED FROM 20 TO 42 ON 2026-09-02, after first being rejected on
+  # a cost estimate that turned out to be wrong. Both halves are recorded because the mistake
+  # is the useful part.
   #
-  # IF THAT MOVE IS EVER MADE, disambiguate first: only rewrite occurrences that explicitly
+  # THE ESTIMATE WAS "thirty-seven careful edits across five courses". It is true that five
+  # courses cite this episode by number, and true that "Series 3 · 20" is NOT a unique address
+  # in this academy — it also names Java & Groovy's Liquibase episode, Learn SQL's EXPLAIN,
+  # Data Warehousing's lakehouse and Data Modeling's own, so a blind find-and-replace corrupts
+  # four other courses. All of that was right.
+  #
+  # WHAT WAS WRONG: about thirty of those references live in GENERATED briefs and all came
+  # from ONE template string in the brief generator. They were a single edit and a
+  # regeneration, not thirty hand-edits. The real cost was that one string, three prerequisite
+  # blocks, and a handful of comments.
+  #
+  # WHAT ACTUALLY GUARDS THIS, and what does not:
+  #   CurriculumSpec resolves a course-qualified reference against THAT course, and a bare one
+  #   inside a prerequisite against the course being required — so a stale pointer in
+  #   `excludes` or `prerequisites` FAILS THE BUILD. That is how the three prerequisite blocks
+  #   in Beam, Flink and Kafka were caught.
+  #   It does NOT read YAML comments or _todo briefs, which is where most references live.
+  #   Those were re-read by eye, and the spec's own rule says exactly why: "Renumbering a
+  #   series means re-reading every reference into it, by eye."
+  #
+  # IF ANYTHING IN THIS SERIES IS RENUMBERED AGAIN: rewrite only occurrences that explicitly
   # say "ETL" or "ETL & Data Pipelines", plus the prerequisite blocks in Apache Beam, Apache
-  # Flink and Apache Kafka. Everything else means another course.
+  # Flink and Apache Kafka, plus the generator template. Everything else means another course.
   - slug: series3-loading-at-production-volume
     title: Loading at Production Volume
     tagline: load a star schema, track changes, and re-run a whole month
@@ -555,17 +570,15 @@ series:
       #
       # CORE, because 15 depends on it and because the decision it teaches is one every reader
       # will be asked to make.
-      - n: "20"
-        slug: streaming-vs-batch
-        title: "Streaming vs Batch — Is Your Data Bounded, and Do You Need a Stream?"
-        hands_on: ["koan:choose"]
-        core: true
-        status: planned
-      # (EVENT TIME, WINDOWS AND WATERMARKS used to sit here at 22. It moved to Series 4 · 00 on
-      # 2026-09-02 — see that episode for the argument. In short: once 2 · 20 was narrowed to its
-      # batch framing, the only thing depending on event time was Series 4, and a core episode
-      # whose only dependents live in a 0-core series is misfiled. Episode 20 above NAMES the
-      # three ideas and hands them over; it does not define them.)
+      #
+      # MOVED TO 42 ON 2026-09-02, to sit immediately before the project as the bridge into
+      # Series 4 — a gate belongs next to the door it gates. See the entry there.
+      #
+      # (EVENT TIME, WINDOWS AND WATERMARKS used to sit at 22, between this and 25. It moved to
+      # Series 4 · 00 on 2026-09-02 — see that episode for the argument. In short: once 2 · 20
+      # was narrowed to its batch framing, the only thing depending on event time was Series 4,
+      # and a core episode whose only dependents live in a 0-core series is misfiled. Episode 42
+      # NAMES the three ideas and hands them over; it does not define them.)
       - n: "25"
         slug: backfills-and-reprocessing
         title: "Backfills & Reprocessing — Rewrite History Without Breaking Downstream"
@@ -604,6 +617,36 @@ series:
         slug: bulk-loading-and-parallelism
         title: "Bulk Loading & Parallelism — COPY, Partitions and Throughput"
         hands_on: ["koan:count:scanned"]
+        status: planned
+      # MOVED HERE FROM 20 ON 2026-09-02. IT IS THE GATE, AND A GATE BELONGS NEXT TO THE DOOR
+      # IT GATES — Series 4 begins immediately after the project, and this is the episode that
+      # decides whether a reader needs it.
+      #
+      # IT ALSO READS BETTER LATE. At 20 the reader was asked "do you need a stream?" and then
+      # did five more batch episodes, so the decision had no consequence at the moment it was
+      # made. Here they have seen the full extent of what batch gives them — backfills, MERGE
+      # at scale, contracts, throughput — and the question finally has evidence behind it.
+      #
+      # THE MOVE ONLY BECAME SAFE WHEN 15 WAS RETITLED. While CDC was called "Stream the
+      # Deltas", 20 had to sit next to it to define a word 15 was already using. "Reading the
+      # Database's Own Log" removed that dependency, and what remains is a BACKWARD citation
+      # (this episode's thesis cites CDC as the cheaper answer), which works at any distance.
+      #
+      # THE PROJECT STILL CLOSES THE SERIES, and the order is deliberate: decide, then build
+      # the batch pipeline anyway. For most readers the honest answer here is "no, batch is
+      # fine", and 45 is that answer demonstrated rather than asserted.
+      #
+      # WHAT THIS COST, recorded because the number was got wrong twice before it was checked:
+      # five other courses cite this episode BY NUMBER (Beam, Flink, Kafka, Spark, and this
+      # course's own comments). Roughly thirty of those references are in GENERATED briefs and
+      # came from a single template string, so they are one edit and a regeneration rather than
+      # thirty. Only the handful in `excludes` and `prerequisites` are checked by CurriculumSpec;
+      # the rest are not, which is why they were re-read by eye.
+      - n: "42"
+        slug: streaming-vs-batch
+        title: "Streaming vs Batch — Is Your Data Bounded, and Do You Need a Stream?"
+        hands_on: ["koan:choose"]
+        core: true
         status: planned
       - n: "45"
         slug: project-orchestrate-northwind

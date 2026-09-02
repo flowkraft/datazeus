@@ -37,7 +37,7 @@
 # episode, open the Programming Guide's own section for that topic, use it as the COVERAGE
 # CHECKLIST, and use its VOCABULARY FOR THE NOUNS (PCollection, PTransform, ParDo, DoFn,
 # windowing, trigger, pane, runner). Anything left out should be left out because an academy
-# rule says so — ETL Series 3 · 20 owns the batch-against-streaming decision, Flink and Spark
+# rule says so — ETL Series 3 · 42 owns the batch-against-streaming decision, Flink and Spark
 # own their own engines — and never because it was missed.
 #
 # EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the guide section named. A brief is
@@ -58,7 +58,7 @@ title: Apache Beam
 
 prerequisites:
   - course: learn-etl-pipelines
-    needs: "Series 3 · 20"
+    needs: "Series 3 · 42"
     why: >-
       That episode defines bounded against unbounded data and what event time and watermarks
       are for. Beam's whole model is an answer to those questions, and this track does not
@@ -66,7 +66,7 @@ prerequisites:
 
 excludes:
   - topic: "Whether you need streaming at all"
-    where: "covered in ETL & Data Pipelines, Series 3 · 20"
+    where: "covered in ETL & Data Pipelines, Series 3 · 42"
   - topic: "Operating a Flink or Spark cluster"
     where: "covered in Apache Flink and Apache Spark, and in Data Ops for the operational discipline"
   - topic: "A first introduction to PCollections and DoFns"

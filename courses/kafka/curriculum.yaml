@@ -54,19 +54,19 @@ title: Apache Kafka
 
 prerequisites:
   - course: learn-etl-pipelines
-    needs: "Series 1, and Series 3 · 20"
+    needs: "Series 1, and Series 3 · 42"
     why: >-
-      ETL & Data Pipelines teaches what a load must guarantee and, at Series 3 · 20, what
+      ETL & Data Pipelines teaches what a load must guarantee and, at Series 3 · 42, what
       bounded and unbounded data actually mean. This track is the transport that carries the
       unbounded case, and it assumes you already know why that is a different problem.
 
 excludes:
   - topic: "Event time, watermarks and windowing as concepts"
-    where: "covered in ETL & Data Pipelines, Series 3 · 20, and applied in Apache Flink"
+    where: "covered in ETL & Data Pipelines, Series 3 · 42, and applied in Apache Flink"
   - topic: "Running the cluster — broker sizing, KRaft or ZooKeeper operations, rebalancing, security"
     where: "covered in Data Ops for the operational discipline. Here you learn what a PRODUCER AND CONSUMER AUTHOR must know"
   - topic: "Choosing Kafka over a database or a queue"
-    where: "covered in ETL & Data Pipelines, Series 3 · 20, which makes the reader decide before reaching for any of this"
+    where: "covered in ETL & Data Pipelines, Series 3 · 42, which makes the reader decide before reaching for any of this"
 
 series:
   - slug: series1-the-log

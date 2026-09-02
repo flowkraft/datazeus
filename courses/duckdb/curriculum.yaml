@@ -16,7 +16,7 @@
 #
 # This is not a contrarian position invented here. Analytics Engineering with dbt says it
 # outright ("it is not Spark. The warehouse does 100% of the work"), Data Warehousing pushes
-# compute into DuckDB and ClickHouse, and ETL & Data Pipelines Series 3 · 20 makes the reader
+# compute into DuckDB and ClickHouse, and ETL & Data Pipelines Series 3 · 42 makes the reader
 # choose. This track is where the claim gets MEASURED rather than asserted.
 #
 # THE EPISODE THAT KEEPS IT HONEST is Series 3 · 15: where DuckDB runs out. A track that

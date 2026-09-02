@@ -69,7 +69,7 @@ excludes:
   - topic: "MLlib and machine learning"
     where: "not covered; this track moves and shapes data"
   - topic: "Streaming concepts — event time, watermarks, windows"
-    where: "covered in ETL & Data Pipelines, Series 3 · 20 and in Apache Flink. In this course, Series 3 · 05 is Spark's implementation, not the theory"
+    where: "covered in ETL & Data Pipelines, Series 3 · 42 and in Apache Flink. In this course, Series 3 · 05 is Spark's implementation, not the theory"
 
 series:
   - slug: series1-spark-fundamentals
@@ -219,7 +219,7 @@ series:
       # readStream, triggers, output modes, and checkpointing as the thing that makes it
       # restartable. MICRO-BATCH is the model, and the honest comparison with Flink's
       # record-at-a-time processing belongs here in one paragraph.
-      # SEAM: ETL Series 3 · 20 owns event time and watermarks as theory. Do not re-teach them.
+      # SEAM: ETL Series 3 · 42 owns event time and watermarks as theory. Do not re-teach them.
       - n: "05"
         slug: structured-streaming
         title: "Structured Streaming — The Same API Over an Unbounded Table, in Micro-Batches"
