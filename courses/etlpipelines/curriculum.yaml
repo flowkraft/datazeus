@@ -3,7 +3,7 @@
 #
 # The job this track teaches: get data from where it is to where it's useful, repeatedly,
 # without losing or duplicating a row. Series 1 moves it safely, Series 2 keeps it
-# maintainable, Series 3 loads a warehouse at volume, and Series 4 asks every one of those
+# maintainable, Series 3 loads at production volume, and Series 4 asks every one of those
 # questions again for data that never ends.
 #
 # NOTE WHAT IS NOT HERE, because the series names used to imply it: RUNNING the pipeline in
@@ -29,6 +29,13 @@
 # WHY BATCH FIRST: a batch has an end, so you can count what went in and what came out. Every
 # correctness idea in this course is easier to see when the thing being checked has finished.
 # Series 4 removes that ending and asks all the same questions again.
+#
+# ONE HONEST EXCEPTION, AND IT IS 3 · 15. Log-based CDC reads the database's WAL or binlog,
+# and that feed is unbounded — it IS a stream by episode 20's own definition. What keeps the
+# episode in a batch series is the CADENCE, not the source: an unbounded feed can be consumed
+# in bounded chunks, and the standard warehouse shape is Debezium into Kafka followed by an
+# hourly load. Do not let anyone "simplify" this into "CDC is batch". It is a stream you are
+# choosing to read a batch at a time, and that distinction is the whole of episode 20.
 
 course: learn-etl-pipelines
 track: etlpipelines
@@ -333,20 +340,35 @@ series:
         core: true
         tags: ["project"]
         status: planned
-  # RENAMED 2026-09-02, from "Production Data Flow". That name promised OPERATIONS, and this
-  # series has none: no monitoring, no alerting, no on-call, no scheduling. The course's own
-  # excludes give all of that away — "cron internals, monitoring, alerting and on-call:
-  # covered in Data Ops; here a pipeline just gets handed to the scheduler." A series title
-  # that claims a subject its own course has excluded is the worst kind of wrong, because a
-  # reader looking for production operations would stop here and find none.
+  # RENAMED TWICE ON 2026-09-02, and the second rename corrects the first. Both attempts are
+  # recorded because the pair is more instructive than either.
   #
-  # WHAT IT ACTUALLY IS, and what its tagline said all along: loading a warehouse — a star
-  # schema, Type 2 history, changes captured from the log — at volume, and being able to redo
-  # the whole month. Every technique in it is batch.
+  # IT WAS "Production Data Flow". Wrong, because it promised OPERATIONS this series does not
+  # have — no monitoring, no alerting, no on-call, no scheduling — and the course's own
+  # excludes hand all of that to Data Ops ("cron internals, monitoring, alerting and on-call").
+  # A title claiming a subject its own course has excluded is the worst kind of wrong: a reader
+  # looking for production operations stops here and finds none.
   #
-  # THE TAGLINE IS UNCHANGED because it was already accurate. Only the title was overselling.
-  - slug: series3-loading-a-warehouse
-    title: Loading a Warehouse
+  # THEN IT WAS "Loading a Warehouse". Also wrong, in the opposite direction — too NARROW.
+  # Only three of the ten episodes are actually about a warehouse (05 star schema, 10 SCD Type
+  # 2, 45 the project). Backfills, idempotent MERGE at scale, contracts and lineage, and bulk
+  # loading are not warehouse topics at all; they are what any load needs once it is real. The
+  # fix threw out the accurate half of the old name along with the inaccurate half.
+  #
+  # AND IT MADE AN EPISODE LOOK MISPLACED THAT IS NOT. 20 ("Streaming vs Batch") reads as an
+  # intruder in a series called "Loading a Warehouse" and reads as a natural consequence in one
+  # about loading generally — 15 teaches a technique that raises the question, 20 answers it.
+  # The episode never moved; the name shrank around it.
+  #
+  # SO: "Loading at Production Volume". "Loading" scopes it, which is what stops "production"
+  # being misread as monitoring and on-call — that was the whole failure of the first name.
+  # "Volume" is what actually unifies backfills, MERGE at scale, throughput and observability:
+  # they are the things a load needs when it stops being a demo.
+  #
+  # THE TAGLINE NEVER CHANGED THROUGH ANY OF THIS, and that is the tell — it was accurate all
+  # along, and only the titles were drifting.
+  - slug: series3-loading-at-production-volume
+    title: Loading at Production Volume
     tagline: load a star schema, track changes, and re-run a whole month
     level: advanced
     episodes:
@@ -397,12 +419,26 @@ series:
       #      explained until 20, the very next episode. It is the ONLY place in Series 1 to 3
       #      where that happens, so it was cheap to remove rather than to excuse.
       #
-      #   2. WORSE, IT CONTRADICTED THE NEXT EPISODE'S ARGUMENT. Episode 20's thesis is that
-      #      most "we need streaming" turns out to be "we need hourly instead of daily —
-      #      which CDC already gives you". That only holds if CDC IS NOT STREAMING. Log-based
-      #      CDC produces a CHANGE FEED, and you may consume it hourly, nightly or
-      #      continuously; the capture and the cadence are separate choices. A title that
-      #      welds them together teaches a conflation the next episode then has to undo.
+      #   2. WORSE, IT WELDED TOGETHER THREE THINGS THE NEXT EPISODE HAS TO PULL APART. Be
+      #      precise here, because a first draft of this comment was not and claimed "CDC is
+      #      not streaming", which is false:
+      #
+      #        THE CAPTURE      log-based CDC reads the WAL or binlog. That feed is UNBOUNDED
+      #                         and ordered — by episode 20's own definition it IS a stream.
+      #                         There is no honest way to call it bounded.
+      #        THE CADENCE      you decide how often to consume it: continuously, hourly, or
+      #                         nightly. An unbounded feed can be read in bounded chunks.
+      #        THE MACHINERY    and therefore whether you need a stream PROCESSOR — state,
+      #                         windows, watermarks — or just "read since last offset, apply,
+      #                         stop".
+      #
+      #      EPISODE 20'S THESIS IS ONLY ABOUT THE THIRD ONE. Most "we need streaming" means
+      #      "we need hourly instead of daily", and CDC delivers that without any streaming
+      #      machinery at all — Debezium into Kafka, then an hourly load, which is the standard
+      #      warehouse shape and the reason this episode sits in a batch series.
+      #
+      #      "Stream the Deltas" as a title collapsed capture into cadence, and left a reader
+      #      concluding that adopting CDC commits them to a stream processor. It does not.
       #
       # THE NEW TITLE ALSO SEPARATES IT FROM SERIES 1 · 35 ("Incremental Loads & Watermarks —
       # Only What Changed"), which a reader could otherwise mistake it for. The difference is
@@ -583,7 +619,7 @@ series:
   # TITLE: "Streaming Pipelines", plainly. An earlier draft called it "Pipelines That Never
   # End", which is a poetic paraphrase of "unbounded" — nobody scanning for streaming would
   # find it, and it would have been the only clever series title in the academy. Its siblings
-  # are "ETL Fundamentals", "Pipelines You Can Maintain" and "Loading a Warehouse". The tagline is
+  # are "ETL Fundamentals", "Pipelines You Can Maintain" and "Loading at Production Volume". The
   # where the idea gets to be said well.
   - slug: series4-streaming-pipelines
     title: Streaming Pipelines

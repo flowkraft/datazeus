@@ -1,11 +1,11 @@
 ---
-title: "ETL vs ELT — Where the Transform Should Run, Now That You Have Done Both"
+title: "SCD Type 2 Loads — Keep History Without Duplicating It"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
 topic: "learn-etl-pipelines"
 tags: []
 level: "advanced"
-module: "series3-loading-a-warehouse"
-order: 0
+module: "series3-loading-at-production-volume"
+order: 10
 published: false
 ---
 
@@ -16,7 +16,7 @@ published: false
 
     READ FIRST
       courses/etlpipelines/curriculum.yaml   the track's decisions, in its header
-      tests/src/koans/groovy/datazeus/etlpipelines/series3/_00/EltPushDownKoans.groovy
+      tests/src/koans/groovy/datazeus/etlpipelines/series3/_10/Scd2LoadsInPracticeKoans.groovy
 
     ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
     This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
@@ -27,10 +27,11 @@ published: false
 
     ── WHERE THIS SITS ─────────────────────────────────────────────────────
     ETL & Data Pipelines · Production Data Flow (advanced) — "load a star schema, track changes, and re-run a whole month"
-      before:  (first in the series)
-      THIS:    ELT — Push the Transform Down into the Warehouse
-      after:   Building the Star Schema — SQLite → DuckDB and ClickHouse, Hands-On
-    NOT core — worth learning, blocks nobody.
+      before:  Building the Star Schema — SQLite → DuckDB and ClickHouse, Hands-On
+      THIS:    SCD Type 2 Loads — Keep History Without Duplicating It
+      after:   Change Data Capture — Stream the Deltas Instead of Reloading
+    CORE — on the shortest path to being productive. Someone will read only
+    the core episodes, so this one has to stand alone.
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
     GOAL: TODO — one sentence, the thing they can do afterwards that they could not before.
@@ -38,9 +39,9 @@ published: false
     later. If you cannot answer that, the episode probably should not exist.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
-      koan:choose
-      koan:count:scanned
-      koan file: tests/src/koans/groovy/datazeus/etlpipelines/series3/_00/EltPushDownKoans.groovy
+      koan:rerun
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/etlpipelines/series3/_10/Scd2LoadsInPracticeKoans.groovy
    ========================================================================== */}
 
 ## The situation this lesson prepares you for

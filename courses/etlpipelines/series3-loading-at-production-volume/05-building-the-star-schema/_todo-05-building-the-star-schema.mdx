@@ -1,11 +1,11 @@
 ---
-title: "Project — Orchestrate the Full Northwind Pipeline End to End"
+title: "Building the Star Schema — Loading One From SQLite Into DuckDB and ClickHouse"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
 topic: "learn-etl-pipelines"
-tags: ["project"]
+tags: []
 level: "advanced"
-module: "series3-loading-a-warehouse"
-order: 45
+module: "series3-loading-at-production-volume"
+order: 5
 published: false
 ---
 
@@ -16,7 +16,7 @@ published: false
 
     READ FIRST
       courses/etlpipelines/curriculum.yaml   the track's decisions, in its header
-      tests/src/koans/groovy/datazeus/etlpipelines/series3/_45/ProjectOrchestrateNorthwindKoans.groovy
+      tests/src/koans/groovy/datazeus/etlpipelines/series3/_05/BuildingTheStarSchemaKoans.groovy
 
     ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
     This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
@@ -27,13 +27,11 @@ published: false
 
     ── WHERE THIS SITS ─────────────────────────────────────────────────────
     ETL & Data Pipelines · Production Data Flow (advanced) — "load a star schema, track changes, and re-run a whole month"
-      before:  Bulk Loading & Parallelism — COPY, Partitions and Throughput
-      THIS:    Project — Orchestrate the Full Northwind Pipeline End to End
-      after:   (last in the series)
+      before:  ELT — Push the Transform Down into the Warehouse
+      THIS:    Building the Star Schema — SQLite → DuckDB and ClickHouse, Hands-On
+      after:   SCD Type 2 Loads — Keep History Without Duplicating It
     CORE — on the shortest path to being productive. Someone will read only
     the core episodes, so this one has to stand alone.
-    THIS IS THE SERIES PROJECT — not a new subject. Everything in the series,
-    applied once, graded by a number the reader can check by hand.
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
     GOAL: TODO — one sentence, the thing they can do afterwards that they could not before.
@@ -42,9 +40,8 @@ published: false
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:author
-      koan:rerun
-      rundeck
-      koan file: tests/src/koans/groovy/datazeus/etlpipelines/series3/_45/ProjectOrchestrateNorthwindKoans.groovy
+      duckdb
+      koan file: tests/src/koans/groovy/datazeus/etlpipelines/series3/_05/BuildingTheStarSchemaKoans.groovy
    ========================================================================== */}
 
 ## The situation this lesson prepares you for
