@@ -156,6 +156,14 @@ cards:
       front: "A column has 4 distinct real values and 21 empty cells. <code>SELECT DISTINCT col</code> returns 5 rows. What does <code>count(DISTINCT col)</code> return?"
       back: "4. DISTINCT keeps one row standing for all the empties, but count of a COLUMN never counts empties, with or without DISTINCT. So the row count and the count disagree by one, and both are right: \"which values appear\" and \"how many values appear\" are different questions."
 
+  # ── 8b. THE CURE FOR THE BLANK TILE — the loop back to lesson 25 ──
+  # 25 raised this and could only diagnose it ("put a COUNT beside it"); this deck is where
+  # the fix finally has a name. The card tests PLACEMENT, not the function, because the
+  # function is easy and the placement is what people get wrong.
+  - basic:
+      front: "A dashboard tile reads <code>SELECT sum(amount) FROM orders WHERE country = 'Japan'</code> and shows blank, not 0 — there are no Japanese orders at all. Two fixes are proposed: <code>sum(COALESCE(amount, 0))</code> and <code>COALESCE(sum(amount), 0)</code>. Which one works, and why does the other not?"
+      back: "<code>COALESCE(sum(amount), 0)</code> — wrap the AGGREGATE. The blank is not a missing value inside a column, it is the answer to a question asked of NO ROWS, and sum over an empty set is NULL. <code>sum(COALESCE(amount, 0))</code> patches holes in the column, which sum already skips, so it changes nothing at all here — there are no rows for it to act on. Same rule as the label: wrap the piece that can be missing. Here that piece is the RESULT. And keep a <code>count(*)</code> beside it: a 0 you wrote and a 0 the data contained look identical on a slide."
+
   # ── 9. THE BOUNDARY SOMEBODY WILL CROSS ──
   # Deliberately here: "just make the column NOT NULL" is the wrong answer to a query
   # problem, and it is the first thing a confident beginner reaches for.

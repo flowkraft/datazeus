@@ -27,6 +27,15 @@ published: false
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
     GOAL: answer "last 30 days", "this month", "by quarter" and get the boundaries right.
     SQL: date literals, CURRENT_DATE, INTERVAL, date_trunc, EXTRACT, the half-open range habit
+    AND THE ARITHMETIC ITSELF, which the scope above assumes rather than states: date MINUS
+    date does not give a number, it gives an INTERVAL (or an integer day count, depending on
+    the types) — and that surprise is what makes "days to ship" go wrong. Series 1 · 45
+    already CASTs both sides to DATE for exactly this reason, so this episode owes the
+    explanation that one borrowed. Cover date + INTERVAL, date - date, and AGE() with the
+    caveat that AGE is PostgreSQL's own (Series 4 · 05 carries the portable spelling).
+    Named because a competitor audit (2026-09-02) found three of its sixty episodes on this
+    one idea — "Adding And Subtracting With Dates", "Extracting Fields From Timestamp",
+    "Age Function" — which is a fair signal that beginners get stuck here.
     (>= start AND < next_start) that never miscounts a month.
     Boundaries are the whole episode. BETWEEN on timestamps quietly drops the last day, and that is
     a wrong number nobody questions.

@@ -323,6 +323,54 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     }
 
     @Unroll
+    def "[#engine] COALESCE around the AGGREGATE fills the empty answer: Japan is 0, blank, 0"() {
+        // THE LOOP BACK TO EPISODE 25, and the reason this assertion exists. 25 showed this
+        // exact query and left it unresolved: "count says 0, sum says nothing at all — this
+        // is how a dashboard tile ends up blank instead of showing zero." It taught the
+        // COUNT beside it as the DIAGNOSIS. This episode owes the CURE, and the cure is
+        // COALESCE around the aggregate rather than around the column.
+        given:
+        def row = sqlFor(engine).firstRow(script("japan-freight-filled"))
+
+        expect: "no order has ever shipped to Japan, and the query still returns ONE row"
+        (row.Orders as int) == 0
+
+        and: "sum over an empty set is NULL — not zero. That blank IS the bug 25 described"
+        row.Freight == null
+
+        and: "and COALESCE around the SUM is what turns it into a number a tile can print"
+        dec(row."Freight, filled") == dec(0)
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] and the placement matters: INSIDE the aggregate changes nothing"() {
+        // The article claims sum(COALESCE(col,0)) is POINTLESS while COALESCE(sum(col),0) is
+        // the fix. That is a falsifiable claim about two different queries, so it is asserted
+        // rather than asserted-by-prose. Over rows that exist the two spellings agree,
+        // because sum already skips empty cells; over NO rows they disagree, which is the
+        // entire point.
+        expect: "over real rows the two are identical — so the inner form buys nothing"
+        dec(sqlFor(engine).firstRow('''SELECT sum("Freight") AS a,
+                                              sum(COALESCE("Freight", 0)) AS b
+                                       FROM "Orders"''').a) ==
+        dec(sqlFor(engine).firstRow('''SELECT sum("Freight") AS a,
+                                              sum(COALESCE("Freight", 0)) AS b
+                                       FROM "Orders"''').b)
+
+        and: "over NO rows the inner form is still NULL, and only the outer one answers"
+        sqlFor(engine).firstRow('''SELECT sum(COALESCE("Freight", 0)) AS inner_form
+                                   FROM "Orders" WHERE "ShipCountry" = 'Japan' ''').inner_form == null
+        dec(sqlFor(engine).firstRow('''SELECT COALESCE(sum("Freight"), 0) AS outer_form
+                                       FROM "Orders" WHERE "ShipCountry" = 'Japan' ''').outer_form) == dec(0)
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
     def "[#engine] NULLIF turns a value into a NULL — the two zero-stock lines"() {
         given:
         def rows = sqlFor(engine).rows(script("nullif-in-stock"))

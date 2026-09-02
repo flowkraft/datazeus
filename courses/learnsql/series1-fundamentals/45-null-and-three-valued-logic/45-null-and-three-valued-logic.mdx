@@ -232,10 +232,10 @@ LIMIT 4;
 
 | City        | Region | Label |
 | ----------- | ------ | ----- |
-| Berlin      |        |       |
-| México D.F. |        |       |
-| México D.F. |        |       |
-| London      |        |       |
+| Berlin      | `[NULL]` | `[NULL]` |
+| México D.F. | `[NULL]` | `[NULL]` |
+| México D.F. | `[NULL]` | `[NULL]` |
+| London      | `[NULL]` | `[NULL]` |
 
 The city is right there on every row. The label is gone — not the region part of it, **the whole line**.
 
@@ -276,8 +276,8 @@ LIMIT 3;
 
 | ProductName             | InStock |
 | ----------------------- | ------- |
-| Gorgonzola Telino       |         |
-| Thuringer Rostbratwurst |         |
+| Gorgonzola Telino       | `[NULL]` |
+| Thuringer Rostbratwurst | `[NULL]` |
 | Scottish Longbreads     | 6       |
 
 Two reasons you would want that.
@@ -334,6 +334,41 @@ And they are the slow ones. The average says the company ships in under six days
 
 The habit that follows is cheap: **when an average matters, print the count beside it.** `count(*)` and `count(<the column>)` in the same query answer the reader's first question before they ask it.
 
+### And now you can fix the blank tile
+
+Lesson 25 left you with one more empty answer and no cure for it. We have never shipped an order to Japan, so `WHERE` throws away all 79 rows — and the query still comes back with a row:
+
+```sql file=./scripts/japan-freight-filled.sql
+SELECT count(*) AS "Orders",
+       sum("Freight") AS "Freight",
+       COALESCE(sum("Freight"), 0) AS "Freight, filled"
+FROM "Orders"
+WHERE "ShipCountry" = 'Japan';
+```
+
+| Orders | Freight | Freight, filled |
+| -----: | ------: | --------------: |
+| 0      | `[NULL]` | 0               |
+
+`count` says `0`, because zero of something is a real number. `sum` has nothing to add up, so there is no total and SQL will not invent one — that is the blank in the middle column, and it is what leaves a dashboard tile empty where a `0` belonged.
+
+Now you know the word for it. `COALESCE(sum(...), 0)` says *"if there was nothing to add up, show a zero"* — and it is your decision to say so, made in the open, rather than a blank arriving by accident.
+
+**Where you put it decides what it means**, and this is the same rule as the label above, one level up:
+
+```sql
+sum(COALESCE("Freight", 0))   -- fills the HOLES IN THE COLUMN. Pointless:
+                              -- sum already skips empty cells, so the answer
+                              -- is identical either way.
+COALESCE(sum("Freight"), 0)   -- fills the EMPTY ANSWER. This is the one you
+                              -- wanted: it only ever does anything when there
+                              -- were no rows at all.
+```
+
+Wrap the hole, not the wall around it. Here the hole is the *result*, not the column.
+
+And keep the honesty check from lesson 25 beside it: a `0` you wrote with `COALESCE` and a `0` the data really contained look identical on a slide. If the difference matters — and for "revenue in Japan" it does — the `count(*)` in that same query is what tells the two apart.
+
 ## The one place NULLs *are* treated as equal
 
 Everything above says a `NULL` is not equal to another `NULL`. There is one family of exceptions, and it surprises people because it looks like a contradiction. It is not — it is a different operation, one that groups rather than compares.
@@ -363,7 +398,7 @@ ORDER BY "Customers" DESC, "Region";
 
 | Region        | Customers |
 | ------------- | --------- |
-|               | 21        |
+| `[NULL]` | 21        |
 | Isle of Wight | 1         |
 | Lara          | 1         |
 | OR            | 1         |

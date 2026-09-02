@@ -207,6 +207,30 @@ excludes:
     where: "covered in Data Ops, Series 2 — Running PostgreSQL in Production. In this course, Series 2 · 40 covers the COMMIT and ROLLBACK basics"
   - topic: "ROLLUP, CUBE, GROUPING SETS & OLAP cubes"
     where: "covered in Data Warehousing, Series 1 · 30 for the subtotal operators, and Data Warehousing, Series 2 · 20 for cubes"
+  # ADDED 2026-09-02 after auditing Amigoscode's 60-episode PostgreSQL course, which spends
+  # an episode on "Exporting Query Results to CSV". We deliberately do not, and the reason is
+  # the academy-wide tool rule at the top of this file: none of the three ways to do it is
+  # SQL you would carry anywhere.
+  #   CloudBeaver's export button — a product UI, and this is not a CloudBeaver course
+  #   psql's \copy                — a CLIENT command, not SQL; it does not parse in any other
+  #                                 client, and it is not in the standard
+  #   COPY … TO '/path'           — real SQL, but it writes on the SERVER and needs
+  #                                 file-system rights a learner on a managed database or a
+  #                                 shared instance simply does not have
+  # An episode teaching it would therefore be teaching a tool, and would leave a reader with
+  # nothing true away from ours — which is the one thing every episode here must do.
+  #
+  # AND IT DOES HAVE A HOME, which is why this points somewhere instead of dead-ending: ETL
+  # & Data Pipelines Series 1 · 10 is "Sources & Sinks — Files, APIs and Databases as
+  # Connections", i.e. the episode whose whole subject is a file at either end of a
+  # connection, and Series 1 · 05 there loads a CSV INTO a table. Getting a result set out
+  # to a file is the same skill pointed the other way, taught where the permissions, the
+  # scheduling and the row-count check that must go with it already live.
+  # Checked 2026-09-02: Data Ops was the other candidate and is NOT it — its Series 2 is
+  # running the server (MVCC, locks, pooling, backup, replication), with no bulk-move
+  # episode at all.
+  - topic: "Exporting query results to a file (COPY, \\copy, client export)"
+    where: "covered in ETL & Data Pipelines, Series 1 · 10, where a file is a sink you write to and the permissions and row-count checks come with it. In this course a result set is something you read, not a file you produce"
 
 series:
   - slug: series1-fundamentals
@@ -351,13 +375,21 @@ series:
       # borrows IS NULL / IS NOT NULL on trust, exactly as episode 15 did.
       #
       # NOT TAUGHT HERE, and each was considered: HAVING is named once as the answer to "can I
-      # put an aggregate in WHERE" and left to 35; GROUP BY is named twice and shown never;
-      # ROUND is not used at all, so the article prints AVG's full sixteen digits and explains
-      # them rather than hiding them. STRING_AGG, STDDEV and the statistical set are Series 2.
+      # put an aggregate in WHERE" and left to 35; GROUP BY is named twice and shown never.
+      # STRING_AGG, STDDEV and the statistical set are Series 2.
+      #
+      # ROUND *IS* USED, and this line used to say the opposite — corrected 2026-09-02 after
+      # auditing the metadata against the built episode. The plan had been to defer rounding
+      # entirely; what shipped shows AVG's full sixteen digits FIRST and explains why they
+      # are there (division is the only one of the five that invents digits), and only then
+      # closes with ROUND(avg("Freight"), 2) -> 50.49 as the fix the learner already owns
+      # from episode 20. That order is the point: explain the number, then tidy it. Both
+      # halves are in the article and on screen (the `avg-rounded` slide, "AND YOU ALREADY
+      # KNOW THE FIX"), and the video file's own header records the same decision.
       - n: "25"
         slug: aggregate-functions
-        title: "COUNT, SUM, AVG, MIN, MAX — Turning Many Rows Into One Number"
-        short: "COUNT, SUM, AVG, MIN, MAX — many rows, one number"
+        title: "Aggregate Functions: COUNT, SUM, AVG, MIN, MAX — Turning Many Rows Into One Number"
+        short: "Aggregate Functions — many rows, one number"
         hands_on: ["koan:complete", "koan:predict"]
         core: true
         status: published
@@ -508,6 +540,12 @@ series:
         hands_on: ["koan:complete", "koan:predict"]
         core: true
         status: planned
+      # DATE ARITHMETIC IS PART OF THIS EPISODE, not a footnote — the same competitor audit
+      # (2026-09-02) found three of sixty episodes spent on it, which is a fair signal that
+      # beginners get stuck. `date - date` yields an INTERVAL rather than a number, and that
+      # is what makes "days to ship" go wrong; Series 1 · 45 already CASTs both sides to DATE
+      # to dodge it, so this episode owes the explanation that one borrowed. AGE() too, with
+      # the caveat that it is PostgreSQL's own. Details in the episode's _todo scope block.
       - n: "20"
         slug: dates-and-times
         title: "Dates & Times — Getting Ranges and Boundaries Right"
@@ -533,6 +571,31 @@ series:
         status: planned
       # The only episode that writes data — placed late, once filtering is second nature.
       # COMMIT/ROLLBACK basics live here; isolation levels belong to a future ops track.
+      #
+      # MUST COVER `INSERT … ON CONFLICT`, and this is the one real hole a competitor audit
+      # found (Amigoscode's 60-episode PostgreSQL course, 2026-09-02 — it spends TWO of its
+      # sixty on this: "On Conflict Do Nothing" and "Upsert"). Today UPSERT appears in this
+      # course ONLY at Series 4 · 05, which is cross-vendor, advanced, and says of itself
+      # that it is "not required to be good at SQL" — so a learner on the core path never
+      # meets the most common write in production.
+      #   ON CONFLICT DO NOTHING  — the idempotent load: re-run the same INSERT and get no
+      #                             duplicates and no error, which is what a re-run of any
+      #                             import script needs.
+      #   ON CONFLICT … DO UPDATE — insert-or-update in one statement, without the
+      #                             SELECT-then-branch race a beginner writes instead.
+      # It belongs HERE and not in its own episode: this one already promises "change the
+      # data, SAFELY", and an import that silently doubles its rows on the second run is
+      # exactly that failure. Series 4 · 05 then stays what it is — how the SAME idea is
+      # spelled MERGE on the other four engines.
+      #
+      # DO NOT LET IT GROW INTO A PIPELINE LESSON. ETL & Data Pipelines, Series 1 · 25 is
+      # "Idempotency — Re-Runnable Loads with TRUNCATE+INSERT and MERGE", which is this same
+      # problem at the scale of a scheduled job, with the staging table and the row-count
+      # check around it. THIS episode owes only the statement and what it does to one table;
+      # the moment it starts discussing load strategies it is teaching that course's lesson.
+      # (The audit found nothing else missing: COALESCE/NULLIF are Series 1 · 45, LIKE/ILIKE
+      # are Series 1 · 10, ROUND/CAST are Series 2 · 25, EXTRACT is Series 2 · 20, and every
+      # key/constraint/DDL topic is deliberately Learn Data Modeling's.)
       - n: "40"
         slug: insert-update-delete
         title: "INSERT, UPDATE, DELETE & Transactions — Change the Data, Safely"

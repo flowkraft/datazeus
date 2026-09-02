@@ -144,8 +144,28 @@ class AggregateFunctionsSpec extends NorthwindGateSpec {
 
     @Unroll
     def "[#engine] SUM: 3988.5200 paid to the couriers across all 79 orders"() {
+        given:
+        def total = sqlFor(engine).firstRow(script("total-freight"))."Total freight"
+
         expect:
-        dec(sqlFor(engine).firstRow(script("total-freight"))."Total freight") == dec("3988.5200")
+        dec(total) == dec("3988.5200")
+
+        and: "AND IT STAYS EXACT, which is the claim the AVG slide and the article are built on:"
+        and: "addition cannot invent a digit that was not in one of its operands, so the total"
+        and: "carries exactly the decimal places the column carries. THAT is what separates sum"
+        and: "from avg — not 'stored value versus calculation', which is false of sum and was on"
+        and: "the slide until 2026-09-01. avg DIVIDES, and division is the only one of the four"
+        and: "that can produce digits the data never had."
+        and: "THIS IS A VALUE FACT, NOT A SCREEN FACT — and the two came apart on 2026-09-01."
+        and: "The driver hands back 3988.5200 with scale 4, which is what is asserted below."
+        and: "CloudBeaver TRIMS trailing zeros, so the learner reads 3988.52 — two places, not"
+        and: "four. So the slide and the article may NOT say 'it keeps four decimal places';"
+        and: "they say the total is still an ordinary money figure, which is what is on screen."
+        and: "Keep the assertion — it is the reason avg's 16 digits are worth a slide — but do"
+        and: "not let the wording leak back into the caption. See decimalAsShownInCloudBeaver."
+        def freight = sqlFor(engine).firstRow('SELECT "Freight" AS f FROM "Orders" ORDER BY "OrderID" LIMIT 1').f
+        scaleOf(total) == scaleOf(freight)
+        scaleOf(total) == 4
 
         where:
         engine << ENGINES
@@ -310,6 +330,20 @@ class AggregateFunctionsSpec extends NorthwindGateSpec {
 
         and: "and it is NOT the number the unfiltered query gave — which is the whole point"
         dec4(r."Average freight") != dec4(sqlFor(engine).firstRow(script("average-freight"))."Average freight")
+
+        and: "THE SCRIPT PRINTS BOTH COUNTS, and the reason is the correction made on 2026-09-01."
+        and: "count(*) is NOT avg's denominator — avg divides by the count of the COLUMN it"
+        and: "averaged. Here the two agree, and they agree only because \"Freight\" has no gaps."
+        and: "The slide used to print count(*) alone beside the average and call it 'the"
+        and: "denominator', which is true of this data and false in general — exactly the trap"
+        and: "the episode is about. Printing both is what makes the habit transferable: equal"
+        and: "means the average covered every row, different means you have just found the gap."
+        r."Freight values" == 52
+        r."Freight values" == r."Shipped orders"
+
+        and: "and that equality is a PROPERTY OF THIS COLUMN, not a rule — assert it as such, so"
+        and: "the day \"Freight\" gains a NULL this goes red instead of the lesson going quietly wrong"
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Orders" WHERE "Freight" IS NULL').n == 0
 
         where:
         engine << ENGINES
@@ -647,5 +681,15 @@ class AggregateFunctionsSpec extends NorthwindGateSpec {
      *  digits — either way the gate starts failing for a reason no learner would care about. */
     private static BigDecimal dec4(Object v) {
         new BigDecimal(v.toString()).setScale(4, RoundingMode.HALF_UP)
+    }
+
+    /** HOW MANY DECIMAL PLACES A VALUE WAS PRINTED WITH — deliberately read off the STRING and
+     *  not off BigDecimal.scale(), because scale() is a property of the Java object the driver
+     *  chose to build and the claim on the slide is about what the learner SEES. dec() above
+     *  strips trailing zeros by design, so it cannot be used here: 3988.5200 and 3988.52 are
+     *  the same value and only one of them is the same rendering. */
+    private static int scaleOf(Object v) {
+        String s = v.toString()
+        s.contains(".") ? s.substring(s.indexOf(".") + 1).length() : 0
     }
 }

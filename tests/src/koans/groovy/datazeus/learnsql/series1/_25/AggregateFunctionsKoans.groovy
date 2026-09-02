@@ -37,7 +37,38 @@ import spock.lang.Stepwise
  *
  * These run on DuckDB. Every one is written so it returns the SAME answer against the
  * PostgreSQL in CloudBeaver — including koan 4, whose average comes out exactly 29.25 on
- * both because 585 units divide evenly by twenty lines.
+ * both because 585 units divide evenly by twenty lines. AggregateFunctionsSpec asserts
+ * each koan's solved form on BOTH engines, so a koan cannot go green here and disagree
+ * with the database you actually type into.
+ *
+ * ── WHY THERE IS NO KOAN FOR THE ERROR ITSELF ───────────────────────────────
+ *
+ * The lesson spends three slides on the wall: ask for `max("UnitPrice")` and
+ * `"ProductName"` together and the database REFUSES, naming GROUP BY. Koan 9 teaches the
+ * way round it — sort and take one — but nothing here asks you to reproduce the error.
+ *
+ * That is on purpose, and the reason is mechanical. A koan compares a RESULT. A query
+ * that refuses to run has no result, so the only thing left to check is the message —
+ * and the two engines word it differently: DuckDB says "Binder Error: column ... must
+ * appear in the GROUP BY clause", PostgreSQL raises SQLSTATE 42803. A koan built on
+ * either wording would be a koan about an error string rather than about SQL. The
+ * refusal is asserted where that IS checkable — AggregateFunctionsSpec proves the query
+ * fails on both engines and that both messages name GROUP BY, and it pins PostgreSQL's
+ * exact wording separately, because CloudBeaver is what you are typing into.
+ *
+ * The same reasoning, the other way round, is why koan 4 divides evenly: PostgreSQL's
+ * avg returns numeric (50.4875949367088608) and DuckDB's a double (50.48759493670886),
+ * so a koan on a ragged average would demand digits one of your two engines never
+ * prints. Where the engines disagree, there is no koan — the rule lives in the video,
+ * the written lesson and the flashcards, where nothing has to run for it to be true.
+ *
+ * ── AND WHY ROUND AND EXPRESSIONS ARE NOT HERE EITHER ───────────────────────
+ *
+ * The lesson uses both — `ROUND(avg(...), 2)` and `sum("UnitPrice" * "UnitsInStock")` —
+ * and neither gets a koan, because neither is THIS episode's idea. Both were episode
+ * 20's, and they appear here as revision: the point being made is that an aggregate
+ * takes an expression like anything else, not that you need practice at multiplication.
+ * Ten koans on ten new ideas beats twelve where two are last month's.
  *
  * ── RELEVANT SCHEMA ─────────────────────────────────────────────────────────
  *
@@ -142,9 +173,22 @@ class AggregateFunctionsKoans extends KoanBase {
         '''
     }
 
-    // 6) THE ONE THIS LESSON EXISTS FOR. count(*) counts ROWS. count(column) counts VALUES —
-    //    and an empty cell is not a value, so it is not counted. Fill in the column whose
-    //    empties make the two numbers differ.
+    // 6) THE ONE THIS LESSON EXISTS FOR — and like the lesson, this one is a DIAGNOSIS before
+    //    it is a fill-in.
+    //
+    //    Somebody was asked how many customers we can reach by fax. They wrote:
+    //
+    //        SELECT count(*) AS "With a fax" FROM "Customers"
+    //
+    //    and reported 25. Nothing errored. The number was real, the alias said what it was
+    //    supposed to be, and the answer was wrong by seven.
+    //
+    //    Work out WHY before you fix it: count(*) counts ROWS — it never looks inside them,
+    //    so it cannot know a cell is empty. count(column) counts VALUES, and an empty cell is
+    //    not a value, so it is skipped. The two are the same number only when the column has
+    //    no gaps, which is exactly when nobody notices the difference.
+    //
+    //    Fill in the column whose empties make the two numbers come apart.
     //    (Predict first: the schema note above tells you how many customers have no fax. Work
     //     out the second number before you run it, and you have understood the whole slide.)
     def "count(*) counts rows, count(column) counts values"() {

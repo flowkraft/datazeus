@@ -174,7 +174,7 @@ ORDER BY e."FirstName", o."OrderDate";
 
 | FirstName | OrderID | OrderDate  |
 | --------- | ------- | ---------- |
-| Andrew    |         |            |
+| Andrew    | `[NULL]` | `[NULL]` |
 | Janet     | 4       | 2024-06-05 |
 | Janet     | 7       | 2024-06-12 |
 | Nancy     | 6       | 2024-06-07 |
@@ -289,12 +289,12 @@ ORDER BY e."FirstName", o."OrderDate";
 
 | FirstName | OrderID | OrderDate  |
 | --------- | ------- | ---------- |
-| Andrew    |         |            |
+| Andrew    | `[NULL]` | `[NULL]` |
 | Janet     | 4       | 2024-06-05 |
 | Janet     | 7       | 2024-06-12 |
 | Nancy     | 6       | 2024-06-07 |
 | Nancy     | 5       | 2024-06-10 |
-|           | 8       | 2022-12-05 |
+| `[NULL]` | 8       | 2022-12-05 |
 | …         | …       | …          |
 
 **Eighty rows** — and the number is the lesson. It decomposes exactly: four matched June orders, one employee with no June order, and then all seventy-five orders that are not June orders, each with a blank where the rep's name should be.
