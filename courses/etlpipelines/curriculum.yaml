@@ -367,6 +367,45 @@ series:
   #
   # THE TAGLINE NEVER CHANGED THROUGH ANY OF THIS, and that is the tell — it was accurate all
   # along, and only the titles were drifting.
+  #
+  # ── WHY 15 AND 20 ARE IN THIS SERIES AND NOT IN SERIES 4 ────────────────────────────────
+  # Asked three separate times on 2026-09-02, which is enough evidence that it will be asked
+  # again. Both episodes have "stream" in them and Series 4 is called Streaming Pipelines, so
+  # the instinct to move them is reasonable. Do not act on it.
+  #
+  # THE AXIS IS NOT "IS A STREAM MENTIONED". IT IS "DOES YOUR PIPELINE END".
+  #     Series 3   pipelines with RUNS. They start, they finish, and you count what went in
+  #                and what came out.
+  #     Series 4   pipelines with NO END. State must be kept, windows must close, and someone
+  #                has to decide when an answer is final.
+  #
+  # 15 (CDC): the FEED is unbounded — log-based CDC reads the WAL, and that is a stream by
+  # episode 20's own definition. But YOUR JOB IS NOT. Nothing in the episode needs state,
+  # windows or watermarks: read from the last offset, apply, stop. That is a run. Moving it to
+  # Series 4 would mean either teaching it with machinery it does not require, or leaving a
+  # batch episode inside the streaming series — which is worse, because it breaks the only
+  # rule that series has. It also has a job here: 10 is SCD Type 2, and CDC is how the changes
+  # that Type 2 history stores are captured. Capture, then store.
+  #
+  # 20 (the decision): IT IS THE GATE, AND A GATE GOES BEFORE THE DOOR. Its entire value is
+  # for the reader whose answer is NO — someone has asked them for "real-time" and they need
+  # to work out that a fifteen-minute batch would do. Inside Series 4 it would only ever be
+  # opened by people who had already decided yes, and the reader who most needed it would
+  # never see it. It is also CORE and Series 4 is 0-core, so filing it there would put the one
+  # core episode at the head of an optional series.
+  #
+  # MOVING 20 LATER IN THIS SERIES was considered on 2026-09-02 — to sit just before the
+  # project, as the bridge into Series 4 — and REJECTED ON COST, not on principle. The
+  # position at 42 is arguably slightly better; the price is renumbering an address that FIVE
+  # OTHER COURSES cite. "Series 3 · 20" is not a unique address in this academy: it also names
+  # Java & Groovy's Liquibase episode, Learn SQL's EXPLAIN, Data Warehousing's lakehouse and
+  # Data Modeling's own. Forty-five files mention the string and only thirty-five qualify it
+  # with a course name. That is a lot of exposure for a modest gain, and 20 reads well where
+  # it is: 15 teaches a technique that raises the question and 20 answers it.
+  #
+  # IF THAT MOVE IS EVER MADE, disambiguate first: only rewrite occurrences that explicitly
+  # say "ETL" or "ETL & Data Pipelines", plus the prerequisite blocks in Apache Beam, Apache
+  # Flink and Apache Kafka. Everything else means another course.
   - slug: series3-loading-at-production-volume
     title: Loading at Production Volume
     tagline: load a star schema, track changes, and re-run a whole month
