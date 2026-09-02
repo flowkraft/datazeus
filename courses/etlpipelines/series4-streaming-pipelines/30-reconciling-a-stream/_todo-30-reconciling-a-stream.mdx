@@ -1,0 +1,84 @@
+---
+title: "Reconciling a Stream — Counting Something That Has No End"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-etl-pipelines"
+tags: []
+level: "advanced"
+module: "series4-streaming-pipelines"
+order: 30
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/etlpipelines/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/etlpipelines/series4/_30/ReconcilingAStreamKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it. Whatever the reader learns must still be
+    true away from our tools — and in THIS series that matters twice over, because the
+    engines (Kafka, Flink, Beam) have courses of their own. If this episode starts
+    teaching one of them, it has stopped being about pipeline correctness.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    ETL & Data Pipelines · Streaming Pipelines (advanced) — "the same correctness, when the data never ends"
+      before:  Idempotent Sinks — Why Exactly-Once Stops at the Edge of the Stream
+      THIS:    Reconciling a Stream — Counting Something That Has No End
+      after:   Replay and Reprocessing — Rewriting History Without Double-Counting It
+    CORE.
+
+    ── THE SERIES RULE: NAME YOUR COUNTERPART ──────────────────────────────
+    Every episode here is a Series 1 or 2 episode ASKED AGAIN for data that never ends,
+    and the contrast IS the lesson — "you know this for batch; here is what changes".
+    The counterpart is named in the coverage notes below. An episode that cannot name
+    one does not belong in this series.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: TODO — one sentence, the thing they can do afterwards that they could not before.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COUNTERPART: Series 1 · 40, Row Counts & Logging — Proving the Load Did What You Think.
+     COVER: you cannot count the rows of a thing with no end. So reconciliation becomes
+     (a) counts over a CLOSED WINDOW, source against sink, once the watermark has passed;
+     (b) CONSUMER LAG as the continuous health metric, and what a rising lag actually means;
+     (c) end-to-end latency measured in event time rather than wall clock.
+     THE HABIT THIS COURSE INSISTS ON, restated: the job says out loud what it processed.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:capture
+      koan:count:rows-held
+      koan file: tests/src/koans/groovy/datazeus/etlpipelines/series4/_30/ReconcilingAStreamKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. Where possible, open on
+    the BATCH version the reader already knows, then break it. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is done in
+    the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it. In this
+    series the answer is almost always "nothing raises" — say what the silence looks
+    like. */}
+
+TODO

@@ -3,7 +3,8 @@
 #
 # The job this track teaches: get data from where it is to where it's useful, repeatedly,
 # without losing or duplicating a row. Series 1 moves it safely, Series 2 keeps it
-# maintainable, Series 3 is production flow at volume.
+# maintainable, Series 3 is production flow at volume, and Series 4 asks every one of those
+# questions again for data that never ends.
 
 course: learn-etl-pipelines
 track: etlpipelines
@@ -460,6 +461,173 @@ series:
         slug: project-orchestrate-northwind
         title: "Project — Orchestrate the Full Northwind Pipeline End to End"
         hands_on: ["koan:author", "koan:rerun", "rundeck"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  # ============================================================================
+  # WHY THIS SERIES EXISTS — added 2026-09-02, and it answers a fair challenge
+  # ============================================================================
+  # The challenge: Series 1 and 2 spend twenty-three episodes on batch, so how can two
+  # episodes (3 · 20 and 3 · 22) be enough for streaming?
+  #
+  # THE FIRST HALF OF THE ANSWER IS A CORRECTION. Those twenty-three are not batch episodes.
+  # Staging, types and casting, quality gates, deduplication, surrogate keys, load order, dead
+  # letters, row counts, orchestration — those are PIPELINE CORRECTNESS concerns, demonstrated
+  # in batch because batch is the simpler substrate. Only about four are genuinely about batch
+  # as a paradigm.
+  #
+  # THE SECOND HALF IS A COUNT. Streaming is not short-changed in this academy: Apache Kafka
+  # (16), Apache Flink (15) and Apache Beam (14) are forty-five episodes, more than batch gets.
+  # 3 · 20 and 3 · 22 are the DECISION and the VOCABULARY, not the coverage.
+  #
+  # THE REAL GAP, FOUND BY GREPPING FOR IT RATHER THAN BY INTUITION (2026-09-02). Every
+  # correctness concern this course teaches for batch has NO streaming counterpart anywhere:
+  #     deduplication   ETL 2   Kafka+Flink+Beam 0
+  #     quality gates   ETL 4                   0
+  #     surrogate keys  ETL 5                   0
+  #     load order      ETL 3                   0
+  #     backfills       ETL 3                   0
+  #     staging         ETL 3                   0
+  # The ENGINES are taught thoroughly. The DISCIPLINE of building a correct pipeline is taught
+  # only for batch. That is what this series fixes.
+  #
+  # WHY HERE AND NOT IN A NEW COURSE, OR IN FLINK:
+  #   1. THE CONTRAST IS THE LESSON. "You know deduplication for batch; here is what changes
+  #      when you cannot see the whole table" only works in the course that taught the batch
+  #      version. Standalone, it is just another deduplication episode.
+  #   2. FLINK AND KAFKA ARE ENGINE COURSES. Correctness across engines has no home in either.
+  #   3. THE SEAM IS ALREADY CROSSED — CDC at 3 · 15, and 3 · 20 and 3 · 22. This formalises
+  #      what the course already does rather than inventing a new direction.
+  #
+  # EVERY EPISODE IS A SERIES 1 OR 2 EPISODE, ASKED AGAIN. That is the whole structure, and an
+  # episode that cannot name its batch counterpart does not belong here.
+  #
+  # IT ASSUMES KAFKA SERIES 1 AND FLINK'S FIRST SERIES, but does not declare them as course
+  # prerequisites — that would force every reader through them to reach Series 1 here. Each
+  # episode points at what it needs.
+  #
+  # TITLE: "Streaming Pipelines", plainly. An earlier draft called it "Pipelines That Never
+  # End", which is a poetic paraphrase of "unbounded" — nobody scanning for streaming would
+  # find it, and it would have been the only clever series title in the academy. Its siblings
+  # are "ETL Fundamentals", "Maintainable Pipelines" and "Production Data Flow". The tagline is
+  # where the idea gets to be said well.
+  - slug: series4-streaming-pipelines
+    title: Streaming Pipelines
+    tagline: the same correctness, when the data never ends
+    level: advanced
+    episodes:
+      # COUNTERPART: Series 1 · 15, Staging.
+      # COVER: where "raw" lives when there is no landing table. THE LOG IS YOUR STAGING AREA —
+      # and unlike a staging table it has a RETENTION WINDOW, so "land raw, transform later"
+      # has a deadline. Retention against compaction as the two ways to keep it. What you can
+      # still re-derive after a week, and what is simply gone.
+      # THE DECISION: how long must raw survive for you to be able to fix a bug in the
+      # transform? That number is a retention setting, and almost nobody sets it deliberately.
+      - n: "00"
+        slug: staging-in-a-stream
+        title: "Staging in a Stream — The Log Is Your Raw Layer, and It Expires"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COUNTERPART: Series 2 · 10 (Data Quality Gates) and 2 · 25 (Errors, Retries & Dead
+      # Letters).
+      # COVER: in batch a bad row fails the job and a human looks at it in the morning. In a
+      # stream there is no job to fail and no morning — the pipeline must decide alone, at 3am,
+      # forever. QUARANTINE INSTEAD OF STOPPING: a dead-letter topic, the record plus why it
+      # was rejected, and a gate on the PROPORTION rejected rather than on any single record.
+      # THE FAILURE: one poison record that stops the consumer, so lag grows all night and
+      # nothing is processed — the streaming equivalent of a failed batch, but silent.
+      - n: "05"
+        slug: bad-records-without-a-human
+        title: "Bad Records Without a Human — Quarantine Instead of Stopping the Pipeline"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # COUNTERPART: Series 2 · 15, Deduplication & Conformance.
+      # COVER: batch dedup scans the table. A stream cannot, so dedup becomes KEYED STATE plus
+      # A RETENTION WINDOW — "one customer, one row" becomes "one customer, one row, within
+      # seven days", and that window is a business decision rather than a technical one.
+      # Exactly-once inside the engine against an idempotent key at the sink. State size as the
+      # cost, and the unbounded key space that fills a disk.
+      - n: "10"
+        slug: deduplication-with-state
+        title: "Deduplication With State — One Customer, One Row, Within Seven Days"
+        hands_on: ["koan:count:rows-held", "koan:predict"]
+        core: true
+        status: planned
+      # COUNTERPART: Series 2 · 35, Load Order — Dimensions First, Then Facts.
+      # COVER: in batch you control the order and load dimensions first. In a stream YOU DO NOT
+      # CONTROL THE ORDER, and a fact arriving before its dimension is normal rather than
+      # exceptional. The three answers: buffer the fact and wait (bounded by a timeout), emit
+      # with a placeholder and correct later, or reject. Each is a different wrong answer if
+      # you pick it by accident.
+      # THIS IS THE EPISODE A BATCH PERSON LEAST EXPECTS, and it is where the paradigm bites.
+      - n: "15"
+        slug: fact-before-dimension
+        title: "The Fact That Arrived Before Its Dimension — Load Order You Do Not Control"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COUNTERPART: Series 2 · 30, Surrogate Keys & Dimension Lookups.
+      # COVER: a batch lookup joins against a dimension that is standing still. A streaming
+      # lookup joins against one that is CHANGING WHILE YOU READ IT, so "which version of the
+      # customer" is a question with a timestamp in it. Temporal and versioned-table joins,
+      # broadcast state for a small dimension, and an external lookup with a cache plus the
+      # staleness that cache buys.
+      # SEAM: Data Modeling owns SCD Type 2 and 3 · 10 loads one in batch. This is READING one
+      # correctly as of an event's own time.
+      - n: "20"
+        slug: dimension-lookups-in-flight
+        title: "Dimension Lookups in Flight — Joining to a Table That Is Changing Under You"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COUNTERPART: Series 1 · 30, Idempotency — Re-Runnable Loads.
+      # COVER: exactly-once inside an engine is real; EXACTLY-ONCE ENDS AT THE EDGE. The moment
+      # you write to a database, a file or an API you are back to at-least-once plus an
+      # idempotent write — which is precisely what 1 · 30 taught. Two-phase-commit sinks and
+      # what they require of the target. Upsert on a natural key as the answer that works
+      # everywhere.
+      # THE MYTH TO PUNCTURE: most teams who believe they have exactly-once have at-least-once
+      # and a unique constraint. That is fine — but they should know which one they have.
+      - n: "25"
+        slug: idempotent-sinks
+        title: "Idempotent Sinks — Why Exactly-Once Stops at the Edge of the Stream"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COUNTERPART: Series 1 · 40, Row Counts & Logging — Proving the Load Did What You Think.
+      # COVER: you cannot count the rows of a thing with no end. So reconciliation becomes
+      # (a) counts over a CLOSED WINDOW, source against sink, once the watermark has passed;
+      # (b) CONSUMER LAG as the continuous health metric, and what a rising lag actually means;
+      # (c) end-to-end latency measured in event time rather than wall clock.
+      # THE HABIT THIS COURSE INSISTS ON, restated: the job says out loud what it processed.
+      - n: "30"
+        slug: reconciling-a-stream
+        title: "Reconciling a Stream — Counting Something That Has No End"
+        hands_on: ["koan:capture", "koan:count:rows-held"]
+        core: true
+        status: planned
+      # COUNTERPART: Series 3 · 25, Backfills & Reprocessing.
+      # COVER: replay from an offset or a savepoint instead of re-running a date range. What
+      # makes replay safe (idempotent sinks from 25, and a retention window from 00) and what
+      # makes it a disaster (a non-idempotent sink, or a downstream that already published).
+      # Reprocessing into a parallel output and switching over, rather than in place.
+      # LAMBDA AND KAPPA GET ONE PARAGRAPH EACH, named and not taught — they are the two
+      # standard answers to this exact problem and a reader will meet the words.
+      - n: "35"
+        slug: replay-and-reprocessing
+        title: "Replay and Reprocessing — Rewriting History Without Double-Counting It"
+        hands_on: ["koan:rerun", "koan:diagnose"]
+        core: true
+        status: planned
+      # THE PROJECT, and it deliberately mirrors Series 1 · 50 ("A Load That Is Safe to Run
+      # Twice") so the series closes on the same promise as the batch one.
+      - n: "40"
+        slug: project-streaming-pipeline
+        title: "Project — A Streaming Pipeline That Is Safe to Replay"
+        hands_on: ["koan:author", "koan:rerun"]
         core: true
         tags: ["project"]
         status: planned
