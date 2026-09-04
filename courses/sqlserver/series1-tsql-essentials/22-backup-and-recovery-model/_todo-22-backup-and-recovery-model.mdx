@@ -1,0 +1,76 @@
+---
+title: "BACKUP DATABASE — Full, Differential, Log, and the Recovery Model That Decides"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-sql-server"
+tags: []
+level: "intermediate"
+module: "series1-tsql-essentials"
+order: 22
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/sqlserver/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/sqlserver/series1/_22/BackupAndRecoveryModelKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Microsoft SQL Server documentation on Microsoft Learn.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Learn SQL owns the SQL, Data Ops owns backup, HA and configuration),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    This is a DELTA track: every sentence should be one that would be FALSE on another engine.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     ADDED 2026-09-02. Previously excluded to Data Ops, which runs PostgreSQL — so a SQL
+     Server reader was pointed at commands that do not exist here.
+     COVER: the RECOVERY MODEL first, because it decides everything else. SIMPLE truncates
+     the log at each checkpoint and makes log backups impossible; FULL keeps them and makes
+     point-in-time recovery possible. Then the chain: FULL, DIFFERENTIAL, LOG, and RESTORE
+     ... WITH NORECOVERY until the last one. COPY_ONLY for the ad-hoc copy that must not
+     break the chain.
+     THE FAILURE EVERY SHOP MEETS ONCE, and it is a disk outage rather than a data loss: a
+     database in FULL recovery with nobody taking LOG backups. The transaction log grows
+     forever, because nothing is allowed to truncate it, until the volume fills and the
+     database stops. Switching to SIMPLE "to fix it" silently ends your ability to recover
+     to a point in time.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/sqlserver/series1/_22/BackupAndRecoveryModelKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

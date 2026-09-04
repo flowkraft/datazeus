@@ -8,7 +8,7 @@ import spock.lang.Stepwise
  * ║  KOANS — Data Ops · Series 1 · 05
  * ╚══════════════════════════════════════════════════════════════════════════╝
  *
- * Files, Paths & Navigation — Where Your Data Actually Lives
+ * The File System — Paths, ls, cp, mv, find and Where Your Data Lives
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into

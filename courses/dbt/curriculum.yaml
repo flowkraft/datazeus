@@ -219,10 +219,13 @@ series:
         hands_on: ["eyes", "dbt"]
         status: planned
 
-      # ADDED 2026-08-24, and it closes a hole in the WHOLE ACADEMY rather than just this
-      # track: git, branches, diffs and pull requests appear in ZERO episodes across all twelve
-      # curricula. Checked by grep, not assumed. The nearest thing anywhere is BI & Data
-      # Visualization, Series 3 · 15, which version-controls a dashboard.
+      # ADDED 2026-08-24, when git, branches, diffs and pull requests appeared in ZERO episodes
+      # across the whole academy — checked by grep, not assumed — and this track's promise of a
+      # version-controlled project could not be kept without it.
+      # SUPERSEDED IN PART 2026-09-03: Data Ops now teaches git itself, at its Series 1 · 43.
+      # THIS EPISODE STAYS AND NARROWS. It is about what belongs in a DBT PROJECT, which is a
+      # different question from how to use the tool, and it may now assume the reader can
+      # commit and diff rather than teaching it here.
       # This track's own header promises to turn a folder of ad-hoc SELECTs into a
       # VERSION-CONTROLLED, tested, documented project. Tested had a whole series, documented
       # had two episodes, and version-controlled had nothing at all.

@@ -51,8 +51,8 @@ prerequisites:
 excludes:
   - topic: "SQL itself"
     where: "covered in Learn SQL"
-  - topic: "Administration — backups, Always On, security configuration, agent jobs"
-    where: "not covered. Data Ops owns the operational discipline; this track is for the person writing queries and procedures"
+  - topic: "Administration — Always On, security configuration, agent jobs"
+    where: "not covered; this track is for the person writing queries and procedures. In this course, Series 1 · 22 teaches BACKUP DATABASE and the recovery model, because the recovery model is a design decision rather than an operational one"
   - topic: "SSIS, SSRS and SSAS"
     where: "not covered. ETL & Data Pipelines owns the load patterns and BI & Data Visualization owns reporting; the products themselves are out of scope"
 
@@ -112,6 +112,24 @@ series:
         slug: system-catalog
         title: "sys Views and DMVs — Reading a Database You Did Not Build"
         hands_on: ["koan:complete", "koan:capture"]
+        status: planned
+      # ADDED 2026-09-02. Previously excluded to Data Ops, which runs PostgreSQL — so a SQL
+      # Server reader was pointed at commands that do not exist here.
+      # COVER: the RECOVERY MODEL first, because it decides everything else. SIMPLE truncates
+      # the log at each checkpoint and makes log backups impossible; FULL keeps them and makes
+      # point-in-time recovery possible. Then the chain: FULL, DIFFERENTIAL, LOG, and RESTORE
+      # ... WITH NORECOVERY until the last one. COPY_ONLY for the ad-hoc copy that must not
+      # break the chain.
+      # THE FAILURE EVERY SHOP MEETS ONCE, and it is a disk outage rather than a data loss: a
+      # database in FULL recovery with nobody taking LOG backups. The transaction log grows
+      # forever, because nothing is allowed to truncate it, until the volume fills and the
+      # database stops. Switching to SIMPLE "to fix it" silently ends your ability to recover
+      # to a point in time.
+      - n: "22"
+        slug: backup-and-recovery-model
+        title: "BACKUP DATABASE — Full, Differential, Log, and the Recovery Model That Decides"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
         status: planned
       - n: "25"
         slug: project-explore

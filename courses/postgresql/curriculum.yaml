@@ -109,8 +109,8 @@ prerequisites:
 excludes:
   - topic: "SQL itself — SELECT, JOIN, GROUP BY, CTEs and window functions"
     where: "covered in Learn SQL. Here you already write them, and the question is what Postgres adds"
-  - topic: "Keeping the server up — backups, failover, pooling, VACUUM tuning, connection limits"
-    where: "covered in Data Ops, Series 2, which is ten episodes on running PostgreSQL in production. This track uses the database rather than operating it"
+  - topic: "Keeping the server up — failover, replication operations, pooling, VACUUM tuning, connection limits"
+    where: "covered in Data Ops, Series 2, which is ten episodes on running PostgreSQL in production. In this course, Series 1 · 37 covers pg_dump and pg_restore because a developer types them weekly; PITR and physical backup are operations and stay there"
   - topic: "Running a migration against a live table without locking it"
     where: "covered in Data Ops, Series 2 · 35. In this course, Series 1 · 30 is only how an extension or a type change is applied"
   - topic: "Deciding what the tables and keys should be"
@@ -220,6 +220,24 @@ series:
         slug: extensions
         title: "Extensions — CREATE EXTENSION and What Ships With Postgres"
         hands_on: ["koan:complete"]
+        core: true
+        status: planned
+      # ADDED 2026-09-02. Backups were excluded to Data Ops, which is correct for the DISCIPLINE
+      # — that series is PostgreSQL and teaches PITR at Series 2 · 30 — but it left this course
+      # without the tool a developer types weekly. pg_dump is not an operations command; it is
+      # how you take a copy of a schema to your laptop.
+      # COVER: pg_dump's formats, and why CUSTOM or DIRECTORY rather than plain SQL — selective
+      # restore, parallel restore, and reordering. pg_restore with -j, --schema-only,
+      # --data-only, -t. pg_basebackup and WAL archiving NAMED as the physical alternative,
+      # with the detail left to Data Ops.
+      # THE TRAP THAT COSTS PEOPLE A RESTORE: pg_dump is PER DATABASE and does not include
+      # ROLES. Restore it somewhere new and every GRANT refers to a role that does not exist.
+      # pg_dumpall --globals-only is the missing half, and almost nobody runs it until the
+      # first real restore.
+      - n: "37"
+        slug: pg-dump-and-restore
+        title: "pg_dump and pg_restore — Taking a Copy You Can Actually Restore"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
         core: true
         status: planned
       - n: "40"

@@ -95,8 +95,8 @@ prerequisites:
 excludes:
   - topic: "SQL itself — SELECT, JOIN, GROUP BY, CTEs and window functions"
     where: "covered in Learn SQL. Here the question is what MySQL does differently, including which versions have them at all"
-  - topic: "Running the server — backups, replication topology, failover, my.cnf tuning"
-    where: "covered in Data Ops, Series 2. That series uses PostgreSQL, and the operational skills transfer even though the commands do not"
+  - topic: "Running the server — replication topology, failover, my.cnf tuning"
+    where: "covered in Data Ops, Series 2 for the discipline — that series runs PostgreSQL, so the habits transfer and the commands do not. In this course, Series 1 · 27 teaches mysqldump, XtraBackup and the binary log"
   - topic: "Deciding what the tables and keys should be"
     where: "covered in Data Modeling. Here the schema exists and the question is which MySQL type and index to give it"
   - topic: "Loading data in from other systems"
@@ -180,6 +180,24 @@ series:
         slug: keys-and-upsert
         title: "AUTO_INCREMENT and ON DUPLICATE KEY UPDATE — Writes, Gaps and REPLACE's Trap"
         hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # ADDED 2026-09-02. Previously excluded to Data Ops — but that series runs PostgreSQL, so
+      # a MySQL reader was sent somewhere the commands do not exist.
+      # COVER: mysqldump, and the two flags that decide whether the dump is worth anything.
+      #   --single-transaction  a consistent InnoDB dump WITHOUT locking the tables. Omit it on
+      #                         a live server and you either lock writers out or get a dump
+      #                         that is internally inconsistent across tables.
+      #   --routines --triggers --events  because mysqldump OMITS ALL THREE BY DEFAULT.
+      # Then the physical option — Percona XtraBackup, or MariaDB Backup on the fork — and the
+      # BINARY LOG as the thing that turns a nightly dump into point-in-time recovery.
+      # THE SILENT FAILURE, and it is the default: a dump taken without --routines restores
+      # cleanly, looks complete, and is missing every stored procedure. Nobody finds out until
+      # something calls one.
+      - n: "27"
+        slug: mysqldump-and-backups
+        title: "mysqldump, XtraBackup and the Binary Log — and the Flags That Decide If It Restores"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
         core: true
         status: planned
       - n: "30"

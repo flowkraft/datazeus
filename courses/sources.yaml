@@ -226,6 +226,34 @@ sources:
       point there, it costs the reader nothing. "Site Reliability Engineering" and "SRE" are
       Google-associated terms; describe the practices, never imply endorsement.
 
+  marick:
+    author: "Brian Marick"
+    work: "Agile Testing Directions — the test quadrants"
+    publisher: "exampler.com (blog series)"
+    year: 2003
+    note: >-
+      THE TEST QUADRANTS — business-facing against technology-facing, supporting the team
+      against critiquing the product. Humble and Farley use them in chapter 4 and credit him;
+      so should we. There is no book: the canonical source is his own posts, which is why this
+      entry has no ISBN.
+
+  humble-farley:
+    author: "Jez Humble & David Farley"
+    work: "Continuous Delivery: Reliable Software Releases through Build, Test, and Deployment Automation"
+    publisher: "Addison-Wesley"
+    year: 2010
+    isbn: "978-0321601919"
+    note: >-
+      THE DEPLOYMENT PIPELINE is theirs — the named pattern, its stages, and the rules that make
+      it work: BUILD YOUR BINARIES ONCE, DEPLOY THE SAME WAY TO EVERY ENVIRONMENT, and the
+      separation of DEPLOYMENT from RELEASE. So are "if it hurts, do it more often" and "done
+      means released". The Continuous Delivery track follows this book's own order, chapter by
+      chapter, and every episode there names the chapter it came from.
+      TWO CAUTIONS FOR WHOEVER WRITES FROM IT. First, it is a 2010 book: the principles aged
+      extremely well and the TOOLING did not, so credit the ideas and never the tool examples.
+      Second, the TEST QUADRANTS in chapter 4 are Brian Marick's and the book says so — credit
+      him there, not these authors.
+
   lewis-rag:
     author: "Patrick Lewis et al."
     work: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"

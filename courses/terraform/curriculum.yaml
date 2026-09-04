@@ -1,0 +1,425 @@
+# The ordered episode list for Terraform & Pulumi for Data Infrastructure. Field docs live in
+# courses/learnsql/curriculum.yaml. `short` is omitted until an episode has a video.
+#
+# The job this track teaches: describe the database, the bucket and the credentials your data
+# work runs on, in a file, so the next environment is a command rather than an afternoon.
+#
+# ============================================================================
+# WHY A DATA PERSON IS HERE AT ALL
+# ============================================================================
+# Data Ops, Series 1 · 46 and 1 · 47 taught renting a machine and a bucket by clicking. That
+# is the right way to learn and the wrong way to keep. The click cannot be reviewed, cannot be
+# repeated exactly, and nobody can tell six months later which of the four settings on that
+# database somebody changed during an incident.
+#
+# THIS TRACK IS THE SECOND TIME YOU NEED THE SAME INFRASTRUCTURE. It is not for the person
+# building a platform team's module library.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# TERRAFORM DOES NOT READ YOUR INFRASTRUCTURE. It reads its STATE — a file recording what it
+# believes it created — and compares that to your configuration. Almost every painful moment
+# in this tool comes from state and reality disagreeing: something changed in the console,
+# state was lost, two people applied at once, or a resource exists and Terraform does not know
+# it. A reader who understands state understands the product; one who does not will be
+# mystified by it for years.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL DOCUMENTATION
+# ============================================================================
+# developer.hashicorp.com/terraform/docs runs Language (configuration syntax, resources,
+# variables, expressions, modules, state), CLI, and then the hosted products. Its LANGUAGE
+# section is the right order for Series 1, and its State pages should be read in full before
+# Series 1 · 20 and Series 3 are written.
+# For Series 4, the sources are opentofu.org's own docs and its migration guide, and
+# pulumi.com/docs — each course's claims come from that project's own documentation, never
+# from a competitor's comparison page.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL TERRAFORM DOCUMENTATION, and for Series 4 the
+# official OpenTofu and Pulumi documentation. Before writing an episode, open the docs' own
+# page for that topic, use it as the COVERAGE CHECKLIST, and use its VOCABULARY FOR THE NOUNS
+# (provider, resource, data source, state, backend, module, workspace, plan, drift, stack).
+# Anything left out should be left out because an academy rule says so — Data Ops owns
+# operating the machine, Kubernetes for Data Workloads owns the cluster — and never because it
+# was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the docs page named. A brief is what
+# a writer actually opens; a rule that lives only in this header is a rule that gets forgotten
+# at the exact moment it matters.
+#
+# TEACH AGAINST WHAT A LEARNER CAN RUN WITHOUT A BILL where possible — the local, random and
+# null providers for the language itself, Docker's provider for something real, and one cloud
+# for the episodes that need a genuine managed database. Say which, and say what it costs.
+#
+# STATE THE VERSION. Terraform's language changed materially across 0.12, 1.x and the 1.5+
+# additions (import blocks, checks, moved). An episode written from older memory teaches
+# syntax that no longer represents good practice.
+
+course: learn-terraform
+track: terraform
+title: Terraform & Pulumi
+
+prerequisites:
+  - course: learn-data-ops
+    needs: "Series 1, and Series 1 · 46 and Series 1 · 47 in particular"
+    why: >-
+      You cannot describe infrastructure you have never rented. Those two episodes are where a
+      machine, a bucket, egress and a lifecycle rule stop being words, and this course assumes
+      all of it.
+
+excludes:
+  - topic: "What a VPS, a managed database or a bucket actually is, and how to size one"
+    where: "covered in Data Ops, Series 1 · 46 for the machine and Data Ops, Series 1 · 47 for the bucket. This course describes those decisions in code; it does not re-argue them"
+  - topic: "Operating the machine once it exists"
+    where: "covered in Data Ops. Terraform creates a server; it has no opinion about what runs on it afterwards"
+  - topic: "Running workloads on a cluster"
+    where: "covered in Kubernetes for Data Workloads. This course can create a cluster and stops at its edge"
+  - topic: "Kubernetes manifests and Helm releases managed through Terraform"
+    where: "not covered, deliberately. It is possible and it is usually a mistake — two state models fighting over the same objects. Kubernetes for Data Workloads, Series 3 · 15 owns Helm"
+  - topic: "Building a reusable module library for a platform team"
+    where: "not covered; this track is for the person who needs the same environment twice, not for the person publishing modules to a registry. Series 2 · 25 teaches modules only as far as that goes"
+
+series:
+  - slug: series1-describing-infrastructure
+    title: Describing Infrastructure
+    tagline: the language, the plan, and the state file everything depends on
+    level: intermediate
+    episodes:
+      # COVER: the argument before the tool. THREE THINGS A CLICK CANNOT DO — be reviewed
+      # before it happens, be repeated exactly, and be diffed afterwards. Then the fourth,
+      # which is the one that actually converts people: DRIFT IS INVISIBLE without a
+      # description to compare against, so nobody knows the staging database has had a
+      # different parameter since March.
+      # THE HONEST LIMIT, said here rather than nowhere: for one machine you will rent once,
+      # clicking is fine and this whole course is overhead. It pays from the second environment
+      # onward, and from the first time somebody asks what changed.
+      - n: "00"
+        slug: why-infrastructure-as-code
+        title: "Infrastructure as Code — The Click You Cannot Repeat, Review or Diff"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: provider, resource, data source, and the first init/apply against something
+      # harmless. HCL as a DECLARATION and not a script — you say what should exist, not the
+      # steps, and the order comes from the dependency graph rather than from the file.
+      # THE FIRST SURPRISE: referencing one resource from another IS the dependency. Nobody
+      # writes the order down and the order is still right.
+      - n: "05"
+        slug: providers-and-resources
+        title: "Providers, Resources and the First apply — Declaring, Not Scripting"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the plan as the product. Reading it properly is the single most valuable habit
+      # in this tool, and the symbols are the lesson:
+      #   +   create        -   destroy        ~   update in place
+      #   -/+ REPLACE — destroy then create, and for a database that is the data.
+      # THE RULE THAT SHOULD SURVIVE THIS COURSE: read every plan for -/+ before you type yes.
+      # Then destroy, and why it exists — a review environment that costs nothing when it is
+      # not there.
+      - n: "10"
+        slug: plan-apply-destroy
+        title: "plan, apply, destroy — and Why -/+ Is the Symbol to Fear"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: variables with types and defaults, tfvars files, outputs as the values other
+      # things need, and locals for the expression written five times. Enough expression
+      # syntax to be useful — interpolation, for_each over a map, count and why for_each is
+      # usually better, conditionals — and no further.
+      # NOT CORE: a reader can be productive with hardcoded values for a week. It becomes
+      # necessary at Series 2 · 30, and the episode should say so.
+      - n: "15"
+        slug: variables-and-outputs
+        title: "Variables, Outputs and for_each — Writing It Once Instead of Five Times"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      # THE CENTRAL EPISODE OF THE COURSE. If a reader learns one thing here, this.
+      # COVER: state is a JSON file recording what Terraform believes it created, keyed by
+      # resource address. plan = config against state against the provider's reality. What
+      # goes wrong when they disagree, and each with its own fix:
+      #   STATE LOST            Terraform will happily create a second copy of everything.
+      #   CHANGED IN THE CONSOLE  the next plan wants to change it back, which is drift and is
+      #                         Series 3 · 00.
+      #   EXISTS BUT UNKNOWN    import, which is Series 3 · 05.
+      # terraform state list, show, mv and rm as the tools, with mv and rm flagged as sharp.
+      # THE WARNING THAT BELONGS HERE AND IS REPEATED IN SERIES 3 · 15: STATE CONTAINS SECRETS
+      # IN PLAIN TEXT. Every password the provider returned is in that file. It is not an
+      # artefact you commit, mail, or leave in a bucket without encryption.
+      - n: "20"
+        slug: state
+        title: "State — What Terraform Believes Exists, and Why It Is Not Your Infrastructure"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: local state stops working the moment a second person or a CI runner exists.
+      # Backends — S3 with DynamoDB or native locking, GCS, Azure, Terraform Cloud — and the
+      # two properties that matter: it is SHARED, and it LOCKS. Then encryption and versioning
+      # on the bucket holding it, which follows directly from the warning in 20.
+      # THE FAILURE THIS PREVENTS, and it is not theoretical: two applies at once, each writing
+      # state the other has not seen, leaving a record that matches neither reality nor itself.
+      # SEAM: Data Ops, Series 1 · 47 owns the bucket, versioning and object lock. This owns
+      # why the state file in particular needs them.
+      - n: "25"
+        slug: remote-state-and-locking
+        title: "Remote State and Locking — the Moment a Second Person Runs apply"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      - n: "30"
+        slug: project-a-database-and-a-bucket
+        title: "Project — A Managed Database and a Bucket, From an Empty Directory"
+        hands_on: ["koan:author", "koan:process:tool"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-the-resources-you-provision
+    title: The Resources a Data Person Provisions
+    tagline: a database, a bucket, credentials, and the second environment
+    level: intermediate
+    episodes:
+      # COVER: a managed Postgres or MySQL as code — engine version, instance size, storage,
+      # parameter groups, maintenance window, backup retention. Data Ops, Series 1 · 46 argued
+      # the sizing; this is where those arguments become arguments to a resource.
+      # THE ONE THAT COSTS DATA, and it is why this episode comes first in the series: some
+      # attributes FORCE REPLACEMENT. Change the wrong one — a name, sometimes an engine
+      # version, sometimes the subnet group — and the plan says -/+, which for a database means
+      # destroy and create empty. Read for it every time, and know that deletion protection and
+      # a lifecycle prevent_destroy block are the seat belts.
+      - n: "00"
+        slug: a-managed-database
+        title: "A Managed Database in Code — Parameters, Versions, and the Plan That Says Replace"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: a bucket with the things a data workload actually needs — versioning, a
+      # lifecycle rule moving objects to cold storage and expiring them, encryption, and public
+      # access blocked at the account level rather than hoped for.
+      # WHY IT IS A GOOD SECOND RESOURCE: a bucket has no data to lose on replacement, so a
+      # reader can experiment with plan output safely, and the lifecycle rule is the first time
+      # code expresses a policy rather than a thing.
+      # SEAM: Data Ops, Series 1 · 47 owns object storage itself. This owns declaring it.
+      - n: "05"
+        slug: object-storage
+        title: "Buckets, Lifecycle Rules and Versioning — Storage Policy as Code"
+        hands_on: ["koan:complete", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: the credential a pipeline uses, described rather than clicked — a role or
+      # service account, a policy scoped to one bucket prefix and one database, and the output
+      # that hands it to the job.
+      # THE REASON THIS IS CORE: least privilege is something everybody agrees with and nobody
+      # does, because in a console it is tedious and in code it is a diff. This is where the
+      # argument for the whole course lands for a security-minded reader.
+      # SEAM: Data Ops, Series 1 · 35 owns what a job does with a credential once it has one.
+      - n: "10"
+        slug: credentials-and-iam
+        title: "Credentials for a Pipeline — Least Privilege When It Is a Diff Instead of a Form"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: just enough network to make the previous three episodes real and safe — a VPC or
+      # equivalent, subnets, and a security group that lets the pipeline reach the database and
+      # lets nothing else reach it at all.
+      # THE POINT, and then stop: THE DATABASE MUST NOT BE PUBLIC. Data Ops, Series 1 · 46 said
+      # a Postgres port open to the internet is found by scanners within the hour; this is how
+      # you write that down so it stays true. Networking beyond this is platform engineering.
+      - n: "15"
+        slug: networking-just-enough
+        title: "Networking, Just Enough — Reaching the Database Without Publishing It"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        status: planned
+      # COVER: the analytics side, because a data team's infrastructure is not only OLTP — a
+      # warehouse or an analytics engine as code, and the providers that exist for the managed
+      # ones. Warehouses have their own resource vocabulary: a warehouse or compute size, a
+      # database, schemas, roles and grants.
+      # THE INTERESTING PART FOR THIS READER: GRANTS AS CODE. Who can read which schema stops
+      # being an undocumented act somebody performed once, and starts being reviewable.
+      # SEAM: Data Warehousing owns what a warehouse is for. This owns declaring one.
+      - n: "20"
+        slug: a-warehouse-and-its-grants
+        title: "A Warehouse in Code — Compute, Schemas and Grants That Can Be Reviewed"
+        hands_on: ["koan:complete", "koan:choose"]
+        status: planned
+      # COVER: a module as a folder with variables and outputs, called more than once. Input
+      # variables, outputs, and versioning a module by git ref. The registry mentioned as a
+      # source of other people's modules, with the caution that comes with any dependency.
+      # KEEP IT PROPORTIONATE, and this is an explicit boundary: publishing a module library is
+      # a platform team's job and this course excludes it. A module here exists so that "the
+      # same environment twice" is possible, which is the next episode.
+      - n: "25"
+        slug: modules
+        title: "Modules — Describing an Environment Once and Calling It Twice"
+        hands_on: ["koan:complete", "koan:author"]
+        core: true
+        status: planned
+      # COVER: dev, staging and prod without copy-paste, and the real choice between the two
+      # approaches — WORKSPACES (one configuration, several states) against SEPARATE
+      # DIRECTORIES OR STATE KEYS (explicit, more files, harder to apply to the wrong one).
+      # State the trade honestly and recommend directories for anything holding real data,
+      # because the failure mode of workspaces is applying to prod while thinking you are in
+      # dev, and that is a single command away.
+      # SEAM: Data Ops, Series 3 · 30 owns environments as CONFIG for a job. This owns them as
+      # separate infrastructure.
+      - n: "30"
+        slug: environments
+        title: "dev, staging and prod — Workspaces Against Directories, and Which Is Safer"
+        hands_on: ["koan:choose", "koan:predict"]
+        status: planned
+      - n: "35"
+        slug: project-a-second-environment
+        title: "Project — Stand Up a Second Environment That Actually Matches the First"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-living-with-it
+    title: Living With It
+    tagline: drift, adoption, destruction, and Terraform in CI
+    level: advanced
+    episodes:
+      # COVER: drift is reality moving away from the description — somebody clicked something
+      # during an incident, or a provider changed a default on upgrade. terraform plan is the
+      # detector and running it on a schedule is the practice.
+      # THE JUDGEMENT THIS EPISODE TEACHES, and it is not "always revert": when you find drift
+      # you choose. ADOPT IT — the console change was right, so write it down. REVERT IT — it
+      # was wrong, so apply. Or IGNORE IT deliberately, with lifecycle ignore_changes, for the
+      # attribute something else legitimately manages. Silently reverting an emergency fix is
+      # its own outage.
+      - n: "00"
+        slug: drift
+        title: "Drift — What Changed Outside Terraform, and Deciding Which Side Is Right"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: adopting infrastructure that already exists, which is the ordinary case rather
+      # than the exception — nobody starts on an empty account. import blocks (1.5+) against
+      # the older terraform import command, generating configuration, and doing it one resource
+      # at a time until plan is empty.
+      # THE GOAL TO STATE OUT LOUD: A CLEAN PLAN. "No changes" is the proof that the
+      # description now matches reality, and it is the only proof there is.
+      # moved blocks, for the refactor that renames a resource without destroying it.
+      - n: "05"
+        slug: import-and-moved
+        title: "import and moved — Adopting Infrastructure That Already Exists"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        status: planned
+      # COVER: the episode this course owes a DATA reader specifically, and the reason the
+      # track can claim to be for data people at all. Everything in Series 2 can be destroyed
+      # by a plan somebody approved at speed.
+      #   READ FOR -/+ FIRST, every time, and know which attributes cause it for your provider.
+      #   prevent_destroy and deletion protection, as two independent seat belts.
+      #   TARGETED APPLY as a sharp tool for an emergency, not a habit.
+      #   A FINAL SNAPSHOT before any plan that touches a database, because Data Ops,
+      #   Series 1 · 42 was right and this is where it applies.
+      # THE FAILURE, and it is a real one people have lived: an apply run in a hurry that
+      # replaced a database and created it empty. Terraform did exactly what the plan said.
+      - n: "10"
+        slug: the-destructive-plan
+        title: "The Destructive Plan — Reading for Replacement Before You Lose the Rows"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the uncomfortable fact from Series 1 · 20, in full — STATE CONTAINS SECRETS IN
+      # PLAIN TEXT, because the provider returned them and Terraform recorded them. Marking a
+      # variable sensitive hides it from OUTPUT, not from state.
+      # WHAT TO ACTUALLY DO: encrypted remote state with tight access; generate passwords with
+      # the random provider rather than typing them; better, have the cloud generate and store
+      # the secret and let Terraform reference it rather than hold it; and never commit a
+      # .tfstate or a .tfvars with credentials in it.
+      # SEAM: Data Ops, Series 1 · 43 owns keeping secrets out of git. This is the specific way
+      # this tool tempts you to put them there.
+      - n: "15"
+        slug: secrets-in-state
+        title: "Secrets — Why the State File Contains Your Database Password"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the ordinary and genuinely good pipeline — plan on the pull request so a human
+      # reads it, apply on merge, with state locked so the runner cannot race a laptop. The
+      # runner's own credentials, which are the most privileged in the organisation and deserve
+      # saying so.
+      # SEAM: Data Ops, Series 3 · 30 owns CI/CD for data jobs, including environments and the
+      # runner's credentials. This is the same shape applied to infrastructure, and the one
+      # difference worth the episode: HERE THE PLAN IS THE REVIEW ARTEFACT. A diff of HCL is
+      # not enough, because what matters is what the provider says it will do about it.
+      - n: "20"
+        slug: terraform-in-ci
+        title: "Terraform in CI — plan on the Pull Request, apply on Merge"
+        hands_on: ["koan:choose", "koan:process:tool"]
+        status: planned
+      # COVER: fmt and validate as the free checks; tflint for provider-specific mistakes;
+      # policy as code — OPA/Conftest or Sentinel — for the rules you want enforced rather than
+      # remembered, such as "no public bucket" and "every database has deletion protection".
+      # terraform test in one paragraph, for modules.
+      # KEEP IT PROPORTIONATE: a two-person data team wants fmt, validate and one policy that
+      # blocks public buckets. Everything beyond that is a platform team's problem.
+      - n: "25"
+        slug: checks-and-policy
+        title: "validate, tflint and Policy as Code — Enforcing the Rules You Keep Forgetting"
+        hands_on: ["koan:complete", "koan:choose"]
+        status: planned
+
+  - slug: series4-the-alternatives
+    title: The Alternatives
+    tagline: OpenTofu, Pulumi, and choosing between them honestly
+    level: advanced
+    episodes:
+      # COVER: what happened — HashiCorp relicensed Terraform under the BUSL in 2023 and the
+      # community forked it as OpenTofu, now under the Linux Foundation. Say it factually and
+      # check the dates and licence names against both projects' own pages on the day of
+      # writing; this is the episode most likely to age.
+      # WHAT MATTERS TO A READER, which is not the politics: the CLI is compatible, the state
+      # format is compatible, migration for an ordinary configuration is close to a rename —
+      # and the two have been diverging since, so "compatible" needs a version stated.
+      # THE ACTUAL DECISION: it is a licence and governance question, not a features one, and
+      # for most data teams either is fine. Say that rather than picking a side.
+      - n: "00"
+        slug: opentofu
+        title: "OpenTofu — the Fork, What Actually Differs, and What Migrating Costs"
+        hands_on: ["koan:choose", "koan:capture"]
+        status: planned
+      # COVER: the same job written in Python, TypeScript or Go instead of HCL. What that
+      # genuinely buys — loops, conditionals, functions, types and tests in a language you
+      # already use, which for a Python-shaped data team is not nothing.
+      # AND WHAT IT COSTS, said with equal weight: a general-purpose language will let you
+      # write infrastructure code that is clever, and clever infrastructure is hard to review.
+      # HCL's limitations are partly the point.
+      # THE HONEST FRAME: same model — declare resources, diff against state, apply. Pulumi is
+      # a different surface over the same idea, not a different idea.
+      - n: "05"
+        slug: pulumi
+        title: "Pulumi — the Same Model in a Language You Already Write"
+        hands_on: ["koan:equivalent", "koan:choose"]
+        status: planned
+      # COVER: where Pulumi genuinely differs and a Terraform reader will be caught out —
+      # STACKS as the environment unit, which is a better answer than workspaces for the
+      # problem of Series 2 · 30; the state backend, including the hosted service and the
+      # self-managed option; and SECRETS ENCRYPTED IN STATE by default, which is a real
+      # improvement on Series 3 · 15 and worth saying plainly even though this course's spine
+      # is Terraform.
+      # BE FAIR HERE. A course that teaches one tool and then damns the other with faint praise
+      # is not teaching, and the reader can tell.
+      - n: "10"
+        slug: pulumi-stacks-and-secrets
+        title: "Stacks and Encrypted State — Where Pulumi Is Genuinely Different"
+        hands_on: ["koan:equivalent", "koan:predict"]
+        status: planned
+      # THE CLOSING DECISION EPISODE. Name what is left in one paragraph each and no more —
+      # the cloud CDKs, Crossplane for the Kubernetes-shaped answer, Ansible for the
+      # configuration-management job that is NOT this one, and ClickOps done deliberately.
+      # THEN THE HONEST ANSWER, which the whole course has been earning: for most data teams
+      # the choice is Terraform or OpenTofu, because that is where the providers, the examples
+      # and the hiring are; Pulumi if the team is strongly one language and will actually use
+      # the testing; and NONE OF THEM if you have one environment you will never rebuild — in
+      # which case Data Ops, Series 1 · 46 was the whole answer and this course was overhead.
+      - n: "15"
+        slug: choosing
+        title: "Choosing — and the Case for None of Them"
+        hands_on: ["koan:choose"]
+        status: planned

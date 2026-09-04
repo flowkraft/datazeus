@@ -1,0 +1,89 @@
+---
+title: "Docker — Images, Containers, and the Commands You Actually Type"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-ops"
+tags: []
+level: "beginner"
+module: "series1-linux-for-data"
+order: 37
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/dataops/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/dataops/series1/_37/DockerKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Ops · Linux for Data (beginner) — "do real data work from the terminal, with shell tools alone"
+      before:  Permissions, Users & Environment Variables — Secrets a Job Can Read
+      THIS:    Docker — Images, Containers, and the Commands You Actually Type
+      after:   VS Code — Remote-SSH, Dev Containers, and Editing Where the Data Is
+    CORE — on the shortest path to being productive. Someone will read only
+    the core episodes, so this one has to stand alone.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: build, start, look inside and stop a container, and know where the data went.
+    DECISION: MOVED HERE 2026-09-03 from Series 3 · 30, where it was "Containers for Data Jobs" and taught only packaging your own job. Splitting Docker in two — run someone else's image, build your own — was a distinction that mattered to whoever drew it and to nobody reading. THERE IS ONE DOCKER EPISODE and it teaches the TOOL. Examples will use something, but no example is the subject: a reader who works on ClickHouse must get the same value as one on Postgres. In Series 1 because Docker is a thing you type into a terminal, and because Series 2's eleven PostgreSQL episodes had assumed a running server nobody was shown how to obtain.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      THE ONE DISTINCTION        an IMAGE is the recipe, a CONTAINER is a running copy. Everything
+                                 follows from that sentence, and most confusion about Docker is that
+                                 sentence not having landed.
+      STARTING                   docker run with the four flags that matter — -d, -p, -v, -e — plus
+                                 --name so you can refer to it and --rm for a throwaway.
+      LOOKING                    docker ps and -a, which is where the stopped ones went; docker logs;
+                                 docker exec -it ... sh to get a shell inside.
+      STOPPING                   stop, start, rm, and the difference between stopped and gone. rmi and
+                                 system prune for the disk this quietly eats — which 1 · 07 just taught
+                                 the reader to notice.
+      BUILDING                   a short Dockerfile — FROM, COPY, RUN, CMD — and docker build -t. This is
+                                 the half that used to be 3 · 30: your job, pinned, still running the
+                                 same months later.
+      TAGS                       :latest is not a version, and that matters more for a thing you run
+                                 nightly than for anything else.
+      COMPOSE                    one short file for the ordinary case of two containers that must see
+                                 each other. up, down, and down -v as the one that also deletes the data.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:process:tool
+      koan:rerun
+      koan file: tests/src/koans/groovy/datazeus/dataops/series1/_37/DockerKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: NO VOLUME. The container is deleted — or simply recreated by an edit to a compose file — and every row is gone, with no error, because from Docker's point of view nothing went wrong. Same trap, second form: data written inside the container at a path that is not mounted, which looks persistent right up until it is not. */}
+
+TODO

@@ -68,7 +68,7 @@ excludes:
   - topic: "SQL itself"
     where: "covered in Learn SQL"
   - topic: "Database administration — RMAN, Data Guard, patching, storage, RAC operations"
-    where: "not covered. This track is for the person writing queries and PL/SQL, not the DBA"
+    where: "RMAN and Data Guard are a DBA speciality and are not covered — this track is for the person writing queries and PL/SQL. In this course, Series 1 · 22 teaches Data Pump, which is the half a developer owns"
   - topic: "Choosing Oracle for a new system"
     where: "covered in Database X vs Database Y, Series 1 · 05, which is honest about how much of that decision is the licence"
 
@@ -132,6 +132,22 @@ series:
         slug: legacy-sql-you-will-meet
         title: "CONNECT BY, DECODE and (+) — Reading the SQL Already in the Codebase"
         hands_on: ["koan:equivalent", "koan:predict"]
+        status: planned
+      # ADDED 2026-09-02. RMAN is genuinely a DBA speciality and stays excluded, but DATA PUMP
+      # is not — expdp and impdp are what a developer uses to move a schema between
+      # environments, and this course had no answer for that at all.
+      # COVER: expdp and impdp at SCHEMA level, REMAP_SCHEMA and REMAP_TABLESPACE for landing it
+      # somewhere with different names, and CONTENT=METADATA_ONLY. RMAN named, with the boundary
+      # stated: the database is the DBA's, the schema is yours.
+      # THE TRAP THAT STOPS EVERYONE ONCE: DIRECTORY is a DATABASE OBJECT, not a filesystem
+      # path, and expdp writes ON THE SERVER. A reader expecting a file on their laptop gets
+      # ORA-39002 and no obvious reason. Create the directory object, grant read/write, and
+      # know the file landed on the database host.
+      - n: "22"
+        slug: data-pump
+        title: "Data Pump — expdp, impdp, and Why the File Landed on the Server"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
         status: planned
       - n: "25"
         slug: project-explore-a-schema

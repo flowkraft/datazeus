@@ -1,0 +1,108 @@
+---
+title: "Git — Version Control for the Scripts and Config That Run Your Data"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-ops"
+tags: []
+level: "beginner"
+module: "series1-linux-for-data"
+order: 43
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/dataops/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/dataops/series1/_43/GitKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Ops · Linux for Data (beginner) — "do real data work from the terminal, with shell tools alone"
+      before:  File Backups — tar, rsync Snapshots, Rotation, and Proving a Restore Works
+      THIS:    Git — Version Control for the Scripts and Config That Run Your Data
+      after:   Bash Glue — Variables, Loops, Exit Codes & Logging for ETL
+    CORE — on the shortest path to being productive. Someone will read only
+    the core episodes, so this one has to stand alone.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: keep the scripts, SQL and config that run your data in version control, put
+    yesterday's version back in one command, and never commit a credential.
+    DECISION: git had ONE episode in the whole academy — dbt's Series 1 · 47 — and that one
+    is about what belongs in a DBT PROJECT and reasonably assumes you can already commit.
+    Nothing taught the tool. Placed at 43, DIRECTLY AFTER FILE BACKUPS, because 42 ends by
+    telling the reader to back up their scripts, config and crontab, and for text files
+    that is the wrong answer: a tarball gives you last Tuesday's copy, git gives you every
+    version, who wrote it, why, and a diff. Say that out loud rather than leaving two
+    answers standing. 42 keeps the data; this keeps the code that produced it.
+
+    NOT A BRANCHING-STRATEGY EPISODE. The reader is a data person with a folder of scripts
+    on a server, not a team of twenty shipping a product.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      THE FOUR COMMANDS          init, add, commit, log — and diff, which is the one that
+                                 pays for the other four. "What changed in this load script
+                                 since the numbers were right" is a question only a diff
+                                 answers.
+      REMOTE                     clone, pull, push, and the ordinary shape of it: you edit
+                                 on your laptop, the server pulls. That is a deployment,
+                                 and it is the whole of deployment for most data teams.
+      BRANCH AND MERGE           enough to try something without breaking the nightly run.
+                                 Stop there — no strategy, no rebase argument.
+      REVERT                     the actual reason this is core: last night's change broke
+                                 the load, and yesterday's version goes back in one
+                                 command, at 3 a.m., without thinking.
+      .gitignore                 and it earns real time, for the two reasons below.
+
+    ── THE TWO THINGS THAT MUST NEVER GO IN, both data-specific ────────────
+      SECRETS   the .env and the connection string of 1 · 35. A committed password is NOT
+                fixed by deleting it in the next commit — it is in the history, and on
+                every clone, forever. The fix is rotating the credential, and that
+                sentence is the most valuable one in the episode.
+      DATA      the 400 MB CSV somebody committed once. Git keeps every version of it for
+                the life of the repo and clones get slower forever. Name git-lfs and DVC
+                in one sentence each and do not teach them.
+
+    SEAM: dbt Series 1 · 47 stays as it is — what belongs in a dbt project specifically —
+    and can now assume this episode rather than teaching the basics itself.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:process:tool
+      terminal
+      koan file: tests/src/koans/groovy/datazeus/dataops/series1/_43/GitKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: the password committed in March and deleted in April. It is still in
+    the history and in every clone anybody made, and the only real fix is rotating it. */}
+
+TODO
