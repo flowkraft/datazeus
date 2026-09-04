@@ -1,0 +1,89 @@
+---
+title: "Rundeck — What It Is, What Data Teams Use It For, and Running One in Docker"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-ops"
+tags: []
+level: "advanced"
+module: "series3-reliability"
+order: 02
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/dataops/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/dataops/series3/_02/RundeckKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Ops · Reliability (advanced) — "keep jobs running, and find out fast when one stops"
+      before:  Scheduling at Scale — Choosing Between cron, systemd Timers and an Orchestrator
+      THIS:    Rundeck — What It Is, What Data Teams Use It For, and Running One in Docker
+      after:   Jenkins — What It Is, Why Data Jobs End Up on It, and Running One in Docker
+    CORE — on the shortest path to being productive. Someone will read only
+    the core episodes, so this one has to stand alone.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: say what Rundeck is, whether your team wants one, and have had it running for ten minutes.
+    DECISION: Rundeck was ALREADY the hands_on tool on Series 1 · 40, on 3 · 00 and on this series' project, and no episode taught it. 3 · 00 is the choice between cron, timers and an orchestrator; this is what the word "orchestrator" actually is, once. A TOOL PRESENTATION, NOT A MANUAL — the reader should not finish having been walked through every screen. Depth belongs to the official docs; say so and link there.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      WHAT IT IS                 one line worth memorising: a web front end that runs your existing
+                                 scripts on your existing machines, and keeps a record.
+      THE OPERATOR BUTTON        someone who is not you reruns last night's failed load, without an SSH
+                                 key for production. This is why it is installed in most shops that have
+                                 it.
+      A LOG PER RUN              output kept per execution and readable next week. Under cron it went to
+                                 mail nobody reads, which is why nobody looked.
+      WHO MAY DO WHAT            an ACL over run, view and edit.
+      THE FAN-OUT                the same job across a list of nodes over ssh, which cron on one box
+                                 cannot express at all.
+      SCHEDULE AND NOTIFY        the cron half you already have, plus retry and a failure alert.
+      TRY IT                     docker run the official image, one job wrapping a two-line script, run
+                                 it from the browser, read the execution log. Series 1 · 37 already
+                                 taught the docker run, so this costs the reader nothing new.
+      THE PRINCIPLE THAT OUTLIVES THE TOOL a SCHEDULER RUNS A JOB; an ORCHESTRATOR MAKES IT OPERABLE. Those
+                                           capabilities are equally true of Airflow or Jenkins, so a reader who
+                                           ends up with a different tool has still learnt what to look for.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:process:tool
+      rundeck
+      koan file: tests/src/koans/groovy/datazeus/dataops/series3/_02/RundeckKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: credentials in the job definition. Rundeck has a Key Storage for exactly this, and job definitions get exported to git. */}
+
+TODO

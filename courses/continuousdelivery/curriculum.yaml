@@ -1,0 +1,553 @@
+# The ordered episode list for Continuous Delivery. Field docs live in
+# courses/learnsql/curriculum.yaml. `short` is omitted until an episode has a video.
+#
+# The job this track teaches: get a change from your machine into production, repeatably,
+# with something other than hope checking it on the way.
+#
+# ============================================================================
+# THIS TRACK FOLLOWS ONE BOOK, IN ITS OWN ORDER
+# ============================================================================
+# Jez Humble & David Farley, "Continuous Delivery: Reliable Software Releases through Build,
+# Test, and Deployment Automation" (Addison-Wesley, 2010). Its three parts are this track's
+# three series and its fifteen chapters are these episodes, IN THE BOOK'S SEQUENCE. Every
+# episode carries a `credits` entry naming the chapter it came from, so a reader who wants the
+# original can find the exact pages.
+#
+#   its Part I    chapters 1–4    -> Series 1, Before a Pipeline Can Exist
+#   its Part II   chapters 5–10   -> Series 2, From Commit to Production
+#   its Part III  chapters 11–15  -> Series 3, Everything Around the Pipeline
+#
+# WE DO NOT REORDER IT. The book's sequence is an argument — you cannot have a deployment
+# pipeline without configuration management, and you cannot have continuous integration
+# without a test suite — and rearranging it to put the data material first would break the
+# argument for the sake of a shelf.
+#
+# ── THEIR ORDER, OUR WORDS ──────────────────────────────────────────────────
+# EVERY SERIES AND EPISODE TITLE HERE IS OURS. Not one is the book's chapter or part title,
+# and that is a rule rather than an accident — the first draft of this file reused them and
+# was rewritten. What we owe the book is the SEQUENCE and the IDEAS, and the `credits` field
+# on every episode pays that debt precisely, naming the chapter so a reader can go and read
+# it. A curriculum that reprints somebody's table of contents has taken their work and given
+# nothing back; one that follows their argument, says so, and teaches it in its own voice with
+# its own examples has written something.
+#
+# THE SAME RULE APPLIES INSIDE A LESSON. Their NAMED THINGS keep their names, because that is
+# what a name is for — the deployment pipeline, the commit stage, branch by abstraction, the
+# test quadrants. Their PROSE does not get reused. Explain it as you understood it, in
+# examples this academy chose, and quote only where a quotation is genuinely better and is
+# marked as one.
+#
+# ============================================================================
+# IT IS A SOFTWARE BOOK, AND THAT IS ON PURPOSE
+# ============================================================================
+# This is NOT "CI/CD for data people". It is continuous delivery, taught properly, by someone
+# who also knows what a pipeline is. A reader should be able to take this track into a job
+# building web applications and be right.
+#
+# THE DATA NUANCE IS ADDED, NEVER SUBSTITUTED. Each episode teaches the chapter's principle
+# first, in the general form the book states it, and then asks the extra question a data
+# workload raises. Sometimes the answer is "nothing changes". Where it does change it usually
+# changes for one reason, and the track should name that reason every single time:
+#
+#     YOU CAN ROLL BACK THE CODE. YOU CANNOT ROLL BACK THE ROWS.
+#
+# The book already knows this — it is most of chapter 12 — which is precisely why it is the
+# right book for this academy rather than a compromise.
+#
+# ============================================================================
+# PRINCIPLES, NOT PRODUCTS
+# ============================================================================
+# THE BOOK IS FROM 2010. Its principles aged extremely well and its tooling did not, so the
+# 2010 tool examples — the configuration-management products of that decade especially — MUST
+# NOT be carried across. Neither should today's, beyond naming a category so a reader knows
+# what to search for.
+#
+# THE TEST FOR EVERY PARAGRAPH: would this sentence still be true if the team used entirely
+# different tools? If not, either it is a principle stated too specifically, or it does not
+# belong here. The tools have their own tracks — Data Ops runs the machine, Terraform &
+# Pulumi describes infrastructure, Kubernetes for Data Workloads runs the cluster, Analytics
+# Engineering with dbt shows one product's take on all of this.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE CHAPTER IT IS CREDITED TO. Before writing an episode, open
+# THAT CHAPTER, use its section headings as the COVERAGE CHECKLIST, and use its VOCABULARY FOR
+# THE NOUNS (commit stage, acceptance stage, artifact repository, binary, environment,
+# release, deployment, pipeline). Anything left out should be left out because an academy rule
+# says so, and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the chapter named. A brief is what a
+# writer actually opens; a rule that lives only in this header is a rule that gets forgotten
+# at the exact moment it matters.
+#
+# WHERE THE BOOK IS DATED, SAY SO IN THE LESSON rather than quietly modernising it. A reader
+# who later opens the book should recognise what they read here, including the parts where we
+# said "this is the one place the book shows its age".
+#
+# ============================================================================
+# THE PROJECTS ARE DATA PROJECTS
+# ============================================================================
+# Each series ends in a project, and every one of them is built on an ETL pipeline rather than
+# on a web application. The principles are general; the practice is ours. That is also the
+# honest division of labour in this track: the teaching is the book's, the exercises are the
+# academy's.
+
+course: learn-continuous-delivery
+track: continuousdelivery
+title: Continuous Delivery
+
+prerequisites:
+  - course: learn-data-ops
+    needs: "Series 1 · 43, and Series 3"
+    why: >-
+      You need git to be a tool you already use rather than a topic, because this track assumes
+      version control from its first episode. Data Ops Series 3 is also where a reader meets the
+      failures this track exists to prevent, and an argument about release safety lands better
+      after you have been paged once.
+
+excludes:
+  - topic: "The tools themselves — a build tool, a CI server, a configuration-management product"
+    where: "not covered, deliberately. Data Ops, Series 3 · 04 shows what a CI server is; this track teaches what to do with one, in terms that survive replacing it"
+  - topic: "Provisioning and describing infrastructure"
+    where: "covered in Terraform & Pulumi. In this course, Series 3 · 00 teaches the principles any such tool has to satisfy, without naming one"
+  - topic: "Running workloads on a cluster"
+    where: "covered in Kubernetes for Data Workloads"
+  - topic: "Writing the pipeline's transformations, and testing them"
+    where: "covered in ETL & Data Pipelines, Series 2 · 12. This track decides what runs those tests, when, and what happens when they fail"
+  - topic: "One product's implementation of all of this"
+    where: "covered in Analytics Engineering with dbt, Series 3 · 45. A tool track shows the buttons; this one is why they exist"
+
+series:
+  - slug: series1-before-a-pipeline
+    title: Before a Pipeline Can Exist
+    tagline: version control, a green build, and knowing which tests buy what
+    level: intermediate
+    episodes:
+      # CHAPTER 1. The book opens with the problem, not the solution, and so does this.
+      # COVER: the release-day antipatterns it names — DEPLOYING SOFTWARE MANUALLY, DEPLOYING
+      # TO A PRODUCTION-LIKE ENVIRONMENT ONLY WHEN DEVELOPMENT IS FINISHED, and MANUAL
+      # CONFIGURATION MANAGEMENT OF PRODUCTION. Then its principles: every change should
+      # trigger the feedback process; the feedback must be fast; the delivery team must
+      # receive and act on it. And the two lines worth memorising — IF IT HURTS, DO IT MORE
+      # OFTEN, BRING THE PAIN FORWARD, and DONE MEANS RELEASED.
+      # DATA NUANCE: the same antipatterns wearing our clothes. The fix somebody typed into
+      # production at 2 a.m. and nobody has a copy of; the transformation only ever run against
+      # last month's extract; the connection string edited on the server. State them as
+      # instances of the book's three, not as a separate list.
+      - n: "00"
+        slug: release-day
+        title: "Release Day — the Three Habits That Make It Frightening"
+        tags: ["humble-farley"]
+        credits:
+          - source: humble-farley
+            concept: "The release antipatterns, and the principle that if it hurts you should do it more often"
+            where: "ch. 1"
+        hands_on: ["koan:capture", "koan:diagnose"]
+        core: true
+        status: planned
+      # CHAPTER 2. The foundation everything later stands on, and the one people skip.
+      # COVER: the book's own scope for the term — VERSION CONTROL FOR EVERYTHING you need to
+      # recreate the system, MANAGING DEPENDENCIES, MANAGING SOFTWARE CONFIGURATION, and
+      # MANAGING ENVIRONMENTS. Its rules for configuration: it is a first-class concern, it is
+      # kept separate from the code, it is injected at deploy time, and the same binary is
+      # configured differently rather than rebuilt.
+      # THE QUESTION THE CHAPTER ASKS AND EVERY READER SHOULD ANSWER: could you recreate your
+      # production system, from scratch, from what is in version control?
+      # DATA NUANCE: the honest inventory for a data platform is longer than people expect —
+      # the transformation code, the DDL, the scheduler's definitions, the pipeline config, the
+      # dashboard definitions. AND THE ONE THAT IS NOT: the data. It is not configuration and it
+      # does not belong in version control, which is chapter 12 and is why that chapter exists.
+      - n: "05"
+        slug: everything-you-need-to-rebuild-it
+        title: "Everything You Need to Rebuild It — What Belongs in Version Control"
+        tags: ["humble-farley"]
+        credits:
+          - source: humble-farley
+            concept: "Configuration management as version control, dependencies, software configuration and environments"
+            where: "ch. 2"
+        hands_on: ["koan:capture", "koan:choose"]
+        core: true
+        status: planned
+      # CHAPTER 3. Note the book's framing, which is stronger than the usual one: CI is a
+      # PRACTICE, not a server. A team with a build server and long-lived branches is not doing
+      # continuous integration.
+      # COVER: the three prerequisites — version control, an automated build, agreement from
+      # the team — and then the practices, which are the chapter:
+      #   check in to trunk regularly, and small
+      #   create a comprehensive automated test suite
+      #   keep the build and test process short
+      #   DO NOT CHECK IN ON A BROKEN BUILD
+      #   always run all commit tests locally first, or let the tool do it for you
+      #   wait for tests to pass before moving on
+      #   NEVER GO HOME ON A BROKEN BUILD
+      #   always be prepared to revert to the previous revision
+      #   do not comment out failing tests
+      # DATA NUANCE: "the build" when nothing compiles. For a data project the equivalent is
+      # real and worth naming — the SQL parses, the models resolve, the DAG has no cycle, the
+      # config validates. A team that says "we have nothing to build" usually has all four and
+      # is running none of them.
+      - n: "10"
+        slug: integrating-every-day
+        title: "Integrating Every Day — Why a Green Build Is the Whole Team's Job"
+        tags: ["humble-farley"]
+        credits:
+          - source: humble-farley
+            concept: "Continuous integration as a team practice, and the essential practices that make it work"
+            where: "ch. 3"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # CHAPTER 4. The chapter that decides what the pipeline in Series 2 is actually running.
+      # COVER: the TEST QUADRANTS — business-facing against technology-facing, supporting the
+      # team against critiquing the product — WHICH ARE BRIAN MARICK'S AND WHICH THE BOOK
+      # CREDITS TO HIM. Credit him here too; the registry has an entry. Then unit, component,
+      # acceptance, and nonfunctional tests; test doubles; and the strategy questions — new
+      # project, mid-project, legacy system, integration testing.
+      # THE SHAPE THAT MATTERS: many fast tests underneath, few slow ones on top. State the
+      # failure mode plainly, because every team meets it — an inverted pyramid of slow
+      # end-to-end tests that nobody trusts and everybody reruns.
+      # DATA NUANCE, and it is the most useful thirty seconds in the series: DATA-QUALITY
+      # CHECKS ARE NOT TESTS. A test asks whether the code is correct and runs on fixed input.
+      # A quality check asks whether today's data is sane and runs in production on real input.
+      # They fail differently, they page different people, and confusing them gives you a
+      # pipeline that "has tests" and still ships a wrong number. Data Ops, Series 3 · 20 owns
+      # the checks; this owns the tests.
+      - n: "15"
+        slug: which-tests-buy-what
+        title: "Which Tests Buy What — Four Quadrants, and Why a Quality Check Is Not a Test"
+        tags: ["humble-farley", "marick"]
+        credits:
+          - source: humble-farley
+            concept: "Building a testing strategy — the test types, test doubles, and where to start on an existing system"
+            where: "ch. 4"
+          - source: marick
+            concept: "The test quadrants — business-facing against technology-facing, supporting the team against critiquing the product"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # PROJECT. Data, as every project in this track is.
+      # The exercise: a pipeline that exists and is not under control — SQL in a folder, a
+      # schedule somebody set up, a password in a script. Bring it to the end of Part I. Not
+      # "add CI": recreate it from version control, separate its configuration, and get a
+      # commit that can go red.
+      # GRADED BY ONE QUESTION, which is chapter 2's: could someone else rebuild this from the
+      # repository alone?
+      - n: "20"
+        slug: project-put-a-pipeline-under-control
+        title: "Project — Bring an Existing ETL Pipeline Under Configuration Management"
+        hands_on: ["koan:author", "koan:capture"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-from-commit-to-production
+    title: From Commit to Production
+    tagline: the stages a change passes through, and the rules that make them mean anything
+    level: advanced
+    episodes:
+      # CHAPTER 5. THE NAMED PATTERN THIS BOOK GAVE THE INDUSTRY, and the centre of the track.
+      # COVER: what a deployment pipeline is — an automated manifestation of the process for
+      # getting software from version control into the hands of users — and its stages: commit,
+      # automated acceptance, manual test or UAT, release. Then the principles, which are the
+      # chapter and which every later episode refers back to:
+      #   BUILD YOUR BINARIES ONLY ONCE, and promote the same artifact through every stage.
+      #   DEPLOY THE SAME WAY TO EVERY ENVIRONMENT, so the production deploy has been rehearsed
+      #     hundreds of times before it matters.
+      #   SMOKE-TEST YOUR DEPLOYMENTS.
+      #   DEPLOY INTO A COPY OF PRODUCTION.
+      #   EACH CHANGE PROPAGATES THROUGH THE PIPELINE INSTANTLY.
+      #   IF ANY PART OF THE PIPELINE FAILS, STOP THE LINE.
+      # DATA NUANCE: "build your binaries once" needs translating rather than dropping, and the
+      # translation is exact — the ARTIFACT is whatever gets promoted: the container image, the
+      # packaged transformation code, the compiled model set. What must not happen is the
+      # staging run using one version of a query and production a rebuilt one.
+      # AND THE ASYMMETRY THE BOOK'S PIPELINE ASSUMES AWAY: deploying into a copy of production
+      # is straightforward for an application and expensive for a warehouse. Say so here, and
+      # point forward to chapter 12.
+      - n: "00"
+        slug: the-route-a-change-takes
+        title: "The Route a Change Takes — One Artifact, Every Stage, No Side Doors"
+        tags: ["humble-farley"]
+        credits:
+          - source: humble-farley
+            concept: "The deployment pipeline pattern, its stages, and the principles that make it work — build once, deploy the same way everywhere, stop the line"
+            where: "ch. 5"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # CHAPTER 6. Principles only — the book's own tool examples are from 2010 and must not
+      # travel.
+      # COVER: the deployment script as the only way anything is deployed, including by you, by
+      # hand, today. It is IDEMPOTENT, it is the SAME SCRIPT for every environment with
+      # configuration as its input, it is IN VERSION CONTROL beside the thing it deploys, and
+      # it is TESTED — because it runs at the worst possible moment. Layers of the build, and
+      # keeping the script and the pipeline honest about each other.
+      # DATA NUANCE: a data deploy is three things and people script one. The CODE, the SCHEMA
+      # CHANGE, and the CONFIGURATION move together or you have a race, and the schema half is
+      # the part that cannot simply be redone — which is chapter 12 again.
+      - n: "05"
+        slug: the-deploy-script
+        title: "The Deploy Script — the Only Way Anything Ships, Including by Hand"
+        tags: ["humble-farley"]
+        credits:
+          - source: humble-farley
+            concept: "Build and deployment scripting — idempotent scripts, the same script for every environment, and scripts as tested artifacts"
+            where: "ch. 6"
+        hands_on: ["koan:author", "koan:rerun"]
+        core: true
+        status: planned
+      # CHAPTER 7. The first gate, and the one with a budget.
+      # COVER: what the commit stage does — compile, run the commit tests, run analysis, create
+      # the artifact and put it in a repository — and its results. THE TEN-MINUTE RULE, and why
+      # a limit rather than a target: past ten minutes people stop waiting, and a gate nobody
+      # waits for is not a gate. What earns a place in the commit stage, and what must be moved
+      # out of it.
+      # DATA NUANCE: the commit stage for a data project, concretely. Parse and compile the
+      # SQL. Unit-test the transforms on fixed input. Lint the model graph. Validate the config
+      # against its schema. NOT: anything that touches the warehouse, because it is slow and it
+      # is shared, and a commit stage that queues behind another branch has stopped being fast.
+      - n: "10"
+        slug: ten-minutes
+        title: "Ten Minutes — What Earns a Place in the First Gate"
+        tags: ["humble-farley"]
+        credits:
+          - source: humble-farley
+            concept: "The commit stage — its responsibilities, its results, and the ten-minute rule"
+            where: "ch. 7"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # CHAPTER 8. The longest chapter in the book, and the one most often skipped in practice.
+      # COVER: why acceptance tests at all — they test BEHAVIOUR the business asked for, not
+      # implementation, so a refactor does not break them. The layered approach the chapter
+      # argues for: the executable specification, the test implementation, and the application
+      # driver, kept separate so the spec survives a UI or interface change. Keeping the suite
+      # maintainable, and managing state and test isolation.
+      # DATA NUANCE: an acceptance test for a pipeline is known input, known output. Seed a
+      # small fixture, run the real pipeline, assert the result. The hard part is not writing
+      # it, it is the ADMISSION the book's chapter 12 also makes — your fixture is not
+      # production, and a class of defect exists only at production volume and shape. Say what
+      # a sample can and cannot prove.
+      - n: "15"
+        slug: what-it-should-do
+        title: "Acceptance Tests — What It Should Do, Not How It Does It"
+        tags: ["humble-farley"]
+        credits:
+          - source: humble-farley
+            concept: "Automated acceptance testing, and the layered separation of specification, test implementation and application driver"
+            where: "ch. 8"
+        hands_on: ["koan:author", "koan:equivalent"]
+        status: planned
+      # CHAPTER 9. The chapter that translates most directly of any in the book, because a data
+      # workload's nonfunctional requirement is usually a single number.
+      # COVER: what nonfunctional means — capacity, throughput, performance, availability,
+      # security — and the book's distinction between them, which people blur. Measuring
+      # capacity, the capacity-testing environment, and automating capacity tests into the
+      # pipeline as a stage of their own.
+      # DATA NUANCE: for a pipeline the requirement is almost always TIME. It must finish
+      # inside the window, at next year's volume, on a night when something else is also
+      # running. So the capacity test is: run it at ten times the data and measure. This is the
+      # cheapest early warning a data team can own, and almost nobody has it — the job that
+      # took twenty minutes in January takes six hours in October and the first person to
+      # notice is whoever opens the dashboard.
+      - n: "20"
+        slug: finishing-in-the-window
+        title: "Will It Still Finish in the Window — Capacity as a Stage of Its Own"
+        tags: ["humble-farley"]
+        credits:
+          - source: humble-farley
+            concept: "Testing nonfunctional requirements — measuring capacity, the capacity-testing environment, and putting it in the pipeline"
+            where: "ch. 9"
+        hands_on: ["koan:count:rows", "koan:predict"]
+        status: planned
+      # CHAPTER 10. The distinction that gives the book its subtitle.
+      # COVER: DEPLOYMENT IS A TECHNICAL EVENT, RELEASE IS A BUSINESS DECISION, and separating
+      # them is what makes frequent deployment safe. The release strategy, the rollback
+      # strategies the chapter sets out — redeploy the previous good version, blue-green
+      # deployment, canary releasing — and continuous deployment. Emergency fixes, and why they
+      # go through the same pipeline: a fix that skips the pipeline is the one that breaks
+      # something else.
+      # DATA NUANCE, and it is the sentence this whole track hangs on: BLUE-GREEN AND CANARY
+      # ARE ROLLBACK STRATEGIES FOR CODE. Neither un-writes a row. A canary that sends ten per
+      # cent of traffic to the new version has, for a pipeline, written ten per cent of last
+      # night's numbers with it. Roll forward is the honest default here, and the repair of
+      # what was written is a separate piece of work that nothing automates for you.
+      - n: "25"
+        slug: shipping-is-not-switching-on
+        title: "Shipping Is Not Switching On — Two Events People Treat as One"
+        tags: ["humble-farley"]
+        credits:
+          - source: humble-farley
+            concept: "Separating deployment from release, and the rollback strategies — redeploy, blue-green and canary releasing"
+            where: "ch. 10"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # PROJECT. The series' whole content, on a pipeline.
+      # The exercise: a commit stage under ten minutes, an acceptance stage on a seeded
+      # fixture, one artifact promoted between them, and a deploy script that is the only way
+      # the thing ships. Then break it on purpose and watch the line stop.
+      - n: "30"
+        slug: project-commit-to-production
+        title: "Project — Take a Nightly ETL Job From Commit to Production"
+        hands_on: ["koan:author", "koan:rerun"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-everything-around-it
+    title: Everything Around the Pipeline
+    tagline: environments, migrations, dependencies, branching, and whoever has to approve it
+    level: advanced
+    episodes:
+      # CHAPTER 11. Principles, stated so they outlive the products — which is exactly what the
+      # book's own 2010 tool examples failed to do.
+      # COVER: environments are provisioned automatically and identically; their configuration
+      # is in version control and applied, not typed; a change to an environment goes through
+      # the same review as a change to code; and you should be able to build a new one on
+      # demand. The chapter's monitoring section, briefly.
+      # THE TEST THAT SURVIVES ANY TOOL: if the server died right now, is rebuilding it a
+      # command or a memory?
+      # SEAM: Terraform & Pulumi is that command, and Data Ops, Series 1 · 46 is the machine
+      # underneath it. This episode is what any such tool has to satisfy and why.
+      - n: "00"
+        slug: if-the-server-died
+        title: "If the Server Died — Is Rebuilding It a Command or a Memory?"
+        tags: ["humble-farley"]
+        credits:
+          - source: humble-farley
+            concept: "Managing infrastructure and environments — automatic provisioning, environment configuration under version control, and change management"
+            where: "ch. 11"
+        hands_on: ["koan:choose", "koan:capture"]
+        status: planned
+      # CHAPTER 12. THE CHAPTER THIS ACADEMY WAS ALWAYS GOING TO CARE ABOUT MOST, and it is
+      # the book's, not ours — which is worth saying, because it means the discipline is
+      # twenty-odd years old rather than a data-team invention.
+      # COVER: versioning the database, incremental change with each migration in version
+      # control and applied in order, and the migration as a first-class part of the deploy.
+      # Rolling back the database, and why the honest answer is usually forward. Managing test
+      # data — the chapter's three kinds, for unit, acceptance and capacity testing — and its
+      # warning against sharing one big dataset between them.
+      # CREDIT AMBLER AND SADALAGE ALONGSIDE, as the book itself does: the schema-change
+      # patterns and their NAMES come from Refactoring Databases, and this episode should use
+      # those names.
+      # DATA NUANCE: everything here is already about data, so the nuance is one of scale. A
+      # migration on an application table is seconds; the same shape of change on a
+      # billion-row fact table is a maintenance window, and "just add the column" stops being
+      # free. Data Ops, Series 2 · 35 owns doing it without blocking; this owns making it part
+      # of the pipeline.
+      - n: "05"
+        slug: the-migration-ships-with-the-code
+        title: "The Migration Ships With the Code — Putting a Database Under Version Control"
+        tags: ["humble-farley", "ambler"]
+        credits:
+          - source: humble-farley
+            concept: "Managing data in the deployment pipeline — versioning the database, incremental migration, and the three kinds of test data"
+            where: "ch. 12"
+          - source: ambler
+            concept: "The database refactoring patterns, and their names"
+        hands_on: ["koan:author", "koan:predict"]
+        core: true
+        status: planned
+      # CHAPTER 12, CONTINUED. The book raises decoupling the application deployment from the
+      # data migration and it deserves its own episode, because it is the technique that makes
+      # everything in Series 2 usable on a system with a database.
+      # COVER: BACKWARD- AND FORWARD-COMPATIBLE CHANGE as the whole mechanism, and the
+      # expand/contract shape it produces — add the new column, write to both, migrate the
+      # read, then remove the old one, with a release boundary between each step. Why that lets
+      # code and schema deploy independently, which is what makes rollback of the CODE possible
+      # at all.
+      # AND THE LIMIT, said plainly because this track's spine depends on it: expand/contract
+      # buys you a safe rollback of the code and NOT of the rows. If the bad version wrote
+      # wrong values into a column that both versions read, no deployment technique in this
+      # book helps you. What helps is knowing which run wrote what — so keep the load's audit
+      # columns, and Data Ops, Series 3 · 20 is how you notice at all.
+      - n: "10"
+        slug: expand-and-contract
+        title: "Expand and Contract — Changing a Schema While Both Versions Are Running"
+        tags: ["humble-farley", "ambler"]
+        credits:
+          - source: humble-farley
+            concept: "Decoupling application deployment from database migration through backward- and forward-compatible change"
+            where: "ch. 12"
+          - source: ambler
+            concept: "The expand/contract sequence for an evolutionary schema change"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # CHAPTER 13. The chapter about keeping a growing system's pipeline fast.
+      # COVER: what a component is and when to split one out — and the book's caution that
+      # splitting too early costs more than it saves. Dependencies and their versions, the
+      # diamond dependency problem, and pipelines for components that feed the pipeline for the
+      # system. Integration pipelines.
+      # DATA NUANCE: the shared transformation library, the macro package, the model everybody
+      # imports. The moment it has its own release cycle it has its own pipeline, and the
+      # question the chapter asks — how do you know which version of it produced last night's
+      # numbers — is a lineage question with a delivery answer.
+      - n: "15"
+        slug: when-to-split-something-out
+        title: "When to Split Something Out — and What It Costs the Pipeline"
+        tags: ["humble-farley"]
+        credits:
+          - source: humble-farley
+            concept: "Managing components and dependencies — when to split a component out, dependency versions, and pipelines for components"
+            where: "ch. 13"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # CHAPTER 14. The chapter that argues with how most teams actually work, and the argument
+      # is worth reproducing rather than softening.
+      # COVER: the branching strategies the chapter compares — branch by feature, branch by
+      # team, branch by release — and why it prefers TRUNK-BASED DEVELOPMENT with small,
+      # frequent commits: a long-lived branch defers integration, and deferred integration is
+      # the pain chapter 1 said to bring forward. BRANCH BY ABSTRACTION as the technique for
+      # making a large change on trunk without a long branch. Distributed version control,
+      # written in 2010 and still readable.
+      # DATA NUANCE: a long-lived branch of transformation code is worse than one of
+      # application code, because the SCHEMA MOVED UNDERNEATH IT. Application code merges
+      # against code; a data branch merges against code AND a warehouse that changed shape
+      # while nobody was looking, and the tests that would have caught it were never run
+      # against the new shape.
+      - n: "20"
+        slug: long-branches-defer-the-pain
+        title: "Long Branches Defer the Pain — Working on Trunk, and Branch by Abstraction"
+        tags: ["humble-farley"]
+        credits:
+          - source: humble-farley
+            concept: "Branching strategies compared, the argument for trunk-based development, and branch by abstraction"
+            where: "ch. 14"
+        hands_on: ["koan:choose", "koan:predict"]
+        status: planned
+      # CHAPTER 15. The book closes on the organisation rather than the machinery, and so
+      # should this.
+      # COVER: the MATURITY MODEL and how to use it — as a conversation about where a team is,
+      # never as a score. Risk management, the value-stream view of the delivery process, and
+      # COMPLIANCE AND AUDITING, where the chapter makes its sharpest point: an automated
+      # pipeline is a BETTER audit trail than a manual approval, because it records what
+      # actually happened rather than what somebody signed.
+      # DATA NUANCE, and it is the natural closing note for this track: the auditor's question
+      # about a number — who changed it, when, and on whose approval — is answerable if the
+      # transformation, the schema and the deploy all went through the pipeline, and is not
+      # answerable otherwise. That is the argument to take to whoever has to approve any of
+      # this.
+      - n: "25"
+        slug: getting-permission
+        title: "Getting Permission — Why a Pipeline Audits Better Than a Signature"
+        tags: ["humble-farley"]
+        credits:
+          - source: humble-farley
+            concept: "The maturity model, risk management, and the argument that an automated pipeline is a better audit trail than a manual approval"
+            where: "ch. 15"
+        hands_on: ["koan:choose", "koan:capture"]
+        status: planned
+      # PROJECT. Chapters 12 and 14 together, on the thing that actually hurts.
+      # The exercise: a column has to change type on a table a live pipeline writes to and a
+      # live dashboard reads from. Do it with expand and contract, through the pipeline, with
+      # no downtime, no rebuild, and a rollback of the code available at every step. Then say
+      # out loud which part of it a rollback would NOT have fixed.
+      - n: "30"
+        slug: project-ship-a-schema-change
+        title: "Project — Ship a Schema Change to a Live Warehouse With Nothing Going Down"
+        hands_on: ["koan:author", "koan:rerun"]
+        core: true
+        tags: ["project"]
+        status: planned

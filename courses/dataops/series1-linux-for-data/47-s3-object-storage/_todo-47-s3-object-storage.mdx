@@ -1,0 +1,121 @@
+---
+title: "S3 Object Storage — Backblaze, R2, rclone, and the Offsite Copy"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-ops"
+tags: []
+level: "beginner"
+module: "series1-linux-for-data"
+order: 47
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/dataops/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/dataops/series1/_29/S3ObjectStorageKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Ops · Linux for Data (beginner) — "do real data work from the terminal, with shell tools alone"
+      before:  VPS & Cloud Compute — Getting a Linux Box, and Sizing It for Data
+      THIS:    S3 Object Storage — Backblaze, R2, rclone, and the Offsite Copy
+      after:   Project — A Nightly Job Written Only With Shell Tools
+    CORE — on the shortest path to being productive. Someone will read only
+    the core episodes, so this one has to stand alone.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: get a bucket, put data in it from the command line, read it back, and know what
+    it will cost.
+    DECISION: directly after 46, because renting the machine and renting the storage are
+    the same shopping trip, and it is the last thing the reader learns before the project —
+    which is right, since 1 · 42 told them a copy on the same disk is not a backup and left
+    the other copy with nowhere to go. This is where it goes. It also closes a real hole —
+    several courses READ from object
+    storage (DuckDB's httpfs querying Parquet over S3, ClickHouse's s3() table function and
+    BACKUP ... TO S3) and not one says what a bucket is or how you get one. They consume
+    it; this provides it.
+
+    ── THE SENTENCE THE EPISODE IS BUILT ON ────────────────────────────────
+    "S3" IS A PROTOCOL, NOT A PRODUCT. Backblaze B2, Cloudflare R2, Wasabi, DigitalOcean
+    Spaces, Hetzner and MinIO all speak the S3 API, so one tool and one pair of keys work
+    against any of them. A reader who understands that is free to shop on price, which is
+    the whole practical point.
+
+    ── A BUCKET IS NOT A FOLDER, and this is what people get wrong for months ─
+      NO DIRECTORIES             there are keys with slashes in them. "Listing a directory"
+                                 is a prefix scan, and it is billed per request.
+      NO PARTIAL WRITES          you replace an object, you do not edit one. No sed -i, no
+                                 append, no seek. A pipeline that "updates a file" writes a
+                                 new one — which is exactly why data lands here as
+                                 immutable Parquet.
+      IT IS HTTP                 with a signature, which is why a database can read it
+                                 directly without anything being downloaded first.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      THE OFFSITE COPY           1 · 42 said a copy on the same disk is not a backup. This
+                                 is the other copy, for a few dollars a month.
+      THE RAW ARCHIVE            the landing zone that keeps every extract you ever
+                                 received, cheap enough never to delete, and readable IN
+                                 PLACE by DuckDB or ClickHouse.
+      COLD HISTORY               storage classes and LIFECYCLE RULES — cold after 30 days,
+                                 expire after a year. Series 3 · 35 owns retention as a
+                                 discipline; this is the mechanism it runs on.
+      THE TOOLS                  rclone, because one config reaches every backend; the
+                                 vendor CLI and s3cmd named; MinIO for a local bucket to
+                                 practise against.
+      THE COST MODEL             storage per gigabyte is cheap and predictable. EGRESS AND
+                                 PER-REQUEST CHARGES ARE WHAT BITE, and they differ by an
+                                 order of magnitude between vendors. Also name the charge
+                                 nobody discovers: failed multipart uploads never aborted,
+                                 invisible in a listing, billed monthly.
+      SECURITY                   the most consequential paragraph here. A bucket left
+                                 PUBLIC is the commonest way a company's data ends up in
+                                 the news. Keys are credentials, so 1 · 35 and 1 · 43 apply
+                                 unchanged. VERSIONING and OBJECT LOCK are the answer to
+                                 ransomware encrypting the backups along with everything
+                                 else.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:process:tool
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/dataops/series1/_29/S3ObjectStorageKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: rclone sync where rclone copy was meant. sync makes the bucket MATCH
+    the source, so the files deleted locally in March are deleted offsite too. The offsite
+    copy is then not a backup at all — it is a faithful mirror of your mistake, and it
+    looks healthy right up until you need it. */}
+
+TODO

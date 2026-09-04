@@ -72,8 +72,8 @@ excludes:
     where: "covered in Data Warehousing, Series 2 · 00. Assumed here"
   - topic: "Designing the star schema you load into it"
     where: "covered in Data Modeling, and loaded in Data Warehousing"
-  - topic: "Running a cluster — sharding topology, ZooKeeper/Keeper operations, backups"
-    where: "covered in Data Ops for the operational discipline. In this course, Series 3 · 10 covers only what a query author must know about distribution"
+  - topic: "Running a cluster — sharding topology, ZooKeeper/Keeper operations"
+    where: "covered in Data Ops for the operational discipline. In this course, Series 3 · 10 covers only what a query author must know about distribution, and Series 3 · 17 teaches BACKUP, RESTORE and FREEZE"
 
 series:
   - slug: series1-clickhouse-essentials
@@ -249,6 +249,22 @@ series:
         slug: what-you-gave-up
         title: "What You Gave Up — No Foreign Keys, No Transactions, and Eventual Everything"
         hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # ADDED 2026-09-02. Previously excluded to Data Ops, and unusually wrong to exclude here:
+      # ClickHouse's backup story follows directly from MergeTree, which this course teaches at
+      # Series 1 · 10, so the reader is better placed to understand it than any other engine's.
+      # COVER: the BACKUP and RESTORE statements to a Disk or S3, and clickhouse-backup as the
+      # tool most teams actually run. Then ALTER TABLE ... FREEZE, which makes HARDLINKS of the
+      # parts — cheap and instantly consistent BECAUSE A PART IS IMMUTABLE. That is the payoff
+      # of 1 · 10 and it is genuinely different from every row store in this catalogue, where
+      # copying files under a live server corrupts them.
+      # THE TRAP: backing up a DISTRIBUTED table backs up nothing. It is a view over shards, and
+      # the data lives on the shards — each one has to be backed up itself.
+      - n: "17"
+        slug: backup-and-restore
+        title: "BACKUP, RESTORE and FREEZE — Why an Immutable Part Can Simply Be Copied"
+        hands_on: ["koan:process:tool", "koan:predict"]
         core: true
         status: planned
       - n: "20"

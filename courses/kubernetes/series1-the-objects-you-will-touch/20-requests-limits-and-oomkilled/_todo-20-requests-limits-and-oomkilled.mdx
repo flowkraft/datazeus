@@ -1,0 +1,77 @@
+---
+title: "Requests, Limits and OOMKilled — Why the Pod Died and the Log Said Nothing"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-kubernetes"
+tags: []
+level: "intermediate"
+module: "series1-the-objects-you-will-touch"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/kubernetes/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/kubernetes/series1/_20/RequestsLimitsAndOomkilledKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Kubernetes documentation (kubernetes.io/docs) — the Concepts section that owns this topic (Workloads, Storage, Configuration, Scheduling and Eviction).
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns the single machine and the container image, Airflow owns dependencies between steps),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    Kubernetes assumes a workload is stateless and long-running. A data job is neither, and that mismatch is the reason for most surprises here.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE EPISODE THAT ANSWERS THE MOST COMMON REAL QUESTION ON THIS PLATFORM.
+     COVER: requests as what the scheduler reserves, limits as what the kernel enforces, and
+     the fact that they are DIFFERENT MECHANISMS with different failure modes:
+       TOO LITTLE MEMORY  the container is killed by the kernel. Exit code 137, reason
+                          OOMKilled, and — the part that wastes an afternoon — NO ERROR IN
+                          YOUR LOGS, because the process was not asked to stop, it was
+                          terminated. describe shows it; logs do not.
+       TOO LITTLE CPU     nothing is killed. The job is throttled and simply runs for four
+                          hours instead of forty minutes, which is harder to notice.
+       REQUESTS TOO HIGH  the pod stays Pending forever because no node has room.
+     WHY THIS BITES DATA WORK SPECIFICALLY: memory use follows the DATA, not the code. The
+     job that was sized in March against 2 GB of input meets 6 GB in November and dies, and
+     nothing in the code changed. Sizing is a data question and it recurs.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/kubernetes/series1/_20/RequestsLimitsAndOomkilledKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

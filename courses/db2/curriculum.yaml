@@ -56,8 +56,8 @@ prerequisites:
 excludes:
   - topic: "SQL itself"
     where: "covered in Learn SQL"
-  - topic: "Database administration — backup and recovery, HADR, storage groups, security"
-    where: "not covered. Data Ops owns the operational discipline"
+  - topic: "Database administration — HADR, storage groups, security"
+    where: "not covered. In this course, Series 1 · 22 teaches backup, restore and rollforward on LUW, because logging mode is a decision made before the data matters; HADR and storage groups stay with the DBA"
   - topic: "COBOL, CICS and mainframe application development"
     where: "not covered. Series 1 · 20 explains what a bound package is because a query author meets one, and stops there"
 
@@ -116,6 +116,23 @@ series:
         slug: packages-and-bind
         title: "Packages and BIND — When the Access Plan Was Chosen, and Why a REBIND Changes It"
         hands_on: ["koan:predict", "koan:diagnose"]
+        status: planned
+      # ADDED 2026-09-02. Previously excluded wholesale to Data Ops, which runs PostgreSQL.
+      # COVER: db2 backup, restore and rollforward, and the setting the whole thing hinges on —
+      # LOGARCHMETH1. Db2 defaults to CIRCULAR logging, which means logs are reused and there is
+      # nothing to roll forward through; you can restore the backup and NOTHING SINCE. Archive
+      # logging is what makes online backup and point-in-time recovery possible at all.
+      # Then the logical tools a developer actually uses: db2look for DDL and db2move for data.
+      # STATE THE PLATFORM, as this course does everywhere: this is LUW. On z/OS the utilities
+      # are different and the DBA owns them.
+      # THE TRAP: an "offline backup, nightly" that a team believes is a recovery strategy. With
+      # circular logging it restores yesterday and loses today, and the setting that would have
+      # fixed it had to be chosen before the data mattered.
+      - n: "22"
+        slug: backup-and-rollforward
+        title: "db2 backup, restore and rollforward — and Why Circular Logging Loses Today"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
         status: planned
       - n: "25"
         slug: project-explore

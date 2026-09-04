@@ -1,0 +1,75 @@
+---
+title: "Pending, CrashLoopBackOff, Evicted — Reading a Failure Without Guessing"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-kubernetes"
+tags: []
+level: "advanced"
+module: "series3-running-data-workloads-well"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/kubernetes/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/kubernetes/series3/_20/DebuggingAWorkloadKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Kubernetes documentation (kubernetes.io/docs) — the Concepts section that owns this topic (Workloads, Storage, Configuration, Scheduling and Eviction).
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns the single machine and the container image, Airflow owns dependencies between steps),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    Kubernetes assumes a workload is stateless and long-running. A data job is neither, and that mismatch is the reason for most surprises here.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE MOST USEFUL EPISODE IN THE COURSE, and it should read like a lookup table you can
+     keep. Each state, what it means, and the ONE command that confirms it:
+       Pending             nothing has room, or a claim is unbound. describe, read Events.
+       ImagePullBackOff    wrong name, wrong tag, or no credentials for a private registry.
+       CrashLoopBackOff    it starts and dies. logs --previous, because the current
+                           container has not said anything yet.
+       OOMKilled / 137     Series 1 · 20, and there will be nothing in the logs.
+       Evicted             the node ran out of disk or memory and chose your batch.
+       Completed but wrong the job "succeeded" and wrote nothing, which is Series 2 · 00.
+     THE HABIT WORTH MORE THAN THE TABLE: events are namespaced, ordered and expire. Read
+     them first and read them early.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/kubernetes/series3/_20/DebuggingAWorkloadKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

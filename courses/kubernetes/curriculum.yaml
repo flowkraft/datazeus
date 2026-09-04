@@ -1,0 +1,332 @@
+# The ordered episode list for Kubernetes for Data Workloads. Field docs live in
+# courses/learnsql/curriculum.yaml. `short` is omitted until an episode has a video.
+#
+# The job this track teaches: get a data job running on a cluster somebody else built, and
+# find out why it died.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# KUBERNETES ASSUMES YOUR WORKLOAD IS STATELESS AND LONG-RUNNING. A data job is neither. It
+# is a batch that starts, writes something somewhere, and exits — and almost every surprise a
+# data person meets here comes from that mismatch: the container that vanished with its
+# output, the pod killed for using the memory the data needed, the CronJob that ran twice.
+#
+# So this course is not a Kubernetes course with data examples. It is the subset of Kubernetes
+# a data person meets, taught in the order they meet it, with the batch/stateful mismatch
+# named every time it is the reason.
+#
+# ============================================================================
+# WHO THIS IS FOR, AND WHO IT IS NOT
+# ============================================================================
+# FOR: the data person whose pipeline already runs on a cluster somebody else operates, or is
+# about to. They need to read, run, debug and size a workload.
+# NOT FOR: the person building the cluster. Provisioning, ingress, service mesh, RBAC
+# administration and cluster upgrades are platform engineering and stay out — see excludes.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL KUBERNETES DOCUMENTATION
+# ============================================================================
+# kubernetes.io/docs runs Concepts (Overview, Cluster Architecture, Containers, Workloads,
+# Services and Networking, Storage, Configuration, Security, Scheduling and Eviction), then
+# Tasks, Tutorials and Reference. Its CONCEPTS/WORKLOADS section is the right order for
+# Series 1, CONCEPTS/STORAGE for Series 2, and SCHEDULING AND EVICTION for Series 3.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL KUBERNETES DOCUMENTATION. Before writing an
+# episode, open the docs' own page for that topic, use it as the COVERAGE CHECKLIST, and use
+# its VOCABULARY FOR THE NOUNS (pod, node, control plane, controller, object, spec, status,
+# claim, class, taint, toleration, CRD). Anything left out should be left out because an
+# academy rule says so — Data Ops owns the single machine and the image, Airflow owns
+# dependencies between steps — and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the docs page named. A brief is what
+# a writer actually opens; a rule that lives only in this header is a rule that gets forgotten
+# at the exact moment it matters.
+#
+# TEACH AGAINST WHAT A LEARNER CAN RUN: kind, minikube or k3s on their own machine. Where a
+# behaviour needs a real cloud cluster — a StorageClass that provisions, an autoscaler that
+# adds a node — say so rather than implying they can try it.
+#
+# STATE THE VERSION any API-shaped claim was checked against. Kubernetes deprecates, and an
+# episode written from memory teaches apiVersions that no longer parse.
+
+course: learn-kubernetes
+track: kubernetes
+title: Kubernetes for Data Workloads
+
+prerequisites:
+  - course: learn-data-ops
+    needs: "Series 1, and Series 1 · 37 in particular"
+    why: >-
+      Everything here runs a container, and this course does not teach one. You need images,
+      volumes, environment variables and logs to already mean something, and Data Ops
+      Series 1 · 37 is where that happens.
+
+excludes:
+  - topic: "Building the container image"
+    where: "covered in Data Ops, Series 1 · 37, which is Docker itself. Here the image already exists and gets scheduled"
+  - topic: "Provisioning the cluster — nodes, networking, ingress, service mesh, RBAC administration, upgrades"
+    where: "not covered; this is platform engineering and a different job. Terraform & Pulumi owns describing infrastructure as code, and even that course stops at the cluster's edge rather than operating one"
+  - topic: "Expressing dependencies between pipeline steps"
+    where: "covered in ETL & Data Pipelines, Series 2 · 45 as a concept and in Apache Airflow as a tool. A CronJob runs one thing on a clock; it has no idea what ran before it"
+  - topic: "Whether to use an orchestrator at all, and which one"
+    where: "covered in Data Ops, Series 3 · 00. This course assumes the cluster is already the answer somebody gave"
+  - topic: "Continuous delivery of the manifests"
+    where: "covered in Continuous Delivery, which owns the deployment pipeline as a subject. In this course, Series 3 · 15 names the GitOps tools and does not teach them"
+
+series:
+  - slug: series1-the-objects-you-will-touch
+    title: The Objects You Will Actually Touch
+    tagline: pods, jobs, and why the container died
+    level: intermediate
+    episodes:
+      # COVER: the object model before any object — you DECLARE a desired state, a CONTROLLER
+      # makes reality match it, and everything else in Kubernetes is that loop wearing a
+      # different name. Then pod, node, control plane, and the fact that a pod is a group of
+      # containers sharing a network namespace, which is why a sidecar can see localhost.
+      # THE FIRST CORRECTION, and it saves weeks: YOU ALMOST NEVER CREATE A POD DIRECTLY. You
+      # create a Job, a CronJob or a Deployment, and something else creates the pod. A reader
+      # who writes bare pods gets no restarts, no rescheduling and no history.
+      # NAMESPACES here too, because every command they type will need one.
+      - n: "00"
+        slug: pods-and-the-control-loop
+        title: "Pods, Nodes and the Control Loop — Declaring What You Want, Not What to Do"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: kubectl as the whole interface — get, describe, logs, exec, apply, delete — and
+      # the habit that matters most: DESCRIBE BEFORE LOGS. describe shows Events, which is
+      # where scheduling and image failures live; logs only exist if the container started.
+      # -o yaml to see what the cluster actually stored, --previous for the crashed run,
+      # -f to follow. Contexts and namespaces, and the mistake of running the right command
+      # against the wrong cluster.
+      - n: "05"
+        slug: kubectl
+        title: "kubectl — describe, logs, exec, and Reading What the Cluster Tells You"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      # THE CENTRAL EPISODE OF THE COURSE. Everything before it is preparation.
+      # COVER: Job as "run this to completion", CronJob as "run it on a schedule", and the
+      # fields that decide behaviour rather than the ones that look important:
+      #   backoffLimit             how many times a failure is retried before it gives up.
+      #   restartPolicy            OnFailure against Never, and what each does to your logs.
+      #   completions/parallelism  the fan-out a data job actually wants.
+      #   activeDeadlineSeconds    the runaway you would otherwise pay for all weekend.
+      #   ttlSecondsAfterFinished  or the namespace fills with completed pods forever.
+      #   concurrencyPolicy        Allow, Forbid, Replace — and Allow IS THE DEFAULT, so a
+      #                            load that overruns its hour will run twice at once.
+      #   startingDeadlineSeconds  what happens to the run that was missed while the
+      #                            controller was down.
+      # THE SEAM WITH IDEMPOTENCY: ETL & Data Pipelines, Series 1 · 30 owns it. This episode
+      # is where a reader finds out why they needed it, because Kubernetes guarantees AT LEAST
+      # ONCE and not exactly once.
+      - n: "10"
+        slug: jobs-and-cronjobs
+        title: "Job and CronJob — Your Nightly Load as a Kubernetes Object"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the long-running half, because a data person meets it even though their own work
+      # is batch — an API the pipeline calls, a dashboard, a Postgres somebody deployed.
+      # Deployment, ReplicaSet, rolling update, and Service as a stable name in front of pods
+      # that come and go. ClusterIP against NodePort against LoadBalancer, briefly.
+      # WHY THIS IS NOT CORE: your load is a Job. This is context for reading somebody else's
+      # manifests, not something you will write.
+      - n: "15"
+        slug: deployments-and-services
+        title: "Deployments and Services — The Long-Running Half You Have to Read"
+        hands_on: ["koan:predict", "koan:choose"]
+        status: planned
+      # THE EPISODE THAT ANSWERS THE MOST COMMON REAL QUESTION ON THIS PLATFORM.
+      # COVER: requests as what the scheduler reserves, limits as what the kernel enforces, and
+      # the fact that they are DIFFERENT MECHANISMS with different failure modes:
+      #   TOO LITTLE MEMORY  the container is killed by the kernel. Exit code 137, reason
+      #                      OOMKilled, and — the part that wastes an afternoon — NO ERROR IN
+      #                      YOUR LOGS, because the process was not asked to stop, it was
+      #                      terminated. describe shows it; logs do not.
+      #   TOO LITTLE CPU     nothing is killed. The job is throttled and simply runs for four
+      #                      hours instead of forty minutes, which is harder to notice.
+      #   REQUESTS TOO HIGH  the pod stays Pending forever because no node has room.
+      # WHY THIS BITES DATA WORK SPECIFICALLY: memory use follows the DATA, not the code. The
+      # job that was sized in March against 2 GB of input meets 6 GB in November and dies, and
+      # nothing in the code changed. Sizing is a data question and it recurs.
+      - n: "20"
+        slug: requests-limits-and-oomkilled
+        title: "Requests, Limits and OOMKilled — Why the Pod Died and the Log Said Nothing"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: ConfigMap for configuration and Secret for credentials, mounted as environment
+      # variables or as files, and which to prefer — a file, because an env var leaks into
+      # every child process and every crash dump.
+      # SAY THE UNCOMFORTABLE TRUTH PLAINLY: a Secret is BASE64, NOT ENCRYPTION. Anyone who can
+      # read the object can read the password, and unless the cluster enables encryption at
+      # rest it is plain in etcd. Then the real answers, named: an external secrets operator,
+      # or the cloud's own secret manager.
+      # SEAM: Data Ops, Series 1 · 35 owns credentials a job can read, and Series 1 · 43 owns
+      # keeping them out of git. This is the same rule wearing a Kubernetes object.
+      - n: "25"
+        slug: configmaps-and-secrets
+        title: "ConfigMaps and Secrets — Where the Connection String Comes From, and Why base64 Is Not Encryption"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "30"
+        slug: project-nightly-load-as-a-cronjob
+        title: "Project — Run a Nightly Load as a CronJob and Prove It Recovers"
+        hands_on: ["koan:author", "koan:rerun"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-state-in-a-stateless-world
+    title: Data Has State, Kubernetes Assumes It Does Not
+    tagline: where the output goes, and why it vanished
+    level: advanced
+    episodes:
+      # COVER: the container filesystem is EPHEMERAL and gone when the pod is. That sentence is
+      # obvious in isolation and catches everybody in practice, because the job ran, exited 0
+      # and produced nothing you can find. emptyDir as the scratch space that lives as long as
+      # the pod — genuinely useful for a sort or a spill file, useless for output.
+      # THE DIAGNOSTIC HABIT: if you cannot name where the bytes went, they went nowhere.
+      - n: "00"
+        slug: ephemeral-by-default
+        title: "Ephemeral by Default — Why the Job Succeeded and the Output Is Gone"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the three-part model, which is the part people find confusing and is actually
+      # simple once separated — a PersistentVolume is the storage, a PersistentVolumeClaim is
+      # the request your pod makes, and a StorageClass is the recipe that creates one on
+      # demand. Access modes, and the trap: ReadWriteOnce means ONE NODE, so the second pod
+      # that wants the same volume stays Pending with a message that does not say why.
+      # Reclaim policy, and the delete that took the data with it.
+      - n: "05"
+        slug: volumes-and-claims
+        title: "PersistentVolumeClaims and StorageClasses — Asking the Cluster for Somewhere to Write"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: what a StatefulSet gives that a Deployment does not — stable names, stable
+      # storage per replica, ordered start and stop — and why databases need exactly those.
+      # THEN THE HONEST ARGUMENT, which this course owes the reader rather than a slogan:
+      # running a database in Kubernetes is now normal and is still a decision. FOR: one
+      # deployment model, operators that handle failover, and the same tooling as everything
+      # else. AGAINST: you have added a layer between the data and the disk, and the failure
+      # modes are the union of both systems. State the question that decides it — do you have
+      # someone who will operate it — and let the reader answer.
+      # SEAM: Data Ops, Series 2 is running PostgreSQL properly and none of it changes here.
+      - n: "10"
+        slug: statefulsets-and-databases
+        title: "StatefulSets — and the Honest Argument About Databases in Kubernetes"
+        hands_on: ["koan:choose", "koan:predict"]
+        status: planned
+      # COVER: the pattern that usually wins for data work, and it is the reason this series
+      # exists — DO NOT ASK KUBERNETES FOR A DISK. Write to object storage, keep the pod
+      # stateless, and the whole PVC problem disappears along with the node affinity it drags
+      # in. Credentials for the bucket, and reading Parquet straight out of it.
+      # WHEN A VOLUME STILL WINS: a genuine scratch space too big for memory, and a database.
+      # SEAM: Data Ops, Series 1 · 47 owns object storage itself — buckets, keys, lifecycle
+      # rules and cost. This owns the choice between it and a claim.
+      - n: "15"
+        slug: object-storage-instead-of-volumes
+        title: "Object Storage Instead of a Volume — the Pattern That Usually Wins"
+        hands_on: ["koan:choose", "koan:process:tool"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-give-a-job-somewhere-to-write
+        title: "Project — Give a Job Somewhere to Write, Twice, and Compare"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-running-data-workloads-well
+    title: Running Data Workloads Well
+    tagline: scheduling, operators, and reading a failure
+    level: advanced
+    episodes:
+      # COVER: how a pod ends up on a node, and how to influence it when the default is wrong —
+      # nodeSelector, affinity, taints and tolerations — with the data-shaped reason: the big
+      # nightly job needs the big machine, or the GPU node, or the one with fast local disk.
+      # PRIORITY AND PREEMPTION in one paragraph: your batch is the thing that gets evicted.
+      - n: "00"
+        slug: scheduling-and-node-selection
+        title: "Scheduling, Taints and Tolerations — Getting the Big Job onto the Big Machine"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # COVER: the three autoscalers and which one you actually want — HPA scales replicas on a
+      # metric, the cluster autoscaler adds nodes, VPA changes requests. THE POINT FOR THIS
+      # READER: a HorizontalPodAutoscaler is built for web traffic and does almost nothing for
+      # a batch job, which is one pod that needs to be big rather than many pods that are
+      # small. What helps a batch is the CLUSTER autoscaler plus honest requests.
+      - n: "05"
+        slug: autoscaling
+        title: "The Autoscalers — Why HPA Does Nothing for a Batch Job"
+        hands_on: ["koan:choose", "koan:predict"]
+        status: planned
+      # COVER: a CRD extends the API with a new kind of object, and an OPERATOR is a controller
+      # that knows how to run one specific thing properly. Then the ones a data person meets —
+      # the Spark operator, the Flink operator, a Postgres operator, and Airflow's Kubernetes
+      # executor, which turns every task into a pod.
+      # THE TEACHING POINT, not the tour: an operator encodes somebody's operational knowledge
+      # as code. That is genuinely valuable and it is also a dependency you now own, on a
+      # project that may be abandoned. Read its CRDs before adopting it.
+      - n: "10"
+        slug: operators-and-crds
+        title: "Operators and CRDs — Spark, Flink and Postgres as Objects the Cluster Understands"
+        hands_on: ["koan:predict", "koan:choose"]
+        status: planned
+      # COVER: Helm as a package manager — chart, values, release, upgrade, rollback — because
+      # almost everything a data person installs arrives as a chart and reading values.yaml is
+      # the actual skill. helm template to see what it WILL create before it creates it.
+      # KUSTOMIZE named as the alternative, and Argo CD or Flux named as GitOps, both in one
+      # paragraph, pointing at Continuous Delivery for the delivery half.
+      - n: "15"
+        slug: helm
+        title: "Helm — Installing Something You Did Not Write, and Reading values.yaml First"
+        hands_on: ["koan:process:tool", "koan:complete"]
+        status: planned
+      # THE MOST USEFUL EPISODE IN THE COURSE, and it should read like a lookup table you can
+      # keep. Each state, what it means, and the ONE command that confirms it:
+      #   Pending             nothing has room, or a claim is unbound. describe, read Events.
+      #   ImagePullBackOff    wrong name, wrong tag, or no credentials for a private registry.
+      #   CrashLoopBackOff    it starts and dies. logs --previous, because the current
+      #                       container has not said anything yet.
+      #   OOMKilled / 137     Series 1 · 20, and there will be nothing in the logs.
+      #   Evicted             the node ran out of disk or memory and chose your batch.
+      #   Completed but wrong the job "succeeded" and wrote nothing, which is Series 2 · 00.
+      # THE HABIT WORTH MORE THAN THE TABLE: events are namespaced, ordered and expire. Read
+      # them first and read them early.
+      - n: "20"
+        slug: debugging-a-workload
+        title: "Pending, CrashLoopBackOff, Evicted — Reading a Failure Without Guessing"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # THE EPISODE THIS COURSE OWES ITS READER, and it is why the track can be honest about
+      # everything else.
+      # COVER: Kubernetes is a good answer when you already run one, when your workloads are
+      # many and varied, or when you need a shared pool of large machines. IT IS THE WRONG
+      # ANSWER for one nightly job on one box — that is Data Ops, Series 1 · 40 and a cron
+      # entry, and it will be more reliable because there is less of it.
+      # THE COST NOBODY PRICES: a cluster is a system that has to be operated, upgraded and
+      # debugged by somebody, and if that somebody is the only data person then the platform
+      # has become the job.
+      - n: "25"
+        slug: when-not-to-use-kubernetes
+        title: "When Not to Use Kubernetes — and Why cron on One Box Often Wins"
+        hands_on: ["koan:choose"]
+        core: true
+        status: planned
+      - n: "30"
+        slug: project-diagnose-broken-workloads
+        title: "Project — Diagnose Three Broken Workloads From Their Events Alone"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned

@@ -1,0 +1,96 @@
+---
+title: "Jenkins — What It Is, Why Data Jobs End Up on It, and Running One in Docker"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-ops"
+tags: []
+level: "advanced"
+module: "series3-reliability"
+order: 04
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/dataops/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/dataops/series3/_04/JenkinsKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Ops · Reliability (advanced) — "keep jobs running, and find out fast when one stops"
+      before:  Rundeck — What It Is, What Data Teams Use It For, and Running One in Docker
+      THIS:    Jenkins — What It Is, Why Data Jobs End Up on It, and Running One in Docker
+      after:   Logging & Structured Output — Make a Failure Readable at 3 a.m.
+    NOT CORE — the shortest path to being productive does not run through
+    here. This is the episode you read because your employer already made
+    the decision for you, so it may assume the core episodes.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: say what Jenkins is, what a data team gets out of one and gives up by using it, and have had it running in a container.
+    DECISION: Jenkins appeared NOWHERE in the academy, which is hard to defend: it is the most common thing a data job is actually scheduled on inside a company — not because anyone chose it for data, but because it was already there with credentials, agents and a login. Paired with 3 · 02, same shape and same ten-minute exercise, so the two read as a choice rather than as two manuals. NOT a Jenkinsfile reference; that is what jenkins.io is for, and the episode should link it.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      WHAT IT IS                 a CI server — built to run steps when something happens, usually a
+                                 commit — that most companies already have, already back up, and already
+                                 give people logins to.
+      THE HONEST FRAME           using it for data jobs is a CI server used as a job runner. Not a
+                                 mistake: an existing, backed-up, access-controlled box beats a new one
+                                 you have to operate. But it is a trade, and the reader should name both
+                                 halves.
+      IT IS ALREADY THERE        credentials, audit trail, agents, SSO. Nobody has to be persuaded to
+                                 install it, which is most of the battle.
+      A JOB ON A SCHEDULE        a pipeline with a cron trigger. One line on the H in "H 2 * * *", which
+                                 spreads load instead of firing every job in the company at 02:00
+                                 exactly, and almost nobody knows it.
+      IT RUNS SOMEWHERE ELSE     agents, which is how a heavy extract stops running on the box somebody
+                                 is using.
+      SECRETS AND OUTPUT         a credentials store, against the environment variables of Series 1 · 35;
+                                 archiving the extract a run produced; alerting on failure.
+      TRY IT                     docker run the official image, one pipeline job with a shell step and a
+                                 cron trigger, watch it fire. Same ten minutes as 3 · 02, which is what
+                                 makes the comparison honest.
+      WHERE IT HURTS FOR DATA    no data-aware retry, no backfill, a workspace that is not a data
+                                 directory, console output as your only log.
+      SEAMS                      dbt owns CI/CD FOR DBT — testing a change before it merges. This is the
+                                 opposite direction: running production work on the CI box.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:process:tool
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/dataops/series3/_04/JenkinsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: the workspace is WIPED between builds and shared while one runs. A job that writes its extract into the workspace and expects to find it tomorrow will not. */}
+
+TODO

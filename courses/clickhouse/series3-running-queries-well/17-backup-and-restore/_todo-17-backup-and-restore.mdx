@@ -1,0 +1,74 @@
+---
+title: "BACKUP, RESTORE and FREEZE — Why an Immutable Part Can Simply Be Copied"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-clickhouse"
+tags: []
+level: "advanced"
+module: "series3-running-queries-well"
+order: 17
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/clickhouse/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/clickhouse/series3/_17/BackupAndRestoreKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official ClickHouse documentation (clickhouse.com/docs).
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Learn SQL owns the SQL, Data Warehousing owns columnar storage, Data Ops owns the cluster),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    This is a DELTA track: every sentence should be one that would be FALSE on another engine.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     ADDED 2026-09-02. Previously excluded to Data Ops, and unusually wrong to exclude here:
+     ClickHouse's backup story follows directly from MergeTree, which this course teaches at
+     Series 1 · 10, so the reader is better placed to understand it than any other engine's.
+     COVER: the BACKUP and RESTORE statements to a Disk or S3, and clickhouse-backup as the
+     tool most teams actually run. Then ALTER TABLE ... FREEZE, which makes HARDLINKS of the
+     parts — cheap and instantly consistent BECAUSE A PART IS IMMUTABLE. That is the payoff
+     of 1 · 10 and it is genuinely different from every row store in this catalogue, where
+     copying files under a live server corrupts them.
+     THE TRAP: backing up a DISTRIBUTED table backs up nothing. It is a view over shards, and
+     the data lives on the shards — each one has to be backed up itself.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/clickhouse/series3/_17/BackupAndRestoreKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

@@ -159,6 +159,24 @@ series:
         title: "LIST, STRUCT and MAP — Nested Data as Columns, Without Flattening First"
         hands_on: ["koan:complete", "koan:predict"]
         status: planned
+      # ADDED 2026-09-02. This course had NO episode and no exclude on backup — the only engine
+      # in the catalogue that was simply silent, which an audit caught.
+      # THE ANSWER IS SHORT AND WORTH SAYING ANYWAY: the database is ONE FILE, so a backup is a
+      # copy of that file taken while nothing is writing. There is no server to quiesce and no
+      # log to ship.
+      # COVER: EXPORT DATABASE and IMPORT DATABASE as the portable form — Parquet or CSV plus
+      # schema, which survives a DuckDB version bump where a raw file may not, and that
+      # durability point is the reason the episode exists rather than a footnote. ATTACH plus
+      # COPY FROM DATABASE for copying between databases. What is NOT a backup: an in-memory
+      # database, and a file on the same disk.
+      # THE TRAP: copying the file while a connection is writing. Contrast SQLite, which
+      # provides VACUUM INTO and a backup API precisely because people do this.
+      - n: "22"
+        slug: backing-up-one-file
+        title: "Backing Up a Database That Is One File — EXPORT DATABASE and the Version Question"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
       - n: "25"
         slug: project-answer-from-files
         title: "Project — Answer a Question From a Folder of Files, With No Database"

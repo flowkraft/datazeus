@@ -1,0 +1,117 @@
+---
+title: "code-server — VS Code in a Browser, SSH FS, and AI Chat on the Box"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-ops"
+tags: []
+level: "beginner"
+module: "series1-linux-for-data"
+order: 39
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/dataops/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/dataops/series1/_39/CodeServerKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Ops · Linux for Data (beginner) — "do real data work from the terminal, with shell tools alone"
+      before:  VS Code — Remote-SSH, Dev Containers, and Editing Where the Data Is
+      THIS:    code-server — VS Code in a Browser, SSH FS, and AI Chat on the Box
+      after:   cron & systemd Timers — Turn a Script into a Nightly Job
+    NOT CORE — the shortest path to being productive does not run through
+    here. This is the episode you read because your employer already made
+    the decision for you, so it may assume the core episodes.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: run the editor ON the machine that holds the data, reach it from a browser, edit
+    across several boxes from that one editor, and use an AI assistant there while knowing
+    exactly what leaves the machine.
+    DECISION: the companion to 38, not a repeat of it. 38 runs the editor on YOUR machine
+    and reaches out to the box; this one runs the editor ON THE BOX and reaches it with a
+    browser. The three pieces below are one episode because they only make sense together
+    — the second exists because of a constraint created by the first.
+
+    ── WHY A DATA PERSON CARES, and it is not novelty ──────────────────────
+    The machine with the data becomes the machine with the editor. Nothing is copied to a
+    laptop, so nothing is left on one. You get the same environment from a Chromebook, a
+    tablet, or a locked-down work laptop where you cannot install software. And the work
+    survives the browser closing, because the process was never on your side of the wire.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      1. CODE-SERVER             VS Code running as a service on the server, reached at a
+                                 URL. Stand it up with the docker run of 1 · 37, put it
+                                 behind a reverse proxy with TLS, and never expose it on
+                                 plain HTTP with the default password — it is a shell on
+                                 your data, published to the internet.
+      2. SSH FS                  by Kelvin Schoofs (Kelvin.vscode-sshfs). WHY IT IS HERE:
+                                 code-server installs extensions from Open VSX rather than
+                                 Microsoft's marketplace, and Microsoft's Remote-SSH — the
+                                 headline of 38 — is not available there. SSH FS is the
+                                 answer: a remote folder over SFTP as a workspace folder,
+                                 so one code-server edits files on several machines.
+                                 THE TRADE, HONESTLY: SSH FS gives you the FILES over SFTP.
+                                 Remote-SSH gives you the whole environment — terminal,
+                                 language servers, extensions — running on the far machine.
+                                 For scripts, SQL and config it is exactly right; for a
+                                 large project it is noticeably slower.
+      3. AI CHAT EXTENSIONS      Continue, Cline and the other open ones, which are on Open
+                                 VSX and therefore work here. What they give this course's
+                                 reader: explain an inherited shell script, draft the awk
+                                 nobody remembers, read an error and say what it means.
+
+    ── THE THREE WARNINGS, and they are why this belongs in a DATA course ──
+      WHAT LEAVES THE BOX   the extension sends file contents to a model provider. A
+                            customer CSV or a production connection string pasted into a
+                            chat has left your infrastructure, and no care afterwards
+                            brings it back.
+      THE API KEY           lives in settings, and settings end up in git. Same rule as
+                            1 · 35 and 1 · 43.
+      AN AGENT WITH A TERMINAL  on a box holding production credentials, running commands.
+                            Require approval per command. This is a genuinely new failure
+                            mode and it deserves naming rather than a footnote.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:process:tool
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/dataops/series1/_39/CodeServerKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: code-server on plain HTTP with the default password, because it was
+    "just for a minute". It is a shell on the machine holding the data, and it is indexed
+    and scanned like anything else with a public port. */}
+
+TODO

@@ -1,11 +1,11 @@
 ---
-title: "Files, Paths & Navigation — Where Your Data Actually Lives"
+title: "The File System — Paths, ls, cp, mv, find and Where Your Data Lives"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
 topic: "learn-data-ops"
 tags: []
 level: "beginner"
 module: "series1-linux-for-data"
-order: 5
+order: 05
 published: false
 ---
 
@@ -27,16 +27,26 @@ published: false
 
     ── WHERE THIS SITS ─────────────────────────────────────────────────────
     Data Ops · Linux for Data (beginner) — "do real data work from the terminal, with shell tools alone"
-      before:  The Terminal — Why One Pipe Answers a Data Question Faster Than a GUI
-      THIS:    Files, Paths & Navigation — Where Your Data Actually Lives
-      after:   cat, less, head, tail & wc — Look at Data Without a Database
+      before:  Linux — Why Data Work Lives on This OS, and at a Prompt
+      THIS:    The File System — Paths, ls, cp, mv, find and Where Your Data Lives
+      after:   ps, df, systemctl & journalctl — Reading the Machine Your Job Runs On
     CORE — on the shortest path to being productive. Someone will read only
     the core episodes, so this one has to stand alone.
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
-    GOAL: TODO — one sentence, the thing they can do afterwards that they could not before.
-    DECISION: TODO — why this episode exists at all, and why HERE rather than earlier or
-    later. If you cannot answer that, the episode probably should not exist.
+    GOAL: move around a machine you have never seen, find the file you need by name, age or size, and copy or move it without breaking anything.
+    DECISION: the FILE SYSTEM command family, and the first of the families that make up this series. The title said "Navigation", which had been reading as ls and cd alone; the family is larger than that and find is most of its value.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      THE SHAPE OF THE TREE      / , /etc, /var/log, /tmp, /home, /mnt — first, because a reader who
+                                 knows where things live stops guessing.
+      PATHS                      absolute against relative, . and .. and ~.
+      THE FAMILY                 ls -lh, cd, pwd, mkdir -p, cp -r, mv, rm — and rm -rf with the respect
+                                 it deserves — ln -s for the symlinks an ops box is full of, and file
+                                 plus stat for what something actually is.
+      FIND EARNS A THIRD OF THE EPISODE find . -name, -mtime, -size, -exec. It answers "which extract is
+                                        missing" and "what has not been written since Tuesday", and a data
+                                        person uses it weekly.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:complete
@@ -65,6 +75,7 @@ TODO
 
 ## What goes wrong
 
-{/* BEAT 4 — the wrong number this prevents, and how you would notice it. */}
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: a filename with a space — or a newline — in it. It arrives with every CSV somebody exported from a spreadsheet, and it breaks every unquoted loop written after it. */}
 
 TODO

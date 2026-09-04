@@ -31,13 +31,21 @@ excludes:
     where: "covered in Learn Data Modeling; this track only migrates a schema safely"
 
   # The wrong expectation somebody arrives with. "DataOps" reads like "DevOps" and it is not.
-  - topic: "Kubernetes, Terraform and cloud provisioning"
-    where: "not covered; this track is the machine, the database and the job — the things a data person is actually handed"
+  # NARROWED 2026-09-03: "cloud provisioning" used to be in this line and was too wide. Choosing
+  # and renting ONE machine is a decision a data person makes personally and often; automating a
+  # fleet of them is somebody else's job.
+  - topic: "Kubernetes, Terraform and infrastructure as code"
+    where: "not covered; this track is the machine, the database and the job — the things a data person is actually handed. In this course, Series 1 · 46 is how you obtain one machine and size it for data work, and Series 1 · 47 is the object storage beside it. Both stop there"
   - topic: "Python as a language for writing the jobs"
     where: "covered in Python for Data. In this course, Series 1 is the shell tools you reach for when there is no Python on the box"
   - topic: "Building the pipeline's logic"
     where: "covered in ETL & Data Pipelines — here it already exists and has to keep running"
 
+  # ADDED 2026-09-03. This track briefly had a CI/CD episode at Series 3 · 30. It was removed
+  # the same week, because one episode can state the principles and cannot teach them, and
+  # summarising a whole discipline badly is worse than pointing at it.
+  - topic: "Continuous integration, deployment pipelines and shipping a change safely"
+    where: "covered in Continuous Delivery, which owns the whole subject. In this course, Series 3 · 04 is the CI server used as a job runner, which is the opposite subject"
   - topic: "Expressing a pipeline as a DAG of dependent steps"
     where: "covered in ETL & Data Pipelines, Series 2 · 45, which is how a pipeline expresses its own dependencies. In this course, Series 3 · 00 is choosing what runs it and keeping that thing alive"
 
@@ -47,16 +55,86 @@ series:
     tagline: do real data work from the terminal, with shell tools alone
     level: beginner
     episodes:
+      # BROADENED 2026-09-03. This was "The Terminal — Why One Pipe Answers a Data Question
+      # Faster Than a GUI", which argued for the SHELL and never once said the word Linux. The
+      # series is called Linux for Data and opened without introducing Linux.
+      # IT IS ONE EPISODE, NOT TWO, because it is one argument: the reason data work lives on
+      # this operating system is the same reason it lives at a prompt.
+      # COVER:
+      #   WHY THIS OS      it is what the servers are. Your database, your scheduler and every
+      #                    container in the catalogue run on Linux whatever you develop on, so
+      #                    the machine you must be able to work on is a Linux one. Say the
+      #                    practical shape of that for a Windows or Mac reader — WSL, a VM, a
+      #                    container — in three sentences, not a setup guide.
+      #   EVERYTHING IS A FILE   the idea the rest of the series is built on. A table extract,
+      #                    a device, a socket and the output of a program are all a stream of
+      #                    bytes with a name, which is WHY tiny tools compose at all.
+      #   TEXT AS THE INTERFACE  programs speak lines, so anything can feed anything. This is
+      #                    the property a GUI does not have and cannot be given.
+      #   WHY A PROMPT     the original argument, kept: one pipe answers a data question faster
+      #                    than a GUI, and — the part that outlasts speed — the answer is a
+      #                    LINE YOU CAN KEEP. It can be rerun, scheduled, put in git and sent to
+      #                    someone. A sequence of clicks is none of those.
+      #   THE DISTROS      one paragraph. Debian/Ubuntu against RHEL/Rocky/Alma, apt against
+      #                    dnf, and the assurance that everything in this series is true on all
+      #                    of them. Then stop — distro comparison is not a data skill.
+      # THE HONEST LIMIT, and it belongs here rather than nowhere: a GUI is better for looking
+      # at something once. This series is about the second time you need the same answer.
+      # WHAT FOLLOWS FROM HERE, and worth stating so the series reads as designed rather than
+      # as a list — the next episodes are the command families, one each: the file system (05),
+      # the machine itself (07), reading a file (10), composing tools (15), slicing text (20),
+      # rewriting streams (25), other machines (30), permissions (35).
       - n: "00"
-        slug: why-the-terminal
-        title: "The Terminal — Why One Pipe Answers a Data Question Faster Than a GUI"
+        slug: linux-for-data
+        title: "Linux — Why Data Work Lives on This OS, and at a Prompt"
         hands_on: ["koan:capture", "terminal"]
         core: true
         status: planned
+      # THE FILE SYSTEM FAMILY. Comment added 2026-09-03 — the episode had none, and "Navigation"
+      # in the title had been reading as ls and cd alone.
+      # COVER: the shape of the tree first — / , /etc, /var/log, /tmp, /home, /mnt — because a
+      # reader who knows where things live stops guessing. Absolute against relative, . and ..
+      # and ~. Then the family itself: ls -lh, cd, pwd, mkdir -p, cp -r, mv, rm (and rm -rf,
+      # with the respect it deserves), ln -s for the symlink an ops box is full of, and file
+      # plus stat for what something actually is.
+      # FIND EARNS ITS OWN THIRD OF THE EPISODE: find . -name, -mtime, -size and -exec. It is
+      # the command that answers "which extract is missing" and "what has not been written since
+      # Tuesday", and a data person uses it weekly.
+      # THE TRAP: a filename with a space or a newline in it, which arrives with every CSV
+      # somebody exported from a spreadsheet and breaks every unquoted loop written after it.
       - n: "05"
         slug: files-and-navigation
-        title: "Files, Paths & Navigation — Where Your Data Actually Lives"
+        title: "The File System — Paths, ls, cp, mv, find and Where Your Data Lives"
         hands_on: ["koan:complete", "terminal"]
+        core: true
+        status: planned
+      # ADDED 2026-09-03 after an audit asked whether this track covers Linux itself. It covers
+      # the TEXT half thoroughly — 05 through 25 are paths, cat, pipes, grep, awk — and had
+      # nothing at all on THE MACHINE. A data person is handed a box and has to answer four
+      # questions before any of the text tools matter: is it running, is there room, what did
+      # it log, and how do I install the thing that is missing.
+      # COVER, in that order and no further:
+      #   IS IT RUNNING     ps aux and pgrep to find a process, top or htop to watch one, kill
+      #                     and the difference between TERM and KILL — TERM asks, KILL does not,
+      #                     and a job killed with -9 never gets to clean up its temp files.
+      #   IS THERE ROOM     df -h for the filesystem and du -sh for the directory, and the habit
+      #                     of running df FIRST when anything data-shaped fails oddly. Inodes get
+      #                     one sentence: a disk can be full with space free, and the error is
+      #                     unhelpful in a way nobody guesses.
+      #   WHAT DID IT LOG   systemctl status for a service, journalctl -u for its output, and
+      #                     /var/log for everything that is not a unit.
+      #   WHAT IS MISSING   apt or dnf, which, and the reason a script that works for you fails
+      #                     under cron: PATH.
+      # PLACED AT 07, immediately after "where your data actually lives", because how much room
+      # is left is the same question asked one level down. It also has to precede 40, since the
+      # first thing anyone debugs about a nightly job is whether it is still running.
+      # THE SILENT FAILURE: a full disk. Postgres refuses writes, a copy truncates, a backup
+      # exits 0 on a partial file — and every symptom points somewhere else. df -h is five
+      # keystrokes and it is the first thing to type, not the last.
+      - n: "07"
+        slug: the-machine-itself
+        title: "ps, df, systemctl & journalctl — Reading the Machine Your Job Runs On"
+        hands_on: ["koan:diagnose", "koan:capture", "terminal"]
         core: true
         status: planned
       - n: "10"
@@ -111,10 +189,228 @@ series:
         hands_on: ["koan:capture", "koan:diagnose"]
         core: true
         status: planned
+      # MOVED HERE 2026-09-03 from Series 3 · 30, where it was "Containers for Data Jobs" and
+      # taught only the far half: packaging your own job so a run is reproducible. THERE IS NOW
+      # ONE DOCKER EPISODE and it teaches DOCKER — the tool, its handful of commands, in the
+      # order you meet them. Examples will of course use something, but no example is the
+      # subject: a reader who works on ClickHouse or on nothing at all must get the same value
+      # from this episode as one who works on Postgres.
+      #
+      # WHY IN SERIES 1, and this is the whole reason for the move: Docker is a thing you type
+      # in a terminal, which is what this series is. At 3 · 30 it arrived after thirty episodes,
+      # in an ADVANCED series about reliability, while Series 2's eleven PostgreSQL episodes had
+      # already assumed a running server the reader was never shown how to obtain — as does
+      # every engine course in the catalogue, each of which says "teach against what a learner
+      # can run: the container image".
+      #
+      # COVER, in this order, and stop when the list stops:
+      #   THE ONE DISTINCTION   an IMAGE is the recipe, a CONTAINER is a running copy of it.
+      #                         Everything else follows from that sentence, and most confusion
+      #                         about Docker is this sentence not having landed.
+      #   STARTING              docker run, with the four flags that matter — -d to detach,
+      #                         -p to publish a port, -v for a volume, -e for a variable — plus
+      #                         --name so you can refer to it and --rm for a throwaway.
+      #   LOOKING               docker ps (and -a, which is where the stopped ones went),
+      #                         docker logs, docker exec -it ... sh to get a shell inside.
+      #   STOPPING              stop, start, rm, and the difference between a container that is
+      #                         stopped and one that is gone. docker rmi and docker system prune
+      #                         for the disk this quietly eats — which Series 1 · 07 just taught
+      #                         the reader to notice.
+      #   BUILDING              a short Dockerfile — FROM, COPY, RUN, CMD — and docker build -t.
+      #                         This is the half that was already here: your job, pinned, as an
+      #                         image that still runs the same months later.
+      #   TAGS                  why :latest is not a version, and why that matters more for a
+      #                         thing you run nightly than for anything else.
+      #   COMPOSE               one short file, for the ordinary case of two containers that
+      #                         have to see each other. up, down, and down -v as the one that
+      #                         also deletes the data.
+      #
+      # THE TRAP, and it is the reason a data course teaches Docker differently from a
+      # developer course: NO VOLUME. The container is deleted — or simply recreated by an edit
+      # to a compose file — and every row is gone, with no error, because from Docker's point
+      # of view nothing went wrong. Second version of the same trap: data written inside the
+      # container at a path that is not mounted, which looks persistent right up until it is not.
+      #
+      # PLACED AT 37, after permissions and environment variables (35) whose -e flag it uses,
+      # and before cron (40), because a scheduled job that runs a container is ordinary and the
+      # order has to be learnable.
+      - n: "37"
+        slug: docker
+        title: "Docker — Images, Containers, and the Commands You Actually Type"
+        hands_on: ["koan:process:tool", "koan:rerun"]
+        core: true
+        status: planned
+      # ADDED 2026-09-03. The series taught ssh, permissions, cron and backups without ever
+      # answering the question that comes before all of them: HOW DO I EDIT A FILE ON THAT BOX?
+      # It had no editor episode at all, and the honest answer for most people in 2026 is not
+      # vim, it is VS Code with the machine attached to it.
+      # THIS IS THE ONE GUI THAT SURVIVES 1 · 00's ARGUMENT, and saying why is the spine of the
+      # episode: VS Code does not replace the shell, it HOSTS it. The terminal, the files and
+      # the processes are all still the remote machine's — you have changed where you type, not
+      # what runs. A tool that hid the shell would be the thing 1 · 00 argued against.
+      # A TOOL PRESENTATION, same shape as 3 · 02 and 3 · 04. What it is, what it is used for
+      # here, and enough to have it working. Not a settings tour, and not a language tutorial.
+      # WHAT A DATA PERSON ACTUALLY USES IT FOR:
+      #   REMOTE-SSH        open a folder on the server and edit it as if it were local, over
+      #                     the same ssh from 1 · 30. Files stay on the box; nothing is copied
+      #                     down and forgotten. This is the headline and most of the value.
+      #   AN INTEGRATED TERMINAL  already on the right machine, in the right directory.
+      #   DEV CONTAINERS    open a folder INSIDE a container, which is why this comes after
+      #                     37 — everyone gets the same toolchain, and the reproducibility
+      #                     argument of Docker extends to the editing environment.
+      #   A SQL CLIENT      an extension that runs a query and shows a grid, so a quick look at
+      #                     a table does not need a second application.
+      #   NOTEBOOKS AND CSV PREVIEW  one line each, no more.
+      # THE LIMIT, and it must be said plainly rather than implied: on a hardened box, a jump
+      # host, or a container that has no room for the server component, Remote-SSH is not
+      # available and you are editing with vi or nano. Teach the four keystrokes that get you
+      # out of vi and save a file. Everyone needs them once, usually at a bad moment.
+      # THE TRAP: editing a file as root over Remote-SSH and leaving it owned by the wrong user,
+      # after which the cron job that reads it fails with a permission error that points nowhere
+      # near the editor. Series 1 · 35 is the diagnosis; this is the cause.
+      - n: "38"
+        slug: vs-code
+        title: "VS Code — Remote-SSH, Dev Containers, and Editing Where the Data Is"
+        hands_on: ["koan:process:tool", "terminal"]
+        core: true
+        status: planned
+      # ADDED 2026-09-03, as the companion to 38 rather than a repeat of it. 38 runs the editor
+      # on YOUR machine and reaches out to the box. THIS ONE RUNS THE EDITOR ON THE BOX and
+      # reaches it with a browser, and the three pieces below only make sense together — which
+      # is why they are one episode.
+      # WHY A DATA PERSON CARES, and it is not novelty: the machine with the data becomes the
+      # machine with the editor. Nothing is copied to a laptop, so nothing is left on one. You
+      # get the same environment from a Chromebook, a tablet or a locked-down work laptop where
+      # you cannot install software. And the work survives the browser closing, because the
+      # process was never on your side of the connection.
+      #   1. CODE-SERVER    VS Code running as a service on the server, reached at a URL. Set it
+      #                     up with the docker run of 37, put it behind a reverse proxy with
+      #                     TLS, and never expose it on plain HTTP with the default password —
+      #                     it is a shell on your data, published to the internet.
+      #   2. SSH FS, by Kelvin Schoofs (Kelvin.vscode-sshfs)
+      #                     THE REASON IT IS IN THIS EPISODE: code-server installs extensions
+      #                     from Open VSX rather than Microsoft's marketplace, and Microsoft's
+      #                     Remote-SSH — the headline of 38 — is not available there. SSH FS is
+      #                     the answer: it adds a remote folder over SFTP as a workspace folder,
+      #                     so one code-server can edit files on several machines.
+      #                     STATE THE TRADE HONESTLY, because it is not a drop-in replacement:
+      #                     SSH FS gives you the FILES over SFTP. Remote-SSH gives you the whole
+      #                     environment — terminal, language servers and extensions all running
+      #                     on the far machine. For editing scripts, SQL and config on a box it
+      #                     is exactly right; for a large project it is noticeably slower.
+      #   3. AI CHAT EXTENSIONS
+      #                     Continue, Cline and the other open ones, which are on Open VSX and
+      #                     therefore work here. What they do for this course's reader: explain
+      #                     an inherited shell script, draft the awk nobody remembers, read an
+      #                     error and say what it means.
+      #                     THE THREE WARNINGS, and they are the reason this belongs in a DATA
+      #                     course rather than a developer one:
+      #                       WHAT LEAVES THE BOX  the extension sends file contents to a model
+      #                         provider. A customer CSV or a production connection string
+      #                         pasted into a chat has left your infrastructure, and no amount
+      #                         of care afterwards brings it back.
+      #                       THE API KEY  lives in settings, and settings end up in git. Same
+      #                         rule as 35 and 43.
+      #                       AN AGENT WITH A TERMINAL  on a box that holds production
+      #                         credentials, running commands. Require approval per command.
+      #                         This is a genuinely new failure mode and it deserves naming.
+      # NOT CORE: 38 is the answer for most people. This is the variant for when you cannot
+      # install anything locally, or when you want the editor to live where the data lives.
+      - n: "39"
+        slug: code-server
+        title: "code-server — VS Code in a Browser, SSH FS, and AI Chat on the Box"
+        hands_on: ["koan:process:tool", "koan:choose"]
+        status: planned
       - n: "40"
         slug: cron-and-systemd-timers
         title: "cron & systemd Timers — Turn a Script into a Nightly Job"
         hands_on: ["koan:process:tool", "rundeck"]
+        core: true
+        status: planned
+      # ADDED 2026-09-02 after an audit asked a simple question this track could not answer:
+      # where are the LINUX-NATIVE backups? The only backup episode in the course was Series
+      # 2 · 30, which is pg_dump and PITR — a DATABASE backup, inside the PostgreSQL series.
+      # Nothing covered the files.
+      #
+      # AND A DATA BOX IS NOT ONLY ITS DATABASE. What actually ruins a week when a machine dies
+      # is everything around it: the scripts, the crontab you edited by hand eleven months ago,
+      # /etc config, the SSH keys, the landing directory holding files a vendor will not resend,
+      # and the one .env nobody committed. A perfect pg_dump restores none of that.
+      #
+      # IT SITS RIGHT AFTER 40 ON PURPOSE: the reader has just learned to schedule a nightly
+      # job, and a nightly backup is the job everyone actually needs first. It also reuses 30's
+      # rsync, which the course has taught as "move data between machines" and which is the
+      # same tool pointed at time instead of distance.
+      #
+      # WHAT IT OWES:
+      #   WHAT TO BACK UP     decide it deliberately rather than backing up everything or the
+      #                       obvious thing only. Scripts and config, the raw landing zone, the
+      #                       crontab, and NOT the things you can regenerate.
+      #   THE TOOLS           tar for a point-in-time archive; rsync --link-dest for cheap
+      #                       incremental snapshots that each look like a full copy; and one
+      #                       line on why a filesystem or cloud snapshot may already do this
+      #                       better than you can.
+      #   ROTATION            keeping every backup forever is the same bug as keeping none —
+      #                       the disk fills, and then nothing is backed up at all. Daily,
+      #                       weekly, monthly, and a retention you can state out loud.
+      #   THE 3-2-1 IDEA      one line, no ceremony: a copy on the same disk is not a backup.
+      #
+      # THE BEAT THAT MAKES IT AN EPISODE RATHER THAN A CHECKLIST, and it is the same discipline
+      # Series 2 · 30 applies to pg_dump: A BACKUP YOU HAVE NEVER RESTORED IS A GUESS. Restore
+      # into a scratch directory and diff it. Almost nobody does, and the ones who find out are
+      # finding out on the worst day.
+      #
+      # THE SILENT FAILURE, which is what earns it under this academy's rule: a cron backup
+      # whose destination filled up in March. It has been "running" ever since, exit code 0 on
+      # a partial copy, and the mail nobody reads went to a local mbox. Check that the backup
+      # GREW, not that the job ran.
+      #
+      # SEAM: Series 2 · 30 is the DATABASE's own backup, and Series 3 · 35 owns retention as a
+      # capacity question. This is the filesystem, and it does not repeat either.
+      - n: "42"
+        slug: file-backups-and-restore
+        title: "File Backups — tar, rsync Snapshots, Rotation, and Proving a Restore Works"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      # ADDED 2026-09-03, and it closes a hole across the whole academy rather than just this
+      # track: git had ONE episode anywhere, dbt's Series 1 · 47, which is about what belongs in
+      # a DBT PROJECT and reasonably assumes you already know how to commit. Nothing taught the
+      # tool. BI Series 3 · 15 version-controls a dashboard on the same assumption.
+      # PLACED AT 43, DIRECTLY AFTER FILE BACKUPS, because 42 ends by telling the reader to back
+      # up their scripts, their config and their crontab — and for text files that is the wrong
+      # answer. A tarball gives you last Tuesday's copy. Git gives you every version, who wrote
+      # it, why, and a diff. 42 keeps the data; this keeps the code that produced it, and the
+      # episode should narrow 42's claim out loud rather than leaving two answers standing.
+      # NOT A BRANCHING-STRATEGY EPISODE. The reader is a data person with a folder of scripts
+      # on a server, not a team of twenty shipping a product.
+      # COVER, in the order they will need it:
+      #   THE FOUR COMMANDS  init, add, commit, log — and diff, which is the one that pays for
+      #                      the other four. "What changed in this load script since the numbers
+      #                      were right" is a question only a diff answers.
+      #   REMOTE             clone, pull, push, and the ordinary shape of it: you edit on your
+      #                      laptop, the server pulls. That is a deployment, and it is the whole
+      #                      of deployment for most data teams.
+      #   BRANCH AND MERGE   enough to try something without breaking the nightly run. Stop
+      #                      there — no strategy, no rebase argument.
+      #   REVERT             the actual reason this episode is core: last night's change broke
+      #                      the load and you can put yesterday's version back in one command,
+      #                      at 3 a.m., without thinking.
+      #   .gitignore         and it earns real time here, for the two reasons below.
+      # THE TWO THINGS THAT MUST NEVER GO IN, and both are data-specific:
+      #   SECRETS  the .env and the connection string of 1 · 35. A committed password is not
+      #            fixed by deleting it in the next commit — it is IN THE HISTORY, and on every
+      #            clone, forever. The fix is rotating the credential, and that sentence is the
+      #            most valuable one in the episode.
+      #   DATA     the 400 MB CSV somebody committed once. Git stores every version of it for
+      #            the life of the repo and clones get slower forever. Name git-lfs and DVC as
+      #            what exists, in one sentence each, and do not teach them.
+      # SEAM: dbt Series 1 · 47 stays as it is — what belongs in a dbt project specifically. It
+      # can now assume this episode instead of teaching the basics itself.
+      - n: "43"
+        slug: git
+        title: "Git — Version Control for the Scripts and Config That Run Your Data"
+        hands_on: ["koan:process:tool", "terminal"]
         core: true
         status: planned
       - n: "45"
@@ -124,6 +420,103 @@ series:
         core: true
         status: planned
 
+      # ADDED 2026-09-03. The series taught ssh, Docker, cron and backups without ever saying
+      # where the machine comes from. For most people doing data work it is a VPS they rent
+      # themselves for the price of a coffee, and choosing it is a real decision with real
+      # consequences.
+      # MOVED TO 46, at the END of the series, and the reasoning is worth keeping because the
+      # first attempt put it at 28: everything before this point can be practised on a laptop,
+      # in WSL or in a container. THESE LAST TWO EPISODES ARE WHERE IT STOPS BEING PRACTICE.
+      # You rent the box (46) and the bucket (47), and then the project at 50 runs on something
+      # real. Teaching it early would have been asking the reader to spend money on a decision
+      # they were not yet equipped to make — they now know what a filesystem is, what a process
+      # is, what fills a disk, what Docker needs and what a backup costs, which is precisely the
+      # knowledge that turns "which plan do I click" into a decision with reasons.
+      # WHAT IT IS: a VPS is a rented Linux machine — Hetzner, DigitalOcean, Linode, OVH,
+      # Vultr — and cloud compute is the same thing from AWS, GCP or Azure with more knobs and
+      # a bill that is harder to predict. Say the price honestly, because the number is the
+      # point: a box that will comfortably run Postgres and a nightly pipeline costs less per
+      # month than a lunch, and a great deal of this course becomes practice rather than
+      # reading once the reader has one.
+      # SIZING IT FOR DATA, which is where the generic advice is wrong:
+      #   RAM BEFORE CORES  a database is a cache with a query engine attached. Postgres on
+      #                     2 GB against 8 GB is a different product, and it is the working set
+      #                     fitting in memory that decides, not the CPU.
+      #   THE DISK          size AND type. NVMe against network storage is an order of
+      #                     magnitude on the random reads an index does, and the disk is the
+      #                     thing that fills — which 1 · 07 taught the reader to watch.
+      #   EGRESS            the cost line nobody predicts. Compute is metered per hour and
+      #                     honest; moving a 200 GB extract OUT of a cloud is charged per
+      #                     gigabyte and is where a data workload's bill actually comes from.
+      #                     Most VPS providers include a generous allowance and the big clouds
+      #                     do not, and that single difference decides more than any benchmark.
+      #   MANAGED OR YOUR OWN  the real fork: RDS or Cloud SQL against Postgres you installed.
+      #                     Managed costs several times more and gives you backups, patching
+      #                     and failover you would otherwise owe Series 2. State the trade;
+      #                     do not pretend either answer is always right.
+      # THE FIRST TEN MINUTES, and this is non-negotiable in a course that will have the reader
+      # put data on it: an SSH KEY AND PASSWORD LOGIN DISABLED, a firewall that exposes ssh and
+      # nothing else — a Postgres port open to the internet is found by scanners within the
+      # hour, not eventually — and the provider's snapshot feature turned on, which is a
+      # checkbox and is not a substitute for 1 · 42.
+      # THE TRAP THAT COSTS MONEY RATHER THAN DATA: a box left running. It is a rounding error
+      # for one machine and it is not for the "temporary" 32 GB instance somebody sized for a
+      # backfill in March. Series 3 · 40 owns cost as a discipline; this is the personal version.
+      - n: "46"
+        slug: vps-and-cloud-compute
+        title: "VPS & Cloud Compute — Getting a Linux Box, and Sizing It for Data"
+        hands_on: ["koan:choose", "koan:process:tool"]
+        core: true
+        status: planned
+      # ADDED 2026-09-03, immediately after 46, because renting the machine and renting the
+      # storage are the same shopping trip and the second one is where a data workload's bill
+      # actually lands. It is also the last thing the reader learns before the project, which
+      # is right: 42 told them a copy on the same disk is not a backup and left the other copy
+      # with nowhere to go. This is where it goes.
+      # A REAL HOLE: several courses READ from object storage — DuckDB's httpfs extension
+      # querying Parquet over S3, ClickHouse's s3() table function and BACKUP ... TO S3 — and
+      # not one of them says what a bucket is or how you get one. They all assume it exists.
+      # This episode is where it comes from, and the seam is that clean: they consume it, this
+      # provides it.
+      # THE SENTENCE THE EPISODE IS BUILT ON: "S3" IS A PROTOCOL, NOT A PRODUCT. Backblaze B2,
+      # Cloudflare R2, Wasabi, DigitalOcean Spaces, Hetzner and MinIO all speak the S3 API, so
+      # one tool and one pair of keys work against any of them. A reader who understands that
+      # is free to shop on price, which is the whole practical point.
+      # A BUCKET IS NOT A FOLDER, and this is the part people get wrong for months:
+      #   NO DIRECTORIES    there are keys with slashes in them. "Listing a directory" is
+      #                     really a prefix scan, and it is billed per request.
+      #   NO PARTIAL WRITES you replace an object, you do not edit one. There is no sed -i, no
+      #                     append, no seek. A pipeline that "updates a file" must write a new
+      #                     one — which is exactly why data lands here as immutable Parquet.
+      #   IT IS HTTP        with a signature. That is why a database can read it directly.
+      # WHY A DATA PERSON CARES, in the order the value arrives:
+      #   THE OFFSITE COPY  1 · 42 said a copy on the same disk is not a backup. This is the
+      #                     other copy, and it is a few dollars a month.
+      #   THE RAW ARCHIVE   the landing zone that keeps every extract you ever received, cheap
+      #                     enough to never delete, and readable IN PLACE by DuckDB or
+      #                     ClickHouse without loading it anywhere first.
+      #   COLD HISTORY      storage classes and LIFECYCLE RULES — move to cold after 30 days,
+      #                     expire after a year. Series 3 · 35 owns retention as a discipline;
+      #                     this is the mechanism it runs on.
+      # THE TOOLS, and keep this short: rclone is the data person's answer because one config
+      # reaches every backend, plus the vendor CLI and s3cmd named, and MinIO for a local
+      # bucket to practise against.
+      # THE COST MODEL, said as plainly as in 28: storage per gigabyte is cheap and
+      # predictable. EGRESS AND PER-REQUEST CHARGES ARE WHAT BITE, and they differ by an order
+      # of magnitude between vendors — Backblaze and R2 are cheap or free to read out of, the
+      # big clouds are not. Also name the charge nobody discovers: FAILED MULTIPART UPLOADS
+      # that were never aborted, sitting in a bucket you cannot see them in, billed monthly.
+      # SECURITY, and it is the most consequential paragraph in the episode: a bucket left
+      # PUBLIC is the single most common way a company's data ends up in the news. Then keys —
+      # they are credentials, so 1 · 35 and 1 · 43 apply unchanged — and VERSIONING plus OBJECT
+      # LOCK, which is the answer to ransomware encrypting the backups along with everything
+      # else.
+      - n: "47"
+        slug: s3-object-storage
+        title: "S3 Object Storage — Backblaze, R2, rclone, and the Offsite Copy"
+        hands_on: ["koan:process:tool", "koan:choose"]
+        core: true
+        status: planned
       # SERIES 1 PROJECT, added 2026-08-24. The series had none: the core path
       # walked ten episodes with nothing built at the end of them.
       # cut/grep/sort/awk/cron, composed once. The point is not that you would ship this — it is that
@@ -222,6 +615,90 @@ series:
         hands_on: ["koan:choose", "rundeck"]
         core: true
         status: planned
+      # ADDED 2026-09-03. RUNDECK WAS ALREADY A TOOL IN THIS TRACK — it is the hands_on tool on
+      # Series 1 · 40, on 3 · 00 above, and on the Series 3 project — and no episode ever taught
+      # it. The track demonstrated in a tool the reader had never been introduced to.
+      # 3 · 00 is the CHOICE episode: cron, systemd timers, or an orchestrator. This is what the
+      # word "orchestrator" actually is, once.
+      #
+      # THIS IS A TOOL PRESENTATION, NOT A MANUAL. The reader should finish able to say what
+      # Rundeck is, whether their team wants one, and to have had it running for ten minutes.
+      # They should NOT finish having been walked through every screen. Depth belongs to the
+      # official docs and this episode should say so and link there.
+      # WHAT IT IS, in one line worth memorising: a web front end that runs your existing
+      # scripts on your existing machines, and keeps a record.
+      # WHAT DATA TEAMS ACTUALLY USE IT FOR — this is the middle of the episode:
+      #   THE OPERATOR BUTTON   someone who is not you reruns last night's failed load, without
+      #                         an SSH key for production. This is the reason it is installed in
+      #                         most shops that have it.
+      #   A LOG PER RUN         output kept per execution and readable next week. Under cron it
+      #                         went to mail nobody reads, which is why nobody looked.
+      #   WHO MAY DO WHAT       an ACL over run, view and edit.
+      #   THE FAN-OUT           the same job across a list of nodes over ssh, which cron on one
+      #                         box cannot express at all.
+      #   SCHEDULE + NOTIFY     the cron half you already have, plus retry and a failure alert.
+      # TRY IT: docker run the official image, add one job that wraps a two-line script, run it
+      # from the browser, look at the execution log. That is the whole exercise — Series 1 · 37
+      # already taught the docker run, so this costs the reader nothing new.
+      # THE PRINCIPLE THAT OUTLIVES THE TOOL, and it is what makes this an episode rather than
+      # an advertisement: A SCHEDULER RUNS A JOB; AN ORCHESTRATOR MAKES IT OPERABLE. Those five
+      # capabilities are the lesson and they are equally true of Airflow or Jenkins. Rundeck is
+      # the demonstration, and a reader who ends up with a different tool has still learnt what
+      # to look for in it.
+      # ONE WARNING, kept short: credentials belong in Key Storage, not in the job definition,
+      # because job definitions get exported to git.
+      - n: "02"
+        slug: rundeck
+        title: "Rundeck — What It Is, What Data Teams Use It For, and Running One in Docker"
+        hands_on: ["koan:process:tool", "rundeck"]
+        core: true
+        status: planned
+      # ADDED 2026-09-03. Jenkins appeared NOWHERE in the academy before this, which is hard to
+      # defend: it is the single most common thing a data job is actually scheduled on inside a
+      # company, not because anyone chose it for data but because it was already there and it
+      # already had credentials, agents and a login.
+      # A TOOL PRESENTATION, the same shape as 3 · 02, and deliberately paired with it so the
+      # two read as a choice rather than as two manuals. Finish able to say what Jenkins is,
+      # what a data team gets out of one, and to have had it running in a container. Not a
+      # Jenkinsfile reference — that is what jenkins.io is for, and the episode should link it.
+      # WHAT IT IS: a CI server — a thing built to run steps when something happens, usually a
+      # commit — that most companies already have, already back up, and already give people
+      # logins to.
+      # THE HONEST FRAME, said plainly: using it for data jobs is a CI server used as a job
+      # runner. That is not a mistake. An existing, backed-up, access-controlled box beats a new
+      # one you have to operate. But it is a trade, and the reader should be able to name both
+      # halves out loud.
+      # WHAT DATA TEAMS ACTUALLY USE IT FOR:
+      #   IT IS ALREADY THERE   with credentials, an audit trail, agents and SSO. Nobody has to
+      #                         be persuaded to install it, which is most of the battle.
+      #   A JOB ON A SCHEDULE   a pipeline with a cron trigger. Mention the H in "H 2 * * *" in
+      #                         one line, because it spreads load instead of firing every job in
+      #                         the company at 02:00 exactly, and almost nobody knows it.
+      #   IT RUNS SOMEWHERE ELSE  agents, which is how a heavy extract stops running on the box
+      #                         somebody is using.
+      #   SECRETS               a credentials store, against the environment variables of
+      #                         Series 1 · 35.
+      #   KEEPING THE OUTPUT    archiving the extract a run produced, and alerting on failure.
+      # TRY IT: docker run the official image, one pipeline job with a shell step and a cron
+      # trigger, watch it fire. Same ten minutes as 3 · 02, which is what makes the comparison
+      # honest.
+      # WHERE IT HURTS FOR DATA, and this is the half a CI-shaped tool cannot give you: no
+      # data-aware retry, no backfill, a workspace that is not a data directory, and console
+      # output as your only log.
+      # THE ONE TRAP WORTH A PARAGRAPH, because it costs a night: the workspace is WIPED between
+      # builds and shared while one runs. A job that writes its extract into the workspace and
+      # expects to find it tomorrow will not.
+      # SEAMS: dbt owns CI/CD FOR DBT (its Series 3) — testing a change before it merges. This
+      # episode is the opposite direction: running production work on the CI box. Continuous
+      # Delivery is the track that teaches what the box was actually built for, in principles
+      # rather than in this product, and this episode should point there once and move on.
+      # NOT CORE: the shortest path to being productive runs through cron and Rundeck. You read
+      # this one because your employer already made the decision.
+      - n: "04"
+        slug: jenkins
+        title: "Jenkins — What It Is, Why Data Jobs End Up on It, and Running One in Docker"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        status: planned
       - n: "05"
         slug: logging-and-structured-output
         title: "Logging & Structured Output — Make a Failure Readable at 3 a.m."
@@ -259,12 +736,18 @@ series:
             concept: "The BLAMELESS POSTMORTEM, and what a useful one contains"
         hands_on: ["koan:capture"]
         status: planned
-      - n: "30"
-        slug: containers-for-data-jobs
-        title: "Containers for Data Jobs — Compose, Images & Runs You Can Reproduce"
-        hands_on: ["koan:process:tool", "koan:rerun"]
-        core: true
-        status: planned
+      # 30 HELD A CI/CD EPISODE for one day, 2026-09-03, and it moved OUT the same week into
+      # its own track — Continuous Delivery, which follows Humble and Farley chapter by
+      # chapter. One episode could state the principles; it could not teach them, and this
+      # track excludes the subject rather than summarising it badly. See the excludes.
+      # THIS 30 SLOT PREVIOUSLY HELD "Containers for Data Jobs", WHICH MOVED TO SERIES 1 · 37 on
+      # 2026-09-03, where it is now simply the Docker episode. Splitting Docker in two — run
+      # someone else's image here, build your own there — was a distinction that mattered to
+      # whoever drew it and to nobody reading. There is one Docker episode, it teaches the tool,
+      # and it sits in Series 1 with the other things you type into a terminal.
+      # NOTHING IS LOST FROM THIS SERIES: the reproducibility argument travelled with it, and
+      # what Series 3 actually needs from containers — that a job which ran in March still runs
+      # in November — is one sentence in 3 · 00 and in the project, not an episode.
       # ALSO OWNS THE DELETION REQUEST, which belongs beside retention because both are the
       # same subject: data that has to go away, on a deadline.
       #   RETENTION is the scheduled version — TTL, partition drops, "we keep 24 months".

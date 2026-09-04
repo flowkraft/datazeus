@@ -1,0 +1,83 @@
+---
+title: "ps, df, systemctl & journalctl — Reading the Machine Your Job Runs On"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-ops"
+tags: []
+level: "beginner"
+module: "series1-linux-for-data"
+order: 07
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/dataops/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/dataops/series1/_07/TheMachineItselfKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Ops · Linux for Data (beginner) — "do real data work from the terminal, with shell tools alone"
+      before:  The File System — Paths, ls, cp, mv, find and Where Your Data Lives
+      THIS:    ps, df, systemctl & journalctl — Reading the Machine Your Job Runs On
+      after:   cat, less, head, tail & wc — Look at Data Without a Database
+    CORE — on the shortest path to being productive. Someone will read only
+    the core episodes, so this one has to stand alone.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: answer the four questions you have to answer about a box before any text tool matters: is it running, is there room, what did it log, and how do I install what is missing.
+    DECISION: this track covered the TEXT half of Linux thoroughly and the MACHINE not at all. It sits at 07, right after "where your data actually lives", because how much room is left is the same question one level down — and it has to come before 40, since the first thing anyone debugs about a nightly job is whether it is still running.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      IS IT RUNNING            ps aux and pgrep to find a process, top to watch one, kill and the
+                               difference between TERM and KILL — TERM asks, KILL does not, and a job
+                               killed with -9 never gets to clean up its temp files.
+      IS THERE ROOM            df -h for the filesystem, du -sh for the directory, and the habit of
+                               running df FIRST when anything data-shaped fails oddly. Inodes get one
+                               sentence: a disk can be full with space free.
+      WHAT DID IT LOG          systemctl status for a service, journalctl -u for its output, /var/log for
+                               everything that is not a unit.
+      WHAT IS MISSING          apt or dnf, which, and the reason a script that works for you fails under
+                               cron: PATH.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:diagnose
+      koan:capture
+      terminal
+      koan file: tests/src/koans/groovy/datazeus/dataops/series1/_07/TheMachineItselfKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: a full disk. Postgres refuses writes, a copy truncates, a backup exits 0 on a partial file — and every symptom points somewhere else. df -h is five keystrokes and it is the first thing to type, not the last. */}
+
+TODO

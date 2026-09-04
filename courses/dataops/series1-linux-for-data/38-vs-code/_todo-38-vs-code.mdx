@@ -1,0 +1,101 @@
+---
+title: "VS Code — Remote-SSH, Dev Containers, and Editing Where the Data Is"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-ops"
+tags: []
+level: "beginner"
+module: "series1-linux-for-data"
+order: 38
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/dataops/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/dataops/series1/_38/VsCodeKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Ops · Linux for Data (beginner) — "do real data work from the terminal, with shell tools alone"
+      before:  Docker — Images, Containers, and the Commands You Actually Type
+      THIS:    VS Code — Remote-SSH, Dev Containers, and Editing Where the Data Is
+      after:   code-server — VS Code in a Browser, SSH FS, and AI Chat on the Box
+    CORE — on the shortest path to being productive. Someone will read only
+    the core episodes, so this one has to stand alone.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: edit and run things on a machine that is not yours, from an editor, without
+    copying files down to your laptop and forgetting which copy is real.
+    DECISION: the series taught ssh, permissions, cron and backups without ever answering
+    the question that comes before all of them — HOW DO I EDIT A FILE ON THAT BOX? There
+    was no editor episode at all, and the honest answer for most people is not vim, it is
+    VS Code with the machine attached to it. At 38 because Dev Containers needs the Docker
+    of 37, and Remote-SSH needs the ssh of 30 and the troubleshooting of 32.
+
+    ── THE SPINE OF THE EPISODE ────────────────────────────────────────────
+    THIS IS THE ONE GUI THAT SURVIVES 1 · 00's ARGUMENT, and saying why is the lesson:
+    VS Code does not replace the shell, it HOSTS it. The terminal, the files and the
+    processes are still the remote machine's. You have changed where you type, not what
+    runs. A tool that hid the shell would be the thing 1 · 00 argued against.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      REMOTE-SSH                 open a folder on the server and edit it as if it were
+                                 local, over the same ssh as 1 · 30. Files stay on the
+                                 box; nothing is copied down and forgotten. This is the
+                                 headline and most of the value.
+      AN INTEGRATED TERMINAL     already on the right machine, in the right directory.
+      DEV CONTAINERS             open a folder INSIDE a container — everyone gets the
+                                 same toolchain, and 37's reproducibility argument
+                                 extends to the editing environment.
+      A SQL CLIENT               an extension that runs a query and shows a grid, so a
+                                 quick look at a table needs no second application.
+      NOTEBOOKS, CSV PREVIEW     one line each, no more.
+      THE LIMIT, SAID PLAINLY    on a hardened box, a jump host, or a container with no
+                                 room for the server component, Remote-SSH is not
+                                 available and you are editing with vi or nano. Teach the
+                                 four keystrokes that save a file and get you out of vi.
+                                 Everyone needs them once, usually at a bad moment.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:process:tool
+      terminal
+      koan file: tests/src/koans/groovy/datazeus/dataops/series1/_38/VsCodeKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: a file edited as root over Remote-SSH and left owned by the wrong
+    user. The cron job that reads it then fails with a permission error pointing nowhere
+    near the editor. Series 1 · 35 is the diagnosis; this is the cause. */}
+
+TODO

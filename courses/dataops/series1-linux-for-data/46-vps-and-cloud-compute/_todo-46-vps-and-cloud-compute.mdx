@@ -1,0 +1,112 @@
+---
+title: "VPS & Cloud Compute — Getting a Linux Box, and Sizing It for Data"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-ops"
+tags: []
+level: "beginner"
+module: "series1-linux-for-data"
+order: 46
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/dataops/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/dataops/series1/_28/VpsAndCloudComputeKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Ops · Linux for Data (beginner) — "do real data work from the terminal, with shell tools alone"
+      before:  Bash Glue — Variables, Loops, Exit Codes & Logging for ETL
+      THIS:    VPS & Cloud Compute — Getting a Linux Box, and Sizing It for Data
+      after:   S3 Object Storage — Backblaze, R2, rclone, and the Offsite Copy
+    CORE — on the shortest path to being productive. Someone will read only
+    the core episodes, so this one has to stand alone.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: rent a Linux machine, size it for data work rather than for a web app, and
+    secure it in the first ten minutes.
+    DECISION: the series taught ssh, Docker, cron and backups without ever saying where the
+    machine comes from. At 46, at the END of the series, because everything before this
+    point can be practised on a laptop, in WSL or in a container — THESE LAST TWO EPISODES
+    ARE WHERE IT STOPS BEING PRACTICE. You rent the box (46) and the bucket (47), and the
+    project at 50 then runs on something real. Earlier would have meant asking the reader
+    to spend money on a decision they were not yet equipped to make; they now know what
+    fills a disk, what Docker needs and what a backup costs, which is the knowledge that
+    turns "which plan do I click" into a decision with reasons.
+    The exclude that used to say "cloud provisioning" was narrowed for this: renting ONE
+    box is a decision a data person makes personally and often; automating a fleet of them
+    is somebody else's job and stays out.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      WHAT IT IS                 a VPS is a rented Linux machine — Hetzner, DigitalOcean,
+                                 Linode, OVH, Vultr. Cloud compute is the same thing from
+                                 AWS, GCP or Azure with more knobs and a less predictable
+                                 bill. Say the price honestly: a box that runs Postgres
+                                 and a nightly pipeline costs less per month than a lunch,
+                                 and much of this course turns from reading into practice
+                                 once the reader has one.
+      RAM BEFORE CORES           a database is a cache with a query engine attached.
+                                 Postgres on 2 GB against 8 GB is a different product. The
+                                 working set fitting in memory decides, not the CPU.
+      THE DISK                   size AND type. NVMe against network storage is an order of
+                                 magnitude on the random reads an index does — and the disk
+                                 is the thing that fills, which 1 · 07 taught them to watch.
+      EGRESS                     the cost line nobody predicts. Compute is metered per hour
+                                 and honest; moving a 200 GB extract OUT is charged per
+                                 gigabyte. Most VPS providers include a generous allowance
+                                 and the big clouds do not, and that one difference decides
+                                 more than any benchmark.
+      MANAGED OR YOUR OWN        the real fork: RDS or Cloud SQL against Postgres you
+                                 installed. Managed costs several times more and gives you
+                                 the backups, patching and failover you would otherwise owe
+                                 Series 2. State the trade; neither answer is always right.
+      THE FIRST TEN MINUTES      an SSH key with password login disabled; a firewall that
+                                 exposes ssh and nothing else, because a Postgres port open
+                                 to the internet is found by scanners within the hour; the
+                                 provider's snapshot checkbox, which is not a substitute
+                                 for 1 · 42.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:choose
+      koan:process:tool
+      koan file: tests/src/koans/groovy/datazeus/dataops/series1/_28/VpsAndCloudComputeKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: a box left running. A rounding error for one machine, and not for
+    the "temporary" 32 GB instance somebody sized for a backfill in March. Series 3 · 40
+    owns cost as a discipline; this is the personal version of it. */}
+
+TODO
