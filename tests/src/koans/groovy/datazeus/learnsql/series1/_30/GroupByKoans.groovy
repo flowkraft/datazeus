@@ -26,9 +26,9 @@ import spock.lang.Stepwise
  * new, not by retyping an answer.
  *
  * TEN KOANS, EASIEST FIRST, IN THE ORDER THE LESSON BUILDS THEM:
- *   1    say what the groups are — one row per distinct value
+ *   1    say what the groups are — one row per distinct value, in no promised order
  *   2    the aggregate runs once per group, not once per table
- *   3    rank the groups by the number you just made
+ *   3    rank the groups by the number you just made — and why LIMIT needs ORDER BY
  *   4    more than one number per group — a report, not a count
  *   5    THE TRAP: a GROUP BY list one column too long, and a report that lies
  *   6    the same two keys, now answering the question that wants them
@@ -89,6 +89,12 @@ class GroupByKoans extends KoanBase {
     //    what a group IS — the database then makes one group per distinct value in it,
     //    and runs count(*) once inside each.
     //    (Predict first: 20 products, 8 categories, so expect 8 rows — not 20, and not 1.)
+    //    (AND THE "ORDER BY" BELOW IS NOT DECORATION — it is here for the same reason it is
+    //     on every query in this lesson. GROUP BY guarantees you one row per group. It does
+    //     NOT guarantee what order those rows come back in. They arrive 1..8 here only
+    //     because that last line asks for it; take it away and the engine may hand you the
+    //     same eight rows in any order it likes — one order today, another tomorrow, with
+    //     nothing changed and nothing to tell you why.)
     def "say what the groups are: one row per distinct value"() {
         expect:
         shouldReturn([[1, 3], [2, 3], [3, 2], [4, 3], [5, 3], [6, 2], [7, 2], [8, 2]], '''
@@ -113,9 +119,14 @@ class GroupByKoans extends KoanBase {
     }
 
     // 3) The rows GROUP BY hands back are rows like any other, so everything you learned
-    //    about sorting still works — including sorting by the number you just computed.
-    //    Which three categories hold the most stock? Fill in what to sort by.
+    //    about sorting still works on them — including sorting by the number you just
+    //    computed. Which three categories hold the most stock? Fill in what to sort by.
     //    (You gave the total a name on the line above. Use it.)
+    //    (WHY THIS ONE CANNOT BE ANSWERED WITHOUT THE SORT, and koan 1 said why: GROUP BY
+    //     promises no order at all. So "LIMIT 3" on its own does not mean "the top three" —
+    //     it means "three of them, whichever three the engine reached first". The ORDER BY
+    //     is what turns a limit into a ranking. A LIMIT without one is a coin toss wearing
+    //     a report's clothes.)
     def "rank the groups by the number you just made"() {
         expect:
         shouldReturn([[8, 154], [2, 105], [5, 95]], '''
@@ -211,11 +222,14 @@ class GroupByKoans extends KoanBase {
     }
 
     // 9) Grouped rows tie like any other rows. How many customers do we have in each
-    //    country? Germany runs away with it — and then France, Mexico and Sweden all
-    //    have two, which leaves the fourth row of a top-four undecided. Add the second
-    //    sort key that settles it, so this list is the same every run.
-    //    (Straight from the sorting lesson, and it applies here unchanged: ORDER BY on
-    //     the count alone cannot choose between three countries that all have two.)
+    //    country? Germany runs away with it at eleven — and then FIVE countries are level
+    //    on two: France, Mexico, Sweden, the UK and Venezuela. A top-four has room for
+    //    three of them. Add the second sort key that settles which three, so this list is
+    //    the same every run.
+    //    (Straight from the sorting lesson, and it applies here unchanged. THE SIZE OF THE
+    //     TIE IS THE POINT: five countries level on two, three places left, so ORDER BY on
+    //     the count alone leaves the engine free to hand back any three of them in any
+    //     order — a different three on a different day, with nothing to tell you why.)
     def "grouped rows tie too, so break the tie"() {
         expect:
         shouldReturn([["Germany", 11], ["France", 2], ["Mexico", 2], ["Sweden", 2]], '''
