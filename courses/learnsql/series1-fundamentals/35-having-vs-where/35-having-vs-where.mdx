@@ -94,7 +94,7 @@ Look at where the two filters sit: `WHERE` is step 2, `HAVING` is step 4, and th
 ### Why the aggregate in a WHERE is refused
 
 ```sql file=./scripts/aggregate-in-where-fails.sql
-SELECT "ShipCountry", count(*)
+SELECT "ShipCountry", count(*) AS "OrderCount"
 FROM "Orders"
 WHERE count(*) > 5
 GROUP BY "ShipCountry";

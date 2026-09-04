@@ -14,15 +14,17 @@ import spock.lang.Unroll
  *    3. orders-per-country          — GROUP BY: ten rows, one per country, found for you
  *    4. country-report              — several aggregates per group, which is what a report is
  *    5. orders-per-country-ranked   — ORDER BY the aggregate: Germany is the biggest market
- *    6. country-with-orderid        — THE RULE, as an error (asserted to FAIL)
- *    7. orders-per-country-city     — THE TRAP: obey the error and the report changes answer
- *    8. cities-per-country          — the same two keys, used on purpose
+ *    6. country-with-city           — THE RULE, as an error (asserted to FAIL)
+ *    7. orders-per-city            — the report he asked for: one row per city
+ *    7b. orders-per-country-city   — the same groups, with the country beside them
+ *    8. cities-per-country          — two keys: the same 24 groups, plus the country
  *    9. freight-per-month-2024      — grouping by an EXPRESSION, not a column
  *   10. heavy-orders-per-country    — WHERE runs first, and the UK leaves the report
  *   11. where-with-count            — why WHERE cannot filter a total (asserted to FAIL)
  *   12. orders-per-customer         — number one by orders placed: a three-way tie
  *   13. freight-per-customer        — number one by freight paid: a different customer
- *   14. orders-per-employee         — the hands-on query
+ *   14. orders-per-employee         — a third grouping column, for the article
+ *   15. germany-cities             — ARTICLE ONLY: where Germany's 32 went, eleven ways
  *
  * NOTHING HERE IS PINNED TO AN UNORDERED RESULT, and that is deliberate rather than lucky.
  * GROUP BY promises one row per group; it promises NOTHING about the order those rows come
@@ -34,7 +36,7 @@ import spock.lang.Unroll
  *
  * THE TWO ERRORS (scripts 6 and 11) are asserted only as REFUSALS. The wording differs per
  * engine — DuckDB says "Binder Error: column ... must appear in the GROUP BY clause or must
- * be part of an aggregate function", PostgreSQL says "column \"Orders.OrderID\" must appear
+ * be part of an aggregate function", PostgreSQL says "column \"Orders.ShipCity\" must appear
  * in the GROUP BY clause or be used in an aggregate function" (SQLSTATE 42803) — so only the
  * refusal itself is portable. The video's error panel and the article both print the
  * PostgreSQL wording, because CloudBeaver is the client this course tells learners to open.
@@ -89,6 +91,25 @@ class GroupBySpec extends NorthwindGateSpec {
         and: "AND YOU WOULD HAVE TO RUN IT TEN TIMES — which is the argument for GROUP BY, and"
         and: "worse, you have to already know the ten names before you can write the ten WHEREs"
         sqlFor(engine).firstRow('SELECT count(DISTINCT "ShipCountry") AS n FROM "Orders"').n == 10
+
+        and: "the video re-runs that same manual query for the next two countries Leo"
+        and: "names, so both numbers on the card are the countries own, not the group row"
+        sqlFor(engine).firstRow("""SELECT count(*) AS "OrderCount" FROM "Orders" WHERE "ShipCountry" = 'France'""").OrderCount == 6
+        sqlFor(engine).firstRow("""SELECT count(*) AS "OrderCount" FROM "Orders" WHERE "ShipCountry" = 'Mexico'""").OrderCount == 8
+
+        and: "AND THE TRAP THE NEXT SLIDE ACTS OUT: a name that is not in the table answers"
+        and: "0, so a guessed country is indistinguishable from a real one with no orders"
+        sqlFor(engine).firstRow("""SELECT count(*) AS "OrderCount" FROM "Orders" WHERE "ShipCountry" = '??? New Country'""").OrderCount == 0
+
+        and: "while Austria was in the table the whole time, with three orders nobody"
+        and: "would have thought to ask for - which is the point of naming them yourself"
+        sqlFor(engine).firstRow("""SELECT count(*) AS "OrderCount" FROM "Orders" WHERE "ShipCountry" = 'Austria'""").OrderCount == 3
+
+        and: "and Poland - the country Leo worries about - answers 0 exactly like the"
+        and: "guess did, which is why he would never find out it was missing. The ten"
+        and: "country report on the next slide has no Poland row either, so the card"
+        and: "and the report agree"
+        sqlFor(engine).firstRow("""SELECT count(*) AS "OrderCount" FROM "Orders" WHERE "ShipCountry" = 'Poland'""").OrderCount == 0
 
         where:
         engine << ENGINES
@@ -166,10 +187,10 @@ class GroupBySpec extends NorthwindGateSpec {
 
     @Unroll
     def "[#engine] a column that is neither grouped nor aggregated is REFUSED"() {
-        when: "asking for the OrderID beside a count per country"
-        sqlFor(engine).rows(script("country-with-orderid"))
+        when: "asking for the ShipCity beside a count per country"
+        sqlFor(engine).rows(script("country-with-city"))
 
-        then: "the database stops you rather than picking one of Germany's 32 OrderIDs"
+        then: "the database stops you rather than picking one of Germany's eleven cities"
         // The MESSAGE differs per engine — see the header. Only the refusal is portable.
         thrown(Exception)
 
@@ -177,42 +198,63 @@ class GroupBySpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
-    def "the refusal is honest: Germany's group really does hold 32 different OrderIDs"() {
-        // The slide's whole explanation is "which of Germany's thirty-two would it print?".
-        // If that number were one, the error would look like pedantry instead of protection.
+    def "the refusal is honest: Germany's group really does hold 11 different cities"() {
+        // The slide's whole explanation is that the database cannot show one "ShipCity" for
+        // Germany because there are eleven of them. If that number were one, the error would
+        // look like pedantry instead of protection — and the trap two slides later, where those
+        // eleven cities split Germany's single row apart, would have nothing to split.
         expect:
         ENGINES.every { engine ->
-            sqlFor(engine).firstRow('''SELECT count(DISTINCT "OrderID") AS n FROM "Orders"
-                                       WHERE "ShipCountry" = 'Germany' ''').n == 32
+            sqlFor(engine).firstRow('''SELECT count(DISTINCT "ShipCity") AS n FROM "Orders"
+                                       WHERE "ShipCountry" = 'Germany' ''').n == 11
         }
     }
 
     // --- 5. THE TRAP: obeying the error changes the question -------------------------------
 
     @Unroll
-    def "[#engine] adding ShipCity to the GROUP BY moves the top row from Germany to Mexico"() {
-        given: "the report that answers the question that was asked"
-        def right = sqlFor(engine).rows(script("orders-per-country-ranked"))
+    def "[#engine] grouping by the city gives the report that was actually asked for"() {
+        given: "the country report, and the same question asked per city"
+        def byCountry = sqlFor(engine).rows(script("orders-per-country-ranked"))
+        def byCity = sqlFor(engine).rows(script("orders-per-city"))
 
-        and: "and the same report after ShipCity was added to make the error go away"
-        def broken = sqlFor(engine).rows(script("orders-per-country-city"))
-
-        expect: "no error, five real rows, every number a real count"
-        broken.size() == 5
-
-        and: "THE BUG: the biggest market is no longer Germany"
-        right.first().ShipCountry == "Germany"
-        right.first().OrderCount == 32
-        broken.first().ShipCountry == "Mexico"
-        broken.first().ShipCity == "México D.F."
-        broken.first().OrderCount == 8
+        expect: "five real rows, every number a real count"
+        byCity.size() == 5
 
         and: "the exact five rows the video puts on screen"
-        broken*.ShipCity == ["México D.F.", "Berlin", "Luleå", "London", "Buenos Aires"]
-        broken*.OrderCount == [8, 5, 5, 4, 3]
+        byCity*.ShipCity == ["M\u00e9xico D.F.", "Berlin", "Lule\u00e5", "London", "Aachen"]
+        byCity*.OrderCount == [8, 5, 5, 4, 3]
 
-        and: "and Germany, which really does have 32 orders, now tops out at Berlin's 5"
-        broken.find { it.ShipCountry == "Germany" }.OrderCount == 5
+        and: "Germany topped the country report with 32 and is absent here \u2014 it is not a city"
+        byCountry.first().ShipCountry == "Germany"
+        byCountry.first().OrderCount == 32
+        byCity.every { it.ShipCity != "Germany" }
+
+        and: "its 32 orders are spread over 11 cities, the biggest of them Berlin with 5"
+        sqlFor(engine).firstRow('''SELECT count(DISTINCT "ShipCity") AS n FROM "Orders"
+                                   WHERE "ShipCountry" = 'Germany' ''').n == 11
+        byCity.find { it.ShipCity == "Berlin" }.OrderCount == 5
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] the country beside the city changes the display, not the groups"() {
+        given: "the same report, grouped by country and city together"
+        def byCity = sqlFor(engine).rows(script("orders-per-city"))
+        def withCountry = sqlFor(engine).rows(script("orders-per-country-city"))
+
+        expect: "THE CLAIM THE SLIDE MAKES: no city here sits in two countries, so the two"
+        and: "groupings produce exactly the same number of groups"
+        sqlFor(engine).rows('''SELECT "ShipCity" FROM "Orders" GROUP BY "ShipCity"''').size() ==
+                sqlFor(engine).rows('''SELECT "ShipCountry", "ShipCity" FROM "Orders"
+                                       GROUP BY "ShipCountry", "ShipCity"''').size()
+
+        and: "so the same five rows come back, with the country spelled out beside each"
+        withCountry*.ShipCity == byCity*.ShipCity
+        withCountry*.OrderCount == byCity*.OrderCount
+        withCountry*.ShipCountry == ["Mexico", "Germany", "Sweden", "UK", "Germany"]
 
         where:
         engine << ENGINES
@@ -220,9 +262,9 @@ class GroupBySpec extends NorthwindGateSpec {
 
     @Unroll
     def "[#engine] the grain changed: ten rows became twenty-four, and Germany alone is eleven"() {
-        expect: "the same query without the LIMIT — one row per country-and-city combination"
-        sqlFor(engine).rows('''SELECT "ShipCountry", "ShipCity" FROM "Orders"
-                               GROUP BY "ShipCountry", "ShipCity"''').size() == 24
+        expect: "the same query without the LIMIT — one row per city"
+        sqlFor(engine).rows('''SELECT "ShipCity" FROM "Orders"
+                               GROUP BY "ShipCity"''').size() == 24
 
         and: "against ten rows for the report that was actually asked for"
         sqlFor(engine).rows(script("orders-per-country")).size() == 10
@@ -241,28 +283,60 @@ class GroupBySpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
+    @Unroll
+    def "[#engine] where Germany's 32 went: eleven cities, none bigger than five"() {
+        // THE ARTICLE'S TABLE, and the clearest statement of what the trap actually did. It is
+        // article-only on purpose — the video says it in a sentence, because a table repeating
+        // a sentence would sit between the trap springing and the rule landing.
+        given:
+        def rows = sqlFor(engine).rows(script("germany-cities"))
+
+        expect: "eleven rows where the country report had one"
+        rows.size() == 11
+        rows*.ShipCity == ["Berlin", "Aachen", "Brandenburg", "Frankfurt a.M.", "Köln",
+                           "Leipzig", "Mannheim", "München", "Cunewalde", "Münster", "Stuttgart"]
+        rows.collect { it.OrderCount as int } == [5, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2]
+
+        and: "NOTHING WAS LOST — the eleven still add up to the 32 the country report showed"
+        rows.collect { it.OrderCount as int }.sum() == 32
+
+        and: "and the biggest of them is 5, which is the row that appears in the trap's top five"
+        rows.first().ShipCity == "Berlin"
+        (rows.first().OrderCount as int) == 5
+
+        and: "THE ORDER IS SAFE ACROSS ENGINES even with the umlaut cities: every comparison is"
+        and: "decided on an ASCII character before an umlaut is reached, and this was run on both"
+        rows*.ShipCity.every { it ==~ /[A-Za-zÀ-ÿ. ]+/ }
+
+        where:
+        engine << ENGINES
+    }
+
     // --- 6. The same two keys, used on purpose --------------------------------------------
 
     @Unroll
-    def "[#engine] two keys give one row per COMBINATION — two countries, two cities each"() {
+    def "[#engine] two keys give the SAME groups as the city alone, plus the country"() {
         given:
         def rows = sqlFor(engine).rows(script("cities-per-country"))
 
-        expect: "2 countries x 2 cities = 4 rows, which is the point of the slide"
-        rows.size() == 4
-        rows*.ShipCountry == ["France", "France", "Sweden", "Sweden"]
-        rows*.ShipCity == ["Marseille", "Nantes", "Bräcke", "Luleå"]
-        rows*.OrderCount == [3, 3, 3, 5]
+        expect: "one row per city, and every city carries its country"
+        rows.size() == 24
 
-        and: "the rows still add up to what the country-level report says for those two"
-        rows.findAll { it.ShipCountry == "France" }*.OrderCount.sum() == 6
-        rows.findAll { it.ShipCountry == "Sweden" }*.OrderCount.sum() == 8
+        and: "THE CLAIM THE SLIDE MAKES: grouping by the city alone gives the same 24 groups,"
+        and: "because no city in this data sits in two countries"
+        sqlFor(engine).rows('''SELECT "ShipCity" FROM "Orders" GROUP BY "ShipCity"''').size() == 24
+        sqlFor(engine).rows('''SELECT "ShipCity" FROM "Orders"
+                               GROUP BY "ShipCity"
+                               HAVING count(DISTINCT "ShipCountry") > 1''').isEmpty()
 
-        and: "EVERY ORDERING DECISION HERE IS MADE ON A PLAIN ASCII CHARACTER — France before"
-        and: "Sweden, Marseille before Nantes, Bräcke before Luleå (B before L, the umlaut is"
-        and: "never reached). A tie settled inside 'Bräcke' would be collation-dependent and"
-        and: "could differ between engines; this one cannot."
-        rows*.ShipCity.collect { it.charAt(0) as String }.every { it ==~ /[A-Za-z]/ }
+        and: "the first six rows the video puts on screen, in country-then-city order"
+        rows.take(6)*.ShipCountry == ["Argentina", "Austria", "France", "France", "Germany", "Germany"]
+        rows.take(6)*.ShipCity == ["Buenos Aires", "Graz", "Marseille", "Nantes", "Aachen", "Berlin"]
+        rows.take(6)*.OrderCount == [3, 3, 3, 3, 3, 5]
+
+        and: "and the counts still add up to the country report — nothing was thrown away"
+        rows.findAll { it.ShipCountry == "Germany" }*.OrderCount.sum() == 32
+        rows*.OrderCount.sum() == 79
 
         where:
         engine << ENGINES
@@ -338,7 +412,7 @@ class GroupBySpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
-    def "and the answer that error is asking for is real: four countries have more than five"() {
+    def "and the answer that error is asking for is real: six countries have more than five"() {
         // The slide promises lesson 35 will produce this list. If the promise is empty the
         // hand-off is worthless, so the gate checks there is something on the other side.
         // HAVING is NOT taught in this lesson and appears nowhere in its scripts — it is here
@@ -399,7 +473,7 @@ class GroupBySpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] the hands-on query: three employees, and Employee 1 handled the most"() {
+    def "[#engine] a third grouping column: three employees, and Employee 1 handled the most"() {
         given:
         def rows = sqlFor(engine).rows(script("orders-per-employee"))
 
