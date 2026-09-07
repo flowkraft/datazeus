@@ -1,0 +1,372 @@
+# The ordered episode list for Spring Boot. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: build and run the application that sits around your data —
+# configured, tested, observable, and shipped as one artifact.
+#
+# ============================================================================
+# WHY THIS TRACK EXISTS, AND WHAT IT IS NOT
+# ============================================================================
+# Java & Groovy for Data, Series 4 teaches the DATA HALF of these frameworks — JPA, Hibernate,
+# Spring Data, scheduling, Spring Batch — and its own header says plainly that it is "not learn
+# Spring Boot", with no controllers, no DI tutorial and no web layer. THIS IS THAT SENTENCE'S
+# OTHER SIDE. Here the reader learns the framework itself, so the rows they already know how to
+# read and write can live inside an application somebody else can run.
+#
+# NOT A JAVA COURSE. The language, the streams, JDBC and the data access are all elsewhere and
+# assumed.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# SPRING BOOT IS NOT A FRAMEWORK ON TOP OF SPRING. It is Spring, plus a set of DEFAULTS that
+# configure themselves from what is on your classpath, plus an embedded server, plus one
+# artifact you can run. Everything surprising about it — the bean you did not declare, the
+# datasource that appeared, the property that did nothing — is auto-configuration, and a reader
+# who cannot see auto-configuration will experience the product as magic and stay stuck there.
+#
+# So Series 2 is spent on that alone, before anything is built with it. That is deliberate and
+# is the opposite of most tutorials, which build first and never explain.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL SPRING BOOT DOCUMENTATION
+# ============================================================================
+# docs.spring.io/spring-boot runs Getting Started, Developing with Spring Boot (build systems,
+# structuring your code, auto-configuration, beans and dependency injection, packaging), Core
+# Features (SpringApplication, externalized configuration, profiles, logging, task execution and
+# scheduling, testing), Web, Data, Messaging, Production-ready Features (Actuator), Deploying,
+# Build Tool Plugins, and a large How-to section.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL SPRING BOOT DOCUMENTATION. Before writing an
+# episode, open the reference's own page for that topic, use it as the COVERAGE CHECKLIST, and
+# use its VOCABULARY FOR THE NOUNS (starter, auto-configuration, condition, bean, context,
+# profile, actuator endpoint, slice). Anything left out should be left out because an academy
+# rule says so — Java & Groovy for Data owns the data access, Data Ops owns the machine — and
+# never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the reference page named. A brief is
+# what a writer actually opens; a rule that lives only in this header is a rule that gets
+# forgotten at the exact moment it matters.
+#
+# STATE THE MAJOR VERSION every claim was checked against, and check it rather than remembering
+# it. Spring Boot 3 moved javax to jakarta, raised the minimum JDK, and replaced RestTemplate
+# guidance with RestClient. An episode written from Boot 2 memory teaches imports that do not
+# compile.
+#
+# TEACH AGAINST WHAT A LEARNER CAN RUN: start.spring.io and a Postgres in a container, which
+# Data Ops Series 1 · 37 already taught them to start.
+
+course: learn-spring-boot
+track: springboot
+title: Spring Boot
+
+prerequisites:
+  - course: learn-java-groovy
+    needs: "Series 1, and Series 4"
+    why: >-
+      The language and the data access are assumed here, not taught. Series 4 in particular is
+      where JPA, Hibernate and Spring Data stop being names, and this track builds the
+      application around exactly that work rather than repeating it.
+
+excludes:
+  - topic: "Reading and writing rows — JPA, Hibernate, Spring Data, Spring Batch, scheduling"
+    where: "covered in Java & Groovy for Data, Series 4, which is the data half of these frameworks. In this course, Series 3 · 10 covers only the DataSource and the pool that sits under all of it"
+  - topic: "The Java language, streams, records and JDBC"
+    where: "covered in Java & Groovy for Data, Series 1 and Series 2"
+  - topic: "Running the server, the database and the machine"
+    where: "covered in Data Ops. This track hands you one runnable artifact and stops there"
+  - topic: "Convention-over-configuration on top of this — Grails"
+    where: "covered in Grails, which is built on Spring Boot and assumes this course"
+  - topic: "Reactive Spring — WebFlux, R2DBC and the reactive stack"
+    where: "not covered. It is a different programming model with its own reasons, and a data reader meets the servlet stack first and usually only. Named in Series 3 · 00 and left there"
+
+series:
+  - slug: series1-the-application
+    title: The Application
+    tagline: one artifact that starts, and knows how it is configured
+    level: intermediate
+    episodes:
+      # COVER: what Boot actually is, in three parts and no mysticism — STARTERS (a dependency
+      # that drags in a coherent set), AUTO-CONFIGURATION (beans defined for you, conditionally),
+      # and an EMBEDDED SERVER inside an executable jar. start.spring.io, the generated project,
+      # and @SpringBootApplication as three annotations in a trenchcoat: @Configuration,
+      # @EnableAutoConfiguration, @ComponentScan.
+      # THE ONE STRUCTURAL RULE WORTH STATING EARLY: component scanning starts at the main
+      # class's package and goes down. A class in a sibling package is invisible, and that is
+      # the first "why is my bean null" everybody meets.
+      - n: "00"
+        slug: what-spring-boot-is
+        title: "Starters, Auto-configuration and an Embedded Server — What Boot Actually Adds"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the container, in the terms a reader will actually use it. A bean is an object
+      # Spring made and owns; @Component/@Service/@Repository declare one; @Bean methods on a
+      # @Configuration class declare the ones you construct yourself. CONSTRUCTOR INJECTION as
+      # the default, and why — it makes the dependency visible, it makes the class testable
+      # without Spring, and it fails at startup rather than at midnight.
+      # THE ERRORS, because they are how people learn this: NoSuchBeanDefinition, and the
+      # multiple-candidates one that @Qualifier or @Primary resolves.
+      # SCOPES in one paragraph: almost everything is a singleton, and a singleton holding
+      # mutable state is the bug this paragraph prevents.
+      - n: "05"
+        slug: beans-and-injection
+        title: "Beans and Constructor Injection — What Spring Owns, and Why Not the new Keyword"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: externalized configuration, which is the chapter a data person needs most,
+      # because a job that runs in three environments is three configurations of one artifact.
+      # application.yml and application.properties, @Value for one value, and
+      # @ConfigurationProperties for a group — with the argument for the second: it is typed,
+      # it is validated, and it is one object rather than eleven scattered strings.
+      # THE PRECEDENCE ORDER, and it is the whole episode: command line beats environment
+      # variables beats profile-specific files beats the file in the jar. Relaxed binding, so
+      # DB_URL and db.url are the same key — which is how a container gets configured at all.
+      # SEAM: Data Ops, Series 1 · 35 owns what a secret is and where it lives. This owns how
+      # the application reads one.
+      - n: "10"
+        slug: externalized-configuration
+        title: "Externalized Configuration — One Artifact, and the Precedence Order That Decides"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: profiles as named sets of configuration — dev, test, prod — activated by
+      # property or environment variable, with @Profile on the beans that differ. The pattern
+      # that keeps this sane: profiles change CONFIGURATION, not CODE PATHS. A bean that only
+      # exists in prod is a bean nobody has tested.
+      # THE TRAP THAT COSTS A MORNING: no profile active, so the default file wins and the
+      # application quietly runs against the wrong database. Log the active profiles on startup.
+      - n: "15"
+        slug: profiles
+        title: "Profiles — dev, test and prod Without Branching in the Code"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: logging as Boot configures it — SLF4J over Logback by default, levels per
+      # package set in configuration rather than in code, and the pattern. Structured JSON
+      # logging named, because that is what anything collecting logs wants.
+      # DATA NUANCE, and it is short: log the COUNTS. A load that logs "started" and "finished"
+      # tells you nothing; one that logs rows read, rows written and rows rejected is
+      # debuggable a week later. Data Ops, Series 3 · 05 owns the discipline; this is where the
+      # lines come from.
+      - n: "20"
+        slug: logging
+        title: "Logging — Levels per Package, and Logging the Counts Rather Than the Story"
+        hands_on: ["koan:capture", "koan:complete"]
+        status: planned
+      - n: "25"
+        slug: project-a-configured-service
+        title: "Project — One Service, Three Environments, No Code Changes"
+        hands_on: ["koan:author", "koan:rerun"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-auto-configuration
+    title: Auto-configuration, Really
+    tagline: seeing what was configured for you, and taking it back
+    level: advanced
+    episodes:
+      # THE SERIES THIS COURSE EXISTS FOR, and it comes second on purpose: before building
+      # anything substantial, make the magic visible. A reader who can read auto-configuration
+      # never has an unexplainable Spring Boot problem again.
+      # COVER: how it works — a starter puts classes on the classpath, an auto-configuration
+      # class is registered, and CONDITIONS decide whether its beans are created:
+      # @ConditionalOnClass, @ConditionalOnMissingBean, @ConditionalOnProperty. The ordering
+      # rules, briefly.
+      # @ConditionalOnMissingBean IS THE WHOLE DESIGN: everything Boot gives you is a default
+      # that steps aside the moment you declare your own. That single sentence turns the
+      # framework from magic into a rule.
+      - n: "00"
+        slug: how-auto-configuration-works
+        title: "Conditions — Why the Bean Appeared, and How Yours Replaces It"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: the tools that make it visible, which almost nobody is shown.
+      #   --debug            prints the CONDITION EVALUATION REPORT: every auto-configuration,
+      #                      matched or not, WITH THE REASON. This is the single most useful
+      #                      output in the product and it is one flag.
+      #   the Actuator's beans, configprops and conditions endpoints, when Actuator is present.
+      # THE HABIT TO TEACH: when something unexpected happened, read the report before reading
+      # Stack Overflow. The answer is almost always a condition that matched or did not.
+      - n: "05"
+        slug: seeing-what-was-configured
+        title: "The Condition Evaluation Report — Reading Why, Instead of Guessing"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: taking it back. Define your own bean and Boot's steps aside; set a property and
+      # the default changes; exclude an auto-configuration entirely when it is fighting you.
+      # Writing a small auto-configuration of your own, with @AutoConfiguration and a starter —
+      # kept short, because most readers consume these rather than publish them, but knowing
+      # the shape is what completes the mental model.
+      - n: "10"
+        slug: overriding-and-writing-it
+        title: "Taking It Back — Overriding a Default, and Writing an Auto-configuration"
+        hands_on: ["koan:complete", "koan:author"]
+        status: planned
+      # COVER: the startup failure, which is where Boot is genuinely good and where a reader
+      # panics. FAILURE ANALYZERS turn a stack trace into a paragraph that names the problem
+      # and suggests the fix — port in use, no datasource URL, missing bean. Teach reading the
+      # bottom of the message first. Then the ones no analyzer catches: a circular dependency,
+      # a bean created too early, a property that silently bound to nothing.
+      - n: "15"
+        slug: startup-failures
+        title: "Startup Failures — Reading the Analyzer's Paragraph Instead of the Stack Trace"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-explain-a-startup
+        title: "Project — Explain Every Bean in a Running Application, With Evidence"
+        hands_on: ["koan:author", "koan:capture"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-web-data-and-tests
+    title: Web, Data and Tests
+    tagline: the layers a data application actually needs
+    level: advanced
+    episodes:
+      # COVER: the servlet stack — @RestController, request mapping, path variables and query
+      # parameters, request and response bodies as JSON via Jackson, status codes, and
+      # @ControllerAdvice for one place that turns an exception into a response. Validation with
+      # @Valid and constraint annotations.
+      # NAME WEBFLUX HERE AND STOP: a different programming model, with its own reasons, and
+      # not this course. Saying so once prevents a reader assuming it was forgotten.
+      # DATA NUANCE: an endpoint that returns a large result set. Do not build a list of a
+      # million rows in memory to serialise it — stream it, page it, or write a file. This is
+      # the first place a data workload breaks a web framework.
+      - n: "00"
+        slug: rest-controllers
+        title: "REST Controllers and JSON — and What a Million-Row Response Does to Heap"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: calling something else, because a data application usually does. RestClient as
+      # the current answer, RestTemplate named as what existing code uses, timeouts that are
+      # set rather than defaulted, and error handling.
+      # SEAM: ETL & Data Pipelines owns retry, backoff and pagination as a pattern. This is the
+      # client that executes it, and the episode should point rather than repeat.
+      - n: "05"
+        slug: calling-other-services
+        title: "RestClient — Timeouts You Set, Because the Default Is Usually Forever"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        status: planned
+      # COVER: the one piece of data configuration this course owns, because it is Boot's and
+      # not JPA's — the DataSource, the connection pool (HikariCP by default), and the
+      # properties that matter: pool size, connection timeout, leak detection. @Transactional
+      # and the two things everybody gets wrong about it: it does nothing on a self-invocation,
+      # and it does nothing on a non-public method, because it is a proxy.
+      # SEAM: Data Ops, Series 2 · 20 owns pooling as an operational subject and the limit you
+      # will hit; Java & Groovy for Data, Series 4 owns what you do with the connection. This is
+      # only how Boot hands it to you.
+      - n: "10"
+        slug: datasource-and-transactions
+        title: "The DataSource, the Pool and @Transactional — Including When the Annotation Does Nothing"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: testing, which is where Boot pays for itself. The pyramid, applied:
+      #   PLAIN UNIT TESTS   no Spring at all — possible precisely because of constructor
+      #                      injection, and the fastest tests you will have.
+      #   SLICES             @WebMvcTest, @DataJpaTest, @JsonTest: a partial context, so the
+      #                      test starts in a second rather than fifteen.
+      #   @SpringBootTest    the whole application, used sparingly and knowingly.
+      # Test configuration, @MockitoBean for the collaborator you do not want, and the context
+      # cache — which is why an inconsistent test configuration makes a suite slow for reasons
+      # nobody can see.
+      # SEAM: Java & Groovy for Data, Series 3 · 30 owns Testcontainers and testing against the
+      # database you actually ship. Use it here rather than re-teaching it.
+      - n: "15"
+        slug: testing
+        title: "Slices, Not the Whole Context — Tests That Start in a Second"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-an-api-over-a-database
+        title: "Project — A Paged, Filtered API Over a Real Table, With Tests"
+        hands_on: ["koan:author", "koan:count:rows"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series4-production
+    title: Ready for Production
+    tagline: health, metrics, packaging, and handing it to Data Ops
+    level: advanced
+    episodes:
+      # COVER: Actuator — what it exposes, and the fact that almost all of it is OFF by
+      # default and must be enabled deliberately. The endpoints worth knowing: health (with
+      # liveness and readiness groups, which is exactly what a cluster asks for), info, metrics,
+      # env, configprops, loggers — which changes a log level at runtime, without a restart, and
+      # is worth the episode on its own during an incident.
+      # SECURITY IN THE SAME BREATH: env and configprops expose configuration. Do not publish
+      # them, and do not put Actuator on the same port as the public application without
+      # thinking about who can reach it.
+      - n: "00"
+        slug: actuator
+        title: "Actuator — Health, Loggers at Runtime, and What Not to Expose"
+        hands_on: ["koan:process:tool", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: Micrometer as the metrics facade, the meters Boot registers for you (JVM, HTTP,
+      # pool), and adding one of your own — which for a data application is almost always a
+      # COUNT or a DURATION: rows loaded, batch duration, last successful run.
+      # SEAM: Data Ops, Series 3 · 10 owns monitoring as a practice and Series 3 · 20 owns
+      # freshness and volume checks. This episode is where the numbers come from; that course
+      # is what watches them.
+      - n: "05"
+        slug: metrics
+        title: "Micrometer — Emitting the Two Numbers a Data Job Should Always Publish"
+        hands_on: ["koan:complete", "koan:capture"]
+        status: planned
+      # COVER: packaging and running. The executable jar and what is actually inside it, layered
+      # jars and why the layer order makes a container rebuild cheap, buildpacks via the Maven
+      # or Gradle plugin, and a plain Dockerfile as the alternative you can read.
+      # GRACEFUL SHUTDOWN, which matters more for a data workload than for a web one: the
+      # process gets SIGTERM, and a batch that is halfway through a transaction should finish or
+      # roll back rather than being killed. Configure the timeout deliberately.
+      # SEAM: Data Ops, Series 1 · 37 is Docker itself and Kubernetes for Data Workloads runs
+      # the result. This episode produces the artifact and hands it over.
+      - n: "10"
+        slug: packaging-and-shutdown
+        title: "The Jar, the Layers and SIGTERM — Producing Something Somebody Else Can Run"
+        hands_on: ["koan:process:jar", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: configuration in production, which is the same episode as Series 1 · 10 seen from
+      # the other end. Environment variables and relaxed binding as the container's interface,
+      # config maps and secret stores named, and the rule that survives every platform: THE
+      # ARTIFACT IS THE SAME IN EVERY ENVIRONMENT, only its inputs differ. Never build a
+      # prod-specific jar.
+      # SEAM: Continuous Delivery owns that rule as a principle; here it is the mechanism.
+      - n: "15"
+        slug: configuration-in-production
+        title: "Configuration in Production — the Same Jar Everywhere, Different Inputs"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # COVER: staying current, which for this framework is a real cost and should be said out
+      # loud. The support windows, what a major upgrade actually involves — Boot 3 moved javax
+      # to jakarta and raised the JDK floor, which is a rewrite of imports across a codebase —
+      # the dependency management BOM as the thing that decides your library versions, and the
+      # migration tooling that exists.
+      # THE HABIT: upgrade one minor at a time, with the tests from Series 3 · 15 as the check.
+      - n: "20"
+        slug: upgrading
+        title: "Upgrading — the BOM, the Support Window, and Why Boot 3 Was a Rewrite of Imports"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        status: planned
+      - n: "25"
+        slug: project-ship-it
+        title: "Project — Take the API From Series 3 to a Running, Observable Container"
+        hands_on: ["koan:author", "koan:process:tool"]
+        core: true
+        tags: ["project"]
+        status: planned

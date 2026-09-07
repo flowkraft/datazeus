@@ -1,0 +1,387 @@
+# The ordered episode list for Grails. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: build and maintain a Grails application — the one your company
+# already has, or the one DataPallas custom work is written in.
+#
+# ============================================================================
+# WHY THIS TRACK EXISTS, AND WHO ARRIVES AT IT
+# ============================================================================
+# Two readers, and they arrive from opposite directions.
+#   THE INHERITOR   was handed a Grails application. Nobody chose it recently and nobody
+#                   remaining wrote it. They need to change it without breaking it.
+#   THE EXTENDER    is adding a data feature to a DataPallas application, which is Grails.
+#                   Java & Groovy for Data ends on exactly that project — its Series 4 · 55 —
+#                   and stops at the edge of the framework.
+# Both need the same thing: the framework itself, taught as a set of conventions with reasons,
+# not as a scaffold you generate and hope about.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# GRAILS IS SPRING BOOT WITH CONVENTIONS AND GORM ON TOP. It is not a separate universe, and
+# the moment something behaves inexplicably the answer is usually one layer down — a Spring
+# bean, a Hibernate session, a transaction boundary. A reader who believes Grails is magic
+# cannot debug it; a reader who knows what is underneath can, using everything the Spring Boot
+# track taught.
+#
+# THE COROLLARY, and it is the thesis of Series 2: GORM IS HIBERNATE. Every dynamic finder,
+# every save(), every lazy association resolves to Hibernate behaviour that Java & Groovy for
+# Data already taught. This course does not re-teach it — it shows where Grails hides it.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL GRAILS DOCUMENTATION
+# ============================================================================
+# The Grails user guide runs Getting Started, Configuration, The Command Line, Object
+# Relational Mapping (GORM), The Web Layer (controllers, views, tag libraries, URL mappings),
+# Validation, The Service Layer, Testing, Web Services, Plugins, Grails and Spring, Grails and
+# Hibernate, Scaffolding, Security, and Deployment. Its GORM section is the largest part of the
+# guide, which is the right proportion for this reader too.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL GRAILS USER GUIDE. Before writing an episode, open
+# the guide's own section for that topic, use it as the COVERAGE CHECKLIST, and use its
+# VOCABULARY FOR THE NOUNS (domain class, constraint, mapping block, controller action, command
+# object, interceptor, tag library, URL mapping, plugin). Anything left out should be left out
+# because an academy rule says so — Java & Groovy for Data owns GORM as data access, Spring Boot
+# owns the container underneath — and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the guide section named.
+#
+# CHECK THE PROJECT'S CURRENT HOME AND VERSION BEFORE WRITING ANYTHING. Grails has changed
+# stewardship more than once in its life, and its major versions changed the build, the Spring
+# Boot baseline and the JDK floor. State the version every claim was verified against, and
+# verify it against the guide on the day — this is the track in the academy most likely to age
+# badly from memory.
+
+course: learn-grails
+track: grails
+title: Grails
+
+prerequisites:
+  - course: learn-spring-boot
+    needs: "Series 1, and Series 2"
+    why: >-
+      Grails is Spring Boot underneath, and the second time something behaves strangely the
+      answer will be a bean or an auto-configuration. Series 2 in particular — reading why a
+      bean exists — is what turns this framework from magic into a system you can debug.
+  - course: learn-java-groovy
+    needs: "Series 1, and Series 4"
+    why: >-
+      GORM is Hibernate wearing Groovy, so the persistence context, lazy loading and the N+1
+      are assumed here rather than taught. Series 4 is where they were taught.
+
+excludes:
+  - topic: "The Groovy language itself"
+    where: "covered in Java & Groovy for Data, Series 1"
+  - topic: "Hibernate's own behaviour — the persistence context, lazy loading, the N+1, batching"
+    where: "covered in Java & Groovy for Data, Series 4. In this course, Series 2 · 20 shows where GORM hides that behaviour rather than re-teaching it"
+  - topic: "The container, auto-configuration, Actuator and packaging"
+    where: "covered in Spring Boot, which this course assumes. In this course, Series 4 · 05 covers only where Grails and Spring meet"
+  - topic: "Front-end frameworks and single-page applications"
+    where: "not covered. Series 3 teaches Grails as a JSON back end, which is how most Grails applications are now used; Next.js is the front end on this shelf"
+  - topic: "Running the server and the database"
+    where: "covered in Data Ops"
+
+series:
+  - slug: series1-the-application
+    title: The Application and Its Conventions
+    tagline: the layout, the command line, and what convention actually means
+    level: intermediate
+    episodes:
+      # COVER: what Grails is and is not — a convention layer and GORM on top of Spring Boot.
+      # The project layout as the API it really is: grails-app/domain, controllers, services,
+      # views, conf, init. Where a class goes IS how it is wired, and that is the whole idea.
+      # THE HONEST FRAMING FOR A READER IN 2026: this is a mature framework that most teams meet
+      # because they inherited it. That is not a criticism and it should not be delivered as
+      # one; it is a fact about who is reading, and it sets the course's job — competence in
+      # somebody else's application, fast.
+      - n: "00"
+        slug: what-grails-is
+        title: "Convention Over Configuration — Why the Folder a Class Sits In Is the Wiring"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the command line, which is how everything in this framework is done — creating an
+      # app, run-app, the generate and create commands, and the interactive shell. The build
+      # underneath, and the profile the application was created from.
+      # THE PRACTICAL SKILL FOR THE INHERITOR: cloning an application you did not write and
+      # getting it to start. Which JDK, which Grails version, which database — and where each of
+      # those is declared.
+      - n: "05"
+        slug: the-command-line
+        title: "The CLI and the Build — Getting an Application You Did Not Write to Start"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the domain class as the centre of a Grails application — properties, constraints
+      # and the mapping block, and the fact that the schema is generated from it by default.
+      # dbCreate and its values, with the warning stated plainly: update in production is how
+      # schemas silently drift. Migrations are the answer and they are Series 2 · 25.
+      # SEAM: Data Modeling owns deciding what the tables should be. This owns expressing that
+      # decision as a domain class.
+      - n: "10"
+        slug: domain-classes
+        title: "Domain Classes — Constraints, the Mapping Block, and Where the Schema Comes From"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: controllers and actions, params, render and respond, and the convention that maps
+      # a URL to a class and method without a configuration file. Views in one pass — GSP, layouts
+      # and tag libraries — with the honest note that many Grails applications now render almost
+      # nothing and return JSON, which Series 3 covers properly.
+      # COMMAND OBJECTS AND DATA BINDING, and the trap that comes with them: binding request
+      # parameters straight onto a domain class lets a caller set fields you did not mean to
+      # expose. Bind to a command object, validate it, and copy across.
+      - n: "15"
+        slug: controllers-and-binding
+        title: "Controllers, Data Binding and Command Objects — and the Field You Did Not Mean to Expose"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the service layer, which is where the actual work belongs. Services are Spring
+      # beans, injected by name, and TRANSACTIONAL BY DEFAULT — which is the single most
+      # consequential convention in the framework and the one people discover by accident.
+      # @Transactional against @NotTransactional, what happens when a service method calls
+      # another one on itself (nothing, because it is a proxy — the same rule as Spring Boot
+      # Series 3 · 10), and where the transaction actually ends.
+      # THE RULE THAT KEEPS A GRAILS APPLICATION MAINTAINABLE: controllers translate, services
+      # decide, domain classes hold. Logic in a controller cannot be tested or reused.
+      - n: "20"
+        slug: services-and-transactions
+        title: "Services Are Transactional by Default — Where the Work Belongs, and Where It Commits"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-a-first-feature
+        title: "Project — Add One Screen and One Table to an Application You Did Not Write"
+        hands_on: ["koan:author", "koan:complete"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-gorm
+    title: GORM, in Depth
+    tagline: the largest part of the guide, and of the job
+    level: advanced
+    episodes:
+      # COVER: the four ways to ask GORM a question, and when each is right — DYNAMIC FINDERS
+      # (findAllByNameAndActive), WHERE QUERIES (compile-checked, composable), CRITERIA, and HQL
+      # for the query none of the others express. get, load, list, count, and the paging
+      # parameters everybody needs on day one.
+      # THE DECISION, because a course that shows four ways without choosing has taught nothing:
+      # dynamic finders for the simple and obvious, where queries for anything composed or
+      # reused, HQL when the query is genuinely a query. Criteria mostly when you inherit it.
+      - n: "00"
+        slug: querying
+        title: "Four Ways to Ask — Dynamic Finders, where, Criteria and HQL"
+        hands_on: ["koan:choose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: associations — hasMany, belongsTo, hasOne, mappedBy — and what each one actually
+      # does to the schema and to cascading. The cascade rules, which are inferred from
+      # belongsTo and surprise everybody at least once: deleting a parent either deletes the
+      # children or throws, depending on a keyword somebody typed two years ago.
+      # THE DIAGNOSTIC: read the generated DDL. The mapping is not an opinion, and the schema
+      # settles the argument.
+      - n: "05"
+        slug: associations
+        title: "hasMany, belongsTo and Cascade — What the Keyword Did to Your Delete"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: validation as a first-class part of persistence, which is unusual and is a
+      # genuine strength — constraints on the domain class, validate(), the errors object, and
+      # the fact that SAVE RETURNS NULL WHEN VALIDATION FAILS AND DOES NOT THROW.
+      # THAT SENTENCE IS THE EPISODE. Code that calls save() and ignores the return value has a
+      # silent data-loss bug, and it is the commonest defect in Grails applications in the wild.
+      # save(failOnError: true) as the honest default, and custom validators.
+      - n: "10"
+        slug: validation-and-save
+        title: "save() Returns null — the Silent Data Loss in Half the Grails Code in the World"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the session, which is Hibernate's and which GORM hides — when it flushes, why an
+      # object you did not save was persisted anyway (a dirty instance at flush time), and
+      # detached objects across requests. withNewSession, withTransaction and flush/clear.
+      # THE DATA JOB, and this is the episode a reader from this academy needs most: importing
+      # a hundred thousand rows through GORM without the session filling. flush and clear on a
+      # batch, or step outside GORM entirely — which is what Java & Groovy for Data taught, and
+      # the right answer more often than a Grails developer expects.
+      - n: "15"
+        slug: the-session
+        title: "The Session Underneath — Why a Load of 100,000 Rows Runs Out of Memory"
+        hands_on: ["koan:diagnose", "koan:count:rows"]
+        core: true
+        status: planned
+      # COVER: where GORM's convenience becomes a query problem. Lazy by default, so a list
+      # rendered in a view fires a query per row — the N+1, arriving through a mechanism that
+      # looks like a field access. Eager fetching, fetch: 'join', and batch fetching.
+      # SEAM STATED PRECISELY: Java & Groovy for Data, Series 4 owns the N+1 as a concept and
+      # Hibernate's answers to it. This episode owns SPOTTING IT THROUGH GORM, where nothing in
+      # the code looks like a query at all. Turn on SQL logging and count.
+      - n: "20"
+        slug: lazy-loading-and-n-plus-one
+        title: "The N+1 Through GORM — When a Field Access Is Secretly a Query"
+        hands_on: ["koan:diagnose", "koan:count:queries"]
+        core: true
+        status: planned
+      # COVER: schema change over time, which the default dbCreate does badly. The Grails
+      # migration plugin — which is Liquibase — the changelog, generating a diff from the domain
+      # model, and running it as part of a deploy rather than at startup by accident.
+      # SEAM: Java & Groovy for Data, Series 4 covers Liquibase itself with the Groovy DSL, and
+      # Continuous Delivery owns migrations as part of a deployment. This is the Grails wiring
+      # only, and it should point at both rather than repeat either.
+      - n: "25"
+        slug: migrations
+        title: "Migrations — Turning dbCreate Off Before Production Turns It Off for You"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "30"
+        slug: project-a-load-that-scales
+        title: "Project — Import a Large File Through the Domain Model Without Exhausting Memory"
+        hands_on: ["koan:author", "koan:count:rows"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-as-a-back-end
+    title: Grails as a Back End
+    tagline: URL mappings, JSON, interceptors and security
+    level: advanced
+    episodes:
+      # COVER: URL mappings as the one place routing is declared, RESTful mappings from a domain
+      # resource, versioning a URL, and reverse mapping in links.
+      # WHY IT MATTERS TO THE INHERITOR: UrlMappings is the fastest map of an application you
+      # did not write. Read it first, before any controller.
+      - n: "00"
+        slug: url-mappings
+        title: "UrlMappings — the Fastest Map of an Application You Inherited"
+        hands_on: ["koan:capture", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: returning JSON properly — respond and content negotiation, JSON views as the
+      # templating layer for responses, and shaping the payload deliberately.
+      # THE TRAP AND THE SECURITY POINT IN ONE: rendering a domain object directly serialises
+      # every property, including the ones you did not mean to publish, and it walks lazy
+      # associations while it does so — which is both a leak and an N+1. Shape the response.
+      - n: "05"
+        slug: json-responses
+        title: "JSON Views — Why Rendering a Domain Object Leaks Fields and Fires Queries"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: interceptors as the cross-cutting layer — matching, before and after, and the
+      # ordinary uses: authentication, logging, timing, tenant selection. Filters named as what
+      # older applications use.
+      - n: "10"
+        slug: interceptors
+        title: "Interceptors — One Place for the Thing Every Request Needs"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      # COVER: security, honestly and without pretending this course can teach the subject. The
+      # Spring Security plugin as what almost every Grails application uses, its domain classes,
+      # annotations and the request map. Then the specifics this framework gets asked about:
+      # CSRF on form posts, and data binding as an authorisation hole — Series 1 · 15's trap,
+      # restated because it belongs here too.
+      - n: "15"
+        slug: security
+        title: "Spring Security in Grails — Roles, the Request Map, and Binding as a Hole"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: work that outlives the request — Grails async, promises, and scheduled jobs
+      # through the Quartz plugin. Kept short and pointed at the tracks that own it.
+      # THE ONE GRAILS-SPECIFIC RULE, and it is the reason the episode exists: a background
+      # thread has NO HIBERNATE SESSION. Domain objects handed to one are detached, and the
+      # first lazy access throws. Re-attach or re-read inside withNewSession.
+      # SEAM: Java & Groovy for Data, Series 4 · 45 owns Quartz; Data Ops owns choosing a
+      # scheduler at all.
+      - n: "20"
+        slug: async-and-jobs
+        title: "Background Work — and Why a Detached Domain Object Throws on the Other Thread"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        status: planned
+      - n: "25"
+        slug: project-a-json-api
+        title: "Project — Expose an Inherited Domain Model as a Shaped, Secured JSON API"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series4-testing-plugins-and-shipping
+    title: Testing, Plugins and Shipping
+    tagline: changing an inherited application safely, and getting it out
+    level: advanced
+    episodes:
+      # COVER: the three levels Grails names — unit with the Grails testing support traits,
+      # integration with a real context and a rolled-back transaction, and functional against a
+      # running application. Spock as the framework throughout, since this academy's own tests
+      # are Spock.
+      # THE INHERITOR'S ORDER, and it is the useful part: on an application with no tests, do
+      # not start with unit tests. Write one functional test that proves the feature you are
+      # about to change still works, THEN change it. That is the only test that pays for itself
+      # on day one.
+      - n: "00"
+        slug: testing
+        title: "Unit, Integration and Functional — What to Write First on Code With No Tests"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: where Grails stops and Spring starts — resources.groovy and bean definitions,
+      # injecting a Spring bean into a Grails artefact and the reverse, and reading the
+      # application context when a convention has not done what you expected.
+      # THE POINT OF THE EPISODE: everything from the Spring Boot track applies here unchanged.
+      # This is one page of translation, not a second course.
+      - n: "05"
+        slug: grails-and-spring
+        title: "resources.groovy — Where the Conventions Stop and Spring Boot Starts"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        status: planned
+      # COVER: plugins as how this ecosystem extends — installing one, what it can contribute
+      # (artefacts, beans, configuration), and writing a small one to share code between two
+      # applications.
+      # THE CAUTION A 2026 READER NEEDS, and give it without sneering: check the plugin's last
+      # release and its Grails version. A plugin that has not moved in years is a dependency
+      # you will end up maintaining, and on an inherited application you may already be.
+      - n: "10"
+        slug: plugins
+        title: "Plugins — What They Contribute, and Checking the Last Release Date First"
+        hands_on: ["koan:choose", "koan:capture"]
+        status: planned
+      # COVER: shipping. The runnable jar and the war, the profile it was built from, external
+      # configuration in production, and the JVM and memory settings a Grails application
+      # actually needs.
+      # SEAM: Spring Boot Series 4 · 10 owns packaging and graceful shutdown and this is the
+      # same mechanism; Data Ops owns the machine it lands on. Say what differs and no more.
+      - n: "15"
+        slug: shipping
+        title: "Jar or War — Building It, Configuring It Outside, and Handing It Over"
+        hands_on: ["koan:process:jar", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: the version question, which every reader of this track will face and which
+      # deserves a straight answer rather than encouragement. What a major upgrade involves —
+      # the Spring Boot baseline, the JDK floor, the build, and plugins that may not have
+      # followed. How to find out where you are, and how to move one step at a time with the
+      # tests from 4 · 00 as the check.
+      # AND THE DECISION NOBODY ELSE WILL STATE FOR THEM: sometimes the answer is to keep the
+      # application on its version and put new work beside it rather than in it. Say when that
+      # is reasonable and when it is avoidance.
+      - n: "20"
+        slug: upgrading-and-what-next
+        title: "Upgrading, or Not — Deciding Honestly What to Do With an Application You Inherited"
+        hands_on: ["koan:choose", "koan:capture"]
+        status: planned
+      - n: "25"
+        slug: project-change-it-safely
+        title: "Project — Change Behaviour in an Inherited Application, Test First"
+        hands_on: ["koan:author", "koan:rerun"]
+        core: true
+        tags: ["project"]
+        status: planned

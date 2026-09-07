@@ -1,0 +1,396 @@
+# The ordered episode list for Next.js. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: ship the application people open — the tables, filters and charts
+# that sit in front of your data, with the query running on the server.
+#
+# ============================================================================
+# WHY A DATA ACADEMY TEACHES A WEB FRAMEWORK
+# ============================================================================
+# The academy has always stopped one step short of the user. BI & Data Visualization ends at a
+# dashboard inside a BI tool, which is the right answer for an analyst and the wrong one when
+# the audience is a customer, the layout is bespoke, or the thing has to be embedded in a
+# product. Nothing covered building that.
+#
+# THE HONEST GATE, AND IT BELONGS IN SERIES 1 · 00: IF A BI TOOL WILL DO, USE THE BI TOOL. It
+# has auth, scheduling, permissions and export already, and you will write all four badly.
+# Build the application when the audience is external, the interaction is not a dashboard, or
+# the thing you are shipping is a product rather than a report.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# MOST OF YOUR CODE RUNS ON THE SERVER, AND THAT IS THE POINT. A Server Component can query the
+# database directly — no API layer, no serialisation of a million rows to a browser, and the
+# credentials never leave the machine. A reader who writes React the way a single-page
+# application taught them will build a public API over their warehouse by accident and ship the
+# connection string to the client.
+#
+# So Series 1 spends a whole episode on the server/client boundary before anything fetches
+# anything, and every later episode says which side it is on.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL NEXT.JS DOCUMENTATION
+# ============================================================================
+# nextjs.org/docs runs Getting Started (installation, project structure, layouts and pages,
+# linking and navigating, server and client components, fetching data, updating data, caching
+# and revalidating, error handling, CSS, images, fonts, metadata, route handlers and middleware,
+# deploying, upgrading), then Guides, then an API Reference split into directives, components,
+# file-system conventions, functions and configuration. Its Getting Started order is close to
+# the right teaching order and Series 1 and 2 follow it.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL NEXT.JS DOCUMENTATION. Before writing an episode,
+# open the docs' own page for that topic, use it as the COVERAGE CHECKLIST, and use its
+# VOCABULARY FOR THE NOUNS (route segment, layout, server component, client component, route
+# handler, server action, revalidation, streaming, prerender). Anything left out should be left
+# out because an academy rule says so — Learn SQL owns the query, BI owns choosing the chart —
+# and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the docs page named.
+#
+# ⚠ THE APP ROUTER ONLY. The Pages Router exists, is still supported, and is what a lot of
+# existing code uses — name it once, in Series 1 · 00, and never teach it. Two routers taught
+# side by side is how a course becomes unreadable.
+#
+# ⚠ CACHING IS THE PART MOST LIKELY TO BE WRONG FROM MEMORY. Its defaults have changed
+# materially between major versions — what is cached, for how long, and whether it is opt-in.
+# STATE THE VERSION EVERY CLAIM WAS CHECKED AGAINST, and check it against the docs on the day
+# of writing. An episode that confidently describes the previous major's defaults is worse than
+# no episode.
+
+course: learn-nextjs
+track: nextjs
+title: Next.js
+
+prerequisites:
+  - course: learn-sql
+    needs: "Series 1, and Series 2"
+    why: >-
+      Every screen in this track is a query with a page around it. You need to be able to write
+      the aggregate and the join yourself, because the interesting problems here — pagination,
+      filters, a chart's dataset — are query problems wearing a user interface.
+
+excludes:
+  - topic: "Writing the queries behind the screens"
+    where: "covered in Learn SQL. In this course, Series 2 · 05 covers only how a query is called from a page and where the connection lives"
+  - topic: "Choosing the right chart, and whether it tells the truth"
+    where: "covered in BI & Data Visualization, Series 1. This course renders the chart you already decided on"
+  - topic: "JavaScript and TypeScript themselves, and React fundamentals"
+    where: "not covered; they are assumed. A reader who has never written a component should learn React first — this track teaches the framework around it"
+  - topic: "The Pages Router"
+    where: "not covered, deliberately. Named once in Series 1 · 00 so a reader recognises it in existing code, and never taught"
+  - topic: "Hosting, containers and the machine it runs on"
+    where: "covered in Data Ops, and Kubernetes for Data Workloads if it lands on a cluster. In this course, Series 4 · 10 covers only what the build output requires"
+
+series:
+  - slug: series1-pages-and-the-boundary
+    title: Pages, and the Line Between Server and Browser
+    tagline: routing by folder, and the one distinction everything else depends on
+    level: intermediate
+    episodes:
+      # COVER: what Next.js is — React plus a router plus a server — and the framing that keeps a
+      # data reader oriented: it is a way to put a rendered page in front of a query. Install,
+      # project structure, and the App Router as the only router this course teaches, with the
+      # Pages Router named once so existing code is recognisable.
+      # THE HONEST GATE GOES HERE, in full, not as a footnote: if a BI tool will do, use the BI
+      # tool. Build when the audience is external, the interaction is not a dashboard, or you
+      # are shipping a product. A course that never says when NOT to use its subject is an
+      # advertisement.
+      - n: "00"
+        slug: what-nextjs-is
+        title: "A Page in Front of a Query — What This Buys Over a BI Dashboard, and When It Does Not"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: routing by file system — a folder is a URL segment, page.tsx makes it routable,
+      # layout.tsx wraps everything below it and does not re-render on navigation, and the
+      # special files: loading, error, not-found. Dynamic segments and route groups. Linking and
+      # client-side navigation.
+      # THE MENTAL MODEL TO LAND: the folder tree IS the site map. It is the same idea Grails
+      # expresses in UrlMappings and Spring in annotations — worth one sentence, because a
+      # reader arriving from either recognises it instantly.
+      - n: "05"
+        slug: routing-and-layouts
+        title: "Folders Are Routes — page, layout, loading and the Files With Meanings"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # THE CENTRAL EPISODE OF THE COURSE. Everything after it refers back.
+      # COVER: components are SERVER components by default; "use client" opts a component and
+      # everything it imports into the browser. What each can do — the server can await a query,
+      # read a secret, touch the filesystem; the client can use state, effects and event
+      # handlers. Composition: a server component can render a client one and pass it data;
+      # the reverse needs children.
+      # WHY A DATA READER MUST GET THIS RIGHT, and say it in these words: on the server the
+      # query runs next to the database and only the ANSWER crosses the network. Push the same
+      # work into a client component and you have built a public API over your warehouse,
+      # shipped credentials to a browser, or serialised a hundred thousand rows to render ten.
+      # THE ERROR THAT TEACHES IT: importing a database client into a "use client" file. Read
+      # the message; it names the boundary.
+      - n: "10"
+        slug: server-and-client-components
+        title: "Server by Default — the Boundary That Decides Where Your Query Runs"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: metadata and the page's identity — the metadata export, dynamic metadata from
+      # route params, titles and descriptions. Then the small things every real page needs and
+      # nobody teaches in order: CSS, the font and image handling the framework provides, and
+      # why the image component exists rather than an img tag.
+      # KEEP IT SHORT. This is the episode that stops the course pretending an application is
+      # only data; it is not the episode where a reader learns design.
+      - n: "15"
+        slug: metadata-and-assets
+        title: "Metadata, CSS, Fonts and Images — the Page Furniture, in One Pass"
+        hands_on: ["koan:complete", "koan:capture"]
+        status: planned
+      - n: "20"
+        slug: project-a-static-report
+        title: "Project — One Page, One Query, Rendered on the Server"
+        hands_on: ["koan:author", "koan:predict"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-data
+    title: Getting the Data In and Out
+    tagline: fetching, caching, mutating — and the part that changes between versions
+    level: advanced
+    episodes:
+      # COVER: fetching in a server component — an async component that awaits, with no hook and
+      # no effect. Parallel against sequential fetches and the waterfall that costs a second per
+      # step. Passing data down as props, and where a Suspense boundary goes.
+      - n: "00"
+        slug: fetching-on-the-server
+        title: "async Components — Awaiting Data With No Hook, and the Waterfall to Avoid"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the database itself, which most tutorials skip and which is the whole point here.
+      # Where the client or pool is created and why it must be a module-level singleton — a
+      # connection per request exhausts the database, and Data Ops, Series 2 · 20 is the episode
+      # that explains what that limit costs. The connection string as a server-only environment
+      # variable, and the import-guard that makes leaking it a build error.
+      # DATA NUANCE, and it is the one this academy is uniquely placed to give: the page is not
+      # the place to fix a slow query. If the screen is slow, read the plan — Learn SQL owns
+      # that — before reaching for a cache, because caching a bad query hides it until the cache
+      # misses in front of a customer.
+      - n: "05"
+        slug: talking-to-the-database
+        title: "The Connection — One Pool, Server-Only, and Not Caching a Query You Should Fix"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: caching and revalidation, and this episode must be written from the docs of the
+      # version in front of you rather than from memory. What is cached, at which layer, for how
+      # long, and how to opt out; time-based revalidation against on-demand; and how to tell,
+      # concretely, whether a page you are looking at is being re-rendered or served from a
+      # cache.
+      # THE FRAMING THAT SURVIVES THE VERSION CHURN, and lead with it: caching is a promise
+      # about STALENESS. Decide how old an answer may be — per screen, in business terms, not in
+      # framework terms — and then find the setting. A dashboard read once a morning and a
+      # balance a customer is looking at have different answers, and the framework cannot know
+      # which you meant.
+      - n: "10"
+        slug: caching-and-revalidating
+        title: "Caching Is a Promise About Staleness — Deciding How Old an Answer May Be"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: streaming with Suspense — send the shell immediately, let the slow section arrive
+      # when its query finishes, and the loading file as the route-level version of the same
+      # idea.
+      # WHY IT MATTERS MORE FOR DATA THAN FOR ANYTHING ELSE: an analytical query takes seconds,
+      # and a page that waits for the slowest widget looks broken. Streaming is how a report
+      # with one expensive number stays usable. Put the boundary around THAT number rather than
+      # around the page.
+      - n: "15"
+        slug: streaming
+        title: "Streaming and Suspense — Sending the Page Before the Slow Query Finishes"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: writing, not just reading. Server Actions as functions that run on the server and
+      # are called from a form or an event, revalidating afterwards so the screen reflects the
+      # change, and the pending state a user needs to see.
+      # THE RULES THAT MATTER MORE HERE THAN IN A TUTORIAL APP: a server action is a PUBLIC
+      # ENDPOINT whatever it looks like in your editor. Authorise inside it, validate its input
+      # inside it, and never trust that the only caller is your own form. And the one this
+      # academy has to add: a mutation that touches many rows belongs in a job, not in a request
+      # a user is waiting on.
+      - n: "20"
+        slug: server-actions
+        title: "Server Actions — a Public Endpoint That Looks Like a Function Call"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: route handlers as the API when you genuinely need one — a webhook receiver, a
+      # download, something a machine calls. Methods, request and response, and the choice
+      # stated plainly: if the caller is your own page, you probably do not need this; use a
+      # server component or an action.
+      # THE DATA-SHAPED USE THAT DOES JUSTIFY IT: streaming an export. A CSV of a hundred
+      # thousand rows should be written to the response as it is read from the database, never
+      # assembled in memory first.
+      - n: "25"
+        slug: route-handlers
+        title: "Route Handlers — When You Actually Need an API, and Streaming a Large Export"
+        hands_on: ["koan:choose", "koan:count:rows"]
+        status: planned
+      - n: "30"
+        slug: project-a-live-report
+        title: "Project — A Report That Streams Its Slow Section and Refreshes on Demand"
+        hands_on: ["koan:author", "koan:rerun"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-the-data-application
+    title: The Screens Data People Actually Build
+    tagline: tables, filters, charts and who is allowed to see them
+    level: advanced
+    episodes:
+      # COVER: the table, which is what most of these applications are. Server-side pagination
+      # and sorting — the query does the work, not the browser — and the two paging strategies
+      # with their trade-off stated: OFFSET is simple and degrades on deep pages; KEYSET is
+      # stable and fast and cannot jump to page 900.
+      # SEAM: Learn SQL owns writing them. This owns wiring one to a page and a URL.
+      - n: "00"
+        slug: tables-and-pagination
+        title: "A Table Over a Real Dataset — Paging in the Query, Not in the Browser"
+        hands_on: ["koan:complete", "koan:count:rows"]
+        core: true
+        status: planned
+      # COVER: filters, and the design decision that makes a data application shareable — PUT
+      # THE STATE IN THE URL. Search params as the source of truth rather than component state,
+      # read on the server, so a filtered view can be bookmarked, sent to a colleague and
+      # reloaded. Debouncing the input, and keeping the query parameterised.
+      # THE SECURITY LINE, because search params are user input arriving straight into a query
+      # path: parameterise, always, and validate the sort column against an allow-list rather
+      # than interpolating it.
+      - n: "05"
+        slug: filters-in-the-url
+        title: "Filters in the URL — a View You Can Send Someone, and the Sort Column You Must Not Interpolate"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: rendering a chart, which is the one place a client component is unavoidable —
+      # charting libraries need the DOM. The pattern: fetch and AGGREGATE ON THE SERVER, pass a
+      # small, already-shaped dataset to a thin client component that draws it.
+      # THE MISTAKE THIS PREVENTS, and it is the commonest one in this whole track: shipping
+      # every row to the browser and grouping it in JavaScript. The database aggregates better
+      # than the browser will, and the answer is a hundred points rather than a hundred thousand.
+      # SEAM: BI & Data Visualization owns whether that chart is the right chart.
+      - n: "10"
+        slug: charts
+        title: "Charts — Aggregate on the Server, Draw on the Client, Ship a Hundred Points"
+        hands_on: ["koan:complete", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: who is allowed to see this. Authentication in outline and the options named
+      # rather than one taught, then the part that is genuinely this course's job: AUTHORISATION
+      # NEXT TO THE QUERY. A check in a layout does not protect a route handler or a server
+      # action, and hiding a link hides nothing.
+      # THE RULE TO LEAVE THEM WITH: every place data leaves the server — page, action, handler
+      # — checks for itself. Then row-level filtering as the harder case, where the answer
+      # itself depends on who is asking, with a pointer to Data Ops, Series 2 · 40 for the
+      # database's own mechanism.
+      - n: "15"
+        slug: auth-and-authorisation
+        title: "Who May See This — Checking Beside the Query, Not in the Layout"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: the request every internal data application eventually gets — export this. CSV
+      # and Excel, generated on the server and streamed, with the encoding and delimiter
+      # decisions that decide whether it opens correctly on somebody's machine. Scheduled or
+      # emailed exports named and pointed at Data Ops.
+      # THE DETAIL THAT COSTS AN AFTERNOON EVERY TIME: Excel's handling of a UTF-8 CSV without a
+      # BOM, and of a long numeric identifier it decides is a number in scientific notation.
+      - n: "20"
+        slug: exports
+        title: "Export to CSV and Excel — the BOM, the Delimiter, and the ID Excel Turned Into 1.2E+15"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        status: planned
+      - n: "25"
+        slug: project-an-internal-tool
+        title: "Project — A Filterable Table, a Chart and an Export, Behind a Login"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series4-shipping
+    title: Shipping It
+    tagline: what the build produced, where it can run, and keeping up
+    level: advanced
+    episodes:
+      # COVER: what the build actually made, because this decides everything about hosting. Which
+      # routes were prerendered at build time and which are rendered per request, how a data
+      # dependency forces a route to be dynamic, and reading the build output that says which is
+      # which — it prints a legend most people never look at.
+      # THE DATA-SHAPED CONSEQUENCE: a page that reads the database at build time froze the
+      # numbers at build time. That is right for a snapshot and wrong for a live report, and the
+      # symptom is a dashboard that never changes until somebody redeploys.
+      - n: "00"
+        slug: what-the-build-produced
+        title: "Static or Per-Request — Reading the Build Output Before You Wonder Why Numbers Froze"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: configuration and secrets. Server-only environment variables against the prefixed
+      # ones that are inlined into the browser bundle — and the fact that inlined means BAKED
+      # INTO THE BUILD, so a prefixed secret is public forever and rotating it is the only fix.
+      # Configuration per environment, and the same rule the rest of the academy uses: one
+      # artifact, different inputs.
+      # SEAM: Data Ops, Series 1 · 35 and 1 · 43 own secrets; this is the framework-specific way
+      # to leak one.
+      - n: "05"
+        slug: environment-and-secrets
+        title: "Environment Variables — the Prefix That Puts a Secret in the Browser Bundle Forever"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: where it runs. The managed platform it comes from, a plain Node server, and a
+      # container — with the standalone output that makes the image small. What each option
+      # assumes, and the honest note that some framework features are easier on the platform
+      # that ships the framework.
+      # THE DATA REASON TO SELF-HOST, stated because this reader has it more often than most:
+      # the application needs to be inside the network the database is in. That is a
+      # deployment constraint, not a preference.
+      # SEAM: Data Ops, Series 1 · 37 is the container; Kubernetes for Data Workloads runs it.
+      - n: "10"
+        slug: deploying
+        title: "Managed, Node or a Container — and the Database That Is Not on the Internet"
+        hands_on: ["koan:choose", "koan:process:tool"]
+        core: true
+        status: planned
+      # COVER: performance, measured rather than guessed. Where the time actually goes in a data
+      # application — almost always the query, occasionally the payload, rarely the framework.
+      # Bundle size for the client half, and the habit of checking what "use client" dragged
+      # across the boundary.
+      # THE ORDER TO DIAGNOSE IN, and it is the episode: time the query first. This academy's
+      # readers have EXPLAIN, and a page blamed on React is usually a missing index.
+      - n: "15"
+        slug: performance
+        title: "Where the Time Went — Query First, Payload Second, Framework Last"
+        hands_on: ["koan:diagnose", "koan:count:scanned"]
+        status: planned
+      # COVER: staying current, which for this framework is a real and recurring cost and should
+      # be said without either enthusiasm or complaint. The release cadence, the codemods that
+      # exist, what typically breaks — caching defaults and async APIs have both moved — and the
+      # practice that makes it survivable: upgrade one major at a time, read the upgrade guide
+      # in full, and have something that tells you when a page broke.
+      - n: "20"
+        slug: upgrading
+        title: "Upgrading — the Cadence, the Codemods, and Reading the Guide Before the Release Notes"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      - n: "25"
+        slug: project-ship-the-tool
+        title: "Project — Deploy the Internal Tool Where It Can Reach the Database"
+        hands_on: ["koan:author", "koan:process:tool"]
+        core: true
+        tags: ["project"]
+        status: planned

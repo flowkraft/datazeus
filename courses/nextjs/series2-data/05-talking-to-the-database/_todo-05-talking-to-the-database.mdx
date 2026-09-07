@@ -1,0 +1,73 @@
+---
+title: "The Connection — One Pool, Server-Only, and Not Caching a Query You Should Fix"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-nextjs"
+tags: []
+level: "advanced"
+module: "series2-data"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/nextjs/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/nextjs/series2/_05/TalkingToTheDatabaseKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Next.js documentation (nextjs.org/docs) — the Getting Started page that owns this topic, App Router only.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Learn SQL owns the query, BI & Data Visualization owns choosing the chart, Data Ops owns the host),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    Server by default. The boundary decides where the query runs — push it clientside and you have built a public API over your warehouse. CHECK CACHING CLAIMS AGAINST THE CURRENT VERSION; the defaults have moved.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the database itself, which most tutorials skip and which is the whole point here.
+     Where the client or pool is created and why it must be a module-level singleton — a
+     connection per request exhausts the database, and Data Ops, Series 2 · 20 is the episode
+     that explains what that limit costs. The connection string as a server-only environment
+     variable, and the import-guard that makes leaking it a build error.
+     DATA NUANCE, and it is the one this academy is uniquely placed to give: the page is not
+     the place to fix a slow query. If the screen is slow, read the plan — Learn SQL owns
+     that — before reaching for a cache, because caching a bad query hides it until the cache
+     misses in front of a customer.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/nextjs/series2/_05/TalkingToTheDatabaseKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

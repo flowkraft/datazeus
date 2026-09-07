@@ -1,0 +1,72 @@
+---
+title: "The Jar, the Layers and SIGTERM — Producing Something Somebody Else Can Run"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-spring-boot"
+tags: []
+level: "advanced"
+module: "series4-production"
+order: 10
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/springboot/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/springboot/series4/_10/PackagingAndShutdownKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Spring Boot reference documentation (docs.spring.io/spring-boot) — the section that owns this topic (Developing, Core Features, Web, Data, Production-ready Features, Deploying).
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Java & Groovy for Data owns the data access, Data Ops owns the machine),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    Boot is Spring plus defaults that configure themselves from the classpath. Everything surprising is auto-configuration, and Series 2 exists to make it visible.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: packaging and running. The executable jar and what is actually inside it, layered
+     jars and why the layer order makes a container rebuild cheap, buildpacks via the Maven
+     or Gradle plugin, and a plain Dockerfile as the alternative you can read.
+     GRACEFUL SHUTDOWN, which matters more for a data workload than for a web one: the
+     process gets SIGTERM, and a batch that is halfway through a transaction should finish or
+     roll back rather than being killed. Configure the timeout deliberately.
+     SEAM: Data Ops, Series 1 · 37 is Docker itself and Kubernetes for Data Workloads runs
+     the result. This episode produces the artifact and hands it over.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:jar
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/springboot/series4/_10/PackagingAndShutdownKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO
