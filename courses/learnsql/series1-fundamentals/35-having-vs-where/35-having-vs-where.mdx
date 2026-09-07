@@ -1,5 +1,5 @@
 ---
-title: "HAVING vs WHERE — Why WHERE Can't Filter Your Totals"
+title: "HAVING vs WHERE — Filtering Groups and Filtering Rows"
 description: "You can build a total. Now keep only the groups you want. Learn what HAVING does, the order a database really runs your query in, and why putting a filter one clause too early gives you a wrong answer that proves itself right."
 topic: "learn-sql"
 tags: ["sql", "fundamentals", "having", "group-by"]
@@ -61,14 +61,14 @@ Read the condition out loud and you can hear why it could not have gone anywhere
 
 ## Two filters, and they are not rivals
 
-It is tempting to file `HAVING` as "the advanced one" or "the one for hard conditions". It is neither. It does exactly the same job `WHERE` does — keep the things you want, throw the rest away. The only difference is **what each of them is looking at**.
+It is tempting to think of `HAVING` as "the advanced one" or "the one for hard conditions". It is neither. It does exactly the same job `WHERE` does — keep the things you want, throw the rest away. The only difference is **what each of them is looking at**.
 
 - `WHERE` is handed **one row** and asks a question about it.
 - `HAVING` is handed **a whole group** and asks a question about all of it at once.
 
 `HAVING` is not stronger. It is *later*. By the time it runs, there is something bigger to ask about.
 
-## The order the database actually works in
+## The order your clauses take effect
 
 This is the most useful thing in the lesson, and it explains everything else in it.
 
@@ -94,7 +94,7 @@ Look at where the two filters sit: `WHERE` is step 2, `HAVING` is step 4, and th
 ### Why the aggregate in a WHERE is refused
 
 ```sql file=./scripts/aggregate-in-where-fails.sql
-SELECT "ShipCountry", count(*) AS "OrderCount"
+SELECT "ShipCountry", count(*)
 FROM "Orders"
 WHERE count(*) > 5
 GROUP BY "ShipCountry";
@@ -137,7 +137,11 @@ Here is a question somebody in a warehouse would actually ask.
 
 > **Which countries can we always ship to cheaply — where nothing has ever cost us more than 50 to send?**
 
-The obvious answer is to filter out the expensive deliveries and see who is left.
+The obvious answer is to filter out the expensive deliveries and see who is left. Say the plan through before you type it:
+
+*Nothing over 50 — so throw away the expensive deliveries, group by country, and show me the dearest delivery in each. **If the dearest one is under 50, every delivery to that country is under 50.***
+
+Hold on to that last sentence. You are about to walk straight past it.
 
 ```sql file=./scripts/cheap-to-ship-wrong.sql
 SELECT "ShipCountry", max("Freight") AS "Dearest"
@@ -149,45 +153,82 @@ ORDER BY "ShipCountry";
 
 | ShipCountry | Dearest |
 | ----------- | ------: |
-| Argentina | 49.7100 |
-| France | 47.9300 |
-| Germany | 45.1500 |
-| Italy | 48.3200 |
-| Mexico | 24.0600 |
-| Sweden | 40.0000 |
-| UK | 45.5000 |
-| USA | 11.3900 |
-| Venezuela | 46.5400 |
+| Argentina | 49.71 |
+| France | 47.93 |
+| Germany | 45.15 |
+| Italy | 48.32 |
+| Mexico | 24.06 |
+| Sweden | 40 |
+| UK | 45.5 |
+| USA | 11.39 |
+| Venezuela | 46.54 |
 
-Nine countries. Every single row shows a dearest delivery under 50. Nothing failed, nothing warned you, and **the report agrees with the question you asked**. You would send it.
+Nine countries. Every single row shows a dearest delivery under 50. Nothing failed, nothing warned you, and **the report agrees with the question you asked**. You could swear this is correct.
 
 It is wrong, and it is wrong in the most dangerous way available: it is self-confirming. Of course every row is under 50 — you deleted everything above 50 before you looked.
 
-### What the same table says with nothing removed
+### Read your filter back before you run it
 
-```sql file=./scripts/dearest-delivery-per-country.sql
-SELECT "ShipCountry", max("Freight") AS "Dearest"
-FROM "Orders"
-GROUP BY "ShipCountry"
-ORDER BY "Dearest" DESC
-LIMIT 5;
+You do not need any data to know that query is wrong. Read the filter aloud.
+
+`WHERE "Freight" <= 50` says: *throw away the expensive deliveries, then group whatever is left.* That is not what you were asked.
+
+This is what you were asked:
+
+> **Which countries can we always ship to cheaply — where nothing has ever cost us more than 50 to send?**
+
+Read those two next to each other. Your query **removes the expensive deliveries**. The requirement wants **the countries that never had one**. Those are not the same job. Removing a row is something you do to a table; *having none* is something that is either true or false about a whole country — and you cannot find out which by deleting the evidence first.
+
+So the thing you needed to filter on was never a delivery. It was a country.
+
+`HAVING max("Freight") <= 50` says: *this country's dearest delivery is under 50.* That is the requirement, word for word.
+
+`GROUP BY` is in both. The filter is the only thing that moves — and where it lands decides what it is allowed to ask about.
+
+```text
+yours                          what you were asked for
+-----                          -----------------------
+WHERE "Freight" <= 50          GROUP BY "ShipCountry"
+GROUP BY "ShipCountry"         HAVING max("Freight") <= 50
 ```
 
-| ShipCountry | Dearest |
-| ----------- | ------: |
-| Venezuela | 98.9200 |
-| Mexico | 97.5300 |
-| USA | 96.1400 |
-| Germany | 95.7500 |
-| Sweden | 87.3300 |
+Above the grouping, a filter is handed one delivery at a time — which is why it cannot so much as mention `max("Freight")`; you saw it refuse. Below the grouping, it is handed a whole country at once, and `max` is exactly what it is there for.
 
-**Germany's dearest delivery is 95.75.** The first report put Germany on a list of countries we can always ship to cheaply and said its most expensive delivery was 45.15. Same table. Same column. Both numbers are real.
+Now go back to what you said before you typed anything: *"if the dearest one is under 50."* **The dearest one** is `max("Freight")`. You had it. The word is in your English, and it is in your `SELECT` — and it is nowhere in your filter. That is the whole mistake, and it was visible before a single row was fetched.
 
-The `WHERE` threw the expensive German orders away, and the biggest one *left over* was 45.15. The query then told you the truth about a table you had already broken.
+**The rule worth keeping: your filter should say the requirement back to you.** If the filter used reads as a different sentence from the one you were asked in the requirement, it is the wrong filter, and no amount of data will fix that.
 
-And look at who is missing from that first report altogether: **Austria**. All three Austrian orders cost more than 50 to ship, so the filter removed every one of them and the group never got built. Austria does not come back as "no cheap deliveries". It does not come back. A zero is a fact; a missing row is a silence.
+### And this is what that line cost
 
-### The fix is one move
+"Always cheap" is a claim about **every delivery that country has ever had**, so a single delivery over 50 makes it false.
+
+```sql file=./scripts/cheap-to-ship-proof.sql
+SELECT "ShipCountry", "OrderID", "Freight"
+FROM "Orders"
+WHERE "ShipCountry" = 'Germany'
+  AND "Freight" > 50
+ORDER BY "Freight" DESC
+LIMIT 6;
+```
+
+| ShipCountry | OrderID | Freight |
+| ----------- | ------: | ------: |
+| Germany | 33 | 95.75 |
+| Germany | 20 | 94.36 |
+| Germany | 58 | 90.5 |
+| Germany | 45 | 89.11 |
+| Germany | 32 | 88.72 |
+| Germany | 70 | 84.86 |
+
+**Order 33 to Germany cost 95.75** — and Germany came back as a country nothing has ever cost more than 50 to reach, with a dearest delivery of 45.15. One row settles it.
+
+And it is not one stray order. Germany has **20 orders over 50**, out of 32. The `WHERE` deleted all twenty before the grouping started, so `max("Freight")` only ever saw the twelve survivors — and 45.15 is the largest of *those*. The number was never a lie — it was correct for the query that was written. The query was the thing that was wrong, because it did not ask what the requirement asked.
+
+A note on what is *not* wrong here. Austria has three orders and all three cost more than 50, so the filter removed every one and Austria never appears in the report at all. That looks like a second bug, and it is not: Austria genuinely is not a country we can always ship to cheaply, so leaving it out is the right answer — reached by accident. For this question, every country the filter drops is a country that fails the test, so a missing row can never be the wrong answer. Only the **false positives** are the bug.
+
+### One country. Not nine.
+
+You already read the fix back to yourself two sections ago. Here it is put where it belongs, and run for real.
 
 ```sql file=./scripts/cheap-to-ship-right.sql
 SELECT "ShipCountry", max("Freight") AS "Dearest"
@@ -199,13 +240,23 @@ ORDER BY "ShipCountry";
 
 | ShipCountry | Dearest |
 | ----------- | ------: |
-| UK | 45.5000 |
+| UK | 45.5 |
 
-**One country.** Not nine.
+One row. The UK, at 45.50 — the only country in this data where no delivery has ever cost more than 50 to send.
 
 Same condition, same number, moved from step 2 to step 4. Every order gets counted first, and only then does anything get thrown away. The question was always *"is this country's dearest delivery under 50?"* — which you cannot answer without looking at all of them, which means it was never a `WHERE` question at all.
 
-Nine versus one. The wrong answer was not slightly wrong. It was the opposite answer.
+The wrong answer was not slightly wrong. It was the opposite answer.
+
+## And one habit that is not SQL
+
+Step 3 of the SQL Thinking Loop, from the very first lesson: *before you run it, try guessing the result.* Step 4: *run it and compare with what your guess was.*
+
+Skip both and a wrong report has nothing to collide with. That is what happened here — the nine countries arrived, nothing failed, and there was no expectation for them to contradict.
+
+Germany has the largest freight bill of any country in this data. Seeing it on a list of places nothing has ever cost more than 50 should have stopped you cold: **that cannot be right.** When the answer argues with what you know about the business, check the query.
+
+It costs a few seconds and it catches the bugs that do not raise an error — which, as this lesson shows, are the only ones worth worrying about.
 
 ## The test that tells you which one
 
@@ -216,9 +267,9 @@ Before you pick a clause, ask yourself one thing:
 - *The freight on this order is over 50.* One row. → `WHERE`
 - *This country has never shipped anything over 50.* You cannot answer that without seeing all of them. → `HAVING`
 
-That is the whole rule, and it is a rule about the **question**, not about the syntax. "Aggregates go in HAVING" is true but useless at the moment it matters, because by then you have already decided what you are asking.
+That is the whole rule, and it is a rule about the **question asked in the requirement**, not about the syntax.
 
-**And do not overcorrect.** If a condition *can* go in the `WHERE`, put it in the `WHERE`. Throwing rows away early is cheaper than building piles you are about to discard — the database has less to carry through every later step. A learner who leaves this lesson frightened of `WHERE` has been taught the wrong thing.
+**And do not overcorrect.** If a condition *can* go in the `WHERE`, put it in the `WHERE`. Throwing rows away early is cheaper than building piles you are about to discard — the database has less to carry through every later step. The goal of this lesson is not to make the learner frightened of `WHERE`, but to understand that `WHERE` and `HAVING` are two different tools — and to understand when to use one and when to use the other.
 
 Some engines will let you put a non-aggregate condition in the `HAVING` (`HAVING "ShipCountry" <> 'Germany'` will run on both PostgreSQL and DuckDB, because the column is in the `GROUP BY`). It works, it is slower, and it tells the next reader you were not sure which clause you meant. Put row conditions in `WHERE`.
 
@@ -240,7 +291,7 @@ ORDER BY "ShipCountry";
 | Germany | 32 |
 | Sweden | 8 |
 
-Now look for the row that should be there and is not. **France has six orders and it is here. Venezuela has six orders and it is not.** Same count, same column, one in and one out — and nothing on the page explains why.
+Now look at which country is not here. **France has 6 orders and it is here. Venezuela has 6 orders and it is not.** Same count, same column, one in and one out — and nothing on the page tells you why.
 
 The reason is a total you cannot see:
 
@@ -254,15 +305,35 @@ LIMIT 5;
 
 | ShipCountry | TotalFreight |
 | ----------- | -----------: |
-| Germany | 1841.7800 |
-| Sweden | 410.6000 |
-| France | 347.8500 |
-| Venezuela | 254.3800 |
-| Austria | 226.1500 |
+| Germany | 1841.78 |
+| Sweden | 410.6 |
+| France | 347.85 |
+| Venezuela | 254.38 |
+| Austria | 226.15 |
 
-France's freight bill is 347.85 and Venezuela's is 254.38. That is the whole story, and it was never printed.
+France's freight bill is 347.85 and Venezuela's is 254.38. Only France clears 300, so Venezuela is out — and it is **right** to be out. The report is correct. But the number that decided it was never printed, so nobody reading that report can check it. That is the price of filtering on a column you do not show.
 
 This is genuinely useful — "our significant markets" almost always means a revenue threshold that nobody wants as a column. It is also worth a comment in your SQL, because six months later the missing row will look like a bug.
+
+## Does HAVING need a GROUP BY?
+
+No. It needs a **group** — and one always exists.
+
+```sql file=./scripts/total-freight-alert.sql
+SELECT count(*) AS "Orders", sum("Freight") AS "TotalFreight"
+FROM "Orders"
+HAVING sum("Freight") > 3500;
+```
+
+| Orders | TotalFreight |
+| -----: | -----------: |
+| 79 | 3988.52 |
+
+The 3500 is arbitrary — `HAVING sum("Freight") > 0` returns the very same row. The number is not the point. **The fact that the query runs at all is:** with no `GROUP BY`, the whole table is handed to `HAVING` as a single group.
+
+Which reframes `GROUP BY` itself. It does not create groups — it **splits** the one you always had. Your very first `count(*)` over a whole table, back in the aggregates lesson, was already an aggregate over one group — the whole table; you simply had no word for it.
+
+You will still write the two together almost every time. `HAVING` without `GROUP BY` earns its keep inside a subquery, in a handful of genuinely useful cases — but that is a bit more advanced than this lesson.
 
 ## One last trap, and it moves between engines
 
@@ -297,9 +368,9 @@ HAVING count(*) > 5
 ORDER BY "ShipCountry";
 ```
 
-Six more characters, and it stops being a question about which engine you are on.
+Use `HAVING count(*) > 5`, and it stops being a question about which engine you are on.
 
-**Worth knowing:** `ORDER BY` is step 6, *after* `SELECT`, which is why `ORDER BY "OrderCount"` works fine on both engines while `HAVING "OrderCount"` does not. That is not an inconsistency — it is the list, doing exactly what it says.
+**Worth knowing:** `ORDER BY` is step 6, *after* `SELECT`, which is why `ORDER BY "OrderCount"` works fine on both engines while `HAVING "OrderCount"` does not. That is not an inconsistency — it is the **execution order**, doing exactly what you learned about.
 
 ## See it for yourself
 

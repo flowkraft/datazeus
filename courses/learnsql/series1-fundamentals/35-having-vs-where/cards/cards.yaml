@@ -65,8 +65,8 @@ cards:
   # ever having seen them.
 
   - basic:
-      front: "In what order does a database actually evaluate a SELECT statement? (six steps)"
-      back: "1. FROM — fetch the rows\n2. WHERE — throw rows away, one at a time\n3. GROUP BY — build the groups\n4. HAVING — throw whole groups away\n5. SELECT — work out the output columns\n6. ORDER BY — sort what survived\n\nYou *write* SELECT first. The database runs it fifth."
+      front: "In what order do the clauses of a SELECT statement take effect? (six steps)"
+      back: "1. FROM — fetch the rows\n2. WHERE — throw rows away, one at a time\n3. GROUP BY — build the groups\n4. HAVING — throw whole groups away\n5. SELECT — work out the output columns\n6. ORDER BY — sort what survived\n\nYou *write* SELECT first. It takes effect fifth.\n\n(This is the order the clauses TAKE EFFECT, which is what the language guarantees. No database physically executes in this order — the planner reorders freely.)"
 
   - cloze: "In evaluation order, WHERE is step {{c1::2}} and HAVING is step {{c2::4}} — with {{c3::GROUP BY}} in between them. That gap is the whole reason both clauses exist."
 
@@ -78,7 +78,7 @@ cards:
 
   - basic:
       front: "Write the clause order of a query that uses every one of: SELECT, FROM, WHERE, GROUP BY, HAVING, ORDER BY."
-      back: "SELECT … FROM … WHERE … GROUP BY … HAVING … ORDER BY …\n\nNote this is the order you WRITE them, which is not the order they run in — SELECT is written first and evaluated fifth."
+      back: "SELECT … FROM … WHERE … GROUP BY … HAVING … ORDER BY …\n\nNote this is the order you WRITE them, which is not the order they take effect in — SELECT is written first and takes effect fifth."
 
   # ── 4. THE TEST — the single most useful card in the deck ─────────────────────
   # Stated as a rule about the QUESTION, not about syntax. "Aggregates go in HAVING"
@@ -90,8 +90,8 @@ cards:
       back: "**Can I answer this by looking at one row?**\n\nYes → WHERE. (\"The freight on this order is over 50.\")\nNo, I need to see the whole group → HAVING. (\"This country has never shipped anything over 50.\")\n\nIt is a rule about the question, not about the syntax."
 
   - basic:
-      front: "If a condition *could* be written in either WHERE or HAVING, which should you pick, and why?"
-      back: "WHERE. Throwing rows away early means fewer rows to group and less work in every later step. Putting a plain row condition in HAVING usually still runs (if the column is in the GROUP BY) but it is slower and tells the next reader you weren't sure which you meant.\n\nThe lesson is not \"be afraid of WHERE\" — it is \"know which question you are asking\"."
+      front: "You have written a query. What is the one check that catches a wrong filter before you run anything?"
+      back: "**Read your SQL back as English, and compare it to the requirement.**\n\nRequirement: *show me the dearest delivery in each country, and keep it if that dearest one is under 50.*\n`WHERE \"Freight\" <= 50` reads as: *throw away the expensive deliveries, then group whatever is left.*\n\nTwo different sentences, so the query is already wrong — and no data was needed to see it. Your filter should say the requirement back to you."
 
   # ── 5. THE TRAP — the reason the lesson exists ────────────────────────────────
   # SELF-CONTAINED: the front supplies the query, the result and the contradicting
@@ -117,6 +117,22 @@ cards:
   - basic:
       front: "Does a HAVING condition have to use a column or aggregate that appears in the SELECT list?"
       back: "No. HAVING can filter on any aggregate over the grouped rows, shown or not — e.g. select the order *count* per country while keeping only countries whose `sum(\"Freight\")` tops 300.\n\nUseful (\"significant markets\" is usually a revenue threshold nobody wants as a column) and worth a comment in the SQL, because later the missing rows will look like a bug."
+
+  # ── 6b. HAVING WITHOUT A GROUP BY ────────────────────────────────────────────
+  # Top-asked question about the clause, and the answer reinforces the spine rather than
+  # adding a rule: HAVING needs a GROUP, and a table without GROUP BY is one.
+
+  - basic:
+      front: "Does `HAVING` require a `GROUP BY`?"
+      back: "No. It requires a **group** — and one always exists.\n\nWith no `GROUP BY`, the whole table is a single group, so `SELECT count(*) FROM \"Orders\" HAVING count(*) > 50` is legal and returns one row (or none).\n\nWhich reframes `GROUP BY`: it does not *create* groups, it **splits** the one you always had. Your first `count(*)` over a whole table was already an aggregate over one group.\n\nYou will still write the two together almost every time."
+
+  # ── 6c. THE HABIT THAT IS NOT SQL ────────────────────────────────────────────
+  # The trap in this lesson raises no error, so no amount of SQL knowledge catches it.
+  # This is the only card in the deck about the learner's process rather than the language.
+
+  - basic:
+      front: "A query runs, returns plausible rows, and raises no error. What catches it before you ship it?"
+      back: "**Guess the result before you run it, then compare.** (Steps 3 and 4 of the SQL Thinking Loop.) Skip both and a wrong report has nothing to collide with.\n\nAnd know your data. Germany has the largest freight bill of any country — seeing it on a list of places nothing ever cost more than 50 should read as *that cannot be right*.\n\nWhen the answer argues with what you know about the business, check the query."
 
   # ── 7. THE PORTABILITY ONE — derivable from the execution-order card ──────────
 

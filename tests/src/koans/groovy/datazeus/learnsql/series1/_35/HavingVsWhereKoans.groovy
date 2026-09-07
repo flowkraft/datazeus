@@ -25,7 +25,7 @@ import spock.lang.Stepwise
  * across from the lesson will not work, which is the point: you learn the idea by
  * applying it somewhere new, not by retyping an answer you just watched.
  *
- * TEN KOANS, EASIEST FIRST, IN THE ORDER THE LESSON BUILDS THEM:
+ * TWELVE KOANS, EASIEST FIRST, IN THE ORDER THE LESSON BUILDS THEM:
  *   1    the word itself — filter the GROUPS, not the rows
  *   2    the condition names an aggregate, because it is about the whole pile
  *   3    WHERE and HAVING in one query, each doing the job the other cannot
@@ -34,12 +34,28 @@ import spock.lang.Stepwise
  *   6    PREDICT what the wrong clause actually returned, and what the right one does
  *   7    WHERE runs first, so a whole group can leave without saying so
  *   8    a different aggregate, and the comparison that goes with it
- *   9    say the aggregate again — HAVING cannot see the name you gave it
- *   10   the whole query, written from scratch
+ *   9    HAVING with no GROUP BY at all — the whole table is already one group
+ *   10   say the aggregate again — the form that runs on EVERY engine
+ *   11   the same query, the DuckDB-only form — so you recognise it in the wild
+ *   12   the whole query, written from scratch
  *
- * These run on DuckDB. Every one is written so it returns the SAME answer against the
- * PostgreSQL in CloudBeaver — and koan 9 is the one place the two engines would
- * disagree if you solved it the lazy way. That disagreement IS koan 9.
+ * These run on DuckDB, and every one returns the SAME answer against the PostgreSQL in
+ * CloudBeaver — except koans 10 and 11, which are a deliberate pair and the only place
+ * the two engines part company.
+ *
+ * ── WHY 10 AND 11 ARE THE SAME QUERY TWICE ──────────────────────────────────
+ *
+ * Identical query, identical five rows, one blank — and TWO different things you could
+ * type into it. One runs everywhere. The other runs here and is rejected by PostgreSQL.
+ *
+ * NEITHER KOAN CAN MARK THAT FOR YOU. Both answers return the same rows on DuckDB, so
+ * `shouldReturn` cannot tell them apart, and no assertion could: on this engine there is
+ * genuinely nothing to detect. That is why the rule is split across two koans instead of
+ * hidden inside one — you have to write BOTH forms and say which is which, and the koan
+ * that would quietly let you ship the wrong one is labelled in its own name.
+ *
+ * It is the one rule in this lesson your tests cannot enforce for you. Those are the
+ * rules that reach production.
  *
  * ── RELEVANT SCHEMA ─────────────────────────────────────────────────────────
  *
@@ -221,18 +237,41 @@ class HavingVsWhereKoans extends KoanBase {
         ''')
     }
 
-    // 9) THE PORTABILITY ONE, and it is the koan most likely to bite you at work.
-    //    The count is named "ProductCount" in the SELECT — so filtering on that name in the
-    //    HAVING looks obvious. DuckDB, which is what these koans run on, ALLOWS IT. The
-    //    PostgreSQL in CloudBeaver DOES NOT: it answers
-    //        SQL Error [42703]: column "ProductCount" does not exist
-    //    and it is right to. HAVING runs BEFORE SELECT, so at that moment the name has not
-    //    been invented yet — it does not exist for another whole step.
-    //    So the blank is NOT "ProductCount", even though that would go green here. Write
-    //    the aggregate out again in full, exactly as it appears in the SELECT, and the
-    //    query works on both engines.
-    //    (Predict first: five of the six suppliers give us more than two products.)
-    def "say the aggregate again — HAVING cannot see your alias"() {
+    // 9) NO GROUP BY AT ALL — and it still works, because HAVING does not need a GROUP BY.
+    //    It needs a GROUP, and one always exists: with no GROUP BY the WHOLE TABLE is a
+    //    single group. Your very first count(*) over a whole table was already an aggregate
+    //    over one group; you just had no word for it. GROUP BY does not CREATE groups — it
+    //    SPLITS the one you always had.
+    //    Fill in the keyword. And notice why the other one cannot go there: the condition is
+    //    an aggregate, and WHERE takes effect before any aggregate exists. DuckDB refuses it
+    //    outright — "WHERE clause cannot contain aggregates!" — so unlike the two koans that
+    //    follow, THIS one really will catch you if you reach for the wrong word.
+    //    (Predict first: one row. Twenty products, 585 units on the shelf between them.)
+    def "HAVING needs a group, not a GROUP BY — the whole table is one group"() {
+        expect:
+        shouldReturn([[20, 585]], '''
+            SELECT count(*) AS "Products", sum("UnitsInStock") AS "TotalStock"
+            FROM "Products"
+            ___ sum("UnitsInStock") > 100
+        ''')
+    }
+
+    // 10) THE PORTABILITY ONE, and it is the koan most likely to bite you at work.
+    //     The count is named "ProductCount" in the SELECT — so filtering on that name in
+    //     the HAVING looks obvious. It is not portable. PostgreSQL answers
+    //         SQL Error [42703]: column "ProductCount" does not exist
+    //     and it is right to: HAVING takes effect BEFORE SELECT, so at that moment the name
+    //     has not been invented yet — it does not exist for another whole step.
+    //
+    //     WRITE THE AGGREGATE OUT AGAIN here, in full, exactly as it appears in the SELECT.
+    //     Six more characters and the query stops caring which engine it lands on.
+    //
+    //     ⚠ THIS KOAN CANNOT MARK YOU. The alias form returns the identical rows on DuckDB,
+    //     so it goes green here and fails the moment you paste it into CloudBeaver. Koan 11
+    //     is that other form, asked for deliberately — do them as a pair and the difference
+    //     is impossible to miss.
+    //     (Predict first: five of the six suppliers give us more than two products.)
+    def "say the aggregate again — the portable form, runs on EVERY engine"() {
         expect:
         shouldReturn([[1, 3], [3, 3], [4, 5], [5, 3], [6, 4]], '''
             SELECT "SupplierID", count(*) AS "ProductCount" FROM "Products"
@@ -242,7 +281,31 @@ class HavingVsWhereKoans extends KoanBase {
         ''')
     }
 
-    // 10) THE WHOLE QUERY, from nothing. No scaffolding, no clue about the shape.
+    // 11) ⚠⚠ THE SAME QUERY AGAIN, AND THIS TIME WRITE THE NON-PORTABLE FORM. ⚠⚠
+    //
+    //     DO NOT SHIP WHAT YOU ARE ABOUT TO TYPE. This blank wants the ALIAS — the name the
+    //     SELECT gives the count. It works here because DuckDB is generous about it. It is
+    //     NOT standard SQL, and PostgreSQL, SQL Server and Oracle all reject it:
+    //         SQL Error [42703]: column "ProductCount" does not exist
+    //
+    //     SO WHY WRITE IT AT ALL? Because you will meet it. Somebody else's query, an answer
+    //     on the internet, your own laptop where it happened to work — and if you have never
+    //     typed it you will not recognise what you are looking at, or why it dies on the
+    //     server. Koan 10 is the form you ship. This is the form you recognise and rewrite.
+    //
+    //     Same query as koan 10, same five rows. The ONLY difference is what goes in the
+    //     blank — which is the entire point: identical answer, opposite portability.
+    def "the SAME query, the DuckDB-only form — recognise it, never ship it"() {
+        expect:
+        shouldReturn([[1, 3], [3, 3], [4, 5], [5, 3], [6, 4]], '''
+            SELECT "SupplierID", count(*) AS "ProductCount" FROM "Products"
+            GROUP BY "SupplierID"
+            HAVING ___ > 2
+            ORDER BY "SupplierID"
+        ''')
+    }
+
+    // 12) THE WHOLE QUERY, from nothing. No scaffolding, no clue about the shape.
     //
     //     THE QUESTION: which categories are running low — where all the stock we hold in
     //     that category, added together, comes to less than 50 units?

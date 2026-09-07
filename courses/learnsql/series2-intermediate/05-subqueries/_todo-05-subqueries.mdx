@@ -32,6 +32,38 @@ published: false
     This is the TOOL episode 06 needs — its fix is a pre-aggregating subquery, which is why 06
     comes after this and not beside episode 00.
 
+    ── A PROMISE MADE IN SERIES 1 · 35, HAVING vs WHERE ────────────────────
+    That episode answers "does HAVING always need a GROUP BY?" with no, shows a query
+    that proves it, and then points HERE for the part it will not teach:
+
+      Leo:        But is there a real case where HAVING without a GROUP BY is
+                  genuinely useful?
+      Mnemosyne:  Yes — inside a subquery, in some genuinely useful cases. But that
+                  is a bit more advanced, Leo. You may not feel much like a beginner
+                  any more — and honestly, you are not — but the sign on the door
+                  still says beginner. We will get there. Slowly.
+
+    SO THIS EPISODE OWES A WORKED EXAMPLE OF EXACTLY THAT: HAVING with NO GROUP BY,
+    inside a correlated subquery, where the correlation has already scoped the rows to
+    a single group and a GROUP BY would be noise. Episode 35 states the rule and
+    deliberately does NOT demonstrate it — it has no subqueries, no EXISTS, no JOINs.
+
+    A CANDIDATE, RUN ON THE SHIPPED NORTHWIND (2026-09-05) — the orders whose lines add
+    up to more than 50 units. Six come back:
+
+      SELECT o."OrderID", o."ShipCountry"
+      FROM "Orders" o
+      WHERE EXISTS (SELECT 1 FROM "Order Details" od
+                    WHERE od."OrderID" = o."OrderID"
+                    HAVING sum(od."Quantity") > 50)
+      ORDER BY o."OrderID";
+      -> 23 UK · 25 Germany · 43 Austria · 45 Germany · 63 Germany · +1
+
+    The shape is the whole point: no GROUP BY anywhere, and that aggregate condition
+    could not have gone in the subquery's WHERE — episode 35 spends its running time
+    proving exactly why. CHECK THE THRESHOLD if the dataset ever changes: > 100 returns
+    nothing on this one, and an example that returns no rows teaches the wrong lesson.
+
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:complete
       koan:choose

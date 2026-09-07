@@ -443,7 +443,7 @@ series:
       # Closes the aggregation arc inside Series 1 — grouping you can't filter is half a tool.
       - n: "35"
         slug: having-vs-where
-        title: "HAVING vs WHERE — Why WHERE Can't Filter Your Totals"
+        title: "HAVING vs WHERE — Filtering Groups and Filtering Rows"
         short: "HAVING vs WHERE — why WHERE can't filter totals"
         hands_on: ["koan:diagnose", "koan:predict"]
         core: true

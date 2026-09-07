@@ -13,10 +13,11 @@ import spock.lang.Unroll
  *    2. aggregate-in-where-fails        — the refusal, recapped from 30 (42803 / Binder Error)
  *    3. expensive-orders-busy-countries — WHERE and HAVING in one query, each doing its job
  *    4. cheap-to-ship-wrong             — THE TRAP: nine countries, every row under fifty
- *    5. dearest-delivery-per-country    — the evidence that the trap lied (Germany: 95.75)
+ *    5. cheap-to-ship-proof            — Germany's deleted rows; order 33 at 95.75 kills the trap
  *    6. cheap-to-ship-right             — the fix, and the answer is ONE country
  *    7. freight-bill-over-300           — filtering on an aggregate the report never shows
  *    8. country-freight-totals          — the totals behind script 7, so the absence is provable
+ *    9. total-freight-alert             — HAVING with NO GROUP BY: the whole table as one group
  *    9. alias-in-having-fails           — THE ENGINE SPLIT: runs on DuckDB, 42703 on PostgreSQL
  *   10. alias-in-having-portable        — the same question, written so both engines agree
  *
@@ -151,9 +152,11 @@ class HavingVsWhereSpec extends NorthwindGateSpec {
         and: "rather than by re-listing the numbers, because the property IS the lesson."
         rows.every { dec(it.Dearest) <= dec("50") }
 
-        and: "AUSTRIA IS NOT HERE AT ALL — all three of its orders cost more than 50 to ship,"
-        and: "so WHERE removed every one of them and the group never existed. It is absent,"
-        and: "not zero. Leo says this out loud on the proof-result slide."
+        and: "AUSTRIA IS NOT HERE — all three of its orders cost more than 50, so WHERE removed"
+        and: "every one and the group never existed. NOBODY SAYS THIS ON SCREEN, on purpose:"
+        and: "Austria failing the test is the RIGHT answer, so its absence is a correct outcome"
+        and: "reached by accident, not evidence of the bug. Asserted anyway because the number of"
+        and: "rows on the trap slide is nine, and nine is what Mnemosyne says."
         !rows*.ShipCountry.contains("Austria")
 
         where:
@@ -161,21 +164,68 @@ class HavingVsWhereSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] and the trap LIED: Germany's dearest delivery is really 95.75, not 45.15"() {
-        given: "the same table with nothing filtered out — the proof-result slide"
-        def rows = sqlFor(engine).rows(script("dearest-delivery-per-country"))
+    def "[#engine] THE COUNTEREXAMPLE: order 33 to Germany cost 95.75, so 'always cheap' is false"() {
+        given: "the raw orders the WHERE deleted — the proof-result slide. NOT a second report:"
+        and: "the question is a UNIVERSAL claim ('nothing has EVER cost more than fifty'), and a"
+        and: "universal claim dies to ONE counterexample. Raw rows are ground truth; another"
+        and: "aggregate would be one more thing the viewer has to decide to trust."
+        def rows = sqlFor(engine).rows(script("cheap-to-ship-proof"))
 
-        expect:
-        rows*.ShipCountry == ["Venezuela", "Mexico", "USA", "Germany", "Sweden"]
-        rows*.Dearest.collect { dec(it) } ==
-                ["98.92", "97.53", "96.14", "95.75", "87.33"].collect { dec(it) }
+        expect: "SIX rows, and this exact table is on screen"
+        rows.size() == 6
+        rows*.ShipCountry.unique() == ["Germany"]
+        rows*.OrderID.collect { it as Integer } == [33, 20, 58, 45, 32, 70]
+        rows*.Freight.collect { dec(it) } == ["95.75", "94.36", "90.50", "89.11", "88.72",
+                                              "84.86"].collect { dec(it) }
 
-        and: "THE CONTRADICTION, asserted as one fact so it cannot rot: the trap reported"
-        and: "45.15 for Germany and the truth is 95.75. Both come out of the same column of"
-        and: "the same table. This single pair is the centre of the episode."
-        dec(rows.find { it.ShipCountry == "Germany" }.Dearest) == dec("95.75")
+        and: "THE CONTRADICTION, asserted as one fact so it cannot rot: one German delivery cost"
+        and: "95.75 while the trap put Germany on a list of countries nothing has ever cost more"
+        and: "than fifty to reach, and reported its dearest as 45.15. This pair is the centre of"
+        and: "the episode."
+        dec(rows.find { (it.OrderID as Integer) == 33 }.Freight) == dec("95.75")
         dec(sqlFor(engine).rows(script("cheap-to-ship-wrong"))
                 .find { it.ShipCountry == "Germany" }.Dearest) == dec("45.15")
+
+        and: "NOT ONE STRAY ROW — Germany has TWENTY orders over fifty, of thirty-two. The trap"
+        and: "reported the largest of the twelve survivors. Mnemosyne says 'twenty' out loud."
+        sqlFor(engine).firstRow("""SELECT count(*) AS n FROM "Orders"
+                                    WHERE "ShipCountry" = 'Germany' AND "Freight" > 50""").n == 20
+
+        and: "AND THE BUG IS ONLY EVER A FALSE POSITIVE. A draft of this episode also offered"
+        and: "Austria as evidence - all three of its orders cost over fifty, so WHERE removed every"
+        and: "one and Austria vanished from the report. TRUE AND IRRELEVANT: Austria really is not"
+        and: "a country we can always ship to cheaply, so leaving it out is the CORRECT verdict,"
+        and: "reached by accident. For THIS question every country the filter drops is a country"
+        and: "that fails the test, so a missing row can never be the wrong answer. Pinned here so"
+        and: "nobody puts the argument back."
+        sqlFor(engine).firstRow("""SELECT count(*) AS n FROM "Orders"
+                                    WHERE "ShipCountry" = 'Austria' AND "Freight" <= 50""").n == 0
+        sqlFor(engine).rows(script("cheap-to-ship-right"))*.ShipCountry == ["UK"]
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] HAVING NEEDS NO GROUP BY: with none, the whole table is a single group"() {
+        given: "the question every learner asks, and the shape that makes it worth asking -"
+        and: "an ALERT: a row comes back only when a whole-table total crosses a line, and"
+        and: "NOTHING comes back when everything is fine. Monitoring, budget checks and"
+        and: "data-quality gates are all this shape, and the empty result set IS the signal."
+        def rows = sqlFor(engine).rows(script("total-freight-alert"))
+
+        expect: "ONE row - 79 orders collapsed into a single group with no GROUP BY in sight"
+        rows.size() == 1
+        rows[0].Orders == 79
+        dec(rows[0].TotalFreight) == dec("3988.52")
+
+        and: "AND THE EMPTY CASE, which is the half the slide is actually about. Raise the bar"
+        and: "above the total and the query returns NO ROWS - not a zero, nothing at all."
+        sqlFor(engine).rows("""SELECT count(*) AS "Orders", sum("Freight") AS "TotalFreight"
+                               FROM "Orders" HAVING sum("Freight") > 5000""").isEmpty()
+
+        and: "the whole-table total is what the slide prints, and 79 is the order count"
+        dec(sqlFor(engine).firstRow('SELECT sum("Freight") AS t FROM "Orders"').t) == dec("3988.52")
 
         where:
         engine << ENGINES
@@ -439,7 +489,27 @@ class HavingVsWhereSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 9 — the portable form keeps five suppliers"() {
+    def "[#engine] koan 9 — HAVING with no GROUP BY: one row, the whole table as one group"() {
+        expect: "the right answer runs and returns a single row"
+        sqlFor(engine).rows('''SELECT count(*) AS "Products", sum("UnitsInStock") AS "TotalStock"
+                               FROM "Products" HAVING sum("UnitsInStock") > 100''')
+                .collect { [it.Products as int, it.TotalStock as int] } == [[20, 585]]
+
+        and: "AND THE WRONG KEYWORD IS REFUSED, which is what makes this koan markable at all -"
+        and: "unlike koans 10 and 11, a student who reaches for WHERE cannot go green here."
+        try {
+            sqlFor(engine).rows('''SELECT count(*) FROM "Products" WHERE sum("UnitsInStock") > 100''')
+            assert false, "an aggregate in WHERE must be refused on both engines"
+        } catch (Exception expected) {
+            assert expected.message?.toLowerCase()?.contains("aggregate")
+        }
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koan 10 — the portable form keeps five suppliers"() {
         expect:
         sqlFor(engine).rows('''SELECT "SupplierID", count(*) AS "ProductCount" FROM "Products"
                                GROUP BY "SupplierID" HAVING count(*) > 2
@@ -472,7 +542,39 @@ class HavingVsWhereSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 10 — three categories are holding under fifty units"() {
+    def "[#engine] koan 11 — the SAME rows from the DuckDB-only alias form"() {
+        given: "koans 10 and 11 are the same query with two different answers in the blank."
+        and: "THE PAIR IS THE POINT: identical rows, opposite portability - which is exactly"
+        and: "why neither koan can mark itself, and why the rule is split across two of them."
+        def portable = '''SELECT "SupplierID", count(*) AS "ProductCount" FROM "Products"
+                          GROUP BY "SupplierID" HAVING count(*) > 2 ORDER BY "SupplierID"'''
+        def duckOnly = '''SELECT "SupplierID", count(*) AS "ProductCount" FROM "Products"
+                          GROUP BY "SupplierID" HAVING "ProductCount" > 2 ORDER BY "SupplierID"'''
+
+        expect: "the portable form is identical on both engines"
+        sqlFor(engine).rows(portable).collect { [it.SupplierID, it.ProductCount] } ==
+                [[1, 3], [3, 3], [4, 5], [5, 3], [6, 4]]
+
+        and: "and the alias form gives the SAME rows on DuckDB while PostgreSQL refuses it -"
+        and: "the asymmetry the koan pair exists to teach, pinned so it cannot rot."
+        if (engine == "duckdb") {
+            assert sqlFor(engine).rows(duckOnly).collect { [it.SupplierID, it.ProductCount] } ==
+                    [[1, 3], [3, 3], [4, 5], [5, 3], [6, 4]]
+        } else {
+            try {
+                sqlFor(engine).rows(duckOnly)
+                assert false, "PostgreSQL must refuse an alias in HAVING"
+            } catch (Exception expected) {
+                assert expected.message?.contains("ProductCount")
+            }
+        }
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koan 12 — three categories are holding under fifty units"() {
         expect:
         sqlFor(engine).rows('''SELECT "CategoryID", sum("UnitsInStock") AS "s" FROM "Products"
                                GROUP BY "CategoryID" HAVING sum("UnitsInStock") < 50
