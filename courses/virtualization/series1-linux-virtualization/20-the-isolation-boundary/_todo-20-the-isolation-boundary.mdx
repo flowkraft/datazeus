@@ -1,0 +1,83 @@
+---
+title: "Unprivileged Containers — the Boundary You Are Actually Trusting"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series1-linux-virtualization"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series1/_20/TheIsolationBoundaryKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the security question, answered honestly rather than reassuringly, because a data
+     team's real question is "whose data can end up in the same place as whose".
+       UNPRIVILEGED CONTAINERS   root inside is an unprivileged UID outside, via the user
+                                 namespace. This is the default in Incus and it should never
+                                 be turned off casually. Show the mapping in /etc/subuid.
+       THE HONEST BOUNDARY       a container shares the host kernel. A kernel vulnerability
+                                 is a shared vulnerability. A VM's boundary is enforced by
+                                 the CPU and is meaningfully stronger — not perfect, and
+                                 side-channel history says so, but a different class.
+     THE DECISION PROCEDURE A DATA TEAM ACTUALLY NEEDS:
+       YOUR OWN WORKLOADS, YOUR OWN TEAM        containers are fine, and the density is worth
+                                                real money.
+       ANOTHER TEAM'S CODE, OR A CUSTOMER'S     a VM. The boundary is the product.
+       ANYTHING WITH A COMPLIANCE ANSWER        a VM, because "shared kernel" is a sentence
+                                                you do not want to have to defend.
+       A DIFFERENT KERNEL OR A KERNEL MODULE    a VM. There is no argument, it simply cannot
+                                                be done in a container.
+     AND THE DATA-SPECIFIC ONE: multi-tenant data — one customer per what? If the answer has
+     to survive an audit, it is one customer per VM, and the density argument loses.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series1/_20/TheIsolationBoundaryKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

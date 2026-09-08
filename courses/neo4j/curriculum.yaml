@@ -1,0 +1,305 @@
+# The ordered episode list for Neo4j. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: model a domain as a graph, ask questions about paths that SQL
+# makes awkward, and know when a graph is not the answer.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# A GRAPH DATABASE IS NOT "A DATABASE WITH A JOIN TABLE". Every relational schema has
+# relationships; what changes here is that a relationship is a STORED, TRAVERSABLE OBJECT with
+# its own type, direction and properties, so following it is a pointer hop rather than an index
+# lookup. The consequence is the whole product: THE COST OF A TRAVERSAL GROWS WITH THE SIZE OF
+# THE ANSWER, NOT WITH THE SIZE OF THE DATABASE.
+#
+# THAT IS ALSO THE LIMIT. A two-hop question is a join, and a relational database does joins
+# extremely well. This track has to be honest about that from Series 1 or it will teach a reader
+# to move a schema that had no reason to move — which is why Series 3 · 15 exists and why it is
+# not buried.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL NEO4J DOCUMENTATION
+# ============================================================================
+# The Neo4j documentation set runs Getting Started, the Cypher Manual (clauses, patterns,
+# functions, indexes, query tuning), Graph Data Modeling, the Graph Data Science library, and
+# Operations. Its Cypher Manual is the right order for Series 1, Graph Data Modeling for
+# Series 2, and GDS for Series 3.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's series
+# order — SHOULD FOLLOW THE OFFICIAL NEO4J DOCUMENTATION. Before writing an episode, open the
+# Cypher Manual's own page for that clause, use it as the COVERAGE CHECKLIST, and use its
+# VOCABULARY FOR THE NOUNS (node, label, relationship, type, property, pattern, path, traversal,
+# db hit). Anything left out should be left out because an academy rule says so — NoSQL Concepts
+# owns the graph shape, Learn SQL owns recursive queries, Data Ops owns the server — and never
+# because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the manual page named.
+#
+# CYPHER IS BECOMING PORTABLE, AND THAT IS WORTH SAYING ONCE. openCypher and the ISO GQL
+# standard mean this query language is no longer one vendor's alone, which changes how much of
+# this track transfers. State the current position from the standard's and the project's own
+# pages, with dates — this is the claim most likely to be out of date, in either direction.
+#
+# TEACH AGAINST WHAT A LEARNER CAN RUN: a single instance in a container, which Data Ops,
+# Series 1 · 37 already taught them to start.
+
+course: learn-neo4j
+track: neo4j
+title: Neo4j
+
+prerequisites:
+  - course: learn-nosql
+    needs: "Series 1, and Series 2"
+    why: >-
+      The graph shape and the question it answers cheaply are introduced there for every engine,
+      alongside the honest comparison with a recursive query in SQL. This track assumes that
+      comparison has been made and gets on with the modelling.
+  - course: learn-sql
+    needs: "Series 2, and Series 3"
+    why: >-
+      Series 3 · 00 there is the recursive CTE, and it is the thing this product must be
+      measured against. A reader who cannot walk a hierarchy in SQL cannot judge when a graph
+      database earns its place.
+
+excludes:
+  - topic: "Why a graph at all, and how it differs from the other shapes"
+    where: "covered in NoSQL Concepts, Series 2 · 20, which this course assumes"
+  - topic: "Walking a hierarchy in SQL"
+    where: "covered in Learn SQL, Series 3 · 00, which is the recursive CTE. In this course, Series 3 · 15 compares the two honestly rather than assuming this one wins"
+  - topic: "Graph theory as mathematics"
+    where: "not covered. Series 3 · 00 uses the algorithms and explains what each one answers; the proofs are somebody else's course"
+  - topic: "Running the server — clustering, backups, upgrades, capacity"
+    where: "covered in Data Ops for the discipline"
+  - topic: "Knowledge graphs for retrieval-augmented generation"
+    where: "covered in AI for Data, Series 2, which owns embeddings and retrieval. In this course, Series 3 · 05 is recommendation from the graph itself, with no model involved"
+
+series:
+  - slug: series1-nodes-and-cypher
+    title: Nodes, Relationships and Cypher
+    tagline: the property graph, and a query language shaped like a drawing
+    level: intermediate
+    episodes:
+      # COVER: the property graph model — nodes with labels, relationships with a type and a
+      # direction, properties on both. THE FACT THAT SURPRISES A RELATIONAL READER: a
+      # relationship carries properties, so "Anna reviewed this product on Tuesday with four
+      # stars" is one relationship rather than a join table with three columns.
+      # THE COMPARISON DRAWN ONCE, PROPERLY: the same domain as a relational schema and as a
+      # graph, side by side. Join tables become relationships; foreign keys become traversals;
+      # nullable columns often become the presence or absence of a relationship.
+      # AND THE HONEST NOTE, first episode: for questions of depth one or two, the relational
+      # version is not worse. Keep the reader's scepticism alive; Series 3 · 15 resolves it.
+      - n: "00"
+        slug: the-property-graph
+        title: "Nodes, Relationships and Properties — Where the Join Table Went"
+        hands_on: ["koan:predict", "koan:equivalent"]
+        core: true
+        status: planned
+      # COVER: Cypher's ASCII-art pattern as the idea that makes the language memorable —
+      # (a)-[:BOUGHT]->(b) looks like what it matches, and reading a query out loud describes the
+      # picture. MATCH, WHERE, RETURN. Labels and relationship types as the filters that make a
+      # pattern cheap. Direction, and the fact that omitting it matches both ways at a cost.
+      # ORDER BY, LIMIT, DISTINCT, aggregation — familiar enough to move through quickly.
+      - n: "05"
+        slug: cypher-match
+        title: "MATCH — a Query That Looks Like the Picture It Is Asking For"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: writing. CREATE, SET, DELETE and DETACH DELETE — with the detail that catches
+      # everybody: you cannot delete a node that still has relationships, which is referential
+      # integrity arriving from an unexpected direction and is a good thing.
+      # MERGE as the important one: match-or-create, in one atomic step, and THE SUBTLETY THAT
+      # PRODUCES DUPLICATE NODES — MERGE matches on the FULL pattern you give it, so merging on
+      # a node with three properties creates a second node when one property differs. The rule:
+      # MERGE on the identifying property only, then SET the rest.
+      # ON CREATE SET and ON MATCH SET as the clean expression of that rule.
+      - n: "10"
+        slug: create-and-merge
+        title: "CREATE, MERGE and DETACH DELETE — and the MERGE That Duplicates Your Nodes"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # THE EPISODE THAT JUSTIFIES THE PRODUCT.
+      # COVER: variable-length patterns — [:KNOWS*1..3] — shortestPath and allShortestPaths, and
+      # returning a path as a value you can work with rather than as rows to reassemble.
+      # WHY IT MATTERS: this is the question SQL expresses badly. A recursive CTE can do it, and
+      # Learn SQL, Series 3 · 00 shows how, but "friends of friends up to four hops, excluding
+      # anyone already connected" is one line here and a page there.
+      # THE WARNING IN THE SAME BREATH: an unbounded variable-length match over a dense graph
+      # will try to walk the world. Bound the depth, and know your densest nodes — a supernode
+      # with a million relationships is a performance cliff, and Series 2 · 00 owns modelling
+      # around it.
+      - n: "15"
+        slug: paths-and-depth
+        title: "Variable-Length Paths — the Question SQL Expresses Badly, and Its Cliff"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-answer-with-a-path
+        title: "Project — Answer Three Questions That Are All About Paths"
+        hands_on: ["koan:author", "koan:complete"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-modelling-a-graph
+    title: Modelling a Graph
+    tagline: what becomes a node, and proving the model with a query plan
+    level: advanced
+    episodes:
+      # COVER: the three decisions, each with a test rather than a preference.
+      #   NODE OR PROPERTY?      make it a node when you want to traverse to it or ask questions
+      #                          about it. A city you filter by is a property; a city you want
+      #                          "who else lives here" for is a node.
+      #   RELATIONSHIP OR NODE?  when a relationship needs its own relationships — an order
+      #                          connecting a customer and products, with a date and a status —
+      #                          it becomes an intermediate node. This is where join tables
+      #                          reappear, and it is correct here.
+      #   DIRECTION              store one direction and traverse either way; storing both is a
+      #                          common and expensive mistake.
+      # SUPERNODES as the modelling problem with real consequences — a node with a million
+      # relationships makes every traversal through it slow — and the standard mitigations:
+      # relationship types that partition the traffic, intermediate nodes, or accepting it.
+      - n: "00"
+        slug: what-becomes-a-node
+        title: "Node, Property or Relationship — Three Tests, and the Supernode to Avoid"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the migration a reader will actually attempt — an existing relational schema into
+      # a graph. The mechanical rules that get you most of the way: a table becomes a label, a
+      # row becomes a node, a foreign key becomes a relationship, and a JOIN TABLE BECOMES A
+      # RELATIONSHIP rather than a node — unless it carries data worth traversing, which is
+      # Series 2 · 00's second test.
+      # THEN THE PART THAT IS NOT MECHANICAL: the useful graph is rarely the schema transcribed.
+      # Some tables should not come at all, some columns should become relationships, and the
+      # naming should read like sentences.
+      # THE HONEST WARNING: a graph that is a relational schema with arrows drawn on it performs
+      # like a relational schema and costs you a second database. If nothing changed in the
+      # model, nothing was gained.
+      - n: "05"
+        slug: from-relational-to-graph
+        title: "From a Relational Schema — What Transcribes Mechanically, and What Must Not"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        status: planned
+      # COVER: indexes and constraints, which exist here and matter more than people expect.
+      # A unique constraint on the identifying property, which also creates the index MERGE needs
+      # — and without it, MERGE scans every node of that label, which is the commonest reason an
+      # import that worked on a thousand nodes takes hours on a million.
+      # Range and text indexes, composite indexes, and full-text indexes for searching properties.
+      # THE FRAMING THAT KEEPS IT STRAIGHT: indexes are how you FIND THE STARTING NODE. Once the
+      # traversal begins, indexes stop mattering and pointer-hopping takes over. Almost every
+      # slow Cypher query is a bad start, not a bad walk.
+      - n: "10"
+        slug: indexes-and-constraints
+        title: "Indexes Find the Starting Node — and Then Stop Mattering"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: EXPLAIN for the plan and PROFILE for what actually happened, and the number that
+      # decides everything: DB HITS. Reading the operators — NodeIndexSeek is what you want,
+      # AllNodesScan or NodeByLabelScan at the start of a plan is the diagnosis.
+      # THE HABIT: profile the query, look at the first operator, and fix the start before
+      # anything else. Same discipline as Learn SQL, Series 3 · 20, different vocabulary, and
+      # the episode should say so — a reader who can read one plan can learn to read another.
+      # Cardinality estimates and where they mislead.
+      - n: "15"
+        slug: profile-and-db-hits
+        title: "PROFILE and db hits — Fix the Start of the Plan Before Anything Else"
+        hands_on: ["koan:diagnose", "koan:count:scanned"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-model-and-prove-it
+        title: "Project — Model a Domain, Then Prove Each Query Starts From an Index"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-algorithms-and-honesty
+    title: Algorithms, Import, and When Not To
+    tagline: what the graph can compute, and the episode that says no
+    level: advanced
+    episodes:
+      # COVER: the Graph Data Science library, taught as four questions rather than as a catalogue
+      # of names:
+      #   WHO MATTERS?           centrality — degree, betweenness, PageRank
+      #   WHO CLUSTERS TOGETHER? community detection — Louvain, label propagation, connected
+      #                          components, which is the one that finds fraud rings and
+      #                          duplicate customers
+      #   HOW ARE THESE TWO CONNECTED?  pathfinding — shortest path, weighted, A*
+      #   WHAT IS SIMILAR?       node similarity, Jaccard, and neighbour overlap
+      # THE MECHANIC TO EXPLAIN ONCE: these run on a PROJECTED IN-MEMORY GRAPH rather than on
+      # the stored one, so projection is a step with a memory cost, and the result usually has to
+      # be written back. People are surprised by that twice — once by the memory, once by
+      # discovering the scores are a snapshot.
+      - n: "00"
+        slug: graph-algorithms
+        title: "Graph Algorithms — Who Matters, Who Clusters, What Connects and What Is Similar"
+        hands_on: ["koan:choose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: recommendation as the worked application, because it is what most readers came
+      # for. Collaborative filtering expressed as a traversal — people who bought this also
+      # bought — and why it reads so naturally here: it is literally a two-hop pattern.
+      # Weighting by relationship properties, excluding what the customer already has, and using
+      # a similarity score from 00.
+      # THE HONESTY: this is a good baseline, not a recommender system. It has no cold-start
+      # answer, and AI for Data, Series 2 owns the embedding-based approach. Say which problems
+      # each is better at rather than implying the graph wins.
+      - n: "05"
+        slug: recommendations
+        title: "Recommendations as a Traversal — a Strong Baseline, and Where It Stops"
+        hands_on: ["koan:author", "koan:choose"]
+        status: planned
+      # COVER: getting data in, which is where first projects stall. LOAD CSV with periodic
+      # commit for moderate volumes, and the constraint-first rule from Series 2 · 10 — create
+      # the constraints BEFORE the import or MERGE will scan, and an import that should take
+      # minutes takes a day.
+      # neo4j-admin import for the bulk case, and its condition: it builds a new database from
+      # scratch and cannot add to a running one.
+      # THE ORDER THAT WORKS: constraints, then nodes, then relationships. Relationships need
+      # both endpoints to exist, and a single pass that creates everything at once is how people
+      # end up with duplicates from Series 1 · 10.
+      - n: "10"
+        slug: import
+        title: "LOAD CSV and admin import — Constraints First, Then Nodes, Then Relationships"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      # THE EPISODE THIS TRACK OWES ITS READER, AND IT IS NOT BURIED AT THE END BY ACCIDENT — it
+      # is placed before the final project so the project can be judged against it.
+      # COVER, fairly in both directions:
+      #   WHERE THE GRAPH GENUINELY WINS   unbounded or variable depth; a traversal that IS the
+      #                                    question; relationships with their own properties and
+      #                                    types that multiply; paths as results rather than rows.
+      #   WHERE SQL IS AT LEAST AS GOOD    one or two hops, which is a join; a fixed hierarchy,
+      #                                    which is a recursive CTE — Learn SQL, Series 3 · 00 —
+      #                                    and performs perfectly well; aggregation over
+      #                                    everything, which relational engines do better.
+      #   AND THE OPTION IN BETWEEN        PostgreSQL with recursive CTEs, or a graph extension,
+      #                                    inside the database you already operate. NoSQL
+      #                                    Concepts, Series 4 · 00 makes this argument in general
+      #                                    and it applies with full force here.
+      # THE COST TO PUT ON THE SCALE: a second database, its backups, its upgrades, and a query
+      # language most of the team does not know.
+      # THE TEST TO LEAVE THEM WITH: write your three most important questions as SQL and as
+      # Cypher. If the SQL is fine, you have your answer.
+      - n: "15"
+        slug: when-not-a-graph
+        title: "When Not a Graph — Write the Question Both Ways and See"
+        hands_on: ["koan:choose", "koan:equivalent"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-graph-or-not
+        title: "Project — Take a Real Domain and Argue Both Sides Before Choosing"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        tags: ["project"]
+        status: planned

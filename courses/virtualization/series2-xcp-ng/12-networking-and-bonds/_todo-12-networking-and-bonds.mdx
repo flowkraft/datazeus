@@ -1,0 +1,79 @@
+---
+title: "PIFs, VIFs and Bonds — and the Storage Network You Should Have Separated"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series2-xcp-ng"
+order: 12
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series2/_12/NetworkingAndBondsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: networking, in this platform's nouns, and the design decisions that are hard to
+     change later.
+       PIF   a physical interface on a host. VIF a virtual one on a VM. A NETWORK joins them
+             across the pool, which is why a network must exist identically on every host or
+             a VM cannot migrate to that host.
+       BONDS for redundancy and throughput, and the modes, briefly.
+       VLANS as the normal way a pool serves several networks over one pair of cables.
+       THE MANAGEMENT INTERFACE, which is what the pool uses to talk to itself, and which you
+             do not casually reconfigure remotely.
+     THE DESIGN RULE FOR A DATA WORKLOAD, and it lands on Storage for Data, Series 4 · 10's
+     argument: SEPARATE THE STORAGE NETWORK FROM THE VM NETWORK. If your VMs' disks are on
+     NFS or iSCSI, then every read your database does crosses a cable, and putting a nightly
+     extract on the same cable at the same time is how you produce a mystery.
+     THE WORKPLACE MOMENT: "the database got slow every night at two" is a storage network
+     sharing a link with a backup job, more often than it is anything in the database.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series2/_12/NetworkingAndBondsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

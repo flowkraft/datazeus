@@ -1,0 +1,74 @@
+---
+title: "Secondary Indexes and Materialized Views — Why the Answer Is Another Table"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-cassandra"
+tags: []
+level: "advanced"
+module: "series2-consistency-and-storage"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/cassandra/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/cassandra/series2/_20/SecondaryIndexesAndViewsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Apache Cassandra documentation — especially its Data Modeling section, which is unusually good and unusually opinionated.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (NoSQL Concepts owns the wide-column shape and the quorum theory, Learn SQL owns SQL, Data Ops owns the cluster),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    CQL looks like SQL and is not. One table per query, and deletes make reads slower.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the features that look like the relational answer and mostly should not be used.
+     SECONDARY INDEXES are local to each node, so a query using one asks every node — fine on
+     low cardinality within a partition, disastrous as a general index. SASI and storage-
+     attached indexes as the more modern attempt, with versions stated.
+     MATERIALIZED VIEWS: server-maintained denormalization, and their consistency caveats have
+     a long history — check the current status against the project's own documentation before
+     writing, and report what it says rather than folklore.
+     THE ADVICE THAT SURVIVES ALL OF IT: the supported answer is another table, written by
+     your application. NoSQL Concepts, Series 3 · 25 predicted this; here is the product that
+     proves the point.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/cassandra/series2/_20/SecondaryIndexesAndViewsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

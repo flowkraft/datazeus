@@ -1,0 +1,98 @@
+---
+title: "Indexed Views — Pre-Aggregate Once, and Let the Optimizer Find It"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-sql-server"
+tags: []
+level: "advanced"
+module: "series2-indexes-and-plans"
+order: 22
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/sqlserver/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/sqlserver/series2/_22/IndexedViewsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Microsoft SQL Server documentation on Microsoft Learn.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Learn SQL owns the SQL, Data Ops owns backup, HA and configuration),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    This is a DELTA track: every sentence should be one that would be FALSE on another engine.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     ADDED 2026-09-07. An academy-wide audit of pre-aggregation found materialized views
+     taught as a CONCEPT (Data Warehousing) and as ONE ENGINE'S behaviour (Oracle's MVs with
+     query rewrite, its Series 3 · 15) — while this track, which has the same capability
+     under a different name, never mentioned it. Zero hits for "indexed view" in this file
+     before today, which is exactly the kind of silence a delta track exists to prevent.
+     WHAT IT IS: a view with a UNIQUE CLUSTERED INDEX on it. The result stops being a query
+     and becomes stored, maintained rows.
+     THE DELTA FACT, and the reason for the episode: THE OPTIMIZER CAN SUBSTITUTE IT
+     AUTOMATICALLY for queries written against the BASE TABLES, so code nobody edited gets
+     faster. That is NOT true of a PostgreSQL materialized view, which only helps a query
+     that names it. It IS true of Oracle's MVs and Db2's MQTs — one line so the reader
+     recognises the family, and let Database X vs Database Y own the comparison.
+     AND THE EDITION CATCH, in the same breath because it decides whether any of the above
+     happens: automatic matching is an ENTERPRISE and Developer behaviour. On Standard the
+     view is still maintained and still correct, but the query must name it and use
+     WITH (NOEXPAND). A team on Standard that reads about indexed views, measures nothing
+     and concludes the feature does not work has met exactly this.
+     THE REQUIREMENTS ARE STRICT, and listing them is most of the practical value:
+       WITH SCHEMABINDING, two-part names, deterministic expressions only
+       COUNT_BIG(*) rather than COUNT(*) — a real and frequent first failure
+       no outer joins, no subqueries, no derived tables
+       the SET options in force BOTH at creation AND at query time — which is Series 1 · 15
+         arriving again, and the callback should be explicit: an app connection whose
+         ANSI_NULLS or QUOTED_IDENTIFIER differs from SSMS silently loses the match, and the
+         symptom is "fast in SSMS, slow in the application" all over again.
+     THE COST, as plainly as the benefit: the index is maintained SYNCHRONOUSLY, inside every
+     transaction that touches a base table. An indexed view with an aggregate over a hot OLTP
+     table is a write tax and a contention point, because many writers now update the same
+     few aggregate rows.
+     THE CHOICE AGAINST 25, taught as a pair rather than as two features:
+       INDEXED VIEW   pre-compute the answer. Wins when the query is known and repeated and
+                      the base tables are read far more than they are written.
+       COLUMNSTORE    compute it fast every time. Wins when the questions vary.
+     A reader who can say which of those their workload is has learnt the episode.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/sqlserver/series2/_22/IndexedViewsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

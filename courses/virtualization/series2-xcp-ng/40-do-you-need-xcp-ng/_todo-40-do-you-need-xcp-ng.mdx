@@ -1,0 +1,85 @@
+---
+title: "Do You Need a Hypervisor Platform — and What the Second Host Is Really For"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series2-xcp-ng"
+order: 40
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series2/_40/DoYouNeedXcpNgKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE CLOSING GATE, and this course uses the academy's pattern: the decision goes at the
+     END, where the reader has felt the cost, not only at the start where it is an assertion.
+     BY NOW THEY KNOW WHAT IT COSTS: a control domain you must not touch, an SR that fills in
+     a way you have to understand, a patch cycle, a management plane to host and back up, and
+     the fact that the good half of the product needs a second host.
+     WALK THE LADDER DOWNWARDS, AND MAKE THEM NAME THEIR RUNG:
+       FIVE VMS ON ONE BOX, ONE TEAM        Series 1. libvirt and Incus do this, with no
+                                            platform to operate, and Series 3 does it with a
+                                            UI if you want one.
+       VMS PLUS CONTAINERS, ONE TO THREE BOXES   Proxmox, in Series 3, is a better fit and
+                                            the reader will see why in the first episode.
+       AN ESTATE OF VMS, SEVERAL HOSTS, A BACKUP POLICY, AND SOMEBODY'S JOB TITLE — XCP-ng,
+                                            and the backup story in Series 2 · 25 is the best
+                                            argument for it.
+       A LICENCE RENEWAL YOU ARE TRYING TO ESCAPE — also XCP-ng, and be honest that migration
+                                            is a project rather than an afternoon.
+       NOBODY WHOSE JOB THIS IS             rent it. Data Ops, Series 1 · 46, and no shame in
+                                            it whatsoever.
+     AND THE QUESTION THAT ACTUALLY DECIDES IT AND IS NOT TECHNICAL: WHO PATCHES THIS IN
+     EIGHTEEN MONTHS, AND WHAT HAPPENS WHEN THEY LEAVE? A platform nobody owns is not a
+     platform, it is a liability with an uptime counter.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series2/_40/DoYouNeedXcpNgKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

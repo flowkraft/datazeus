@@ -1,0 +1,92 @@
+---
+title: "Partitioned Work — Splitting Rows and Combining Answers"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series3-jvm-that-ships"
+order: 38
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules. Then read
+    the comment ABOVE THIS EPISODE in that file, which is the authority on
+    coverage.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    One of FOUR episodes on parallelism, 36 to 39, placed after 35 "Measure
+    Before You Change Anything" because parallelism is a change and 35 is how
+    you find out whether you need it. Series 3 reads: ships → measure →
+    parallelise → project.
+      before:  Fan-Out and Bounded Memory — N Calls, One Queue, a Flat Heap
+      THIS:    Partitioned Work — Splitting Rows and Combining Answers
+      after:   When One Machine Is Not Enough — What Changes, and What Breaks
+
+    CONCEPTS AND PATTERNS BEFORE ANY FRAMEWORK. Series 4 has Spring Batch and
+    Beam and both are answers; this block is the question, and every episode
+    must be readable by someone who will use neither.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: split rows across threads and combine the results without silently changing the answer.
+    DECISION: the CPU-bound case, and the one where a wrong answer is produced with no exception. Both failure modes below are one line of apparently reasonable code.
+
+    ── COVER ───────────────────────────────────────────────────────────────
+      THE SHAPE                    partition by key or range, compute per partition, then COMBINE. Name
+                                   it as map and reduce once — not for the buzzword, but because
+                                   recognising the shape here is what makes Spark and Beam legible in
+                                   Series 4 instead of magical.
+      FAILURE ONE: SHARED STATE    the groupingBy aggregation from Series 1 - 35, accumulating into a
+                                   plain HashMap from several threads, produces A WRONG NUMBER RATHER
+                                   THAN AN EXCEPTION. Concurrent collections, or better, a result per
+                                   partition and no sharing at all.
+      FAILURE TWO: ASSOCIATIVITY   parallel reduction splits and recombines in an order you do not
+                                   control, so subtraction or a floating-point sum gives a DIFFERENT
+                                   ANSWER than the serial run. Series 1 - 32 taught that money is not a
+                                   double; this is the second bill for the same mistake.
+      THE DETERMINISM COST         output order changes and logs interleave, so Series 3 - 25's
+                                   readable failure stops being readable. Decide that trade
+                                   deliberately.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series3/_38/PartitionedWorkKoans.groovy
+
+    `predict` on a non-associative reduction run both ways — deterministic, no clock, and the cleanest koan in the block.
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the constructs
+
+{/* BEAT 2 — one at a time, each with code the reader types and runs. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns
+    its place by preventing a number that is wrong and looks right, or a job
+    that fails in a way nobody can read.
+    The one to write: the totals that were right on the developer's laptop and wrong in production, because the laptop's dataset was small enough that the stream never went parallel. */}
+
+TODO

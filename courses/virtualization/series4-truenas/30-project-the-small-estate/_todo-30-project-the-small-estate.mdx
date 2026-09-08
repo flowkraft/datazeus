@@ -1,0 +1,81 @@
+---
+title: "Project — a NAS, a Hypervisor, and Three Failures You Caused on Purpose"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series4-truenas"
+order: 30
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series4/_30/ProjectTheSmallEstateKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE CAPSTONE, AND IT IS THE ONE THAT JOINS THE WHOLE COURSE: the small-estate shape,
+     built nested on one machine, with the failure exercised on purpose.
+     BUILD: TrueNAS with a mirrored pool, a dataset per purpose, an NFS export tuned for
+     hypervisor storage, and periodic snapshots with retention. Then Proxmox or XCP-ng
+     mounting that export, and a PostgreSQL VM whose disk lives on it.
+     THEN BREAK IT, DELIBERATELY, THREE TIMES:
+       PULL A DISK from the NAS pool. Watch the alert arrive — the one you configured and
+       TESTED in Series 4 · 20 — and resilver it while the VM keeps running.
+       SNAPSHOT THE DATASET while the database is writing, roll it back, and read the
+       Postgres log recovering. That is Series 3 · 20's argument, felt.
+       STOP THE NAS while the VM is running, and watch what a hypervisor does when its
+       storage disappears. This is the single point of failure from Series 4 · 25, and every
+       reader should meet it in a lab rather than in production.
+     HAND IN: the build as commands, the three failure logs, your measured recovery point and
+     recovery time, and one paragraph naming the risk you have chosen to accept — because
+     every architecture accepts one, and the professional difference is whether you can say
+     which.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:author
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series4/_30/ProjectTheSmallEstateKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

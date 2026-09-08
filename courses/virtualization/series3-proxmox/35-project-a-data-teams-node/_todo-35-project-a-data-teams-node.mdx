@@ -1,0 +1,76 @@
+---
+title: "Project — the Node a Small Data Team Runs, and Two Kinds of Restore"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series3-proxmox"
+order: 35
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series3/_35/ProjectADataTeamsNodeKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE ARTEFACT: the environment a small data team actually runs, built and proven.
+     BUILD, nested and on one node: Proxmox with ZFS; a Debian template with cloud-init and
+     the guest agent; a VM cloned from it running PostgreSQL; two containers — one for a
+     pipeline, one for a scheduler; a firewall that allows only what is needed; and an API
+     token for a script.
+     THEN THE BACKUP STORY, END TO END: Proxmox Backup Server on a second machine, nightly
+     vzdump of everything, AND a database-level backup inside the guest. Restore both. Then
+     do the exercise that teaches the episode: restore ONE FILE out of a backup, and restore
+     the database to a point in time between two backups — and note which of the two
+     mechanisms could do which.
+     WRITE THE PARAGRAPH: your recovery time and recovery point objectives, measured, not
+     guessed; and what this single node cannot do.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:author
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series3/_35/ProjectADataTeamsNodeKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

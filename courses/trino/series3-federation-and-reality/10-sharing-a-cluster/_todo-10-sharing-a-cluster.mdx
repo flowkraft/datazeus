@@ -1,0 +1,74 @@
+---
+title: "Sharing a Cluster — Column Access Across Every Source, and Why You Were Queued"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-trino"
+tags: []
+level: "advanced"
+module: "series3-federation-and-reality"
+order: 10
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/trino/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/trino/series3/_10/SharingAClusterKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Trino documentation (trino.io/docs) — the page that owns this topic, and above all THE CONNECTOR'S OWN PAGE, because connectors differ enormously in what they push down.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Learn SQL owns the SQL, Apache Iceberg owns the table format, Data Warehousing owns the lakehouse, Data Ops owns the cluster),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    TRINO HAS NO STORAGE. Every performance question is a question about somebody else's data layout. Say WHICH CONNECTOR each claim was verified against, and check whether a source is describing Trino or PrestoDB.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: what changes when the cluster is shared, which it always is.
+       ACCESS CONTROL     Trino sits in front of several systems, so it becomes the place
+                          where "who can see which column" is answered ACROSS all of them —
+                          and if it is misconfigured it is also the place where somebody sees
+                          a source they could not otherwise reach. Say that plainly.
+       RESOURCE GROUPS    one analyst's unbounded query taking the memory everybody else
+                          needed. Queues and limits per group, and why a shared cluster
+                          without them fails in a way that looks random.
+     THE FRAMING: this is the episode where a query author learns why their query was queued,
+     rejected or killed — which is otherwise the most confusing experience in the product.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/trino/series3/_10/SharingAClusterKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

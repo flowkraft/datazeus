@@ -1,0 +1,76 @@
+---
+title: "Distributed Locks — the TTL Is a Guess, So the Work Must Be Idempotent"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-redis"
+tags: []
+level: "advanced"
+module: "series2-patterns"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/redis/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/redis/series2/_20/LocksKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Redis documentation (redis.io/docs) — the data type or command page that owns this topic, INCLUDING ITS TIME COMPLEXITY, which in this product is the whole story.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (NoSQL Concepts owns the key-value shape, Data Ops owns running the server, Kafka owns durable streaming at scale),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    A data structure server, not a cache and not a database. Every episode answers: if this process died now, what would you lose?
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the distributed lock, and this episode has to be honest or it is dangerous.
+     THE SIMPLE VERSION: SET key value NX PX ttl, and release by comparing the value in a Lua
+     script so you only delete your own lock. That much is correct and useful.
+     THE PART EVERYONE SKIPS: the TTL is a guess about how long your work takes. Exceed it and
+     a second holder starts while you still believe you hold it — so THE LOCK DOES NOT MAKE
+     THE WORK SAFE, IT MAKES CONCURRENCY UNLIKELY. Anything that must not happen twice needs
+     to be idempotent as well, and ETL & Data Pipelines, Series 1 · 30 owns that.
+     REDLOCK named, with the honest note that its safety under clock and network assumptions
+     is genuinely disputed by serious people, and that a reader should know the dispute
+     exists rather than be handed a verdict.
+     THE ALTERNATIVE TO NAME: Java & Groovy for Data, Series 4 · 40 is ShedLock, which is the
+     same idea for scheduled tasks and usually the better fit for that job.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/redis/series2/_20/LocksKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

@@ -207,6 +207,45 @@ series:
       # difference actually causes: Delta's log is simpler and its history is linear;
       # Iceberg's manifests make partition evolution and multi-engine writes easier.
       # DATE AND VERSION EVERY CLAIM. These converge yearly.
+      #
+      # ALSO OWNS THE LICENCE STORY, added 2026-09-07 after an audit found the words licence,
+      # governance and foundation in NONE of this track — while Redis has a Valkey episode and
+      # Elasticsearch has an OpenSearch one, both because the licence story IS part of the
+      # subject. Delta's is the most interesting of the three and it was missing.
+      #
+      # THE THREE LAYERS, and they must be given in this order or the answer misleads:
+      #   THE FORMAT IS OPEN        Apache 2.0, open-sourced by Databricks in 2019 and donated
+      #                             to the Linux Foundation. Independent implementations exist —
+      #                             delta-rs in Rust with Python bindings, and Delta Kernel for
+      #                             engines that would rather not reimplement the protocol.
+      #   THERE WAS A REAL GAP      and this is where the reputation came from. For years the
+      #                             performance features — OPTIMIZE, Z-ordering, data skipping,
+      #                             change data feed — were in Databricks' proprietary runtime
+      #                             only. You could read and write the format anywhere and you
+      #                             could not get the speed anywhere. DELTA LAKE 2.0 IN 2022
+      #                             CLOSED MOST OF IT by open-sourcing those features, so anyone
+      #                             repeating the criticism from an older blog post is describing
+      #                             a product that no longer exists. Say that, because the reader
+      #                             will meet the old criticism before they meet the fix.
+      #   THE ENGINE IS NOT OPEN    Photon, the vectorized engine that makes Databricks fast on
+      #                             Delta, is proprietary. So the TABLE is open and the fastest
+      #                             READER of it is not — which is the sharpest one-line contrast
+      #                             with Iceberg, where the format and the main engines (Trino,
+      #                             Spark, Flink, DuckDB) are all open.
+      #
+      # THEN THE DIRECTION, because it changes how this ages: Databricks acquired Tabular —
+      # founded by Iceberg's creators — in 2024, and Delta's UniForm writes Iceberg-compatible
+      # metadata alongside its own. The formats are converging, which is this comment's opening
+      # line arriving with evidence.
+      #
+      # ⚠ VERIFY LICENCE NAMES, DATES, VERSIONS AND WHO GOVERNS WHAT against the Linux
+      # Foundation's and Databricks' own pages ON THE DAY OF WRITING. Licences in this space have
+      # moved twice in five years — Redis and Elasticsearch both — and a confident sentence here
+      # is the one most likely to be quoted back at us after it stops being true.
+      #
+      # AND DO NOT TAKE A SIDE. The same rule the Redis and Elasticsearch fork episodes carry:
+      # report what each project's own pages say, name the consequence a team actually meets,
+      # and let the reader decide.
       - n: "00"
         slug: delta-lake
         title: "Delta Lake — A Transaction Log Instead of a Metadata Tree"

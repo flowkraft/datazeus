@@ -1,0 +1,75 @@
+---
+title: "Sharding — the Shard Key Decides Everything, and Most Deployments Need None"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-mongodb"
+tags: []
+level: "advanced"
+module: "series3-in-production"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/mongodb/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/mongodb/series3/_05/ShardingAndTheShardKeyKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official MongoDB Manual — the section that owns this topic (CRUD, Aggregation, Data Modeling, Indexes, Replication, Sharding).
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (NoSQL Concepts owns the shapes and the distributed theory, Data Ops owns running the server),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    A collection is not a table. The commonest failure is a relational schema transliterated into collections, with $lookup standing in for JOIN.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: sharding, and the fact that the shard key is the whole of it. Ranged against
+     hashed, chunks and balancing, and what a query without the shard key does — a scatter-
+     gather to every shard, which is the difference between one hop and all of them.
+     THE FAILURES, each with its shape: a MONOTONICALLY INCREASING key (a timestamp, an
+     ObjectId) puts every insert on one shard; a LOW-CARDINALITY key cannot be split; a key
+     absent from your common queries makes every read a fan-out.
+     AND SAY THE STAKES: changing it is a data migration. NoSQL Concepts, Series 3 · 00 said
+     this in general; here it has a name and a command.
+     THE HONEST GATE: most deployments should not shard. A replica set on a large machine
+     goes a very long way, and sharding adds a component, a failure mode and a modelling
+     constraint. Shard when one machine genuinely cannot take the writes.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/mongodb/series3/_05/ShardingAndTheShardKeyKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

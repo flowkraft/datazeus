@@ -1,0 +1,332 @@
+# The ordered episode list for Redis. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: use Redis for the jobs it is genuinely the best tool for, and know
+# exactly what you are trusting it with.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# REDIS IS A DATA STRUCTURE SERVER, NOT A CACHE AND NOT A DATABASE. Calling it a cache
+# undersells it — sorted sets, streams and atomic scripts do things no cache does. Calling it a
+# database oversells it — the durability story is configurable and the default is not what a
+# system of record needs.
+#
+# THE QUESTION THIS TRACK KEEPS ASKING: IF THIS PROCESS DIED RIGHT NOW, WHAT WOULD YOU LOSE, AND
+# IS THAT ACCEPTABLE? Every episode should be answerable against it. A reader who can answer it
+# for their own keyspace has learnt the course.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL REDIS DOCUMENTATION
+# ============================================================================
+# redis.io/docs runs Data types, Commands, Develop (clients, patterns, pub/sub, keyspace
+# notifications, transactions, scripting), Operate (persistence, replication, cluster, eviction,
+# security) and Reference. Its Data types section is the right order for Series 1 and Operate is
+# the right order for Series 3.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's series
+# order — SHOULD FOLLOW THE OFFICIAL REDIS DOCUMENTATION. Before writing an episode, open the
+# page for that data type or command, use it as the COVERAGE CHECKLIST, and use its VOCABULARY
+# FOR THE NOUNS (key, TTL, eviction policy, replica, hash slot, consumer group, stream entry).
+# Every command's own page states its TIME COMPLEXITY — USE IT, because in this product the O()
+# is the whole story: a single O(N) command against a large collection blocks every other client.
+# Anything left out should be left out because an academy rule says so — NoSQL Concepts owns the
+# key-value shape, Data Ops owns running the server — and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the command's page named.
+#
+# THE FORK IS A REAL PART OF THE SUBJECT, NOT GOSSIP. The licence change in 2024 produced Valkey
+# under the Linux Foundation, and Linux distributions and cloud providers made different choices
+# about which to ship. Series 3 · 20 covers it as a decision a team actually has to make. State
+# the licence names and the versions, VERIFIED ON THE DAY, and do not take a side — this is the
+# episode most likely to age and most likely to be quoted.
+
+course: learn-redis
+track: redis
+title: Redis
+
+prerequisites:
+  - course: learn-nosql
+    needs: "Series 1, and Series 2"
+    why: >-
+      The key-value shape and its bargain — microsecond reads in exchange for only ever asking
+      by key — are taught there for every engine. This track spends its time on what makes
+      Redis more than that shape.
+
+excludes:
+  - topic: "Why key-value at all, and how it differs from the other shapes"
+    where: "covered in NoSQL Concepts, Series 2 · 00, which this course assumes"
+  - topic: "Caching as a general architectural idea"
+    where: "covered in BI & Data Visualization, Series 3 · 22 for a dashboard's cache. In this course, Series 2 · 00 is the caching patterns and the failure modes they have"
+  - topic: "Running the server — provisioning, backups, monitoring, capacity"
+    where: "covered in Data Ops for the discipline. In this course, Series 3 covers only what changes the durability and availability of your data"
+  - topic: "Redis as a message broker at scale"
+    where: "covered in Apache Kafka, which is a log with retention and consumer groups built for it. In this course, Series 2 · 15 covers Streams and states plainly where the boundary is"
+  - topic: "The modules — search, JSON, time series, probabilistic types"
+    where: "not covered. They are a separate product surface with their own licences and availability, and an episode about them would age faster than anything else here"
+
+series:
+  - slug: series1-data-structures
+    title: The Data Structures
+    tagline: what Redis actually stores, and what each one is for
+    level: intermediate
+    episodes:
+      # COVER: the model in three facts, each with a consequence.
+      #   IN MEMORY            your dataset must fit in RAM, and RAM is the budget.
+      #   SINGLE-THREADED for commands   so every command is atomic without you asking, AND one
+      #                        slow command blocks everyone. That is why the time complexity on
+      #                        each command page is not trivia. KEYS * in production is the
+      #                        canonical example and should be shown, once, as the thing not to do.
+      #   PLAIN TEXT PROTOCOL  RESP, so redis-cli and telnet both work and you can see everything.
+      # Keys as flat strings with a convention rather than a namespace, and the habit that saves a
+      # keyspace: colon-separated, prefix first, decided before the second developer arrives.
+      - n: "00"
+        slug: what-redis-is
+        title: "In Memory and Single-Threaded — Why One Slow Command Blocks Everyone"
+        hands_on: ["koan:predict", "koan:process:tool"]
+        core: true
+        status: planned
+      # COVER: strings as the base type — SET, GET, SETNX, GETSET, MSET — and the fact that a
+      # string is any bytes, so it holds a serialized object just as happily as a number.
+      # INCR and DECR as the reason counters live here: atomic without a transaction, no
+      # read-modify-write race, and fast enough that nobody notices them.
+      # EXPIRY, and it is half the product: EXPIRE, TTL, SET with EX. A key with a TTL is
+      # self-cleaning, and a keyspace where most keys have no TTL is a memory leak with a
+      # schedule. Teach the habit: decide the TTL when you write the key, not later.
+      - n: "05"
+        slug: strings-counters-and-ttl
+        title: "Strings, INCR and TTL — Atomic Counters, and Keys That Clean Themselves"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: hashes as a small object under one key — HSET, HGET, HGETALL, HINCRBY — and the
+      # decision they force: one hash per object, or one string per field? Field-level updates and
+      # memory efficiency against the cost of HGETALL on a large hash.
+      # SETS: SADD, SISMEMBER, SINTER, SUNION — membership answered in constant time, and set
+      # algebra done in the server rather than in your application.
+      - n: "10"
+        slug: hashes-and-sets
+        title: "Hashes and Sets — an Object Under One Key, and Membership in Constant Time"
+        hands_on: ["koan:complete", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: lists — LPUSH, RPOP, LRANGE, and the blocking variants BLPOP and BRPOP that turn a
+      # list into a work queue with no polling.
+      # AND THE HONEST LIMIT, stated where the reader first meets it rather than three episodes
+      # later: A LIST IS A QUEUE WITH NO ACKNOWLEDGEMENT. Pop the job, crash before finishing it,
+      # and it is gone. That is fine for work you can lose and wrong for work you cannot, and
+      # Series 2 · 15's Streams are the answer when it matters.
+      - n: "15"
+        slug: lists-and-queues
+        title: "Lists — a Work Queue in Two Commands, and the Job You Lose on a Crash"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      # THE EPISODE THAT SHOWS WHY THIS IS NOT A CACHE.
+      # COVER: sorted sets — every member carries a score, the set stays ordered, and range
+      # queries by score or rank are cheap. ZADD, ZRANGE, ZRANGEBYSCORE, ZINCRBY, ZREMRANGEBYSCORE.
+      # THE THREE THINGS THEY SOLVE, and they look unrelated until you see the shape:
+      #   A LEADERBOARD        score is the score. Rank is a command.
+      #   A RATE LIMITER       score is a timestamp; trim the window, count what is left.
+      #   A SCHEDULE           score is "run at"; pop everything due.
+      # A reader who recognises "ordered by a number, queried by range" as a sorted set has
+      # gained the most transferable idea in the course.
+      - n: "20"
+        slug: sorted-sets
+        title: "Sorted Sets — Leaderboards, Rate Limits and Schedules Are the Same Structure"
+        hands_on: ["koan:complete", "koan:choose"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-pick-the-structure
+        title: "Project — Five Requirements, Five Structures, and Why Each Fits"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-patterns
+    title: The Patterns
+    tagline: caching, queues, locks and rate limits — with their failure modes
+    level: advanced
+    episodes:
+      # COVER: cache-aside as the default — look in Redis, miss, read the database, write it back
+      # with a TTL — plus write-through and write-behind named with their trade-offs.
+      # INVALIDATION, which is the hard half: TTL as the honest simple answer, explicit deletion
+      # on write, and versioned keys as the trick that avoids invalidation entirely.
+      # THE TWO FAILURES WORTH THE EPISODE:
+      #   STAMPEDE / DOGPILE   a popular key expires, and a thousand requests miss simultaneously
+      #                        and all hit the database at once — which is a self-inflicted
+      #                        outage caused by a cache working correctly. Jitter the TTL, or
+      #                        let one requester recompute while the rest serve the stale value.
+      #   CACHING A QUERY YOU SHOULD FIX   Learn SQL, Series 3 · 20 exists; read the plan before
+      #                        reaching for a cache, because a cache hides a bad query until the
+      #                        morning it misses.
+      - n: "00"
+        slug: caching-patterns
+        title: "Cache-Aside and the Stampede — When a Cache Working Correctly Takes You Down"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: the keyspace as a design artefact, because Redis gives you no schema and no
+      # directory. A naming convention with the prefix first, so SCAN by prefix works and so two
+      # teams do not collide. Why SCAN and never KEYS. Key size and the memory cost of very many
+      # small keys. Logical databases (SELECT n) and why they are a poor namespace.
+      # THE OPERATIONAL RULE THAT COMES FROM 05: EVERY KEY GETS A TTL OR A DOCUMENTED REASON WHY
+      # NOT. An audit of keys with no expiry is the fastest way to understand an inherited Redis.
+      - n: "05"
+        slug: keyspace-design
+        title: "Keyspace Design — Prefixes, SCAN Not KEYS, and Every Key Gets a TTL"
+        hands_on: ["koan:capture", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: pub/sub — PUBLISH and SUBSCRIBE — and the single most important property, stated
+      # first: IT IS FIRE AND FORGET. No persistence, no replay, no acknowledgement. A subscriber
+      # that is not connected at the moment of publication never learns the message existed.
+      # WHERE THAT IS EXACTLY RIGHT: live dashboards, cache invalidation broadcasts, presence,
+      # anything where a missed message is uninteresting. BI & Data Visualization, Series 3 · 23
+      # is the live dashboard that consumes this.
+      # WHERE IT IS WRONG: anything a business would want redelivered — which is the next episode.
+      - n: "10"
+        slug: pub-sub
+        title: "Pub/Sub — Fire and Forget, and Who That Is Right For"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: Streams as the durable answer — an append-only log with ids, XADD, XREAD, and
+      # consumer groups with XREADGROUP, XACK and XPENDING. Acknowledgement, redelivery and the
+      # pending-entries list, which is the machinery a list-based queue does not have.
+      # MAXLEN as the retention control, and the fact that trimming is your decision.
+      # THE BOUNDARY WITH KAFKA, said plainly so nobody has to guess: Streams are excellent for a
+      # queue inside one system with modest retention. Apache Kafka is the answer when retention
+      # is days, when several independent systems consume the same feed, or when the volume
+      # justifies its own cluster. Naming that boundary is more useful than either product's
+      # marketing.
+      - n: "15"
+        slug: streams
+        title: "Streams and Consumer Groups — Acknowledgement, Redelivery, and Where Kafka Begins"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the distributed lock, and this episode has to be honest or it is dangerous.
+      # THE SIMPLE VERSION: SET key value NX PX ttl, and release by comparing the value in a Lua
+      # script so you only delete your own lock. That much is correct and useful.
+      # THE PART EVERYONE SKIPS: the TTL is a guess about how long your work takes. Exceed it and
+      # a second holder starts while you still believe you hold it — so THE LOCK DOES NOT MAKE
+      # THE WORK SAFE, IT MAKES CONCURRENCY UNLIKELY. Anything that must not happen twice needs
+      # to be idempotent as well, and ETL & Data Pipelines, Series 1 · 30 owns that.
+      # REDLOCK named, with the honest note that its safety under clock and network assumptions
+      # is genuinely disputed by serious people, and that a reader should know the dispute
+      # exists rather than be handed a verdict.
+      # THE ALTERNATIVE TO NAME: Java & Groovy for Data, Series 4 · 40 is ShedLock, which is the
+      # same idea for scheduled tasks and usually the better fit for that job.
+      - n: "20"
+        slug: locks
+        title: "Distributed Locks — the TTL Is a Guess, So the Work Must Be Idempotent"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        status: planned
+      # COVER: rate limiting, three ways, in increasing fidelity — a counter with a TTL (fixed
+      # window, simple, bursty at the boundary), a sliding window with a sorted set (from
+      # Series 1 · 20), and a token bucket in a Lua script for atomicity.
+      # WHY LUA: several commands that must not interleave. EVAL runs them as one, which is the
+      # single-threaded property of Series 1 · 00 turned into a feature.
+      # THE DETAIL THAT MATTERS IN PRODUCTION: what happens when Redis is unavailable. Fail open
+      # and you have no limit; fail closed and you have an outage. Decide it deliberately.
+      - n: "25"
+        slug: rate-limiting
+        title: "Rate Limiting — Fixed Window, Sliding Window, and What Happens When Redis Is Down"
+        hands_on: ["koan:complete", "koan:choose"]
+        status: planned
+      - n: "30"
+        slug: project-a-cache-that-behaves
+        title: "Project — A Cache With TTLs, Jitter and a Stampede You Can Demonstrate"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-running-it
+    title: What You Are Trusting It With
+    tagline: persistence, eviction, replication — and the fork
+    level: advanced
+    episodes:
+      # THE EPISODE THE WHOLE TRACK POINTS AT.
+      # COVER: RDB snapshots — a point-in-time fork to disk, cheap, and you lose everything since
+      # the last one. AOF — an append log of every write, with fsync policy deciding how much you
+      # can lose: every write, every second, or never. Both together as the common configuration.
+      # THE ANSWER TO THE TRACK'S QUESTION: with the usual defaults you can lose the last second
+      # of writes, and on a hard crash possibly more. For a cache that is irrelevant. For a
+      # queue holding customer work it is a decision somebody must make ON PURPOSE, and the
+      # failure mode is that nobody ever did.
+      # AND THE HONEST CONCLUSION: Redis CAN be a system of record with the right configuration
+      # and the right operational discipline. Usually it should not be, and the reason is not the
+      # technology but that most teams have not decided what they are willing to lose.
+      - n: "00"
+        slug: persistence
+        title: "RDB and AOF — Exactly How Much You Would Lose, and Whether That Is Fine"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: maxmemory and the eviction policies — noeviction, allkeys-lru, volatile-lru,
+      # allkeys-lfu and the rest — and the decision each encodes.
+      # THE TWO OUTCOMES TO SHOW: with noeviction, writes start failing when memory fills, which
+      # is an outage that looks like an application bug. With allkeys-lru, Redis quietly deletes
+      # data to make room — which is correct for a cache and catastrophic for a queue sharing the
+      # same instance.
+      # THE RULE THAT FOLLOWS: DO NOT MIX A CACHE AND A SYSTEM OF RECORD IN ONE INSTANCE WITH ONE
+      # EVICTION POLICY. It is the commonest way to lose data in this product, and it happens
+      # because both workloads were small when somebody added the second one.
+      - n: "05"
+        slug: eviction
+        title: "maxmemory and Eviction — Why a Cache and a Queue Must Not Share an Instance"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: asynchronous replication and what that word costs — a replica can be behind, and a
+      # failover can lose acknowledged writes. Sentinel for automatic failover on a single
+      # dataset. Cluster for sharding across nodes: 16384 hash slots, the key's slot decided by
+      # its name, and HASH TAGS as the way to force related keys onto the same slot.
+      # THE CONSTRAINT THAT SURPRISES PEOPLE: in Cluster, a command touching several keys works
+      # only if they share a slot. Multi-key operations and Lua scripts across arbitrary keys stop
+      # working, and the fix is a naming decision — which is Series 2 · 05 arriving with teeth.
+      - n: "10"
+        slug: replication-and-cluster
+        title: "Replication, Sentinel and Cluster — Hash Slots, and Why Multi-Key Stops Working"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        status: planned
+      # COVER: three ways to send more than one thing, and they are not the same:
+      #   PIPELINING   send many commands without waiting for each reply. Purely a network win —
+      #                no atomicity — and usually the largest single performance improvement
+      #                available to an application talking to Redis.
+      #   MULTI/EXEC   queued commands executed together. NOT a rollback transaction: if one
+      #                command fails the others still ran, because there is nothing to undo.
+      #                Say that plainly, because the word transaction sets a wrong expectation.
+      #   LUA (EVAL)   a script that runs atomically on the server, which is how you do
+      #                read-then-write logic safely. Keep it short — it blocks everyone.
+      - n: "15"
+        slug: pipelines-transactions-and-lua
+        title: "Pipelining, MULTI and Lua — and Why MULTI Is Not a Rollback"
+        hands_on: ["koan:predict", "koan:complete"]
+        status: planned
+      # COVER: the licence change and the fork, factually and without a side. What Redis's
+      # licence became, why Valkey was created under the Linux Foundation, and the practical
+      # consequence a team actually meets: THE PACKAGE YOUR DISTRIBUTION OR CLOUD PROVIDER SHIPS
+      # MAY NO LONGER BE THE ONE YOU THINK. Check what you are running.
+      # WHAT IT MEANS IN PRACTICE TODAY: the protocol and the commands are compatible for
+      # ordinary use, so most application code does not care — and the two have been diverging
+      # since, so "compatible" needs a version attached.
+      # VERIFY LICENCE NAMES, DATES AND VERSIONS AGAINST BOTH PROJECTS' OWN PAGES ON THE DAY OF
+      # WRITING. This is the episode most likely to be quoted back at us and most likely to age.
+      - n: "20"
+        slug: redis-and-valkey
+        title: "Redis and Valkey — the Licence Change, and Checking What You Actually Run"
+        hands_on: ["koan:capture", "koan:choose"]
+        status: planned
+      - n: "25"
+        slug: project-what-would-you-lose
+        title: "Project — Audit an Instance and State Exactly What a Crash Would Cost"
+        hands_on: ["koan:author", "koan:capture"]
+        core: true
+        tags: ["project"]
+        status: planned

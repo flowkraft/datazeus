@@ -1,0 +1,94 @@
+---
+title: "Fan-Out and Bounded Memory — N Calls, One Queue, a Flat Heap"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series3-jvm-that-ships"
+order: 37
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules. Then read
+    the comment ABOVE THIS EPISODE in that file, which is the authority on
+    coverage.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    One of FOUR episodes on parallelism, 36 to 39, placed after 35 "Measure
+    Before You Change Anything" because parallelism is a change and 35 is how
+    you find out whether you need it. Series 3 reads: ships → measure →
+    parallelise → project.
+      before:  Before You Reach for Threads — Push It Down to the Engine
+      THIS:    Fan-Out and Bounded Memory — N Calls, One Queue, a Flat Heap
+      after:   Partitioned Work — Splitting Rows and Combining Answers
+
+    CONCEPTS AND PATTERNS BEFORE ANY FRAMEWORK. Series 4 has Spring Batch and
+    Beam and both are answers; this block is the question, and every episode
+    must be readable by someone who will use neither.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: run four hundred slow calls at once without exhausting memory or the connection pool.
+    DECISION: the I/O-bound case, done properly. Series 2 - 60 chose between two Java 21 features; this is the pool underneath them, the queue that keeps memory flat, and the ceiling that is not the thread count.
+
+    ── COVER ───────────────────────────────────────────────────────────────
+      THE POOL                     ExecutorService, and sizing that is not a guess — roughly the core
+                                   count for CPU work, far more for waiting. A reader who has only met
+                                   virtual threads cannot reason about a pool they did not create.
+      THE SHARED POOL TRAP         every parallel stream in the JVM uses the SAME common ForkJoinPool,
+                                   so one long parallel stream starves every other one in the process —
+                                   including a request handler in the same application. Invisible in
+                                   code review, and why a library must never call parallelStream() on a
+                                   caller's behalf.
+      BOUNDED PRODUCER-CONSUMER    one reader, N workers, and a queue WITH A LIMIT. That is how a large
+                                   file goes through N workers with flat memory. Series 2 - 40 does it
+                                   with one consumer; an unbounded queue is the whole file in RAM with
+                                   extra steps.
+      THE REAL CEILING             thirty-two threads against a pool of four is a queue with extra
+                                   steps, and thirty-two connections against one Postgres is slower
+                                   than eight. THE POOL SIZE, NOT THE THREAD COUNT, IS YOUR
+                                   PARALLELISM. Data Ops, Series 2 - 20 owns pooling; this is what it
+                                   means for your loop.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:count:roundtrips
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series3/_37/FanOutAndBoundedMemoryKoans.groovy
+
+    `count:roundtrips`, never a stopwatch — the track header forbids asserting wall-clock time and this is the episode most tempted to break it.
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the constructs
+
+{/* BEAT 2 — one at a time, each with code the reader types and runs. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns
+    its place by preventing a number that is wrong and looks right, or a job
+    that fails in a way nobody can read.
+    The one to write: the loader that got slower when somebody raised the thread count. Every extra thread queued on the same four connections, and the only thing that grew was the wait. */}
+
+TODO

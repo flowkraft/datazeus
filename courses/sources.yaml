@@ -205,6 +205,58 @@ sources:
       The paper that made the case for column stores and started the line that runs through
       Vertica, DuckDB and ClickHouse. A paper, not a book — cite it as one.
 
+  dean-mapreduce:
+    author: "Jeffrey Dean & Sanjay Ghemawat"
+    work: "MapReduce: Simplified Data Processing on Large Clusters"
+    publisher: "OSDI 2004"
+    year: 2004
+    note: >-
+      THE PROGRAMMING MODEL, not the product. Map transforms each record independently, a
+      shuffle groups by key, reduce combines per key — and because you accepted that shape, a
+      framework can parallelise, distribute and retry it for you. Apache Hadoop was this paper
+      as a product; Spark is its descendant with the intermediate results kept in memory.
+      CREDIT THE MODEL AND NOT HADOOP. The framework is largely historical; the shape is what
+      every distributed engine still does, and "shuffle" is still the word.
+
+  oneil-lsm:
+    author: "Patrick O'Neil, Edward Cheng, Dieter Gawlick & Elizabeth O'Neil"
+    work: "The Log-Structured Merge-Tree (LSM-Tree)"
+    publisher: "Acta Informatica 33"
+    year: 1996
+    note: >-
+      Writes go to memory and then to immutable sorted files that are merged in the background,
+      so writes are near-sequential and nothing is modified in place. It is why Cassandra,
+      RocksDB, HBase and ClickHouse's MergeTree write as fast as they do — and why deletes cost
+      what they cost, which is the tombstone problem their courses have to teach.
+
+  decandia-dynamo:
+    author: "Giuseppe DeCandia et al."
+    work: "Dynamo: Amazon's Highly Available Key-value Store"
+    publisher: "SOSP 2007"
+    year: 2007
+    note: >-
+      CONSISTENT HASHING, TUNABLE QUORUMS (the N, R and W that make R + W > N a decision rather
+      than a property), HINTED HANDOFF and ANTI-ENTROPY REPAIR. Cassandra descends from it
+      directly — one of its authors co-wrote Cassandra, and Cassandra's own documentation still
+      calls that section "dynamo".
+      CREDIT THE PAPER, NOT THE PRODUCT. This academy does not teach cloud-vendor proprietary
+      services and DynamoDB is deliberately excluded (see NoSQL Concepts). A 2007 research paper
+      that every open-source engine in this catalogue borrowed from is a different thing, and
+      the distinction is worth keeping straight.
+
+  melnik-dremel:
+    author: "Sergey Melnik et al."
+    work: "Dremel: Interactive Analysis of Web-Scale Datasets"
+    publisher: "VLDB 2010"
+    year: 2010
+    note: >-
+      TWO CONTRIBUTIONS, and the first is the one this academy needs: a COLUMNAR ENCODING FOR
+      NESTED DATA, using repetition and definition levels, which is how a column-oriented file
+      can hold a record containing arrays and structs without losing its shape. PARQUET'S NESTED
+      ENCODING COMES DIRECTLY FROM THIS PAPER. The second is the multi-level serving tree, which
+      is the ancestor of BigQuery.
+      Credit it where Parquet's internals are taught, not wherever Parquet is merely used.
+
   tukey:
     author: "John W. Tukey"
     work: "Exploratory Data Analysis"
@@ -225,6 +277,23 @@ sources:
       ERROR BUDGETS, TOIL, and the BLAMELESS POSTMORTEM. Free to read online at sre.google —
       point there, it costs the reader nothing. "Site Reliability Engineering" and "SRE" are
       Google-associated terms; describe the practices, never imply endorsement.
+
+  armbrust-lakehouse:
+    author: "Michael Armbrust, Ali Ghodsi, Reynold Xin & Matei Zaharia"
+    work: "Lakehouse: A New Generation of Open Platforms that Unify Data Warehousing and Advanced Analytics"
+    publisher: "CIDR"
+    year: 2021
+    note: >-
+      THE WORD "LAKEHOUSE" IS THEIRS. Databricks popularised it in a 2020 post and then argued
+      it properly in this CIDR paper, which is why it is creditable at all rather than being
+      pure marketing — there is a stated architecture and a stated claim to disagree with.
+      CREDIT THE NAME AND THE ARCHITECTURE, NOT THE COMPONENTS. Object storage, SQL over a lake
+      and columnar files all predate it, and the technical enabler — the open table format —
+      came from three places at once: Delta Lake from Databricks, Iceberg from Netflix, Hudi
+      from Uber. Two of those three are not theirs, which is the fact that keeps this an
+      architecture rather than a product.
+      ⚠ The authors are also the vendor. Read the paper as an argument by interested parties,
+      state its claim fairly, and let the counter-argument stand beside it.
 
   marick:
     author: "Brian Marick"

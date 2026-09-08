@@ -1,0 +1,76 @@
+---
+title: "Block, File and Object — Three Interfaces, and the Question That Sorts Them"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-storage"
+tags: []
+level: "intermediate"
+module: "series1-what-storage-is"
+order: 0
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/storage/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/storage/series1/_00/BlockFileObjectKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — OpenZFS docs for Series 2, the S3 API reference and MinIO's docs for Series 3, the Ceph docs for Series 4. SERIES 1 HAS NO MANUAL: it is physics, arithmetic and trade-offs, so teach the SHAPE and the orders of magnitude.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a bucket and watching a disk, Data Warehousing owns columnar layout, the engine tracks own their storage engines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    REPLICATION IS NOT A BACKUP — a delete is replicated faithfully to all three copies. DATE EVERY CONCRETE FIGURE: capacities, prices and rebuild times age faster here than anywhere else in the academy.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the taxonomy, because everything else in the course hangs off it and almost
+     nobody is taught it explicitly.
+       BLOCK   a disk. Fixed-size blocks, no idea what is in them, one writer. What a
+               database wants, because it manages its own layout.
+       FILE    a filesystem. Names, directories, permissions, several readers and writers,
+               partial writes and appends.
+       OBJECT  a key and a blob over HTTP. NO PARTIAL WRITES, NO APPEND, NO SEEK — you
+               replace a whole object — which is the constraint that produced table formats,
+               and Data Ops, Series 1 · 47 already states it as a rule. Here it gets its
+               reason.
+     THE TEST TO LEAVE THEM WITH: can a process modify byte 4,000,000 in place? Block yes,
+     file yes, object no. That single question sorts most storage arguments.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/storage/series1/_00/BlockFileObjectKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

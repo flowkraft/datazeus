@@ -1,0 +1,77 @@
+---
+title: "What Replaces the Join — Embed, Reference, Duplicate or Precompute"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-nosql"
+tags: []
+level: "intermediate"
+module: "series1-why-not-relational"
+order: 15
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/nosql/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/nosql/series1/_15/WhatReplacesTheJoinKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    THE PRODUCT'S OWN CURRENT DOCUMENTATION for every product named, with the version stated. THIS COURSE HAS NO MANUAL OF ITS OWN — the only documents describing NoSQL as a whole are written by vendors explaining why their product is the answer.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (each engine's own course owns teaching it properly, Learn Data Modeling owns the relational discipline this reverses),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    A comparison page written by one of the databases being compared is a source ABOUT a claim, never the claim. Several famous NoSQL limitations were fixed years ago — check before repeating one.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: what you do when there is no join, in the order you should consider them.
+       EMBED          keep the related data inside the parent. One read, always current, and
+                      it grows without limit if you are not careful.
+       REFERENCE      store an id and fetch separately. Small, and it is N+1 by hand.
+       DUPLICATE THE FIELDS YOU DISPLAY  the extended-reference idea: copy the three
+                      attributes the screen shows, accept that they can go stale, and decide
+                      deliberately how stale is acceptable.
+       JOIN IN THE APPLICATION  honest and common, and it moves the cost to a place with no
+                      statistics and no optimizer.
+       PRECOMPUTE     a second collection or table shaped like the answer, maintained on
+                      write. The same idea as a materialized view, without the engine's help.
+     THE RULE: the choice is decided by whether the embedded thing is BOUNDED and whether it
+     is READ WITH the parent. Unbounded, or read separately, means reference.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/nosql/series1/_15/WhatReplacesTheJoinKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

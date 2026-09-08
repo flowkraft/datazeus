@@ -1,0 +1,82 @@
+---
+title: "Longhorn, OpenEBS or Rook — and the Case for None of Them"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-kubernetes"
+tags: []
+level: "advanced"
+module: "series6-rook-and-choosing"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/kubernetes/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/kubernetes/series6/_20/ChoosingBetweenThemKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Kubernetes documentation (kubernetes.io/docs) — the Concepts section that owns this topic (Workloads, Storage, Configuration, Scheduling and Eviction).
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns the single machine and the container image, Airflow owns dependencies between steps),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    Kubernetes assumes a workload is stateless and long-running. A data job is neither, and that mismatch is the reason for most surprises here.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE CLOSING DECISION EPISODE, and the one the whole storage block builds to. Nine other
+     courses in this academy end this way, before the project.
+     WALK THE LADDER DOWNWARDS and make the reader name their rung:
+       YOU ARE ON A MANAGED CLOUD    use the provider's CSI driver. It is maintained by
+                                     somebody else and it is almost always the right answer.
+                                     None of these three should be installed to replace it.
+       YOUR JOB WANTS OBJECT STORAGE a bucket, and no volume at all. Series 2 · 15 said this
+                                     first and it is still true after three series of volumes.
+       YOUR DATABASE REPLICATES ITSELF   OpenEBS Local PV. Fast disk, no double replication.
+       YOU NEED A REPLICATED VOLUME AND SIMPLICITY   Longhorn. You can read the replicas.
+       YOU NEED BLOCK AND FILE AND OBJECT, AT SCALE, AND SOMEBODY OWNS IT   Rook and Ceph.
+     THE QUESTION THAT DECIDES THE LAST ONE is the same one Storage for Data, Series 4 · 58
+     asks and it does not get easier inside Kubernetes: is there a named person whose job
+     includes this cluster? An operator automates the running, not the understanding.
+     THE RULE THE BLOCK CLOSES ON: USE THE MINIMUM THAT GETS YOU WHAT YOU ACTUALLY NEED.
+     Storage you did not need is not neutral — it is a rebuild during every node drain, a
+     second version ladder at every upgrade, and one more thing that can be the reason a pod
+     will not start.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/kubernetes/series6/_20/ChoosingBetweenThemKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

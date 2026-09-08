@@ -1,0 +1,90 @@
+---
+title: "Do You Need TrueNAS — or Debian, ZFS and Twenty Minutes of Samba"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series4-truenas"
+order: 25
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series4/_25/DoYouNeedTruenasKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE CLOSING GATE FOR THE SERIES, and it is the sharpest one in the course because this
+     academy already teaches the alternative in full.
+     THE HONEST COMPARISON: Debian, ZFS, Samba and nfs-kernel-server will do most of what
+     this appliance does, and Storage for Data, Series 2 teaches every bit of it. So what are
+     you actually buying?
+       WHAT THE APPLIANCE GENUINELY GIVES YOU: scheduled snapshot and replication tasks with
+       retention, configured in minutes rather than scripted; alerting that works out of the
+       box; a UI somebody else on the team can use when you are away; boot environments; and
+       a coherent upgrade path.
+       WHAT IT TAKES AWAY: apt. You cannot install your tool on it, you should not edit its
+       files, and you are on its release schedule rather than yours.
+     THE LADDER, DOWNWARDS:
+       A FEW TERABYTES, ONE CONSUMER, ONE ADMIN WHO LIKES THE SHELL   Debian and ZFS.
+                                 Storage for Data, Series 2 · 22 is that decision, made there.
+       SHARES FOR PEOPLE AND MACHINES, SNAPSHOTS ON A SCHEDULE, AND SOMEBODY WHO IS NOT YOU
+       HAS TO BE ABLE TO USE IT     TrueNAS, and this is the sweet spot.
+       SHARED STORAGE UNDER A HYPERVISOR POOL     TrueNAS, and Series 4 · 10 is the episode
+                                 that matters — with the honest caveat that ONE NAS IS ONE
+                                 POINT OF FAILURE for every VM in the pool, which is an
+                                 uncomfortable thing to discover after you have built it.
+       MANY NODES, PETABYTES, AND A TEAM        Storage for Data, Series 4 is Ceph, and
+                                 Storage for Data, Series 4 · 58 is that decision.
+       NOBODY TO CHANGE THE DISK   rent it. A NAS with a dead disk and no owner is a
+                                 countdown.
+     AND THE QUESTION THAT DECIDES IT: WHO NOTICES THE ALERT? Everything else in this episode
+     is secondary to that.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series4/_25/DoYouNeedTruenasKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

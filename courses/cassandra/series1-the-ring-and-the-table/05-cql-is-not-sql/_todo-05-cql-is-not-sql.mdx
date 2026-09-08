@@ -1,0 +1,75 @@
+---
+title: "CQL Is Not SQL — No Joins, No Groups, and ALLOW FILTERING Is a Confession"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-cassandra"
+tags: []
+level: "intermediate"
+module: "series1-the-ring-and-the-table"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/cassandra/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/cassandra/series1/_05/CqlIsNotSqlKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Apache Cassandra documentation — especially its Data Modeling section, which is unusually good and unusually opinionated.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (NoSQL Concepts owns the wide-column shape and the quorum theory, Learn SQL owns SQL, Data Ops owns the cluster),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    CQL looks like SQL and is not. One table per query, and deletes make reads slower.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: CQL, taught as a list of what is missing rather than a tour of what is there,
+     because the reader already knows the syntax and needs the boundaries. NO JOINS. No
+     subqueries. No GROUP BY across partitions. No ORDER BY except along the clustering
+     columns you declared. No foreign keys, no referential integrity, no uniqueness beyond
+     the primary key.
+     ALLOW FILTERING, and it deserves its own paragraph: it is not a hint, it is a confession.
+     It tells the coordinator to fetch and discard rows across the cluster, it works fine on
+     your laptop's test data, and it is the single commonest way a Cassandra application
+     becomes unusable in production. Teach it as a word you should almost never type.
+     UPSERT SEMANTICS: INSERT and UPDATE are the same operation, and there is no "row already
+     exists" error. That surprises people once and silently overwrites data once.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/cassandra/series1/_05/CqlIsNotSqlKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

@@ -1,0 +1,75 @@
+---
+title: "Consensus, in One Episode — Why a Commit Becomes a Conversation"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-distributed-sql"
+tags: []
+level: "intermediate"
+module: "series1-the-problem-and-the-idea"
+order: 15
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/distributedsql/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/distributedsql/series1/_15/WhatACommitBecomesKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    EACH PRODUCT'S OWN CURRENT DOCUMENTATION for every product named, with the version AND EDITION stated. THIS COURSE HAS NO MANUAL OF ITS OWN and teaches no product — if a beat needs something installed, it belongs in the CockroachDB track.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (CockroachDB owns the hands-on, Learn SQL owns the SQL, NoSQL Concepts owns the non-relational models, Data Ops owns the machine),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    A COMMIT IS A CONVERSATION BETWEEN MACHINES. Licences and editions move fast here — check pricing pages, not blog posts.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the mechanism, at exactly the depth a schema author needs and no further. A table
+     is cut into RANGES by key order; each range is replicated an odd number of times; the
+     replicas agree by consensus, so a write is acknowledged once a majority has it.
+     THE SENTENCE THE WHOLE TRACK HANGS ON: A COMMIT IS A CONVERSATION BETWEEN MACHINES.
+     A write is no longer a local disk flush — it is at least one network round trip to a
+     majority. That is not a defect; it is what you are buying in exchange for surviving a
+     node loss with no data loss and no promotion decision.
+     WHAT MUST FOLLOW, and every Series 2 episode is one of these: writes have a floor, keys
+     decide which machines are in the conversation, and every index is another conversation.
+     SEAM: NoSQL Concepts, Series 3 · 05 owns quorum arithmetic as theory. This owns what it
+     does to one of your commits, and should not re-derive it.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/distributedsql/series1/_15/WhatACommitBecomesKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

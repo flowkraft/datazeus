@@ -1,0 +1,107 @@
+---
+title: "Mirrors, RAIDZ or Striped Mirrors — Exactly the Redundancy You Need"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-storage"
+tags: []
+level: "advanced"
+module: "series2-filesystems-and-zfs"
+order: 7
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/storage/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/storage/series2/_07/ChoosingYourLayoutKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — OpenZFS docs for Series 2, the S3 API reference and MinIO's docs for Series 3, the Ceph docs for Series 4. SERIES 1 HAS NO MANUAL: it is physics, arithmetic and trade-offs, so teach the SHAPE and the orders of magnitude.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a bucket and watching a disk, Data Warehousing owns columnar layout, the engine tracks own their storage engines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    REPLICATION IS NOT A BACKUP — a delete is replicated faithfully to all three copies. DATE EVERY CONCRETE FIGURE: capacities, prices and rebuild times age faster here than anywhere else in the academy.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE EPISODE THAT JUSTIFIES ZFS EXISTING, and the reason to teach it rather than any
+     other filesystem.
+     COVER: every block is checksummed, and because the filesystem also holds the redundancy
+     it can DETECT corruption and REPAIR it from another copy. SILENT CORRUPTION — bit rot, a
+     cable, a controller lying — is otherwise invisible: the disk returns bytes, they are the
+     wrong bytes, and nothing tells you. A traditional filesystem on RAID cannot even tell
+     which copy is right.
+     SCRUB as the scheduled proof, and the practice: scrub regularly and read the output.
+     THE HONEST FRAMING: this is the one property that would make a data team choose ZFS on
+     purpose, and it is worth more to a data team than to almost anyone else — because a
+     wrong number that looks right is exactly what this academy exists to prevent.
+     ADDED after a review asked whether a reader could choose EXACTLY the redundancy they
+     need — no more, no less. 05 teaches what a vdev is and states the mirrors-against-RAIDZ
+     trade in two lines. That is not enough to lay out a pool you will live with for years,
+     and the layout is the decision with the least room to change your mind.
+     COVER, as a decision procedure rather than a table:
+       THE LEVELS, IN ZFS's OWN NAMES   stripe (no redundancy), mirror, RAIDZ1, RAIDZ2,
+                         RAIDZ3, and STRIPED MIRRORS — several mirror vdevs in one pool,
+                         which is RAID 10's shape and the usual answer under a database.
+       HOW MANY DISKS PER VDEV   a vdev is the failure and rebuild unit, so a twelve-disk
+                         RAIDZ2 rebuilds by reading eleven disks and a pool of six mirrors
+                         rebuilds by reading one. FEWER, WIDER VDEVS BUY CAPACITY; MORE,
+                         NARROWER VDEVS BUY IOPS AND FAST RESILVER. Series 1 · 20's rebuild
+                         window is why the second usually wins for a warehouse that must stay
+                         up.
+       THE RULE OF THUMB WORTH GIVING: mirrors or striped mirrors for anything a database
+                         writes to; RAIDZ2 for bulk and archival; RAIDZ1 almost never at
+                         modern disk sizes, for exactly the reason 1 · 15 gives about single
+                         parity; RAIDZ3 when a rebuild takes days and you are honest about it.
+     THE THREE DECISIONS YOU CANNOT TAKE BACK, and they are the point of the episode:
+       ASHIFT   the sector size, set at pool creation and PERMANENT. Get it wrong on 4K-sector
+                disks and every write is amplified for the life of the pool, with no symptom
+                except that it is slower than it should be forever. Set it deliberately;
+                do not let it be autodetected from a disk that lies about its geometry.
+       VDEV TYPE   you cannot convert a RAIDZ2 into mirrors. Rebuilding the pool and restoring
+                is the migration path.
+       ADDING A SINGLE DISK   a bare disk added to a redundant pool becomes a vdev with no
+                redundancy, and the pool now dies with it. ZFS will warn; people use -f.
+     ⚠ RAIDZ EXPANSION LANDED IN RECENT OpenZFS AND CHANGES PART OF THIS. Check the version in
+     front of you before writing that a vdev cannot grow, and state what your Debian's
+     packaged version actually supports rather than what the project supports.
+     HOT SPARES and autoreplace, briefly, and the honest note that a spare shortens the window
+     in Series 1 · 20 rather than removing it.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/storage/series2/_07/ChoosingYourLayoutKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

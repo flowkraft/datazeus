@@ -1,0 +1,457 @@
+# The ordered episode list for NoSQL Concepts. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: say what kind of database a problem wants, and why — before
+# anybody installs one.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# "NoSQL" DOES NOT MEAN THE ABSENCE OF SQL. Most of these products ship a query language, and
+# several of them look like SQL on purpose. What actually differs is the DATA MODEL and the
+# TRADE-OFFS TAKEN TO GET IT — and a reader who thinks the distinction is about syntax will
+# choose a database for the wrong reason and discover the real difference in production.
+#
+# The name is a historical accident. Teach the trade-offs and let the name be a label.
+#
+# ============================================================================
+# WHY THIS TRACK OPENS THE NON-RELATIONAL HALF OF THE CATALOGUE
+# ============================================================================
+# Every other database track in this catalogue is a DELTA TRACK — Learn SQL teaches the SQL and
+# each engine teaches what is true only there. That model breaks for non-relational engines,
+# because there is no shared course underneath them to be a delta FROM. This track is that
+# shared course: the vocabulary, the models and the distributed-systems facts that MongoDB,
+# Redis, Elasticsearch, Cassandra and Neo4j all assume and none of them should re-teach.
+#
+# IT IS THE MIRROR OF Database X vs Database Y, which closes the catalogue. That one asks
+# WHICH OF THESE TWO. This one asks WHICH KIND, and it is the earlier question.
+#
+# ============================================================================
+# THERE IS NO OFFICIAL DOCUMENTATION TO FOLLOW — THE STATED EXCEPTION
+# ============================================================================
+# Every other track in this catalogue follows its engine's manual. This one has no manual: the
+# only documents describing "NoSQL" as a whole are written by vendors describing why their
+# product is the answer.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# SO THE SOURCING RULE IS DIFFERENT AND STRICTER. Every claim about a product comes from THAT
+# PRODUCT'S OWN CURRENT DOCUMENTATION, with the version stated, on the day of writing. A
+# comparison page written by one of the databases being compared is a source ABOUT a claim,
+# never the claim. Where the honest answer is "it depends on the version", say that instead of
+# picking a side — several of the sharpest differences in this subject have been fixed since
+# the blog posts everyone quotes were written, and MongoDB's multi-document transactions are
+# the obvious example.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS.
+#
+# BE FAIR TO THE RELATIONAL DEFAULT AND FAIR TO THE ALTERNATIVES. This academy is SQL-first and
+# says so everywhere; a track that used that as licence to sneer would be useless to the reader
+# who has to work on MongoDB tomorrow. Series 4 · 00 is where the relational case is put
+# properly, and it comes AFTER the alternatives have been taught properly.
+
+course: learn-nosql
+track: nosql
+title: NoSQL Concepts
+
+prerequisites:
+  - course: learn-data-modeling
+    needs: "Series 1"
+    why: >-
+      You cannot appreciate query-first modelling without first knowing the discipline it
+      reverses. Keys, relationships and normalization are what Series 1 · 10 here deliberately
+      turns upside down, and the reversal only teaches anything to someone who knows the
+      original rule and why it is right.
+
+excludes:
+  - topic: "Any one product, in depth"
+    where: "covered in MongoDB, Redis, Elasticsearch, Apache Cassandra and Neo4j, each of which assumes this course. Here every product is an example of a shape, never the subject"
+  - topic: "Relational modelling, normalization and the star schema"
+    where: "covered in Learn Data Modeling, which this course assumes and argues with rather than repeating"
+  - topic: "Vector databases and similarity search"
+    where: "covered in AI for Data, Series 2, which teaches embeddings and argues for vector storage inside the database you already run. In this course, Series 2 · 25 names the shape and points there"
+  - topic: "Distributed SQL — CockroachDB, YugabyteDB, TiDB and Spanner"
+    where: "covered in Distributed SQL, which is a relational course and is filed with the relational engines. In this course, Series 4 · 05 names the category and states why it matters to this decision, and stops there"
+  # DECIDED 2026-09-07, and recorded here because an audit of this catalogue proposed a DynamoDB
+  # track and the argument for one is genuinely decent — single-table design is a distinct
+  # discipline, and billing per request makes cost a design input no other database on this shelf
+  # has. IT IS STILL NO: this academy does not teach a cloud vendor's proprietary service as a
+  # course. Do not re-propose it.
+  - topic: "Cloud-vendor proprietary databases — DynamoDB and its equivalents"
+    where: "not covered, deliberately. This catalogue teaches engines you can run yourself, and a managed service that exists on one cloud is a different kind of commitment. In this course, Series 2 · 00 and Series 2 · 10 name DynamoDB as an example of a shape, which is as far as it goes"
+  - topic: "Running any of these in production"
+    where: "covered in Data Ops for the discipline. Each engine's own track owns its operational specifics"
+  - topic: "Object storage as a data store"
+    where: "covered in Data Ops, Series 1 · 47. It is not a database and this course does not pretend it is one"
+
+series:
+  - slug: series1-why-not-relational
+    title: Why Not Just Relational?
+    tagline: the pressures that break the default, and the modelling reversal
+    level: intermediate
+    episodes:
+      # COVER: the four pressures, each with a concrete shape rather than a slogan.
+      #   WRITE VOLUME BEYOND ONE MACHINE   a single primary accepting every write is a ceiling,
+      #                                     and vertical scaling ends somewhere.
+      #   SCHEMA CHURN                      an entity whose fields differ per row or change
+      #                                     weekly, where ALTER TABLE is a deployment.
+      #   AN ACCESS PATTERN THAT IS NOT TABULAR   documents with nesting, relationships walked
+      #                                     to depth, text ranked by relevance, a value fetched
+      #                                     by key a hundred thousand times a second.
+      #   A LATENCY FLOOR                   sub-millisecond reads, where a disk and a planner
+      #                                     are already too much.
+      # AND THE HONEST COUNTERWEIGHT, stated here rather than saved for Series 4: NONE OF THESE
+      # IS "we have a lot of data". Volume alone is an argument for a columnar engine, which
+      # Data Warehousing already owns. If the reader's reason is volume, they are in the wrong
+      # course and should be told so in the first episode.
+      - n: "00"
+        slug: where-relational-stops
+        title: "Where the Relational Default Stops — Four Pressures, and One That Is Not"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the name, and then past it. "NoSQL" was a conference hashtag; it describes a
+      # family by what it is not, which is why it explains nothing. What the members actually
+      # share: a non-relational data model, a willingness to trade a guarantee for a property,
+      # and an origin in scaling problems that relational engines of the 2000s could not meet.
+      # WHAT THEY DO NOT SHARE, and saying so early prevents most confusion: a query language,
+      # a consistency model, a transaction model, or a reason to exist. Cassandra and Neo4j have
+      # almost nothing in common except the label.
+      # "NOT ONLY SQL" as the retcon, mentioned once and not defended.
+      - n: "05"
+        slug: what-nosql-means
+        title: "What NoSQL Means — a Label for a Family That Shares Almost Nothing"
+        hands_on: ["koan:capture", "koan:choose"]
+        core: true
+        status: planned
+      # THE MOST IMPORTANT EPISODE IN THE COURSE, and the one a relational reader resists.
+      # COVER: relational modelling asks WHAT IS TRUE about this business and normalizes so each
+      # fact is stored once; the query comes later and the engine works out how to serve it.
+      # NON-RELATIONAL MODELLING REVERSES THAT: you start from the questions the application
+      # asks, and you design storage so each one is a single cheap lookup. The same fact ends up
+      # in several places on purpose.
+      # WHAT YOU ARE ACTUALLY TRADING: write-time work and duplication, in exchange for read-time
+      # certainty. Denormalized data cannot drift in a relational database because there is one
+      # copy; here there are four copies and keeping them equal is YOUR job, not the engine's.
+      # SEAM STATED WITH RESPECT: Learn Data Modeling is not wrong and this is not its
+      # replacement. The rule reverses because the engine's guarantees reversed.
+      # THE COST TO NAME: a new question the model was not designed for can mean a migration,
+      # not a JOIN.
+      - n: "10"
+        slug: query-first-modelling
+        title: "Query-First Modelling — Design for the Question, Not for the Entity"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: what you do when there is no join, in the order you should consider them.
+      #   EMBED          keep the related data inside the parent. One read, always current, and
+      #                  it grows without limit if you are not careful.
+      #   REFERENCE      store an id and fetch separately. Small, and it is N+1 by hand.
+      #   DUPLICATE THE FIELDS YOU DISPLAY  the extended-reference idea: copy the three
+      #                  attributes the screen shows, accept that they can go stale, and decide
+      #                  deliberately how stale is acceptable.
+      #   JOIN IN THE APPLICATION  honest and common, and it moves the cost to a place with no
+      #                  statistics and no optimizer.
+      #   PRECOMPUTE     a second collection or table shaped like the answer, maintained on
+      #                  write. The same idea as a materialized view, without the engine's help.
+      # THE RULE: the choice is decided by whether the embedded thing is BOUNDED and whether it
+      # is READ WITH the parent. Unbounded, or read separately, means reference.
+      - n: "15"
+        slug: what-replaces-the-join
+        title: "What Replaces the Join — Embed, Reference, Duplicate or Precompute"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-model-it-twice
+        title: "Project — Model the Same Business Relationally and Then for Its Queries"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-the-five-shapes
+    title: The Five Shapes
+    tagline: what each model is for, and which question it answers cheaply
+    level: intermediate
+    episodes:
+      # Each episode in this series answers ONE question: WHAT QUESTION IS THIS SHAPE CHEAP AT,
+      # and what does it refuse to do. Products are named as examples and never taught.
+      # COVER: a dictionary the size of a datacentre. GET, SET, DELETE by key, and nothing else
+      # — no query by value, no scan you would want to run, no relationships.
+      # WHAT YOU GET FOR THAT: latency measured in microseconds, and horizontal scaling that is
+      # nearly free because the key IS the partition.
+      # WHERE IT WINS: sessions, caches, counters, rate limits, feature flags, anything where
+      # you already know the key.
+      # WHERE IT FAILS: any question that starts with "which". Naming Redis and DynamoDB.
+      - n: "00"
+        slug: key-value
+        title: "Key-Value — the Fastest Thing There Is, If You Already Know the Key"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: a document is a nested record stored and retrieved as a whole, with the shape
+      # decided per record rather than per table. THE UNIT OF ATOMICITY IS THE DOCUMENT, which
+      # is the fact that determines everything else about how you model.
+      # WHERE IT WINS: an aggregate that is read and written together — an order with its lines,
+      # a profile with its settings — and a shape that varies per record.
+      # WHERE IT FAILS: data with many equally valid entry points, where every access pattern
+      # wants a different aggregate. Naming MongoDB.
+      # SEAM: Learn SQL, Series 3 · 15 queries JSON inside a relational database and Learn Data
+      # Modeling, Series 2 · 42 owns deciding to store it. That option is real and often better,
+      # and this episode should say so rather than leave the reader thinking documents require a
+      # document database.
+      - n: "05"
+        slug: document
+        title: "Document — an Aggregate Stored and Read as One Thing"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: rows grouped under a partition key, sorted by clustering columns, spread across a
+      # ring of machines. It looks like a table and it is not one: THE PARTITION KEY DECIDES
+      # WHICH MACHINE ANSWERS, so a query without it has no home and either fans out to every
+      # node or is refused.
+      # WHERE IT WINS: enormous write throughput, time-ordered data under a known key, linear
+      # scale-out, no single primary.
+      # WHERE IT FAILS: ad-hoc questions, anything needing a join or an aggregate across
+      # partitions. Naming Cassandra, ScyllaDB, HBase and DynamoDB's shape.
+      - n: "10"
+        slug: wide-column
+        title: "Wide-Column — a Partition Key, and Everything Under It in Order"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the inverted index — from term to the documents containing it — and why that
+      # single inversion makes text search possible and everything else awkward.
+      # THE DISTINCTION THIS EPISODE OWES THE READER, because it is what a SQL reader gets
+      # wrong: A FILTER ANSWERS YES OR NO; RELEVANCE ANSWERS HOW WELL. LIKE '%term%' is a
+      # filter. Search returns things in an order somebody has to be happy with, which is a
+      # different kind of correctness and cannot be asserted with =.
+      # ANALYSIS as the step nobody expects: text is tokenized, lowercased, stemmed and stored
+      # transformed, which is why searching for what you indexed sometimes finds nothing.
+      # WHERE IT FAILS: as a system of record. Naming Elasticsearch, OpenSearch, Solr — and
+      # PostgreSQL's own full-text search as the answer that needs no new database.
+      - n: "15"
+        slug: search
+        title: "Search — the Inverted Index, and Why Relevance Is Not a Filter"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: nodes, relationships and properties, where THE RELATIONSHIP IS STORED AS A FIRST
+      # CLASS THING and traversing it is a pointer hop rather than an index lookup. That is the
+      # entire performance argument: cost grows with the size of the ANSWER, not with the size
+      # of the database.
+      # WHERE IT WINS: questions about paths and depth — shortest route, who introduced whom,
+      # fraud rings, dependency chains, recommendations through shared connections.
+      # THE HONEST COMPARISON, and it must be here rather than only in Series 4: a two-hop
+      # question is a join and SQL does it well. A recursive CTE — Learn SQL, Series 3 · 00 —
+      # walks a hierarchy perfectly adequately. Graphs earn their place at variable and
+      # unbounded depth, and at the point where the traversal itself is the question.
+      - n: "20"
+        slug: graph
+        title: "Graph — When the Relationship Is the Data, and Depth Is the Question"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # THE DECISION EPISODE, and the one a reader will come back to.
+      # COVER: a decision procedure rather than a comparison table — start from the QUESTIONS
+      # the application asks, most frequent first, and ask of each: do I know the key; is the
+      # answer one aggregate; do I need ranking; do I need depth; is it written faster than one
+      # machine accepts.
+      # NAME THE SHAPES THIS COURSE DOES NOT GIVE AN EPISODE, in a line each, with where they
+      # live: VECTOR (AI for Data, Series 2, and pgvector is usually the right answer),
+      # TIME-SERIES (PostgreSQL's own TimescaleDB series, and ClickHouse), OBJECT STORAGE (Data
+      # Ops, Series 1 · 47). Saying so prevents the reader assuming they were forgotten.
+      # AND THE ANSWER THAT IS OFTEN RIGHT: more than one shape, or none of them — which is
+      # Series 4.
+      - n: "25"
+        slug: choosing-a-shape
+        title: "Choosing a Shape — Starting From the Questions, Not From the Products"
+        hands_on: ["koan:choose", "koan:author"]
+        core: true
+        status: planned
+
+  - slug: series3-distributed-and-what-it-costs
+    title: Distributed, and What It Costs
+    tagline: partition keys, quorums, and consistency taught honestly
+    level: advanced
+    episodes:
+      # COVER: in every distributed store, one field decides which machine holds the data. That
+      # single choice determines whether reads are one hop or a fan-out, whether load is even,
+      # and whether the system has a hot spot that no amount of hardware fixes.
+      #   HOT PARTITIONS   a key with low cardinality, or one value that is far more common —
+      #                    "country" looks like a key and puts a third of the traffic on one node
+      #   UNBOUNDED PARTITIONS  a key whose partition grows forever, which is the time-series
+      #                    mistake and is fixed by BUCKETING the key by day or month
+      #   THE QUERIES YOU CAN NO LONGER ASK  anything not starting from the key
+      # AND THE PART THAT MAKES IT SERIOUS: on most of these systems the partition key CANNOT BE
+      # CHANGED without rewriting the data. It is a modelling decision with the permanence of a
+      # schema decision, made before you have any traffic to learn from.
+      - n: "00"
+        slug: partition-keys
+        title: "Partition Keys — the One Decision Everything Downstream Inherits"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: replication factor, and the quorum arithmetic that follows from it — R + W > N
+      # gives you a read that sees the latest write, and every combination below that is a
+      # deliberate trade. Work the numbers on screen; it is arithmetic, not philosophy.
+      # TUNABLE CONSISTENCY as the real product feature: the same database can be strongly
+      # consistent for one query and eventually consistent for the next, chosen per operation.
+      # THAT IS THE INSIGHT, because most of the argument about NoSQL consistency assumes it is
+      # a property of the DATABASE when it is usually a property of the CALL.
+      - n: "05"
+        slug: replication-and-quorums
+        title: "Replication and Quorums — Why R + W > N Is the Whole Argument"
+        tags: ["decandia-dynamo"]
+        credits:
+          - source: decandia-dynamo
+            concept: "Tunable quorums — N, R and W as a per-operation decision rather than a property of the database, plus consistent hashing and hinted handoff"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: CAP correctly, because it is the most misquoted theorem in this industry. It says
+      # that WHEN A NETWORK PARTITION OCCURS you must choose between answering with possibly
+      # stale data and refusing to answer. It does NOT say you pick two of three on an ordinary
+      # Tuesday, and "we are an AP database" is a statement about behaviour during a partition
+      # only.
+      # THEN PACELC, which is the more useful question and almost nobody asks it: else — when
+      # there is NO partition, which is almost always — do you trade LATENCY or CONSISTENCY?
+      # That is the trade you live with every day, and CAP is silent about it.
+      # HOW TO USE IT: as vocabulary for reading a product's own documentation, not as a way of
+      # sorting databases into two boxes.
+      - n: "10"
+        slug: cap-and-pacelc
+        title: "CAP, Correctly — and Why PACELC Is the Question You Actually Live With"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: what eventual consistency looks like from a desk rather than in a paper. The user
+      # updates their profile, reloads, and sees the old value — READ-YOUR-WRITES is the
+      # guarantee they assumed and did not have. Monotonic reads, and the page that goes
+      # backwards. Causal consistency, and the comment that appears before the post it replies
+      # to.
+      # WHAT YOU ACTUALLY DO: read from the primary after your own write, pin a session to a
+      # replica, or design the screen so the stale value is not visible. All three are ordinary
+      # and none is a failure.
+      # THE POINT: eventual consistency is not a bug and not a slogan. It is a set of specific
+      # anomalies, each of which has a name and a mitigation, and a reader who can name them can
+      # discuss the trade instead of fearing it.
+      - n: "15"
+        slug: eventual-consistency-in-practice
+        title: "Eventual Consistency at a Desk — the Support Ticket, and What It Is Called"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: what atomicity means when there is no transaction manager. SINGLE-DOCUMENT AND
+      # SINGLE-PARTITION ATOMICITY is what almost all of these give you, and modelling to fit
+      # inside that unit is why aggregates are the shape they are — Series 1 · 15 was already
+      # this decision without saying so.
+      # WHAT ARRIVED LATER, and say it with the version and check it: several of these engines
+      # now offer multi-document or multi-partition transactions, so the confident claim "NoSQL
+      # has no transactions" is out of date. What has not changed is the COST — they are slower,
+      # they hold coordination, and the fact that you can does not mean the model wants you to.
+      # THE PATTERNS FOR WHEN YOU CANNOT: idempotent writes, the outbox, and compensating
+      # actions. ETL & Data Pipelines, Series 1 · 30 owns idempotency; point rather than repeat.
+      - n: "20"
+        slug: transactions
+        title: "Transactions — One Document at a Time, and What Arrived Since"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # COVER: why an index is a different animal when the data is spread across machines. A
+      # LOCAL index lives beside its partition — cheap to maintain, and a query that does not
+      # name the partition has to ask every node. A GLOBAL index is itself distributed, so
+      # keeping it consistent with the writes is coordination you pay for on every write.
+      # THE CONSEQUENCE, and it is the practical takeaway: on several of these engines the
+      # advice is to model a second table instead of adding a secondary index. That reads as
+      # primitive to a relational reader and it is the honest answer to a real constraint.
+      - n: "25"
+        slug: secondary-indexes
+        title: "Secondary Indexes — Local, Global, and Why the Advice Is Another Table"
+        hands_on: ["koan:predict", "koan:choose"]
+        status: planned
+      - n: "30"
+        slug: project-predict-the-cluster
+        title: "Project — Predict What a Cluster Returns During a Partition, Then Check"
+        hands_on: ["koan:author", "koan:predict"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series4-choosing-and-living-with-it
+    title: Choosing, and Living With It
+    tagline: the relational case put properly, and the cost of the fifth database
+    level: advanced
+    episodes:
+      # THE EPISODE THIS COURSE OWES ITS READER, and it comes AFTER the alternatives have been
+      # taught properly rather than before — a gate stated first reads as a refusal to teach.
+      # COVER: one PostgreSQL does JSONB with GIN indexes, full-text search, arrays, ranges,
+      # geospatial, vectors through pgvector, LISTEN/NOTIFY for pub-sub, and partitioning. Four
+      # of the five shapes in Series 2 have a competent answer inside a database the team
+      # already runs, backs up and knows how to operate.
+      # AND SAY WHERE IT GENUINELY RUNS OUT, or the episode is propaganda: write throughput past
+      # one primary, sub-millisecond key lookups at very high rates, relevance ranking at scale,
+      # and traversals at unbounded depth.
+      # THE ARGUMENT THAT DECIDES IT IN PRACTICE, and it is operational rather than technical:
+      # the second database is not twice the work, it is a new backup story, a new failure mode,
+      # a new upgrade path and a new person who has to be on call for it.
+      - n: "00"
+        slug: one-postgres-does-more
+        title: "One Postgres Does More Than You Think — JSONB, Full-Text, Geo and Vectors"
+        hands_on: ["koan:choose", "koan:equivalent"]
+        core: true
+        status: planned
+      # COVER: the category that took back NoSQL's strongest argument. CockroachDB, YugabyteDB,
+      # TiDB and Spanner offer horizontal scale-out AND transactions AND SQL, by distributing
+      # the relational model rather than abandoning it.
+      # WHAT IT COSTS, said plainly: cross-node transactions have a latency floor that physics
+      # sets, and a data model that ignores locality will pay it on every query — so the
+      # partition-key thinking of Series 3 · 00 comes back wearing a primary key.
+      # WHY IT IS IN THIS COURSE AT ALL: because a reader evaluating Cassandra for scale should
+      # know this option exists, and the honest 2026 answer to "we need scale-out writes" is
+      # often here rather than in Series 2.
+      - n: "05"
+        slug: distributed-sql
+        title: "Distributed SQL — the Category That Took the Best Argument Back"
+        hands_on: ["koan:choose", "koan:capture"]
+        status: planned
+      # COVER: polyglot persistence — the right store for each job — as an idea that is correct
+      # in an architecture diagram and expensive in a rota.
+      # THE REAL COSTS, itemised, because they are always underestimated: consistency BETWEEN
+      # stores becomes application code; there is no join across them; each has its own backup,
+      # restore drill, upgrade cadence, monitoring and security model; and someone must be able
+      # to debug all of them at three in the morning.
+      # THE PATTERNS THAT MAKE IT SURVIVABLE: one system of record and the rest derived — which
+      # makes rebuilding a store an operation rather than a data-loss event — plus CDC to keep
+      # the derived copies fed. ETL & Data Pipelines, Series 3 · 15 owns CDC.
+      # THE TEST TO LEAVE THEM WITH: can you name, for each store, what happens when it is empty
+      # tomorrow morning? If any answer is "we lose data", it is a system of record and must be
+      # operated like one.
+      - n: "10"
+        slug: polyglot-persistence
+        title: "Polyglot Persistence — the Fifth Database, and Who Is On Call For It"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: migrations in both directions, because both happen and the second is more common
+      # than the marketing suggests.
+      # ONTO a non-relational store: the model does not survive the move — a normalized schema
+      # copied into documents produces documents nobody wants. You re-model from the queries,
+      # which is Series 1 · 10 as a project rather than a lecture.
+      # OFF one, and back to relational: usually easier than feared for the data and harder than
+      # expected for the code, because application logic has absorbed the joins the database was
+      # not doing.
+      # THE MECHANICS EITHER WAY: dual-write with a read-from-old switch, backfill, verify by
+      # reconciliation rather than by hope. Data Warehousing, Series 1 · 22 owns reconciling two
+      # stores and its method transfers unchanged.
+      - n: "15"
+        slug: migrating
+        title: "Migrating On and Off — the Model Does Not Survive the Move"
+        hands_on: ["koan:author", "koan:diagnose"]
+        status: planned
+      - n: "20"
+        slug: project-the-decision-memo
+        title: "Project — Write the Memo That Chooses a Database, With Its Trade-offs Named"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        tags: ["project"]
+        status: planned

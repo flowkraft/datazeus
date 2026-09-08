@@ -199,6 +199,51 @@ series:
         title: "Tablespaces, Bufferpools and BLU — The Physical Layer You Cannot Ignore"
         hands_on: ["koan:choose", "koan:diagnose"]
         status: planned
+      # ADDED 2026-09-07. Same academy-wide audit that added Indexed Views to the SQL Server
+      # track: pre-aggregation was taught as a CONCEPT in Data Warehousing and as ORACLE'S
+      # behaviour in its Series 3 · 15, and the two other engines that do the same thing said
+      # nothing about it. Zero hits for MQT in this file before today.
+      #
+      # WHAT IT IS: a table whose contents are DEFINED BY A QUERY. Db2 keeps the rows and knows
+      # what they mean, which is what allows the next paragraph.
+      #
+      # THE DELTA FACT: AUTOMATIC QUERY REWRITE. The optimizer can answer a query written
+      # against the base tables FROM THE MQT INSTEAD, without the query mentioning it. Existing
+      # reports get faster with no code change. Oracle's materialized views and SQL Server's
+      # indexed views do the same thing under other names; PostgreSQL's materialized views do
+      # NOT — there you must name the view. One line on the family, and Database X vs Database Y
+      # owns the comparison.
+      #
+      # THE TWO MAINTENANCE MODES, which is the actual design decision:
+      #   REFRESH IMMEDIATE  maintained inside every transaction that writes a base table.
+      #                      Always current, and a tax on every write.
+      #   REFRESH DEFERRED   updated when you run REFRESH TABLE. Cheap to write, and the answer
+      #                      can be stale — which is a decision about the report, not about the
+      #                      database. Staging tables carry incremental changes so a refresh
+      #                      does not recompute everything.
+      #
+      # THE TRAP THAT MAKES TEAMS CONCLUDE MQTs "DO NOT WORK", and it is the reason this episode
+      # is worth its place: they build a REFRESH DEFERRED MQT, the query plan ignores it
+      # completely, and nothing explains why. CURRENT REFRESH AGE defaults to 0, which means the
+      # optimizer will only consider MQTs that are guaranteed current — that is, immediate ones.
+      # Deferred MQTs are only eligible once CURRENT REFRESH AGE says how stale an answer may
+      # be, alongside CURRENT MAINTAINED TABLE TYPES FOR OPTIMIZATION. Two special registers,
+      # invisible in the SQL, deciding whether the whole feature does anything.
+      # VERIFY THE REGISTER NAMES, VALUES AND DEFAULTS AGAINST IBM DOCUMENTATION FOR THE
+      # PLATFORM before writing — this file's own header requires it, and this is the episode
+      # where getting it approximately right is the same as getting it wrong.
+      #
+      # STATE THE PLATFORM, as this course does everywhere: written for LUW. z/OS has
+      # materialized query tables too and the administration around them is the DBA's.
+      #
+      # THE CHOICE AGAINST 20, taught as a pair: BLU's column-organized tables make the SCAN
+      # fast; an MQT means you DO NOT SCAN. Same shape of decision as SQL Server's indexed
+      # views against columnstore, and a reader who has met one should recognise the other.
+      - n: "22"
+        slug: materialized-query-tables
+        title: "Materialized Query Tables — the Summary Db2 Substitutes Without Asking"
+        hands_on: ["koan:predict", "koan:choose"]
+        status: planned
       - n: "25"
         slug: project-tune
         title: "Project — Diagnose a Slow Db2 Query From Its Access Plan"

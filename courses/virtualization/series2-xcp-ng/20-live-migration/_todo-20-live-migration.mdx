@@ -1,0 +1,80 @@
+---
+title: "Live Migration and Maintenance Mode — Patching a Host at Eleven in the Morning"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series2-xcp-ng"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series2/_20/LiveMigrationKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: live migration, which is the operation that justifies the entire cost of a second
+     host, and the maintenance workflow built on it.
+     WHAT IT IS: moving a running VM to another host with no downtime — memory copied
+     iteratively while it runs, then a pause of milliseconds. STORAGE MOTION moves the disk
+     too, between SRs, which is how you empty a storage array you are retiring.
+     THE REQUIREMENTS THAT ACTUALLY BITE: compatible CPUs across the pool (and the cost of
+     Series 1 · 25's host-passthrough decision arriving here), a network both hosts have, and
+     shared storage unless you are moving the disk as well.
+     MAINTENANCE MODE as the workflow: put the host into maintenance, watch every VM migrate
+     off it, patch it, reboot it, take it out. THE WORKPLACE MOMENT, AND IT IS THE WHOLE
+     BUSINESS CASE FOR A POOL: it is eleven o'clock on a Tuesday morning, there is a kernel
+     security update, and the warehouse load does not stop and nobody is asked to work at
+     midnight.
+     THE HONEST LIMITS: a VM with a passed-through PCI device usually cannot migrate; a VM
+     writing memory faster than the link can copy it may never converge; and a single-host
+     lab cannot demonstrate any of this, which is why this episode is `eyes`.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      eyes
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series2/_20/LiveMigrationKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

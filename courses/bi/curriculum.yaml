@@ -338,6 +338,51 @@ series:
         hands_on: ["koan:count:scanned", "koan:diagnose"]
         core: true
         status: planned
+      # ADDED 2026-09-07. An audit for "real-time" coverage found the two neighbouring subjects
+      # owned and this one homeless: ETL & Data Pipelines, Series 4 owns STREAMING PIPELINES —
+      # the data arriving continuously — and Next.js owns streaming a PAGE RENDER. Nobody owned
+      # the widget: does the number on screen change by itself, and how.
+      # PLACED AT 23, IMMEDIATELY AFTER DASHBOARD PERFORMANCE, because it is the same
+      # conversation continued — 22 asks how expensive the answer is, this asks how fresh it has
+      # to be, and the two together are the only honest way to size a dashboard.
+      #
+      # START WITH THE GATE, AND MEAN IT: MOST "REAL-TIME" REQUESTS ARE NOT. Ask what decision
+      # gets made differently because the number is thirty seconds old rather than five minutes
+      # old. Usually the answer is none, and a refresh interval is the entire solution, at a
+      # fraction of the complexity and none of the operational cost.
+      # THE ONE CASE THAT GENUINELY NEEDS PUSH: somebody is WATCHING the screen in order to act
+      # — an operations wallboard, a queue, a live event. If nobody is watching, nothing needs
+      # pushing.
+      #
+      # THEN THE THREE MECHANISMS, in increasing cost, taught as a choice rather than a tour:
+      #   SCHEDULED REFRESH   the page re-runs its query every N seconds. Simple, cacheable, and
+      #                       correct for almost every dashboard anybody has ever asked for.
+      #   POLL A CHEAP CHECK  ask "has anything changed" — a max timestamp, a version — and
+      #                       re-run the expensive query only when the answer moved. This is the
+      #                       underused middle option and it deserves the most airtime.
+      #   PUSH                the server tells the browser: websockets or server-sent events
+      #                       with a pub/sub channel behind them. Genuinely live, and now you
+      #                       own connection state, reconnection, and what a client that was
+      #                       disconnected for ten minutes sees when it returns.
+      #
+      # THE COST NOBODY PRICES, and it belongs here rather than in an ops track: A LIVE
+      # DASHBOARD RUNS ITS QUERY FOREVER. A forty-second query on a five-second refresh is not a
+      # dashboard, it is a denial-of-service against your own warehouse — which is exactly why
+      # this episode comes after 22. Pre-aggregate first, then choose the interval, then put a
+      # ceiling on how many people can have it open.
+      #
+      # THE HONESTY BEAT: SHOW WHEN THE DATA IS FROM. A dashboard that silently displays a stale
+      # number is worse than one that says "as of 09:14", and the timestamp costs nothing. 22
+      # owns explaining why a number is stale; this owns showing that it is.
+      #
+      # SEAMS: ETL Series 4 owns getting the data there continuously; Data Ops, Series 3 - 20
+      # owns noticing when it stopped arriving; Next.js owns building the page when the
+      # dashboard is your own application rather than a BI tool.
+      - n: "23"
+        slug: live-dashboards
+        title: "Live Dashboards — Refresh, Poll or Push, and Whether Anyone Is Watching"
+        hands_on: ["koan:choose", "koan:capture"]
+        status: planned
       - n: "25"
         slug: report-bursting
         title: "Report Bursting — One Report, Many Recipients, Each Seeing Only Theirs"

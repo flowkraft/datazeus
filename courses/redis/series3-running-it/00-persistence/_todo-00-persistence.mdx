@@ -1,0 +1,75 @@
+---
+title: "RDB and AOF — Exactly How Much You Would Lose, and Whether That Is Fine"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-redis"
+tags: []
+level: "advanced"
+module: "series3-running-it"
+order: 0
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/redis/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/redis/series3/_00/PersistenceKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Redis documentation (redis.io/docs) — the data type or command page that owns this topic, INCLUDING ITS TIME COMPLEXITY, which in this product is the whole story.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (NoSQL Concepts owns the key-value shape, Data Ops owns running the server, Kafka owns durable streaming at scale),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    A data structure server, not a cache and not a database. Every episode answers: if this process died now, what would you lose?
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE EPISODE THE WHOLE TRACK POINTS AT.
+     COVER: RDB snapshots — a point-in-time fork to disk, cheap, and you lose everything since
+     the last one. AOF — an append log of every write, with fsync policy deciding how much you
+     can lose: every write, every second, or never. Both together as the common configuration.
+     THE ANSWER TO THE TRACK'S QUESTION: with the usual defaults you can lose the last second
+     of writes, and on a hard crash possibly more. For a cache that is irrelevant. For a
+     queue holding customer work it is a decision somebody must make ON PURPOSE, and the
+     failure mode is that nobody ever did.
+     AND THE HONEST CONCLUSION: Redis CAN be a system of record with the right configuration
+     and the right operational discipline. Usually it should not be, and the reason is not the
+     technology but that most teams have not decided what they are willing to lose.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/redis/series3/_00/PersistenceKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

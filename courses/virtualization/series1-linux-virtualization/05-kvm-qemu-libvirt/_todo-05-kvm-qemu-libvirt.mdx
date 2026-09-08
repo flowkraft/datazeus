@@ -1,0 +1,82 @@
+---
+title: "KVM, QEMU and libvirt — Three Layers People Say as One Word"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series1-linux-virtualization"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series1/_05/KvmQemuLibvirtKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: three words people use as one, separated once and for good, because every
+     confusing error message in Linux virtualization comes from not knowing which layer spoke.
+       KVM      a KERNEL MODULE that turns Linux itself into a hypervisor. It is not a
+                product you install; /dev/kvm either exists or your firmware has
+                virtualization switched off. `grep -E 'vmx|svm' /proc/cpuinfo`, and
+                `kvm-ok` on Debian.
+       QEMU     the USERSPACE process that provides the virtual hardware — the disk
+                controller, the network card, the display. One QEMU process per running VM,
+                visible in `ps`, which surprises people the first time they see it.
+       LIBVIRT  the MANAGEMENT LAYER — a daemon, an XML definition per domain, and `virsh`.
+                It is what every tool in this course is really talking to, directly or by
+                having reimplemented it.
+     THE WORKPLACE POINT, and it justifies the episode: THIS IS WHAT PROXMOX IS. And what
+     OpenStack is, and what most cloud providers are. Learning the three layers once means
+     every KVM-based product afterwards is a UI over something you already understand.
+     ALSO COVER: `virsh` as the vocabulary — domain, network, pool, volume — and where the
+     XML lives, because reading a domain's XML is how you answer "what is this VM actually
+     configured with" in every one of these products.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series1/_05/KvmQemuLibvirtKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

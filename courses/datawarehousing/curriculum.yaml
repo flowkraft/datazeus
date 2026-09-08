@@ -93,6 +93,11 @@ series:
       #            first value, and the bus matrix is what stops it fragmenting.
       #   TODAY    most teams run something closer to Kimball on a lakehouse, and dbt's
       #            staging/marts split is the same shape. Say both names, then move on.
+      # AND SAY WHERE THE THIRD WORD CAME FROM, in one line, because this is the episode
+      # that defines all three: DATA LAKE was James Dixon's, around 2010. LAKEHOUSE is
+      # Databricks', from 2020, argued in a CIDR 2021 paper. Series 3 · 20 is the
+      # architecture; here the reader only needs to know the words are not the same age and
+      # that one of them has an author.
       # THE HONEST LINE: whichever one they inherited, the reader's job is identical — find
       # the grain, find the conformed dimensions, check the numbers reconcile.
       # SOURCE (kimball): KIMBALL vs INMON — name both, take no side. See the beat above.
@@ -177,6 +182,13 @@ series:
         hands_on: ["koan:complete"]
         core: true
         status: planned
+      # SEAM ADDED 2026-09-07, when Learn SQL gained its own GROUPING SETS episode at its
+      # Series 2 · 38. The two are not redundant and the split is by READER:
+      #   LEARN SQL     owns the SYNTAX — the three keywords, the GROUPING() function and the
+      #                 subtotal NULL, on Northwind, for someone learning to write queries.
+      #   HERE          owns the WAREHOUSING MOVE — subtotals over a star schema, next to
+      #                 slice, dice, roll-up and drill-down at 25, for someone building one.
+      # This episode may now ASSUME the syntax and spend its time on the star instead.
       - n: "30"
         slug: rollup-cube-grouping-sets
         title: "ROLLUP, CUBE & GROUPING SETS — Subtotals the Standard Way"
@@ -230,6 +242,58 @@ series:
         hands_on: ["koan:count:scanned"]
         core: true
         status: planned
+      # ADDED 2026-09-07, and it is the one gap in this academy's lineage table that was a
+      # CONTENT gap rather than an attribution one. TEN COURSES mention Parquet — Java & Groovy,
+      # Python for Data, DuckDB, Spark, Trino, Polars, Iceberg, this one — and Python for Data
+      # 1 · 15 is even called "why Parquet usually wins". NOT ONE OF THEM EXPLAINS WHY IT WINS:
+      # checked by grep, zero hits anywhere for row group, column chunk, dictionary encoding or
+      # footer.
+      #
+      # AND IT IS LOAD-BEARING FOR FOUR OTHER COURSES. Trino's pushdown, DuckDB's speed,
+      # Iceberg's data skipping and Spark's partition pruning are all THE SAME MECHANISM seen
+      # from four sides, and none of them can explain it because none of them owns the file
+      # format. This episode is where it belongs — beside 00, which credits C-Store for the
+      # column-store idea; this is the file that idea produced.
+      #
+      # COVER, outside in:
+      #   THE LAYOUT        file -> ROW GROUPS -> column chunks -> pages. And the fact that
+      #                     decides everything: THE FOOTER HOLDS THE METADATA AND IS READ FIRST,
+      #                     so a reader knows what is in the file before reading any of it.
+      #   MIN/MAX STATISTICS  per row group and per page. This is why predicate pushdown works
+      #                     at all — a whole row group can be discarded without decompressing a
+      #                     byte. Learn SQL, Series 3 · 18 taught filtering early; this is what
+      #                     the file does with your filter.
+      #   ENCODINGS         dictionary, run-length, bit-packing, delta — and the distinction
+      #                     nobody draws: ENCODING IS NOT COMPRESSION. A low-cardinality column
+      #                     becomes tiny because it is dictionary-encoded, and snappy or zstd is
+      #                     then applied on top. ClickHouse's LowCardinality is the same idea in
+      #                     a different product.
+      #   NESTED DATA       repetition and definition levels, from the Dremel paper — how a
+      #                     COLUMN-ORIENTED file stores a record containing arrays and structs
+      #                     without losing its shape. Most readers have never wondered how that
+      #                     is possible, and the answer is genuinely elegant.
+      #
+      # THE CONSEQUENCE THAT MAKES IT ACTIONABLE, and it is the whole payoff: SORT BEFORE YOU
+      # WRITE. Min/max statistics only skip when values are clustered — write the same rows in
+      # random order and every row group's range covers everything, so nothing is skipped and
+      # the file is no faster than a CSV with better compression. Series 2 · 15 owns sort keys
+      # as a warehouse decision; this is why they exist at the file level.
+      # ROW GROUP SIZE as the second dial: too small and per-group overhead dominates, too large
+      # and there is nothing granular left to skip.
+      #
+      # WHAT GOES WRONG: a team writes Parquet, measures no improvement, and concludes the
+      # format is overrated. The data was written unsorted, every row group holds the full range
+      # of every column, and not one of them could be skipped.
+      - n: "02"
+        slug: inside-a-parquet-file
+        title: "Inside a Parquet File — Row Groups, Encodings and Why Skipping Works"
+        tags: ["melnik-dremel"]
+        credits:
+          - source: melnik-dremel
+            concept: "Repetition and definition levels — the columnar encoding for nested data that Parquet took directly from Dremel"
+        hands_on: ["koan:count:scanned", "koan:predict"]
+        core: true
+        status: planned
       - n: "05"
         slug: duckdb
         title: "DuckDB — An Analytical Warehouse That Runs Inside Your Process"
@@ -256,11 +320,155 @@ series:
       # (what you aggregate), joins (so nobody retypes the foreign keys), segments (reusable
       # named filters — "last 30 days"), hierarchies (country -> region -> city, the drill path).
       # See content/docs/semantic-layer/dsl-reference.mdx before writing this.
+      # ADDED 2026-09-07. An audit for object-storage coverage found this phrase mentioned ONCE
+      # in the whole academy — in Distributed SQL — while Snowflake is named in four courses and
+      # Databricks in one, always in passing. The architecture underneath all of them, and under
+      # the lakehouse at Series 3 · 20, had no episode anywhere.
+      #
+      # IT IS NOT A COURSE, AND THAT WAS CONSIDERED. It is deep rather than wide: nobody chooses
+      # this architecture, they inherit it by choosing a product. So the reader's need is to READ
+      # A VENDOR'S PAGE AND KNOW WHICH PROPERTIES FOLLOW — which is one episode, here, where the
+      # reader has just met two engines that do the opposite.
+      #
+      # PLACED AT 17 BECAUSE THE SERIES HAS ALREADY BUILT THE LADDER, and this is its third rung:
+      #   05  DUCKDB           storage and compute in ONE PROCESS, on one disk.
+      #   10  CLICKHOUSE       compute owns its LOCAL DISKS. Adding capacity means moving data.
+      #   17  SEPARATED        the bytes live in object storage; compute is stateless and reads
+      #                        them over a network.
+      # Stating it as a progression is what makes it land — each rung gives something up.
+      #
+      # WHAT SEPARATION BUYS, and each is a consequence rather than a feature:
+      #   SCALE INDEPENDENTLY   a big query gets a big cluster for ten minutes and gives it back.
+      #   COMPUTE TO ZERO       a dataset nobody queried this month costs storage only, which
+      #                         changes the economics of keeping history at all.
+      #   ONE COPY, MANY ENGINES  the lakehouse claim from Series 3 · 20 — Trino, Spark and
+      #                         DuckDB reading the same files, with no copy per tool.
+      #   NO REBALANCING        replace or resize compute without moving a byte, which is the
+      #                         operational cost ClickHouse at 10 still has.
+      #
+      # WHAT IT COSTS, AND THIS HALF IS WHY THE EPISODE EXISTS:
+      #   EVERY READ CROSSES A NETWORK   there is a latency floor per request. These systems are
+      #                         throughput machines and are genuinely poor at point lookups —
+      #                         which is why nobody serves an application from one.
+      #   SO CACHING BECOMES THE PERFORMANCE STORY   a local SSD cache on the compute node, and
+      #                         a COLD cluster is slow in a way a warm one is not. THIS IS THE
+      #                         "the first query is always slow" phenomenon everybody notices
+      #                         and nobody explains, and naming it is worth the episode alone.
+      #   REQUESTS ARE BILLED   object storage charges per request, so a table stored as two
+      #                         hundred thousand small files costs money as well as time. Data
+      #                         Ops, Series 1 · 47 owns that cost model; this is where it lands
+      #                         on a query.
+      #   METADATA BECOMES A BOTTLENECK   listing a bucket is expensive and slow, which is
+      #                         precisely why a table format keeps manifests. Apache Iceberg &
+      #                         Table Formats, Series 1 · 00 is that argument, and a reader who
+      #                         meets this episode first will understand why that one exists.
+      #
+      # NAME WHO WORKS THIS WAY and stop: Snowflake, BigQuery, Databricks, ClickHouse Cloud,
+      # MotherDuck, Neon for PostgreSQL, and any lakehouse assembled from a table format and an
+      # engine. Examples of a shape, never products taught here.
+      #
+      # ── SAY THIS OUT LOUD IN THE LESSON: THERE ARE TWO SNOWFLAKES ─────────────
+      # THE ONE IN THE LINE ABOVE IS SNOWFLAKE INC., a company, selling a managed cloud data
+      # warehouse as SaaS — you cannot self-host it, and it runs on somebody else's cloud. It is
+      # named here because it is the commercial proof of the architecture this episode teaches:
+      # three separated layers, with "virtual warehouses" as independently sized compute that
+      # several teams can point at the same data without contending.
+      #
+      # THE PAPER, NAMED PRECISELY — because "the primary source" on its own says nothing, and
+      # an earlier draft of this comment said exactly that: Dageville et al., "The Snowflake
+      # Elastic Data Warehouse", SIGMOD 2016.
+      # IT IS THE PRIMARY SOURCE FOR ONE THING: how Snowflake's own engineers describe their
+      # architecture — the three layers, the micro-partitions, the elasticity claim. Useful
+      # because it is specific and technical where the marketing is not.
+      # IT IS NOT A SOURCE FOR SEPARATION OF STORAGE AND COMPUTE AS AN IDEA. That is older than
+      # the company, and Google's Dremel paper describes another system doing it around 2010.
+      # Read it as an argument by interested parties, the same caution Series 3 · 20 carries for
+      # the lakehouse paper. VERIFY AUTHORS, TITLE AND VENUE before citing it in a lesson.
+      #
+      # AND IT IS DELIBERATELY NOT A `credits` ENTRY. Series 3 · 20 credits a paper because it
+      # teaches THAT PAPER'S NAMED ARCHITECTURE. This episode teaches the architecture generally
+      # and names five products as examples, so hanging a credit on one vendor's paper would
+      # imply they invented the idea. A reading pointer in a comment, not a badge on the episode.
+      #
+      # THE OTHER ONE IS A SCHEMA SHAPE, and it has nothing whatever to do with the company —
+      # a star whose dimensions have been normalised into sub-dimensions. Decades old, nobody's
+      # product. Data Modeling, Series 3 · 10 is "Snowflake vs Star — Normalizing Dimensions,
+      # and What It Costs You".
+      #
+      # IT IS PURE COINCIDENCE, AND THIS FILE CAUSES THE COLLISION ITSELF: two of this course's
+      # own excludes say "star vs snowflake", and this episode says "Snowflake, BigQuery,
+      # Databricks" — same word, same curriculum, two unrelated meanings, and until 2026-09-07
+      # nothing anywhere told the reader. One sentence here settles it, and this is the right
+      # episode for it because this is where the VENDOR sense appears.
+      # PRECEDENT: Analytics Engineering with dbt handles its own name collision deliberately in
+      # its header, for the same reason — a reader who has to guess which one you meant has
+      # already stopped learning.
+      #
+      # SEAMS: Data Ops, Series 1 · 47 is the bucket and its bill. Distributed SQL, Series 3 · 10
+      # owns serverless billing as a purchasing decision. Series 3 · 30 below owns cost, tiering
+      # and TTL. This episode owns the architecture that makes all three make sense.
+      #
+      # THE FAILURE TO BUILD THE LESSON AROUND: a team migrates to a separated engine, the demo
+      # is fast, and in production the first query of every morning takes forty seconds. Nobody
+      # can reproduce it after ten o'clock, three people tune the SQL, and the answer is a cold
+      # cache on a cluster that scaled to zero overnight.
+      - n: "17"
+        slug: storage-and-compute-separated
+        title: "Storage and Compute, Separated — Reads Cross a Network, Compute Can Sleep"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
       - n: "20"
         slug: olap-cubes
         title: "The Semantic Layer — Dimensions, Measures and Hierarchies, Declared Once"
         hands_on: ["koan:complete", "cube"]
         core: true
+        status: planned
+      # ADDED 2026-09-07. 20 defines what a semantic layer IS and 25 reads cubes somebody else
+      # built. Between those two sits a question neither answers and every team has to: WHERE
+      # DOES THE DEFINITION LIVE? This file's header already names Cube.dev, the dbt semantic
+      # layer and DataPallas as three implementations of one idea — that sentence deserves an
+      # episode rather than a parenthesis.
+      #
+      # THE FOUR PLACES A METRIC DEFINITION CAN LIVE, and the honest trade for each:
+      #   IN THE BI TOOL        a Looker model, a Power BI dataset, a Tableau data source.
+      #                         CLOSEST TO THE USER and the easiest to start. The definition is
+      #                         trapped in that tool, so the second consumer — a notebook, an
+      #                         API, an AI question — either duplicates it or goes without.
+      #   STANDALONE / HEADLESS a service that owns the definitions and answers over an API,
+      #                         with the BI tool as one client among several. Cube.dev and
+      #                         DataPallas are this shape. You gain one definition for every
+      #                         consumer; you gain a component to run.
+      #   IN THE TRANSFORMATION PROJECT   defined beside the models that build the tables, in
+      #                         code, reviewed and version-controlled. dbt's is this. Best
+      #                         governance; needs a consumer that can call it.
+      #   IN THE WAREHOUSE      the engine's own metric or view objects. Fewest moving parts and
+      #                         the least portable — you have chosen an engine forever.
+      #
+      # THE DECIDING QUESTION, and give it to them as one line to take away: HOW MANY THINGS
+      # NEED TO AGREE? One BI tool and nothing else, and the tool's own model is correct and
+      # cheaper. A dashboard, a scheduled report, an embedded widget and an AI question — which
+      # is DataPallas' own situation and worth saying so — and the definition has to live
+      # outside all four.
+      #
+      # ONE PARAGRAPH RETIRING MOLAP AND ROLAP, and it is why this episode earns its place for
+      # anyone who learned this subject in the 2000s: A CUBE USED TO BE A FILE. MOLAP meant the
+      # numbers were pre-computed into a proprietary multidimensional structure you rebuilt
+      # overnight; ROLAP meant they were computed from the relational tables on demand; HOLAP
+      # split the difference. Modern semantic layers are ROLAP in that sense and then some —
+      # THE CUBE IS A DEFINITION THAT GENERATES SQL, and it computes nothing until asked. Say it
+      # plainly, because a reader carrying the file model into a product that has no file will
+      # keep asking where the cube is stored and when it is rebuilt. The answer is nowhere and
+      # never — and where speed is genuinely needed, 35 and 3 - 05 are the pre-aggregation that
+      # does the work.
+      #
+      # DO NOT TEACH MDX. It was in a title here until 2026-08-24 and was removed for the reason
+      # that still holds: it is SSAS and Mondrian's query language, nothing in this stack uses
+      # it, and none of the four options above speak it.
+      - n: "22"
+        slug: kinds-of-semantic-layer
+        title: "Kinds of Semantic Layer — In the BI Tool, Standalone, or in Your Project"
+        hands_on: ["koan:choose", "koan:capture"]
         status: planned
       - n: "25"
         slug: the-northwind-cubes
@@ -341,10 +549,89 @@ series:
         title: "Billions of Rows — Partitions, Sharding & Distribution"
         hands_on: ["koan:count:scanned"]
         status: planned
+      # HAD NO COVER COMMENT AT ALL until 2026-09-07, which an audit caught while asking a
+      # different question: the word appears in five curricula and the ARCHITECTURE is explained
+      # in none of them. A writer opening this episode had the title and nothing else.
+      #
+      # TEACH IT AS FOUR BOXES, because that is what makes it an architecture rather than a
+      # slogan — and because each box is now its own course in this academy:
+      #   STORAGE        object storage. Data Ops, Series 1 · 47.
+      #   TABLE FORMAT   what turns a folder of Parquet into a table with ACID, schema evolution
+      #                  and time travel. Apache Iceberg & Table Formats owns it, and its
+      #                  Series 1 · 00 is "A Folder Is Not a Table".
+      #   CATALOG        who holds the pointer to the current version. Iceberg, Series 2 · 00.
+      #   ENGINE         whatever answers the SQL — Trino, Spark, DuckDB, ClickHouse.
+      # THE CLAIM THE ARCHITECTURE MAKES: each box is swappable and none of them owns your data,
+      # so you get warehouse behaviour without copying the data into a warehouse. THAT is the
+      # thing to teach; the file formats are the demonstration.
+      #
+      # WHERE THE WORD CAME FROM, and it belongs in the lesson rather than a footnote:
+      # DATABRICKS COINED IT in 2020 and argued it in a CIDR 2021 paper. That is why it is worth
+      # crediting rather than dismissing — there is a stated architecture and a claim you can
+      # disagree with.
+      # AND WHAT IS OLDER THAN THE NAME, said in the same breath so nobody thinks 2020 invented
+      # any of it: "data lake" is James Dixon's, around 2010; Hive gave SQL over HDFS the same
+      # year; columnar files are older still. THE GENUINELY NEW PART WAS THE TABLE FORMAT, and it
+      # arrived from three directions at once — Delta Lake from Databricks, Iceberg from Netflix,
+      # Hudi from Uber. Two of those three are not Databricks, which is precisely what keeps this
+      # an architecture instead of a product.
+      #
+      # AND THE COUNTER-ARGUMENT, which this episode owes the reader because the paper's authors
+      # are also the vendor: for KNOWN questions on data you have already loaded, a warehouse or
+      # ClickHouse still wins on latency and on operational simplicity — it owns its storage and
+      # can lay it out. Series 2 · 17 is why. The lakehouse wins when the data is large, shared
+      # between engines, or must not be copied.
+      #
+      # THE ANCESTOR WORTH ONE SENTENCE: this is Hadoop's four boxes redrawn — HDFS became object
+      # storage, MapReduce became Spark and Trino, the Hive metastore became a catalog. Same
+      # architecture, each piece now swappable and owned by somebody else.
       - n: "20"
         slug: lakehouse
         title: "Lakehouse — Parquet, Iceberg and DuckDB Straight on Files"
+        tags: ["armbrust-lakehouse"]
+        credits:
+          - source: armbrust-lakehouse
+            concept: "The LAKEHOUSE as a named architecture — warehouse behaviour over open files on object storage, with no copy into a warehouse"
         hands_on: ["koan:complete", "duckdb"]
+        status: planned
+      # ADDED 2026-09-07. An audit found federation present ONLY as engine mechanics — DuckDB's
+      # ATTACH and its scanners, ClickHouse's table functions, PostgreSQL's foreign data
+      # wrappers — each taught correctly in its own delta track, and nowhere taught as a
+      # DECISION. So a reader knows three ways to do it and has never been asked whether to.
+      # PLACED AFTER 20, because the lakehouse episode is the same shape of answer one step
+      # earlier: query it where it lies instead of copying it.
+      #
+      # THE QUESTION: this warehouse needs a table that lives in another database. Copy it on a
+      # schedule, or query it across the wire?
+      #
+      # WHAT ACTUALLY DECIDES IT, and none of it is syntax:
+      #   WHERE DOES THE WORK HAPPEN   the whole episode in one question. If the remote side can
+      #                                apply your filter and your aggregate, a small answer
+      #                                comes back. If it cannot, THE ENGINE DRAGS THE WHOLE
+      #                                TABLE ACROSS THE NETWORK AND JOINS IT LOCALLY, and the
+      #                                query that ran in a second against 100,000 rows takes
+      #                                twenty minutes against fifty million. PUSHDOWN is the
+      #                                word. Check it; never assume it.
+      #   STATISTICS                   the local planner usually knows nothing about the remote
+      #                                table's size or distribution, so it guesses — and a join
+      #                                order chosen from a guess is where federated queries go
+      #                                wrong in ways the plan does not explain.
+      #   THE BLAST RADIUS             a federated query puts analytical load on somebody else's
+      #                                OLTP database, at a time you chose. The first person to
+      #                                find out is on call for that system.
+      #   FRESHNESS AGAINST STABILITY  the honest argument FOR it: no copy means no staleness
+      #                                and no pipeline to maintain. Say that fairly.
+      #
+      # THE RULE TO LEAVE THEM WITH: FEDERATE WHAT IS SMALL, OCCASIONAL OR REFERENCE. COPY WHAT
+      # IS LARGE, HOT, OR JOINED IN EVERY QUERY. A currency table, a lookup somebody maintains
+      # in another system, a one-off reconciliation — federate. A fact table — never.
+      #
+      # SEAMS: ETL & Data Pipelines owns the copying, and 3 - 20 above owns reading files in
+      # place. The engine tracks own the syntax and should be pointed at rather than repeated.
+      - n: "22"
+        slug: querying-across-databases
+        title: "Querying Across Databases — Federation, and Where the Join Actually Runs"
+        hands_on: ["koan:choose", "koan:diagnose"]
         status: planned
       - n: "25"
         slug: streaming-ingestion

@@ -1,0 +1,85 @@
+---
+title: "Where the Virtual Disk Lives — qcow2, LVM, zvols, and the Bind-Mount Trap"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series1-linux-virtualization"
+order: 17
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series1/_17/StorageBackendsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: where a guest's disk actually lives, and the choice that decides how fast
+     snapshots are and whether the host survives running out of space.
+       A FILE ON A FILESYSTEM   qcow2 or raw in /var/lib/libvirt/images. Simple, portable,
+                                snapshots are a qcow2 feature. The default, and fine.
+       AN LVM LOGICAL VOLUME    Storage for Data, Series 1 · 18. Thin pools give you cheap
+                                snapshots and the ability to overcommit.
+       A ZFS ZVOL OR DATASET    Storage for Data, Series 2. Snapshots, compression and
+                                checksums belong to the storage layer instead of the image
+                                format, which is why every appliance in this course that can
+                                use ZFS does.
+     THE FORMAT DECISION: qcow2 against raw — thin provisioning and snapshots against a few
+     per cent of performance and no surprises. Say which matters when.
+     THIN PROVISIONING AND THE CLIFF: ten guests each promised a hundred gigabytes on a
+     four-hundred-gigabyte pool is a normal and reasonable thing to do, right up until they
+     all fill. Storage for Data, Series 1 · 25 is the arithmetic; here it is the specific
+     failure — the guests do not get a friendly error, they get I/O errors, and filesystems
+     go read-only.
+     AND BIND MOUNTS / VIRTIOFS for containers, with THE TRAP: an unprivileged container maps
+     its root to a high host UID, so a directory you bind-mount from the host is owned by
+     somebody else as far as the container is concerned. This is the single most common
+     "permission denied" in Incus and in every Proxmox container that touches a NAS share.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series1/_17/StorageBackendsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

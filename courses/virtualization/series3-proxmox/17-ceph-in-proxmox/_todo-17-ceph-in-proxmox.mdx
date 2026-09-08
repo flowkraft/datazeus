@@ -1,0 +1,82 @@
+---
+title: "The Ceph Button — Ten Minutes to Install, and What You Just Agreed To"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series3-proxmox"
+order: 17
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series3/_17/CephInProxmoxKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: Ceph in Proxmox, in ONE episode, deliberately, and the episode is mostly a
+     warning rather than a tutorial.
+     WHAT THE PRODUCT DOES: it will install and configure a Ceph cluster from the web UI in
+     about ten minutes — monitors, managers, OSDs, pools — and then offer you RBD as a
+     storage. It genuinely works. THAT IS EXACTLY THE PROBLEM: it makes a decision that
+     deserves a quarter of planning look like four clicks.
+     WHAT YOU HAVE ACTUALLY TAKEN ON, listed so a reader can price it: a distributed storage
+     system with its own failure modes, its own upgrade order, its own network requirements,
+     and its own vocabulary — and it is now underneath every VM you run, so its bad day is
+     everybody's bad day.
+     THE MINIMUM THAT IS NOT A TOY: three nodes at the very least, a separate and fast
+     storage network, enough RAM per OSD, and real disks rather than consumer SSDs without
+     power-loss protection.
+     AND THEN POINT, RATHER THAN TEACH: Storage for Data, Series 4 is fourteen episodes on
+     what this is and how to operate it, and Storage for Data, Series 4 · 58 is the decision
+     episode. This course's job is to make sure nobody arrives at a Ceph cluster by accident.
+     THE ALTERNATIVES FOR A THREE-NODE DATA TEAM, said plainly: ZFS replication from
+     Series 3 · 12 for most people, or NFS from the box in Series 4 · 10.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      eyes
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series3/_17/CephInProxmoxKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

@@ -1,0 +1,72 @@
+---
+title: "Snapshots and Backups — the Only Copy That Leaves the Cluster"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-kubernetes"
+tags: []
+level: "advanced"
+module: "series4-longhorn"
+order: 15
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/kubernetes/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/kubernetes/series4/_15/SnapshotsAndBackupsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Kubernetes documentation (kubernetes.io/docs) — the Concepts section that owns this topic (Workloads, Storage, Configuration, Scheduling and Eviction).
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns the single machine and the container image, Airflow owns dependencies between steps),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    Kubernetes assumes a workload is stateless and long-running. A data job is neither, and that mismatch is the reason for most surprises here.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: snapshots (in-cluster, cheap, NOT a backup) and BACKUPS to an S3 target or NFS —
+     which is the only copy that leaves the cluster, and therefore the only one that survives
+     the cluster. Recurring jobs to schedule both. Restore into a new volume.
+     THE ACADEMY'S SENTENCE, AGAIN AND ON PURPOSE: replicas are not a backup. Three replicas
+     replicate your DELETE. Storage for Data, Series 1 · 15 owns the argument; this is where a
+     Kubernetes reader meets it with a UI that makes snapshots look like safety.
+     THE TARGET IS USUALLY A BUCKET — Data Ops, Series 1 · 47 rented one and Storage for Data,
+     Series 3 hosts one. This is what finally consumes it.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/kubernetes/series4/_15/SnapshotsAndBackupsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

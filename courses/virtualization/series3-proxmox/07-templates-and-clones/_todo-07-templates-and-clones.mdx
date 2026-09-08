@@ -1,0 +1,81 @@
+---
+title: "Templates, Linked Clones and cloud-init — a Database per Developer in Seconds"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series3-proxmox"
+order: 7
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series3/_07/TemplatesAndClonesKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the workflow that makes this product pay for itself in a data team, and it is
+     Series 1 · 22 with the sharp edges removed.
+       BUILD A TEMPLATE from a cloud image: `qm create`, import the disk, attach a cloud-init
+       drive, set the ssh key and the user, then `qm template`. This is a runbook and it is
+       the most-copied set of commands in the whole product.
+       FULL CLONE against LINKED CLONE: independent and slow against instant and dependent.
+       Linked clones need the storage to support it — which is Series 3 · 10's table arriving
+       with consequences.
+       CLOUD-INIT fields in the UI and via `qm set --ipconfig0`, and how to check what
+       happened when a clone comes up with the wrong hostname.
+     THE WORKPLACE MOMENT, AND IT IS THE BUSINESS CASE: every developer needs a database with
+     last month's data. Build one container or VM, restore into it once, template it, and
+     hand out clones that take four seconds and almost no disk. The alternative — everybody
+     restoring a dump for themselves — costs hours a week and a lot of storage, and this is
+     the episode that ends it.
+     AND THE SAME PATTERN FOR CONTAINERS: `pct` templates and the distribution templates
+     Proxmox ships, which is the fastest way to get a throwaway Debian on the network.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series3/_07/TemplatesAndClonesKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

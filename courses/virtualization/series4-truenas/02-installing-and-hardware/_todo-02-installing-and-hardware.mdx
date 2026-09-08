@@ -1,0 +1,86 @@
+---
+title: "Installing It — the Mirrored Boot Device, and No RAID Card Under ZFS"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series4-truenas"
+order: 2
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series4/_02/InstallingAndHardwareKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the install, and the hardware decisions that are genuinely expensive to get
+     wrong — which is worth an episode because unlike the rest of this course, this one is
+     usually bought as a physical box.
+       THE BOOT DEVICE IS SEPARATE FROM THE DATA POOLS, and it should be mirrored, and it
+       should not be a USB stick. Losing it costs a reinstall plus a configuration restore
+       rather than data — which is why EXPORTING THE CONFIGURATION FILE after every change is
+       the habit this episode installs.
+       NO HARDWARE RAID UNDER ZFS. An HBA in IT mode, passing the disks through raw. A RAID
+       controller hides the disks, lies about flushes, and takes away exactly the information
+       ZFS needs to repair anything — Storage for Data, Series 2 · 10 is why this matters and
+       Storage for Data, Series 1 · 15 is what the controller is doing instead. This is a
+       classic, expensive, extremely common mistake and it deserves to be blunt.
+       ECC MEMORY: the honest version. It is genuinely better and it is not a hard
+       requirement; the internet argument on this is worse than the facts. State what it
+       protects against and let the reader decide.
+       DISK COUNT AND LAYOUT are Storage for Data, Series 2 · 07's episode and are not
+       repeated here — but say plainly that the vdev layout is chosen now and is the decision
+       with the least room to change your mind.
+       AND VIRTUALIZING TRUENAS ITSELF: fine for a lab, and for production it requires
+       passing the HBA through to the guest, which is Series 1 · 25's passthrough paragraph
+       with real consequences. A TrueNAS VM given virtual disks on somebody else's RAID is
+       the anti-pattern.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:process:tool
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series4/_02/InstallingAndHardwareKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

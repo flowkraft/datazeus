@@ -1,0 +1,98 @@
+---
+title: "Before You Reach for Threads — Push It Down to the Engine"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series3-jvm-that-ships"
+order: 36
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules. Then read
+    the comment ABOVE THIS EPISODE in that file, which is the authority on
+    coverage.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    One of FOUR episodes on parallelism, 36 to 39, placed after 35 "Measure
+    Before You Change Anything" because parallelism is a change and 35 is how
+    you find out whether you need it. Series 3 reads: ships → measure →
+    parallelise → project.
+      before:  Performance and Memory — Measure Before You Change Anything
+      THIS:    Before You Reach for Threads — Push It Down to the Engine
+      after:   Fan-Out and Bounded Memory — N Calls, One Queue, a Flat Heap
+
+    CONCEPTS AND PATTERNS BEFORE ANY FRAMEWORK. Series 4 has Spring Batch and
+    Beam and both are answers; this block is the question, and every episode
+    must be readable by someone who will use neither.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: decide whether this work belongs in your JVM at all, and where it belongs instead.
+    DECISION: the gate, and the most data-specific episode in the block. Placed after 35 because parallelism is a change and 35 is how you find out whether you need it. A large share of readers who arrive here wanting threads should leave with an index.
+
+    ── COVER ───────────────────────────────────────────────────────────────
+      SERIAL, OR BADLY WRITTEN?    one thread with the right algorithm, the right index or one fewer
+                                   round trip beats four threads doing the wrong thing — and costs
+                                   nothing afterwards. Learn SQL, Series 3 - 18 and 3 - 20 are usually
+                                   the fix.
+      THE DATABASE IS ALREADY PARALLEL the spine of the episode. PostgreSQL runs parallel plans, DuckDB
+                                       uses every core in your own process, ClickHouse was built for it. A
+                                       GROUP BY over fifty million rows belongs in the engine, which has
+                                       the threads, the statistics and the storage layout — none of which
+                                       your loop has.
+      THE RULE                     MOVE THE COMPUTATION TO THE DATA, NOT THE DATA TO THE COMPUTATION.
+                                   Pulling fifty million rows into the JVM to aggregate them is the
+                                   mistake this episode exists to prevent, and good programmers commit
+                                   it precisely because they are comfortable in Java.
+      WHEN THE JVM MUST DO IT      said fairly, or the episode is a scolding: the work is not
+                                   expressible in SQL (an API call per row, a parser, a PDF or a
+                                   workbook), the data is not all in one database, or the source is
+                                   files. Series 2 - 45, DuckDB inside your process, is the middle
+                                   answer people forget.
+      THEN THE SHAPE               I/O-bound is waiting, CPU-bound is computing, and it decides which
+                                   of the next two episodes you are in. Series 2 - 60 teaches it; cite
+                                   it.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:reconcile
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series3/_36/PushItDownKoans.groovy
+
+    `reconcile` — the same answer computed by a JVM loop and by one SQL statement, proven identical. `choose` on four workloads: which belongs in the engine.
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the constructs
+
+{/* BEAT 2 — one at a time, each with code the reader types and runs. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns
+    its place by preventing a number that is wrong and looks right, or a job
+    that fails in a way nobody can read.
+    The one to write: the nightly job that pulls a whole table across the wire to compute a total the database would have computed in two seconds. It is not wrong, it is just slow — and it gets slower every month while nobody changes a line of it. */}
+
+TODO

@@ -1,0 +1,91 @@
+---
+title: "Do You Need Proxmox — One Box, Three Boxes, or Somebody Else's"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series3-proxmox"
+order: 30
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series3/_30/DoYouNeedProxmoxKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE CLOSING GATE FOR THIS SERIES, and it asks a different question from Series 2 · 40
+     because the honest competitor to Proxmox is usually not another platform — it is doing
+     less.
+     BY NOW THE READER KNOWS THE COST: a cluster filesystem that needs quorum, a storage
+     layout chosen early, a backup product to run as well, an upgrade day a year, and a
+     management interface that must never face the internet.
+     WALK THE LADDER DOWNWARDS:
+       ONE MACHINE, A FEW WORKLOADS, ONE PERSON   Series 1. libvirt and Incus, no web UI, no
+                                 cluster, nothing to upgrade but Debian. This is the right
+                                 answer far more often than the internet suggests.
+       ONE MACHINE, SEVERAL PEOPLE WHO NEED A UI AND SNAPSHOTS   Proxmox on a single node,
+                                 and be clear that a single node has no HA, no migration, and
+                                 downtime for every patch — and that this is completely fine
+                                 for most data teams.
+       THREE MACHINES AND A REASON TO SURVIVE ONE DYING   Proxmox as a cluster, with a
+                                 QDevice if you only have two, and Series 3 · 12's replication
+                                 before you reach for Series 3 · 17's Ceph button.
+       WORKLOADS THAT ARE ALL CONTAINERS AND ALREADY DECLARATIVE   Kubernetes for Data
+                                 Workloads is a different answer to a different question, and
+                                 running it ON Proxmox VMs is a very common and sensible
+                                 combination worth naming here.
+       NO HARDWARE AND NO APPETITE   rent it, per Data Ops, Series 1 · 46.
+     AND THE COST COMPARISON DONE PROPERLY, because it is the argument that gets made badly:
+     a bought server against a rented one is not a like-for-like price. Add the hours, the
+     power, the network, the second box for backups, and the fact that somebody is on the
+     hook at 3 a.m. Then compare. It often still wins, especially for large storage and
+     steady load — but it must win on the real number.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series3/_30/DoYouNeedProxmoxKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

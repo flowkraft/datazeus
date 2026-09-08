@@ -147,9 +147,21 @@ series:
       # almost every slow Spark job. Reading stage boundaries as shuffle boundaries.
       # spark.sql.shuffle.partitions and why its default of 200 is wrong for both small and
       # large jobs.
+      # SAY WHERE THIS CAME FROM, added 2026-09-07. Spark is MapReduce's descendant and the
+      # relationship explains both halves of this episode: the SAME MODEL — map, shuffle, reduce
+      # — with the intermediate results KEPT IN MEMORY between stages instead of written to disk,
+      # and a planner on top. That single difference is why Spark displaced Hadoop MapReduce for
+      # new work, and why THE SHUFFLE IS STILL THE EXPENSIVE PART: the model did not change, only
+      # what happens between the stages.
+      # Java & Groovy for Data, Series 3 · 38 teaches the shape in plain Java and names the
+      # model. This is where it becomes physical and starts costing money.
       - n: "00"
         slug: the-shuffle
         title: "The Shuffle — What Causes It, and Why It Is Almost Always the Slow Part"
+        tags: ["dean-mapreduce"]
+        credits:
+          - source: dean-mapreduce
+            concept: "The shuffle as the model's own step — Spark is this paper's descendant, with the intermediate results kept in memory instead of written to disk"
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         status: planned

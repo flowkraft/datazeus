@@ -1,0 +1,80 @@
+---
+title: "Xen Orchestra — XO Lite, From Sources, or XOA, and Where It Must Not Live"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series2-xcp-ng"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series2/_05/XenOrchestraKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the management plane, which is a separate product and a separate decision, and
+     which a reader must understand before they design anything.
+       XO LITE          built into the host, browser-based, per-host. Enough to start a VM.
+                        Not enough to run an estate.
+       XO FROM SOURCES  the full Xen Orchestra, built and run by you on a Debian VM. Free.
+                        This is what the series uses, and the build is a runbook.
+       XOA              the same thing as a supported appliance from Vates, with tiers.
+     ⚠ STATE THE LICENSING HONESTLY AND WITH A DATE. Some features are tied to paid tiers and
+     the boundaries have moved between releases. Check the current matrix before writing, say
+     which release it describes, and do not imply that the free path is a trick — it is a
+     legitimate, widely used path, and so is paying for support.
+     THE DESIGN RULE, AND IT IS THE POINT OF THE EPISODE: THE MANAGEMENT PLANE MUST NOT LIVE
+     ON THE THING IT MANAGES. If XO runs as a VM inside the pool it backs up, then the day
+     the pool is down is the day you cannot reach your backups or your restore interface.
+     Put it elsewhere — a small separate box, or a VM on a different host — and back up XO's
+     own configuration. People learn this the expensive way.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series2/_05/XenOrchestraKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

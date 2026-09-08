@@ -1,0 +1,97 @@
+---
+title: "Kinds of Semantic Layer — In the BI Tool, Standalone, or in Your Project"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-warehousing"
+tags: []
+level: "intermediate"
+module: "series2-columnar-engines-and-cubes"
+order: 22
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/datawarehousing/curriculum.yaml   the track's decisions, in its header
+      the comment ABOVE THIS EPISODE in that file — the authority on coverage
+      tests/src/koans/groovy/datazeus/datawarehousing/series2/_22/KindsOfSemanticLayerKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Warehousing · Columnar Engines & Cubes (intermediate) — "make queries fast with columnar engines and cubes"
+      before:  The Semantic Layer — Dimensions, Measures and Hierarchies, Declared Once
+      THIS:    Kinds of Semantic Layer — In the BI Tool, Standalone, or in Your Project
+      after:   Reading Cubes Somebody Else Built — Sales, Inventory, Customers and HR
+    NOT CORE — the shortest path does not run through here, so this episode
+    may assume the core ones before it.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: choose where a metric definition should live, and stop looking for a cube file that does not exist.
+    DECISION: 20 defines what a semantic layer IS and 25 reads cubes somebody else built. Between them sits the question neither answers and every team has to face: WHERE DOES THE DEFINITION LIVE? This track's header already names Cube.dev, the dbt semantic layer and DataPallas as three implementations of one idea, and that sentence deserves an episode rather than a parenthesis.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      IN THE BI TOOL                 a Looker model, a Power BI dataset, a Tableau data source. Closest to
+                                     the user and easiest to start; the definition is trapped in that tool,
+                                     so the second consumer duplicates it or goes without.
+      STANDALONE / HEADLESS          a service that owns the definitions and answers over an API, with the
+                                     BI tool as one client among several. Cube.dev and DataPallas are this
+                                     shape. One definition for every consumer; one more component to run.
+      IN THE TRANSFORMATION PROJECT  defined beside the models that build the tables, in code, reviewed and
+                                     version-controlled. dbt's is this. Best governance; needs a consumer
+                                     that can call it.
+      IN THE WAREHOUSE               the engine's own metric or view objects. Fewest moving parts and the
+                                     least portable — you have chosen an engine forever.
+      THE DECIDING QUESTION          HOW MANY THINGS NEED TO AGREE? One BI tool and nothing else, and the
+                                     tool's own model is correct and cheaper. A dashboard, a scheduled
+                                     report, an embedded widget and an AI question — which is DataPallas'
+                                     own situation — and the definition has to live outside all four.
+      RETIRE MOLAP AND ROLAP         in one paragraph, and it is why the episode earns its place for anyone
+                                     who learned this in the 2000s: A CUBE USED TO BE A FILE, pre-computed
+                                     overnight. A modern semantic layer is A DEFINITION THAT GENERATES SQL
+                                     and computes nothing until asked. A reader carrying the file model
+                                     into a product that has no file will keep asking where the cube is
+                                     stored and when it is rebuilt — nowhere, and never.
+      DO NOT TEACH MDX               removed from a title here on 2026-08-24 for the reason that still
+                                     holds: it is SSAS and Mondrian's query language, and none of the four
+                                     options above speak it.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:choose
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/datawarehousing/series2/_22/KindsOfSemanticLayerKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: a second definition of revenue, created because the first one was locked inside a BI tool and the new embedded widget could not reach it. Both are defensible, both are maintained, and they diverge in the third month. */}
+
+TODO

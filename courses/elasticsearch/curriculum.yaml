@@ -1,0 +1,322 @@
+# The ordered episode list for Elasticsearch. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: index data so it can be searched well, write queries that rank
+# rather than filter, and know why this must not be your system of record.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# SEARCH IS NOT FILTERING. A relational reader arrives believing this is LIKE '%term%' with
+# better performance, and everything that follows from that belief is wrong: they index text as
+# an exact value, they expect = to work, they are baffled when searching for what they stored
+# finds nothing, and they judge the result set by whether it is CORRECT rather than by whether
+# the best answer is at the top.
+#
+# THE POSITIVE FORM: A QUERY RETURNS THINGS IN AN ORDER SOMEBODY HAS TO BE HAPPY WITH. That is a
+# different kind of correctness, it cannot be asserted with an equals sign, and every episode
+# in Series 1 exists to install it.
+#
+# ============================================================================
+# AND THE SECOND ONE, WHICH COSTS MORE WHEN IT IS LEARNED LATE
+# ============================================================================
+# THIS IS NOT YOUR SYSTEM OF RECORD. It is a derived index: something else owns the data, and
+# this can be rebuilt from it. Teams that forget this discover it during a mapping change, a
+# version upgrade or a cluster incident — the three moments when reindexing from the source is
+# the only way out. Series 3 · 10 states it as a rule; every earlier episode should assume it.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL ELASTICSEARCH DOCUMENTATION
+# ============================================================================
+# The Elasticsearch Guide runs Data management and mappings, Search your data (query DSL,
+# relevance, aggregations), Index management and ILM, and then cluster operations. Its mapping
+# and query-DSL sections are the right order for Series 1, aggregations and index lifecycle for
+# Series 2, and cluster sizing for Series 3.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's series
+# order — SHOULD FOLLOW THE OFFICIAL ELASTICSEARCH GUIDE. Before writing an episode, open the
+# guide's own page for that topic, use it as the COVERAGE CHECKLIST, and use its VOCABULARY FOR
+# THE NOUNS (index, mapping, field type, analyzer, token, shard, replica, query and filter
+# context, aggregation, data stream). Anything left out should be left out because an academy
+# rule says so — NoSQL Concepts owns the search shape, Data Ops owns the cluster — and never
+# because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the guide page named.
+#
+# THE FORK IS PART OF THE SUBJECT. The licence change in 2021 produced OpenSearch, and the two
+# have diverged since — in features, in APIs and in what clouds offer. Series 3 · 15 covers it
+# as a decision. State licences and versions VERIFIED ON THE DAY, and do not take a side.
+#
+# TEACH AGAINST WHAT A LEARNER CAN RUN: a single node in a container, which Data Ops,
+# Series 1 · 37 already taught them to start. Where a behaviour needs a real multi-node cluster —
+# shard allocation, a rolling restart — say so rather than implying they can try it.
+
+course: learn-elasticsearch
+track: elasticsearch
+title: Elasticsearch
+
+prerequisites:
+  - course: learn-nosql
+    needs: "Series 1, and Series 2"
+    why: >-
+      The inverted index and the difference between a filter and a ranking are introduced there
+      for every engine. This track assumes the reader already knows why relevance is a
+      different kind of answer, and spends its time on how to get a good one.
+
+excludes:
+  - topic: "Why a search engine at all, and how it differs from the other shapes"
+    where: "covered in NoSQL Concepts, Series 2 · 15, which this course assumes"
+  - topic: "Full-text search inside a relational database"
+    where: "covered in PostgreSQL, Series 2 · 10, which indexes text with GIN. Frequently the right answer for a single application, and NoSQL Concepts, Series 4 · 00 argues that case"
+  - topic: "Getting the data in from the source system"
+    where: "covered in ETL & Data Pipelines, and Series 3 · 15 there owns CDC. In this course, Series 2 · 20 covers only the bulk API and what the index does while you write to it"
+  - topic: "Kibana, dashboards and visualisation"
+    where: "covered in BI & Data Visualization for the discipline of building a dashboard at all"
+  - topic: "Running the cluster — provisioning, upgrades, backups, capacity"
+    where: "covered in Data Ops for the discipline. In this course, Series 3 covers only the sizing decisions a person indexing data has to make themselves"
+
+series:
+  - slug: series1-indexing-and-searching
+    title: Indexing and Searching
+    tagline: mappings, analyzers, and a query that ranks
+    level: intermediate
+    episodes:
+      # COVER: the inverted index concretely — from each term to the list of documents containing
+      # it — and why that structure makes "which documents contain this word" trivial and
+      # "sort by this field" a separate mechanism entirely.
+      # NEAR REAL TIME, and it surprises everyone once: a document you just indexed is not
+      # searchable until the next refresh, about a second later by default. Not a bug, not
+      # eventual consistency in the distributed sense, and the cause of every "I indexed it and
+      # the test fails" report. Refresh, and why forcing it in production is a mistake.
+      # The document, the index, and _source as the stored original.
+      - n: "00"
+        slug: the-inverted-index
+        title: "The Inverted Index and the Refresh — Why the Document You Just Wrote Is Not There"
+        hands_on: ["koan:predict", "koan:process:tool"]
+        core: true
+        status: planned
+      # THE MOST CONSEQUENTIAL EPISODE IN THE TRACK, and the trap with the widest blast radius.
+      # COVER: text against keyword. TEXT IS ANALYZED — broken into tokens, lowercased, stemmed —
+      # and is for searching. KEYWORD IS STORED WHOLE and is for filtering, sorting and
+      # aggregating. Get it wrong and the symptoms are absurd: an exact match that finds nothing,
+      # or an aggregation on a city field that returns "new" and "york" as separate buckets.
+      # THE MULTI-FIELD PATTERN as the standard answer: index it both ways, as `city` and
+      # `city.keyword`.
+      # DYNAMIC MAPPING and why it is a trap in production — the first document decides the type
+      # forever, so one badly-shaped record can set a field to the wrong type for the life of the
+      # index. AND THE FACT THAT MAKES IT SERIOUS: YOU CANNOT CHANGE A FIELD'S TYPE IN PLACE. The
+      # fix is a new index and a reindex, which is why Series 3 · 10's rule matters.
+      - n: "05"
+        slug: mappings-text-and-keyword
+        title: "text Against keyword — the Field Type That Decides Whether Anything Works"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the analysis chain — character filters, tokenizer, token filters — and the point
+      # that lands it: WHAT IS STORED IS NOT WHAT YOU SENT. Lowercasing, stop words, stemming so
+      # "running" and "runs" meet, and language analyzers.
+      # THE ANALYZE API as the debugging tool, and the habit to install: when a search does not
+      # match, run _analyze on the query text AND on the field's analyzer and compare the tokens.
+      # Nearly every "why does this not match" is answered there in twenty seconds.
+      # THE ASYMMETRY THAT CATCHES PEOPLE: index-time and search-time analyzers can differ, and
+      # if they disagree nothing matches and nothing errors.
+      - n: "10"
+        slug: analyzers
+        title: "Analyzers — What Is Stored Is Not What You Sent, and _analyze Proves It"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the query DSL as JSON, and the distinction that organises everything: QUERY
+      # CONTEXT asks how well does this match and produces a score; FILTER CONTEXT asks yes or no,
+      # produces no score, and IS CACHEABLE. bool with must, should, filter and must_not — where
+      # must scores and filter does not, which is both the performance rule and the mental model.
+      # THE PRACTICAL RULE TO LEAVE THEM WITH: anything that is a yes-or-no condition — a date
+      # range, a status, a category — goes in filter. Only the text the user typed belongs in
+      # must. Most slow Elasticsearch queries in the wild are structured conditions scoring
+      # pointlessly.
+      # match against term, and the classic mistake of using term on a text field.
+      - n: "15"
+        slug: query-dsl
+        title: "Query Against Filter Context — Only the User's Words Need a Score"
+        hands_on: ["koan:complete", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: relevance, without turning it into information retrieval theory. BM25 in three
+      # ideas — a rare term counts for more, more occurrences count for more with diminishing
+      # returns, and a shorter field counts for more. That is enough to reason about a result
+      # order.
+      # THE TOOL: the explain API, and reading a score's breakdown rather than arguing about it.
+      # TUNING, in the order to try it: boosts per field, multi_match types, then function_score
+      # for business rules such as recency or popularity.
+      # THE JUDGEMENT THIS EPISODE OWES: relevance has no unit test. It has a set of queries you
+      # care about and a human who says whether the top five are right. Say so, and teach them to
+      # keep that set written down — it is the only regression test search has.
+      - n: "20"
+        slug: relevance
+        title: "Relevance and BM25 — Three Ideas, and Why There Is No Unit Test for Good"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-a-search-that-works
+        title: "Project — Make a Bad Search Good, With the Query Set as Evidence"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-aggregations-and-data
+    title: Aggregations and Getting Data In
+    tagline: analytics on an index, and what bulk indexing costs
+    level: advanced
+    episodes:
+      # COVER: aggregations as the analytical half — terms, date_histogram, range, and the
+      # metric aggregations inside them — with the framing a data reader needs: THIS IS GROUP BY,
+      # written as nested JSON, over an index rather than a table.
+      # Sub-aggregations and the nesting that produces a small analytical result from a large
+      # index. size:0 to ask only for the aggregation.
+      # THE FIELD-TYPE CALLBACK: aggregating on a text field is either an error or nonsense.
+      # Series 1 · 05 is why, and this is where it bites for the second time.
+      - n: "00"
+        slug: aggregations
+        title: "Aggregations — GROUP BY as Nested JSON, Over an Index"
+        hands_on: ["koan:complete", "koan:equivalent"]
+        core: true
+        status: planned
+      # THE EPISODE A DATA PERSON WILL VALUE MOST, AND ALMOST NOBODY IS TAUGHT IT.
+      # COVER: a terms aggregation across several shards is APPROXIMATE. Each shard returns its
+      # own top N, the coordinating node merges them, and a term that was eleventh everywhere and
+      # top nowhere can be missing from a global top ten that it genuinely belongs in.
+      # doc_count_error_upper_bound and sum_other_doc_count as the fields that TELL YOU this
+      # happened — and which nobody reads. shard_size as the dial that reduces it at a cost.
+      # THE PARALLEL TO NAME EXPLICITLY: this is Learn SQL, Series 3 · 27's argument arriving
+      # again — an aggregate that does not decompose cleanly across partitions gives an
+      # approximate answer, and the fix is either more work or an honest acceptance. A reader who
+      # has met one recognises the other immediately.
+      # AND CARDINALITY: the cardinality aggregation is HyperLogLog, so distinct counts here are
+      # approximate BY DESIGN, with a precision threshold.
+      - n: "05"
+        slug: approximate-aggregations
+        title: "Your Top Ten May Be Wrong — Shard-Level Approximation, and the Field That Says So"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the two ways to model a one-to-many inside a document, and their costs. NESTED,
+      # where each sub-document is indexed separately so a query cannot match across two of them
+      # — which is the whole point, and the flat alternative silently matches "red" from one
+      # shoe and "size 9" from another. JOIN fields (parent/child) for the case where children
+      # change far more often than parents.
+      # THE HONEST ADVICE: both are expensive and both are frequently a sign that the data was
+      # modelled for a database rather than for an index. DENORMALIZE FIRST — NoSQL Concepts,
+      # Series 1 · 10 — and reach for these only when duplication genuinely will not do.
+      - n: "10"
+        slug: nested-and-join
+        title: "nested and join — the Match Across Two Sub-Documents You Did Not Mean"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        status: planned
+      # COVER: time-based data, which is most Elasticsearch in the wild. One index per day or
+      # week rather than one enormous index, index templates so each new one is shaped correctly
+      # without anybody remembering, aliases so applications never name a concrete index, and
+      # ILM to roll over, shrink, freeze and delete on a schedule. Data streams as the modern
+      # packaging of all of it.
+      # WHY IT MATTERS BEYOND TIDINESS: deleting a day is dropping an index, which is instant.
+      # Deleting a day's documents from one big index is a delete-by-query that rewrites
+      # segments and costs more than the writing did. RETENTION IS A LAYOUT DECISION, made before
+      # you have data — and Data Ops, Series 3 · 35 owns retention as a discipline.
+      - n: "15"
+        slug: time-based-indices
+        title: "Indices per Day, Templates and ILM — Deleting Old Data Should Be Instant"
+        hands_on: ["koan:choose", "koan:process:tool"]
+        core: true
+        status: planned
+      # COVER: the _bulk API and why single-document indexing at volume is the wrong shape.
+      # Batch sizing by bytes rather than by count. The settings that change bulk load
+      # dramatically: refresh_interval raised or disabled during a load, replicas set to zero and
+      # restored after, and both restored afterwards — with the warning that a load with no
+      # replicas has no redundancy while it runs.
+      # ERROR HANDLING, and it is the part people get wrong: A BULK REQUEST RETURNS 200 EVEN WHEN
+      # INDIVIDUAL ITEMS FAILED. You must read the per-item errors. A loader that checks only the
+      # HTTP status silently drops documents, and the count is only wrong later.
+      - n: "20"
+        slug: bulk-indexing
+        title: "The Bulk API — 200 OK With Failed Items Inside, and the Loader That Ignores Them"
+        hands_on: ["koan:diagnose", "koan:count:rows"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-index-a-dataset
+        title: "Project — Load a Dataset, Prove the Count, and Aggregate It"
+        hands_on: ["koan:author", "koan:count:rows"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-sizing-and-reality
+    title: Sizing and Reality
+    tagline: shards, the source of truth, and the fork
+    level: advanced
+    episodes:
+      # COVER: shards and replicas — a primary shard is a Lucene index and a unit of parallelism;
+      # a replica is a copy that also serves reads. THE NUMBER OF PRIMARY SHARDS IS FIXED WHEN THE
+      # INDEX IS CREATED, which is why this is a modelling decision rather than a tuning knob.
+      # Sizing guidance in the shape a reader can use: aim for shards in the tens of gigabytes,
+      # size from your retention and daily volume, and test rather than guess.
+      - n: "00"
+        slug: shards-and-replicas
+        title: "Shards and Replicas — a Number You Choose Once and Live With"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the failure this product is famous for and which nobody warns beginners about —
+      # TOO MANY SHARDS. Every shard costs heap on the master and the data nodes whether or not
+      # anybody queries it, so a year of daily indices with five shards each is nearly two
+      # thousand shards holding a few megabytes apiece, and the cluster becomes unstable for
+      # reasons that look like nothing.
+      # THE SYMPTOMS: slow cluster state updates, master instability, heap pressure with no
+      # query load. THE FIXES: fewer shards per index, rollover by size rather than by day, and
+      # shrink or delete old indices.
+      # THE RULE: shard count follows from DATA VOLUME, never from how many nodes you have or
+      # how important the index feels.
+      - n: "05"
+        slug: too-many-shards
+        title: "Too Many Shards — the Instability That Looks Like Nothing Is Wrong"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # THE EPISODE THIS TRACK OWES ITS READER.
+      # COVER: why this should be a DERIVED index — something else owns the data and this can be
+      # rebuilt. The three moments that force the issue and are unanswerable otherwise: a mapping
+      # change you cannot make in place (Series 1 · 05), a major version upgrade, and a cluster
+      # you have to recreate.
+      # THE TEST TO LEAVE THEM WITH, and it is the same test as NoSQL Concepts, Series 4 · 10:
+      # if this cluster were empty tomorrow morning, could you rebuild it, and how long would it
+      # take? If the answer is "we could not", you have a system of record that is missing
+      # transactions, constraints and a backup story.
+      # REINDEX, aliases and zero-downtime index swaps as the mechanism that makes rebuilding
+      # routine rather than an incident.
+      - n: "10"
+        slug: not-your-source-of-truth
+        title: "Not Your Source of Truth — Could You Rebuild This Cluster Tomorrow?"
+        hands_on: ["koan:choose", "koan:process:tool"]
+        core: true
+        status: planned
+      # COVER: the licence change and the fork, factually and without taking a side. What
+      # Elasticsearch's licence became, why OpenSearch exists, and the practical consequences a
+      # team meets: which one their cloud provider actually offers, which client libraries work
+      # against which server, and the fact that the two have diverged in features and APIs since
+      # the split — so "compatible" needs a version attached.
+      # VERIFY LICENCE NAMES, DATES AND VERSION NUMBERS AGAINST BOTH PROJECTS' OWN PAGES ON THE
+      # DAY OF WRITING. Same rule as the Redis track's fork episode, and the same reason.
+      - n: "15"
+        slug: elasticsearch-and-opensearch
+        title: "Elasticsearch and OpenSearch — the Split, and Which One You Are Actually Running"
+        hands_on: ["koan:capture", "koan:choose"]
+        status: planned
+      - n: "20"
+        slug: project-size-an-index
+        title: "Project — Size an Index From Its Retention and Defend the Number"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        tags: ["project"]
+        status: planned

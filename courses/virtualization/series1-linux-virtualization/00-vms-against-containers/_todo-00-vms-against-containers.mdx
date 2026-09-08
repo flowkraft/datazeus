@@ -1,0 +1,87 @@
+---
+title: "Two Ways to Get More Machines — a Second Kernel, or a Fence Around Processes"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series1-linux-virtualization"
+order: 0
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series1/_00/VmsAgainstContainersKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE TAXONOMY EPISODE, and everything else in the course hangs off it.
+     COVER: the two mechanisms, as two different answers to one question.
+       A VIRTUAL MACHINE   its own kernel, its own boot, virtual hardware. The CPU itself
+                           helps — Intel VT-x or AMD-V — so this is not emulation and not
+                           slow. Strong boundary, whole operating system, gigabytes and a
+                           boot time.
+       A CONTAINER         processes on the HOST'S kernel, fenced off by namespaces and
+                           limited by cgroups. No boot, no second kernel, megabytes, starts
+                           in the time it takes to fork.
+     THE TEST TO LEAVE THEM WITH, and it settles most arguments: run `uname -r` inside. If it
+     is the host's kernel, it is a container, and everything that follows from that is true —
+     you cannot load a kernel module, you cannot run a different kernel version, you cannot
+     run a Windows guest, and a kernel bug is a shared problem.
+     WHERE A DATA TEAM MEETS EACH: containers for the pipeline and the tool, VMs for the
+     database, for anything belonging to another team, and for anything an auditor asks about.
+     SAY WHAT THIS COSTS: virtualization overhead on modern hardware is small for CPU and
+     memory and is NOT small for storage latency, which Series 1 · 25 measures rather than
+     asserts.
+     AND SAY WHERE VIRTUALBOX FITS, in one paragraph, because most readers have used it: the
+     same idea, packaged for a desktop, and a fine way to run the rest of this course's
+     appliances on a laptop. It is not what anybody runs a shared environment on.
+     ⚠ SAY AT THE TOP THAT ALL OF SERIES 1 RUNS ON A LAPTOP with virtualization enabled in
+     the firmware. Nobody needs to buy a server to start.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series1/_00/VmsAgainstContainersKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

@@ -1,0 +1,120 @@
+---
+title: "Inside a Parquet File — Row Groups, Encodings and Why Skipping Works"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-warehousing"
+tags: ["melnik-dremel"]
+level: "intermediate"
+module: "series2-columnar-engines-and-cubes"
+order: 2
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/datawarehousing/curriculum.yaml   the track's decisions, in its header
+      the comment ABOVE THIS EPISODE in that file — the authority on coverage
+      courses/sources.yaml                       melnik-dremel, and what it is credited for
+      tests/src/koans/groovy/datazeus/datawarehousing/series2/_02/InsideAParquetFileKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Warehousing · Columnar Engines & Cubes (intermediate) — "make queries fast with columnar engines and cubes"
+      before:  Columnar Storage — Why Analytics Loves Columns
+      THIS:    Inside a Parquet File — Row Groups, Encodings and Why Skipping Works
+      after:   DuckDB — An Analytical Warehouse That Runs Inside Your Process
+    CORE — on the shortest path to being productive. Someone will read only
+    the core episodes, so this one has to stand alone.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: know what is actually inside the file, so "Parquet is faster" becomes a mechanism
+    you can predict from rather than a slogan you repeat.
+    DECISION: TEN COURSES mention Parquet — Java & Groovy, Python for Data, DuckDB, Spark,
+    Trino, Polars, Iceberg, this one — and Python for Data 1 · 15 is even called "why
+    Parquet usually wins". NOT ONE OF THEM EXPLAINS WHY. Checked by grep: zero hits
+    anywhere for row group, column chunk, dictionary encoding or footer.
+    AND IT IS LOAD-BEARING FOR FOUR OTHER COURSES. Trino's pushdown, DuckDB's speed,
+    Iceberg's data skipping and Spark's partition pruning are the SAME MECHANISM seen from
+    four sides, and none of them can explain it because none of them owns the file format.
+    Beside 00, which credits C-Store for the column-store idea: this is the file that idea
+    produced.
+
+    ── COVER, OUTSIDE IN ───────────────────────────────────────────────────
+      THE LAYOUT            file → ROW GROUPS → column chunks → pages. And the fact that
+                            decides everything: THE FOOTER HOLDS THE METADATA AND IS READ
+                            FIRST, so a reader knows what is in the file before reading any
+                            of it.
+      MIN/MAX STATISTICS    per row group and per page. This is why predicate pushdown
+                            works at all — a whole row group is discarded without
+                            decompressing a byte. Learn SQL, Series 3 · 18 taught filtering
+                            early; this is what the file does with your filter.
+      ENCODINGS             dictionary, run-length, bit-packing, delta — and the
+                            distinction nobody draws: ENCODING IS NOT COMPRESSION. A
+                            low-cardinality column becomes tiny because it is
+                            dictionary-encoded, and snappy or zstd is applied on top.
+                            ClickHouse's LowCardinality is the same idea in another product.
+      NESTED DATA           repetition and definition levels, from the Dremel paper — how a
+                            COLUMN-ORIENTED file stores a record containing arrays and
+                            structs without losing its shape. Most readers have never
+                            wondered how that is possible, and the answer is elegant.
+
+    ── THE CONSEQUENCE THAT MAKES IT ACTIONABLE ────────────────────────────
+    SORT BEFORE YOU WRITE. Min/max statistics only skip when values are clustered. Write
+    the same rows in random order and every row group's range covers everything, so nothing
+    is skipped and the file is no faster than a CSV with better compression. Series 2 · 15
+    owns sort keys as a warehouse decision; this is why they exist at the file level.
+    ROW GROUP SIZE is the second dial: too small and per-group overhead dominates, too
+    large and there is nothing granular left to skip.
+
+    ── ATTRIBUTION ─────────────────────────────────────────────────────────
+    Credited to melnik-dremel for the NESTED ENCODING ONLY — repetition and definition
+    levels, which Parquet took directly from that paper. Not for columnar storage, which is
+    00's C-Store credit, and not for the file format itself.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:count:scanned
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/datawarehousing/series2/_02/InsideAParquetFileKoans.groovy
+
+    THE KOAN THAT TEACHES IT: the same rows written sorted and unsorted, the same query
+    over both, and `count:scanned` showing the difference. No stopwatch — the number of
+    row groups read is the evidence.
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: a team converts to Parquet, measures no improvement, and concludes
+    the format is overrated. The data was written unsorted, so every row group holds the
+    full range of every column and not one of them could be skipped. The file is smaller
+    and the query reads all of it. */}
+
+TODO

@@ -1,0 +1,1476 @@
+# The ordered episode list for Virtualization for Data. Field docs live in
+# courses/learnsql/curriculum.yaml. `short` is omitted until an episode has a video.
+#
+# The job this track teaches: turn hardware you control into the machines your data work needs —
+# a lab, a staging environment, a database host you can snapshot before a migration, and the
+# storage underneath all of them.
+#
+# ============================================================================
+# WHY THIS TRACK EXISTS
+# ============================================================================
+# EVERY OTHER TRACK ASSUMES THE MACHINE ALREADY EXISTS. Data Ops rents one by clicking, in
+# Series 1 · 46, and then teaches you to live on it. Kubernetes for Data Workloads starts with a
+# cluster somebody else built. Storage for Data hands you disks. Terraform & Pulumi describes
+# infrastructure that some API is willing to create for you.
+#
+# NOBODY OWNS THE STEP WHERE THE MACHINES COME FROM WHEN THERE IS NO API TO CALL. A second-hand
+# server, a rack in an office, a colocated box, the workstation under a desk — and the question
+# "how do I get eight machines out of this one?"
+#
+# THE READER THIS IS FOR: the data person who has been handed hardware, or who has decided that
+# the monthly bill for a dev environment is absurd, or whose data legally cannot go to somebody
+# else's cloud. Not a systems administrator building a datacentre — this track never becomes a
+# vSphere manual — but somebody who has to stand up, run and answer for the boxes their
+# pipelines live on.
+#
+# ============================================================================
+# THE FOUR THINGS THIS COURSE TEACHES, AND WHY THESE FOUR
+# ============================================================================
+#   SERIES 1  THE PRIMITIVES, on one Debian box. KVM, QEMU and libvirt; namespaces, cgroups,
+#             LXC and Incus. This is what all three products in the rest of the course are
+#             standing on, and a reader who knows it can debug them instead of clicking around.
+#   SERIES 2  XCP-NG AND XEN ORCHESTRA. A type-1 hypervisor with a management plane, free, and
+#             the usual answer when a team is walking away from a per-socket licence bill.
+#   SERIES 3  PROXMOX VE. Series 1's exact tools — KVM and LXC — with a cluster, a web UI and a
+#             backup server around them. The most common answer for a data team's own hardware.
+#   SERIES 4  TRUENAS. The storage appliance, which in most real deployments is not a fourth
+#             option but THE THING UNDER THE OTHER TWO: the box that exports the NFS share or
+#             the iSCSI target that the hypervisors keep their disks on.
+#
+# THEY ARE NOT FOUR COMPETITORS AND THE COURSE MUST NOT PRESENT THEM AS ONE. Series 4 · 10 is
+# where they join up, and Series 4 · 27 is where a reader chooses.
+#
+# ============================================================================
+# FOLLOW EACH PROJECT'S OWN DOCUMENTATION — FOR COVERAGE AND VOCABULARY
+# ============================================================================
+# Series 1 is the kernel and the Linux Containers project. Series 2 to 4 each have one manual:
+#   XCP-NG    the XCP-ng documentation (xcp-ng.org/docs) and the Xen Orchestra documentation —
+#             pool, host, dom0, SR, VDI, PIF, VIF, and the `xe` CLI.
+#   PROXMOX   the Proxmox VE Administration Guide (pve.proxmox.com/pve-docs) — node, cluster,
+#             pmxcfs, qm, pct, vzdump, storage type, content type.
+#   TRUENAS   the TrueNAS documentation — pool, vdev, dataset, zvol, share, periodic snapshot
+#             task, replication task, app, instance.
+#
+# ── BUT FOLLOW IT FOR COVERAGE AND VOCABULARY, NOT FOR SHAPE ────────────────
+# THE DOCS ARE A REFERENCE. THIS IS A COURSE. An administration guide is written to be complete
+# and to be looked things up in; we are written to take somebody from bare hardware to a system
+# they can defend on Monday. Copying a reference's running order produces a reference nobody
+# finishes.
+#
+# SO THE RULE IS: THE DOCUMENTATION SETS WHAT MUST BE COVERED AND WHAT THINGS ARE CALLED. THE
+# ORDER IS OURS, AND IT FOLLOWS THE ORDER OF A REAL JOB.
+#   WHAT WE TAKE      every topic the manual treats as essential, so nothing is missed; and its
+#                     exact nouns, so a reader who finishes can live in those docs afterwards.
+#   WHAT WE REORDER   the sequence. Every one of these manuals opens with installation and
+#                     architecture. A course opens with WHY YOU WOULD, then gets something
+#                     running, then explains what just happened.
+#   WHAT WE LEAVE     the exhaustive option lists, the configuration reference, and the features
+#                     that exist for somebody else's deployment. Name them, point at the page,
+#                     move on.
+#
+# ============================================================================
+# AND THE THING THAT MAKES THIS COURSE WORTH READING INSTEAD OF THE MANUAL
+# ============================================================================
+# EVERY EPISODE ANSWERS "HOW IS THIS ACTUALLY USED AT WORK?" — and the answer is a scene, not a
+# category. This is the requirement the course was commissioned on and it is not decoration.
+#
+# THE MANUAL CANNOT TELL YOU THIS, and it is not the manual's job. A manual documents live
+# migration. It cannot tell you that the reason a data team buys a second host is so that
+# somebody can patch a kernel at eleven in the morning without stopping the warehouse load, and
+# that this single fact is what turns "one server" into "a pool" and doubles the budget.
+#
+# SO EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD:
+#   "The migration is on Thursday and I want to be able to put it back."
+#   "Every developer needs their own Postgres with last month's data in it."
+#   "Finance asked what the dev environment costs and the answer was embarrassing."
+#   "The auditor asked where the data physically is."
+#   "The disk in the NAS is making a noise."
+#   "The upgrade is scheduled for Saturday and I need to know how to undo it."
+# THE TEST FOR ANY EPISODE: IS THIS SOMETHING SOMEBODY DOES ON A REAL PROJECT? If it is in the
+# docs and nobody does it in the first year, it is a pointer and not an episode. If somebody
+# does it constantly and the docs bury it on page forty — reverting a snapshot, finding out why
+# an SR will not coalesce, discovering that a backup of a running database is not a backup of a
+# consistent database — IT IS AN EPISODE, and its prominence here should be nothing like its
+# prominence there.
+#
+# AND SAY WHAT IT COSTS IN TIME, not only in money. Every platform here is free to download and
+# none of them is free to run. The hours are the price, and a course that hides them is selling
+# something.
+#
+# ============================================================================
+# THE THREE MISUNDERSTANDINGS THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+#   A SNAPSHOT IS NOT A BACKUP. It lives on the same storage as the thing it protects, it is a
+#   dependency of that thing rather than a copy of it, and a chain of them left running is one
+#   of the commonest ways to fill a datastore and take the whole host down. Series 2 · 10 and
+#   Series 3 · 20 both collect on this. Storage for Data says the sibling sentence — replication
+#   is not a backup — and this course must not let a reader believe either mechanism is one.
+#
+#   HIGH AVAILABILITY OF A VM IS NOT HIGH AVAILABILITY OF A DATABASE. Every platform here will
+#   restart a virtual machine on another host when a host dies. What comes back is a database
+#   that was killed without warning: it recovers from its write-ahead log, it takes as long as
+#   it takes, and connections were dropped. That is a real and useful thing. It is not what the
+#   word means when a database person says it, and the gap between the two is where a data team
+#   gets hurt. Series 3 · 15 owns saying this out loud.
+#
+#   A CRASH-CONSISTENT SNAPSHOT OF A DATABASE IS A DATABASE THAT CRASHED. Usually it recovers.
+#   "Usually" is not a backup policy. Series 3 · 20 is the episode; every backup episode in the
+#   course points at it.
+#
+# ============================================================================
+# THE PLATFORM IS DEBIAN, AND THE VERSIONS ARE NAMED
+# ============================================================================
+# Series 1 is Debian stable, with the version stated and the real package names. Series 2 to 4
+# are appliances that ship their own operating system — XCP-ng is its own distribution, Proxmox
+# VE is Debian with Proxmox's kernel and repositories, TrueNAS is its own image — and each
+# episode says which release it was written against.
+#
+# ⚠ THIS SUBJECT MOVES, AND TWO OF THESE PRODUCTS HAVE CHANGED SOMETHING STRUCTURAL RECENTLY.
+# The container runtime under TrueNAS's apps and the technology under its virtual machines have
+# both been replaced within the last few releases; LXD was forked into Incus and the
+# distributions have picked sides; Proxmox and XCP-ng both have moving stories around their
+# subscription tiers and their clustered-storage options.
+# THE RULE: NEVER WRITE A VERSION-DEPENDENT CLAIM FROM MEMORY. Open the release notes for the
+# version you are writing against, state that version in the lesson, and if a thing changed
+# recently SAY SO AND SAY WHEN — a reader on the older release is not wrong, they are on the
+# older release. Every episode that touches one of these carries a ⚠ below.
+#
+# ============================================================================
+# EVERY OPERATIONAL EPISODE CARRIES A RUNBOOK, NOT A DESCRIPTION
+# ============================================================================
+# THE ACCEPTANCE TEST: A READER FINISHES AN EPISODE AND CAN DO THE THING. Not recognise it, not
+# discuss it — do it. So every episode that installs, configures or operates something contains
+# THE ACTUAL SEQUENCE, in order, run by the author before it ships, with the expected output
+# shown so a reader knows whether it worked.
+#
+# FOR THE WEB-UI PRODUCTS, THE RUNBOOK IS THE CLI, and this is a deliberate decision rather than
+# a stylistic one. `xe`, `qm`, `pct`, `midclt` and each product's REST API are what survives a
+# version change, what can be scripted, what can be pasted into a ticket, and what still works
+# when the UI is the thing that is broken. THE UI IS SHOWN FOR THE FIRST TIME YOU DO SOMETHING
+# AND THE CLI FOR EVERY TIME AFTER — which is also how people actually work.
+# A SCREENSHOT IS NOT A RUNBOOK. Screenshots go stale in one release and cannot be diffed.
+#
+# ── AND THE KOAN IS THE RUNBOOK, IN THREE HONEST TIERS ──────────────────────
+# Same mechanism as everywhere else in the academy — a koan asserting on a process's output —
+# with no second framework invented. What varies is what can honestly be tested:
+#   TIER 1  RUNS IN CI. Everything in Series 1 that does not need nested virtualization:
+#           namespaces and cgroups with `unshare` and cgroup files, an Incus container in a
+#           privileged runner, `virsh` against a tiny guest, cloud-init rendering.
+#   TIER 2  NEEDS A CAPABLE RUNNER — nested virtualization, or a single-node appliance in a VM.
+#           The koan header must say what it needs and SKIP CLEANLY with a message naming the
+#           missing capability, rather than failing and looking broken.
+#   TIER 3  CANNOT HONESTLY BE TESTED, so the episode is marked `eyes` and the brief says why.
+#           Live migration between two physical hosts, HA fencing, a pool master failure, an SR
+#           coalescing under load, hardware sizing. A three-container imitation proves the
+#           commands parse and proves nothing about the thing being taught.
+# THE RULE THAT KEEPS IT HONEST: AN EPISODE IS TIER 3 BECAUSE THE SUBJECT CANNOT BE TESTED,
+# NEVER BECAUSE THE TEST WOULD BE INCONVENIENT.
+# AND NEVER ASSERT WALL-CLOCK TIME. "The VM came back" is an assertion; "it came back in four
+# seconds" is a flake.
+#
+# ============================================================================
+# WHAT A LEARNER CAN ACTUALLY RUN
+# ============================================================================
+# ALL OF SERIES 1 RUNS ON ANY LINUX LAPTOP WITH VIRTUALIZATION ENABLED IN THE FIRMWARE, and the
+# course must say so at 1 · 00 so nobody believes they need hardware to start.
+# SERIES 2, 3 AND 4 INSTALL INSIDE A VM — every one of these products will run nested, with a
+# single node, on eight or sixteen gigabytes, and that is enough for every episode except the
+# ones marked `eyes`. SAY THIS EXPLICITLY AND EARLY IN EACH SERIES, with the nested-virtualization
+# flag a reader has to turn on, because "you need three servers to learn Proxmox" is false and
+# it stops people before they begin.
+# BE EQUALLY CLEAR WHERE THE PRETENCE ENDS: a single-node cluster teaches the commands and
+# teaches nothing about quorum; one host cannot migrate a VM anywhere. Those episodes say so.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THE DOCS RULE, WITH THE DOCS SECTION NAMED.
+
+course: learn-virtualization
+track: virtualization
+title: Virtualization for Data
+
+prerequisites:
+  - course: learn-data-ops
+    needs: "Series 1"
+    why: >-
+      You need the terminal, ssh and a text editor on a remote box, and you need to have already
+      met containers once — Series 1 · 37 is Docker as a tool, and this course explains what it
+      was standing on. Series 1 · 46 rents a machine by clicking; this course is the other
+      answer to the same question.
+  - course: learn-storage
+    needs: "Series 1"
+    why: >-
+      Every platform here makes you choose a disk layout on the day you install it, and that
+      choice is the hardest one to take back. Series 1 · 15 is RAID and Series 1 · 18 is LVM,
+      both of which appear in the installer of every product in this course. Series 2 is ZFS,
+      which Series 4 of this course assumes completely.
+
+excludes:
+  - topic: "Building and running application containers, and writing a Dockerfile"
+    where: "covered in Data Ops, Series 1 · 37, which is Docker as a tool a data person uses. In this course, Series 1 · 02 explains the kernel features underneath it and Series 1 · 10 covers the different thing a system container is"
+  - topic: "Orchestrating containers across a cluster"
+    where: "covered in Kubernetes for Data Workloads. This course stops at the machines; what schedules pods onto them is that track's subject"
+  - topic: "ZFS itself — pools, vdevs, RAIDZ, scrub, resilver, send and receive"
+    where: "covered in Storage for Data, Series 2, in ten episodes. In this course, Series 4 · 05 covers only what the TrueNAS interface calls those things and which decisions it makes for you"
+  - topic: "Ceph as a storage system"
+    where: "covered in Storage for Data, Series 4. In this course, Series 3 · 17 covers only the fact that Proxmox will build one for you from a web form, and what you have taken on when it does"
+  - topic: "Renting a virtual machine or a bucket from a provider"
+    where: "covered in Data Ops, Series 1 · 46 and Data Ops, Series 1 · 47. This course is the alternative, and it is honest about when renting is the better answer"
+  - topic: "Creating virtual machines from code, with a provider and a state file"
+    where: "covered in Terraform & Pulumi. In this course, Series 3 · 25 covers the API and the token that such a provider would authenticate with, and stops there"
+  - topic: "Operating PostgreSQL — backups, replication, upgrades and tuning"
+    where: "covered in Data Ops, Series 2. This course puts a database on a virtual disk and protects the machine; what happens inside the database is that course's subject and the two must not be confused"
+  - topic: "VMware vSphere, Hyper-V and the commercial platforms"
+    where: "not covered. This track is virtualization a data team can obtain and run without a purchase order, and the two products a reader is most often migrating away from are named as context in Series 2 · 00 rather than taught"
+  - topic: "Desktop virtualization — VirtualBox, VMware Workstation and running a VM on your laptop"
+    where: "not covered as a subject, though Series 1 · 00 says plainly where it fits. This course is about machines that other people depend on"
+
+series:
+  # SERIES 1 IS NOT AN INTRODUCTION TO THE THREE PRODUCTS. It is the layer they are all built
+  # on, taught on one Debian box, and it is here for a reason that the rest of the course keeps
+  # collecting on: PROXMOX IS KVM AND LXC WITH A UI, and XCP-ng is Xen with a different one. A
+  # reader who has created a VM with `virt-install` and a container with `incus launch` will
+  # recognise every screen in Series 3, and — far more usefully — will know what to do when the
+  # screen is not enough.
+  - slug: series1-linux-virtualization
+    title: Containers and Virtual Machines on One Linux Box
+    tagline: namespaces, KVM and LXC — what a "machine" is when there is only one machine
+    level: intermediate
+    episodes:
+      # THE TAXONOMY EPISODE, and everything else in the course hangs off it.
+      # COVER: the two mechanisms, as two different answers to one question.
+      #   A VIRTUAL MACHINE   its own kernel, its own boot, virtual hardware. The CPU itself
+      #                       helps — Intel VT-x or AMD-V — so this is not emulation and not
+      #                       slow. Strong boundary, whole operating system, gigabytes and a
+      #                       boot time.
+      #   A CONTAINER         processes on the HOST'S kernel, fenced off by namespaces and
+      #                       limited by cgroups. No boot, no second kernel, megabytes, starts
+      #                       in the time it takes to fork.
+      # THE TEST TO LEAVE THEM WITH, and it settles most arguments: run `uname -r` inside. If it
+      # is the host's kernel, it is a container, and everything that follows from that is true —
+      # you cannot load a kernel module, you cannot run a different kernel version, you cannot
+      # run a Windows guest, and a kernel bug is a shared problem.
+      # WHERE A DATA TEAM MEETS EACH: containers for the pipeline and the tool, VMs for the
+      # database, for anything belonging to another team, and for anything an auditor asks about.
+      # SAY WHAT THIS COSTS: virtualization overhead on modern hardware is small for CPU and
+      # memory and is NOT small for storage latency, which Series 1 · 25 measures rather than
+      # asserts.
+      # AND SAY WHERE VIRTUALBOX FITS, in one paragraph, because most readers have used it: the
+      # same idea, packaged for a desktop, and a fine way to run the rest of this course's
+      # appliances on a laptop. It is not what anybody runs a shared environment on.
+      # ⚠ SAY AT THE TOP THAT ALL OF SERIES 1 RUNS ON A LAPTOP with virtualization enabled in
+      # the firmware. Nobody needs to buy a server to start.
+      - n: "00"
+        slug: vms-against-containers
+        title: "Two Ways to Get More Machines — a Second Kernel, or a Fence Around Processes"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the kernel features Docker made famous and did not invent, run BY HAND so they
+      # stop being magic.
+      #   NAMESPACES  what a process can SEE. `unshare --pid --fork --mount-proc` and watch the
+      #               shell become PID 1; the mount, net, uts, ipc and user namespaces in the
+      #               same shape. `lsns` to list them, and /proc/<pid>/ns to see them as files.
+      #   CGROUPS v2  what a process can USE. Write to memory.max and cpu.max under
+      #               /sys/fs/cgroup, then watch a process get killed for exceeding it.
+      # THE PAYOFF, AND IT IS IMMEDIATE: a container that "died with no error in the logs" was
+      # killed by the kernel for exceeding memory.max, and the evidence is in dmesg and the
+      # cgroup's memory.events. THAT IS EXACTLY WHAT Kubernetes for Data Workloads, Series 1 · 20
+      # CALLS OOMKilled — a reader who has written the limit by hand never has to guess at that
+      # again, in any of the four platforms in this course.
+      # AND THE OTHER PAYOFF: this is why a container's `free` and `nproc` LIE, reporting the
+      # host's memory and CPU count rather than the limit — which is how a JVM or a pandas job
+      # inside a container sizes itself catastrophically wrong.
+      - n: "02"
+        slug: namespaces-and-cgroups
+        title: "Namespaces and cgroups — Building a Container by Hand, and Why free Lies"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: three words people use as one, separated once and for good, because every
+      # confusing error message in Linux virtualization comes from not knowing which layer spoke.
+      #   KVM      a KERNEL MODULE that turns Linux itself into a hypervisor. It is not a
+      #            product you install; /dev/kvm either exists or your firmware has
+      #            virtualization switched off. `grep -E 'vmx|svm' /proc/cpuinfo`, and
+      #            `kvm-ok` on Debian.
+      #   QEMU     the USERSPACE process that provides the virtual hardware — the disk
+      #            controller, the network card, the display. One QEMU process per running VM,
+      #            visible in `ps`, which surprises people the first time they see it.
+      #   LIBVIRT  the MANAGEMENT LAYER — a daemon, an XML definition per domain, and `virsh`.
+      #            It is what every tool in this course is really talking to, directly or by
+      #            having reimplemented it.
+      # THE WORKPLACE POINT, and it justifies the episode: THIS IS WHAT PROXMOX IS. And what
+      # OpenStack is, and what most cloud providers are. Learning the three layers once means
+      # every KVM-based product afterwards is a UI over something you already understand.
+      # ALSO COVER: `virsh` as the vocabulary — domain, network, pool, volume — and where the
+      # XML lives, because reading a domain's XML is how you answer "what is this VM actually
+      # configured with" in every one of these products.
+      - n: "05"
+        slug: kvm-qemu-libvirt
+        title: "KVM, QEMU and libvirt — Three Layers People Say as One Word"
+        hands_on: ["koan:process:tool", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the first VM, end to end, as a runbook on Debian.
+      # THE MODERN WAY AND NOT THE ISO WAY: download the distribution's CLOUD IMAGE, resize it,
+      # and boot it with cloud-init supplying the user, the key and the hostname. `virt-install`
+      # with --import. A machine in under a minute, with no installer and no clicking.
+      # DO NOT TEACH THE INSTALLER AS THE DEFAULT — an installer is what you use once, to build
+      # the template, and Series 1 · 22 is where that becomes a habit.
+      # THEN THE LIFECYCLE: virsh list --all, start, shutdown against destroy (and the fact that
+      # `destroy` means "pull the power cable", which is a genuinely bad name that has surprised
+      # everybody once), console, and autostart.
+      # AND THE OPERATION THIS WHOLE COURSE IS SECRETLY ABOUT: `virsh snapshot-create-as`, then
+      # break something on purpose, then revert. THE WORKPLACE MOMENT: the schema migration is
+      # on Thursday, it is the kind that cannot be rolled back with SQL, and you want to be able
+      # to put the machine back exactly as it was in twenty seconds.
+      # ⚠ AND THE WARNING THAT MUST TRAVEL WITH IT, stated the first time snapshots appear and
+      # restated in Series 2 · 10 and Series 3 · 20: A SNAPSHOT IS NOT A BACKUP. It sits on the
+      # same disks, it grows for as long as it exists, and a forgotten one is how a datastore
+      # fills up. It is an undo button with a short life, and it is superb at being that.
+      - n: "07"
+        slug: first-vm-with-virsh
+        title: "virt-install and virsh — a Cloud Image, a Machine, and an Undo Button"
+        hands_on: ["koan:process:tool", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: the distinction almost nobody is taught, and it is the reason this episode exists
+      # in a course whose readers all already know Docker.
+      #   AN APPLICATION CONTAINER  one process, no init, no ssh, no cron, immutable, thrown
+      #                             away and rebuilt. Docker. Data Ops, Series 1 · 37 owns it.
+      #   A SYSTEM CONTAINER        a full userspace with its own init, its own systemd, its own
+      #                             package manager, its own logs and users. It behaves like a
+      #                             small VM and you keep it for a year. LXC and Incus.
+      # WHY A DATA TEAM WANTS THE SECOND KIND: a per-developer Postgres they can ssh into, a
+      # build box, a legacy tool that expects to be a machine, an environment somebody needs to
+      # poke at. Density is the reason it is not just a VM — forty system containers on one host
+      # is unremarkable and forty VMs is not.
+      # ⚠ AND THE NAMING, WHICH IS GENUINELY CONFUSING AND MUST BE STATED PLAINLY WITH DATES:
+      # LXC is the low-level tooling. LXD was the friendly manager built on it; in 2023 it moved
+      # under Canonical and the original maintainers forked it as INCUS under the Linux
+      # Containers project. Debian ships Incus. Say which one the lesson uses, say which one the
+      # reader's distribution ships, and check both before writing — this is a live situation
+      # and a lesson that names the wrong one is useless at the command line.
+      - n: "10"
+        slug: lxc-and-incus
+        title: "System Containers — LXC, Incus, and Why This Is Not Docker"
+        hands_on: ["koan:choose", "koan:process:tool"]
+        core: true
+        status: planned
+      # COVER: running one, as a runbook. `incus launch images:debian/12 pg`, exec, file push and
+      # pull, `incus list`, and where the filesystem actually is on the host.
+      # PROFILES as the thing worth learning early: a named set of devices and configuration
+      # applied to many containers. THE WORKPLACE USE: one profile called `dev-db` with the
+      # right limits, the right network and the right mount, and every developer's container
+      # gets it without anybody remembering four flags.
+      # SNAPSHOTS AND COPIES: `incus snapshot`, `incus copy` — and the pattern that makes this
+      # worth the effort. Build ONE container with a restored copy of last month's production
+      # data, snapshot it, and give every developer a copy. They break it, they reset it in two
+      # seconds, and nobody has been waiting three hours for a restore.
+      # LIMITS: limits.memory and limits.cpu, which are Series 1 · 02's cgroup files with a
+      # nicer name, and are what stops one developer's runaway query taking the host down.
+      - n: "12"
+        slug: running-system-containers
+        title: "incus launch — Profiles, Snapshots, and One Database per Developer"
+        hands_on: ["koan:process:tool", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: the thing that breaks first and is explained last in most tutorials. NETWORKING.
+      #   NAT / THE DEFAULT BRIDGE   the guest gets an address on a private network and reaches
+      #                              the world through the host. Nothing on the LAN can reach
+      #                              the guest. Fine for a laptop, wrong for a server.
+      #   A REAL BRIDGE              the guest gets an address on YOUR network from YOUR DHCP,
+      #                              and is a peer of every other machine. This is what you want
+      #                              on a host that other people connect to, and it is the
+      #                              configuration every product in this course defaults to.
+      # THE RUNBOOK: a bridge on Debian with systemd-networkd or /etc/network/interfaces, the
+      # physical interface enslaved to it, and the host's own address moved onto the bridge —
+      # including the warning that GETTING THIS WRONG OVER SSH LOCKS YOU OUT OF THE MACHINE, so
+      # have console access before you start. That sentence has saved more afternoons than any
+      # other in this series.
+      # THEN: VLANs in one paragraph, port forwarding for the laptop case, and the diagnostic
+      # ladder — `ip a` inside, `bridge link`, `ip route`, and can you ping the gateway.
+      # THE WORKPLACE MOMENT: "the VM works but nobody can reach the database on it" is
+      # ninety per cent of the time this episode, and ten per cent of the time it is
+      # Data Ops, Series 1 · 32.
+      - n: "15"
+        slug: bridges-and-networking
+        title: "Bridges and NAT — the Address Your VM Did Not Get"
+        hands_on: ["koan:diagnose", "koan:process:tool"]
+        core: true
+        status: planned
+      # COVER: where a guest's disk actually lives, and the choice that decides how fast
+      # snapshots are and whether the host survives running out of space.
+      #   A FILE ON A FILESYSTEM   qcow2 or raw in /var/lib/libvirt/images. Simple, portable,
+      #                            snapshots are a qcow2 feature. The default, and fine.
+      #   AN LVM LOGICAL VOLUME    Storage for Data, Series 1 · 18. Thin pools give you cheap
+      #                            snapshots and the ability to overcommit.
+      #   A ZFS ZVOL OR DATASET    Storage for Data, Series 2. Snapshots, compression and
+      #                            checksums belong to the storage layer instead of the image
+      #                            format, which is why every appliance in this course that can
+      #                            use ZFS does.
+      # THE FORMAT DECISION: qcow2 against raw — thin provisioning and snapshots against a few
+      # per cent of performance and no surprises. Say which matters when.
+      # THIN PROVISIONING AND THE CLIFF: ten guests each promised a hundred gigabytes on a
+      # four-hundred-gigabyte pool is a normal and reasonable thing to do, right up until they
+      # all fill. Storage for Data, Series 1 · 25 is the arithmetic; here it is the specific
+      # failure — the guests do not get a friendly error, they get I/O errors, and filesystems
+      # go read-only.
+      # AND BIND MOUNTS / VIRTIOFS for containers, with THE TRAP: an unprivileged container maps
+      # its root to a high host UID, so a directory you bind-mount from the host is owned by
+      # somebody else as far as the container is concerned. This is the single most common
+      # "permission denied" in Incus and in every Proxmox container that touches a NAS share.
+      - n: "17"
+        slug: storage-backends
+        title: "Where the Virtual Disk Lives — qcow2, LVM, zvols, and the Bind-Mount Trap"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # COVER: the security question, answered honestly rather than reassuringly, because a data
+      # team's real question is "whose data can end up in the same place as whose".
+      #   UNPRIVILEGED CONTAINERS   root inside is an unprivileged UID outside, via the user
+      #                             namespace. This is the default in Incus and it should never
+      #                             be turned off casually. Show the mapping in /etc/subuid.
+      #   THE HONEST BOUNDARY       a container shares the host kernel. A kernel vulnerability
+      #                             is a shared vulnerability. A VM's boundary is enforced by
+      #                             the CPU and is meaningfully stronger — not perfect, and
+      #                             side-channel history says so, but a different class.
+      # THE DECISION PROCEDURE A DATA TEAM ACTUALLY NEEDS:
+      #   YOUR OWN WORKLOADS, YOUR OWN TEAM        containers are fine, and the density is worth
+      #                                            real money.
+      #   ANOTHER TEAM'S CODE, OR A CUSTOMER'S     a VM. The boundary is the product.
+      #   ANYTHING WITH A COMPLIANCE ANSWER        a VM, because "shared kernel" is a sentence
+      #                                            you do not want to have to defend.
+      #   A DIFFERENT KERNEL OR A KERNEL MODULE    a VM. There is no argument, it simply cannot
+      #                                            be done in a container.
+      # AND THE DATA-SPECIFIC ONE: multi-tenant data — one customer per what? If the answer has
+      # to survive an audit, it is one customer per VM, and the density argument loses.
+      - n: "20"
+        slug: the-isolation-boundary
+        title: "Unprivileged Containers — the Boundary You Are Actually Trusting"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # COVER: the habit that separates somebody who runs three machines from somebody who runs
+      # thirty. STOP INSTALLING DEBIAN BY HAND.
+      #   THE GOLDEN IMAGE   one machine built properly — hardened, monitored, with your keys,
+      #                      your CA, your apt sources, your agent — then shut down and turned
+      #                      into a template. Everything after is a clone.
+      #   CLOUD-INIT         the mechanism that makes a clone into a specific machine on first
+      #                      boot: hostname, user, ssh keys, packages, and a run-once script.
+      #                      user-data and meta-data, the NoCloud datasource, and how to see
+      #                      what it did — /var/log/cloud-init.log, which is where you look when
+      #                      a machine came up nameless.
+      #   LINKED CLONES      a clone that stores only its differences from the template. Fifty
+      #                      machines in the space of one and a half, created in seconds — and
+      #                      the trade, which is that they all depend on the template's disk
+      #                      and that deleting it is not possible.
+      # THE WORKPLACE MOMENT AND IT IS THE POINT OF THE EPISODE: a new environment for a new
+      # project used to be a Wednesday. It is now a command, and — because it came from the
+      # template — it has the monitoring agent on it, which the hand-built one did not, which is
+      # why nobody noticed its disk filling.
+      # SAY THAT PACKER EXISTS for building the template repeatably, name it, and move on.
+      - n: "22"
+        slug: templates-and-cloud-init
+        title: "Templates and cloud-init — Stop Installing Debian by Hand"
+        hands_on: ["koan:process:tool", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: the performance settings that matter, MEASURED rather than asserted, using the
+      # tool Storage for Data, Series 1 · 07 already taught. Run fio in the guest and on the
+      # host and compare — that is the episode.
+      #   VIRTIO IS NOT OPTIONAL   emulated IDE or e1000 hardware is a compatibility crutch and
+      #                            costs a factor, not a percentage. virtio-blk or virtio-scsi
+      #                            for disk, virtio-net for network, and the guest needs the
+      #                            drivers (which every modern Linux has and Windows does not).
+      #   THE DISK CACHE MODE      the setting that matters most and is understood least.
+      #                            `cache=none` sends writes to the disk; `cache=writeback` lets
+      #                            the HOST'S page cache acknowledge them. Writeback is faster
+      #                            and MEANS THE GUEST'S fsync CAN RETURN BEFORE THE DATA IS
+      #                            SAFE — which is Storage for Data, Series 2 · 00's argument,
+      #                            arriving in the one place a data person can actually get it
+      #                            wrong. A database on cache=writeback is a database that can
+      #                            lose committed transactions when the HOST loses power. Say
+      #                            this once, plainly, and make it the takeaway.
+      #   CPU MODEL                host-passthrough against a stable model, and the trade with
+      #                            live migration in Series 2 · 20 — passthrough is faster and
+      #                            pins you to matching hardware.
+      #   THE ONES TO NAME AND NOT TEACH   pinning, hugepages, NUMA and SR-IOV matter at a scale
+      #                            most readers are not at. One paragraph, point at the docs.
+      #   PCI AND GPU PASSTHROUGH  one paragraph, honest: IOMMU groups, and the fact that a
+      #                            passed-through device usually blocks live migration.
+      # AND THE HONEST HEADLINE: CPU and memory overhead is small enough to ignore; storage and
+      # network latency is where virtualization actually costs you, which is why the settings
+      # above are the ones on the list.
+      - n: "25"
+        slug: performance-and-virtio
+        title: "virtio and cache=writeback — the Setting That Can Lose a Commit"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # THE ARTEFACT: a working two-machine lab on one box, with the operation that matters
+      # proven rather than described.
+      # BUILD: a Debian template with cloud-init; a VM cloned from it running PostgreSQL on a
+      # bridged address; a system container running the pipeline that loads it. Both reachable
+      # from the LAN.
+      # THEN PROVE IT: snapshot the database VM, run a destructive migration, revert, and show
+      # the data is back. Then do the thing that teaches the lesson — TAKE A SNAPSHOT WHILE THE
+      # DATABASE IS WRITING, revert to it, and read the Postgres log to see it recover from its
+      # write-ahead log on startup. That recovery message is Series 3 · 20's whole subject, met
+      # here for the first time.
+      # HAND IT IN AS: the commands, the cloud-init file, and the log excerpt.
+      - n: "30"
+        slug: project-a-two-machine-lab
+        title: "Project — a Template, a Database VM, and a Revert That Actually Works"
+        hands_on: ["koan:author", "koan:capture"]
+        status: planned
+
+  # SERIES 2 IS THE FIRST PRODUCT, AND IT IS DELIBERATELY THE ONE FURTHEST FROM SERIES 1.
+  # XCP-ng is Xen, not KVM: a different hypervisor, a different control domain, a different
+  # vocabulary. That is exactly why it comes before Proxmox — a reader who meets Proxmox second
+  # sees it as "Series 1 with a UI", which is the correct and useful way to see it, and they can
+  # only see that if they have already met a platform that is NOT that.
+  - slug: series2-xcp-ng
+    title: XCP-ng and Xen Orchestra
+    tagline: a type-1 hypervisor, a pool, and the backup story that sells it
+    level: intermediate
+    episodes:
+      # COVER: what it is and where it came from, because the lineage explains the product.
+      #   IT IS XEN, and Xen is a TYPE-1 hypervisor — it boots before Linux does, and what you
+      #   log into is dom0, a privileged VM that manages the others. That is a genuinely
+      #   different architecture from Series 1, where Linux is the host and KVM is a module in
+      #   it, and the difference shows up everywhere: in what dom0 is for, in how you patch, and
+      #   in why you do not install things on it.
+      #   IT IS A FORK OF CITRIX XENSERVER, open source, driven by Vates. Say this plainly — a
+      #   reader will meet XenServer documentation and needs to know why it looks familiar.
+      # XEN AGAINST KVM, IN ONE HONEST PARAGRAPH AND NOT A HOLY WAR: both are mature, both are
+      # in production at enormous scale, performance differences are workload-specific and
+      # smaller than the internet suggests. THE REAL DECISION IS THE MANAGEMENT PLANE AND THE
+      # ECOSYSTEM AROUND IT, not the hypervisor, and this course says so once here so it never
+      # has to be argued again.
+      # THE WORKPLACE MOMENT THAT PUTS THIS PRODUCT ON THE TABLE, and it is the same one every
+      # time: the per-socket licence renewal arrived and it has a new number on it. VMware and
+      # Hyper-V are named here as context — this is what a team is usually migrating FROM — and
+      # not taught, per this course's excludes.
+      # AND WHO IT IS FOR: an organisation that wants a hypervisor PLATFORM with a support
+      # contract available, rather than a Linux box it also runs VMs on. If that distinction
+      # does not describe you, Series 3 probably does.
+      # ⚠ SAY HERE THAT THE WHOLE SERIES RUNS NESTED, in a single VM with 8–16 GB, with the
+      # nested-virtualization flag named.
+      - n: "00"
+        slug: what-xcp-ng-is
+        title: "XCP-ng — Xen, a Fork of XenServer, and the Licence Renewal That Sells It"
+        hands_on: ["koan:choose", "eyes"]
+        core: true
+        status: planned
+      # COVER: the install, as a runbook, and the concept that install forces you to meet.
+      # THE INSTALLER: it takes the whole disk, it is not Debian, and the local storage
+      # repository is created for you on what is left. Say what it asks and what to answer.
+      # THEN DOM0, AND THE RULE THAT IS THE MOST USEFUL SENTENCE IN THIS SERIES: DOM0 IS NOT
+      # YOUR SERVER. It is a control domain with a deliberately small memory allocation and a
+      # small root filesystem, and it gets REPLACED on major upgrades. So:
+      #   DO NOT install your monitoring stack, your scripts, your Python, or your data tools in
+      #   it. Do not fill /var. Every one of those is lost or in the way at upgrade time.
+      #   ANYTHING YOU WANT TO RUN GOES IN A VM — including, and especially, the management
+      #   plane in Series 2 · 05.
+      # This is the mistake everybody makes once, it is invisible for a year, and it surfaces on
+      # the day of an upgrade, which is the worst possible day.
+      # ALSO COVER: xsconsole, the local console menu you will use before networking works, and
+      # the first `xe host-list` — the CLI that this series treats as the runbook.
+      - n: "02"
+        slug: installing-and-dom0
+        title: "Installing a Host — and Why dom0 Is Not Somewhere You Put Things"
+        hands_on: ["koan:process:tool", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the management plane, which is a separate product and a separate decision, and
+      # which a reader must understand before they design anything.
+      #   XO LITE          built into the host, browser-based, per-host. Enough to start a VM.
+      #                    Not enough to run an estate.
+      #   XO FROM SOURCES  the full Xen Orchestra, built and run by you on a Debian VM. Free.
+      #                    This is what the series uses, and the build is a runbook.
+      #   XOA              the same thing as a supported appliance from Vates, with tiers.
+      # ⚠ STATE THE LICENSING HONESTLY AND WITH A DATE. Some features are tied to paid tiers and
+      # the boundaries have moved between releases. Check the current matrix before writing, say
+      # which release it describes, and do not imply that the free path is a trick — it is a
+      # legitimate, widely used path, and so is paying for support.
+      # THE DESIGN RULE, AND IT IS THE POINT OF THE EPISODE: THE MANAGEMENT PLANE MUST NOT LIVE
+      # ON THE THING IT MANAGES. If XO runs as a VM inside the pool it backs up, then the day
+      # the pool is down is the day you cannot reach your backups or your restore interface.
+      # Put it elsewhere — a small separate box, or a VM on a different host — and back up XO's
+      # own configuration. People learn this the expensive way.
+      - n: "05"
+        slug: xen-orchestra
+        title: "Xen Orchestra — XO Lite, From Sources, or XOA, and Where It Must Not Live"
+        hands_on: ["koan:process:tool", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: the pool, which is the unit that makes this a platform rather than a hypervisor.
+      #   A POOL is a set of hosts sharing configuration, networks and — critically — SHARED
+      #   STORAGE. One host is the POOL MASTER and holds the database the others follow.
+      #   JOINING a host: the requirements that actually bite — matching CPU vendors and
+      #   compatible feature sets, matching patch levels, and a network the hosts agree about.
+      #   WHAT HAPPENS WHEN THE MASTER DIES: not what people assume. Designate a new master, and
+      #   know the procedure BEFORE you need it. HA changes this and brings its own quorum
+      #   requirements and its own ways to go wrong.
+      # THE SENTENCE THIS EPISODE EXISTS TO DELIVER: TWO HOSTS WITH LOCAL STORAGE ARE NOT A
+      # CLUSTER. They are two servers. Everything people want from a pool — migrating a VM off a
+      # host to patch it, restarting a VM elsewhere when a host dies — requires storage that
+      # both hosts can see. THAT IS WHY SERIES 4 EXISTS, and this is the episode that explains
+      # why a shared storage box is not an optional extra but the thing that makes the second
+      # host worth buying.
+      # NAME XOSTOR / hyperconverged storage as the alternative to a separate storage box, say
+      # what it is in two sentences, and ⚠ check its current status and licensing before writing
+      # anything more than that.
+      - n: "07"
+        slug: pools-and-hosts
+        title: "Pools, Hosts and the Master — Why Two Servers Are Not Yet a Cluster"
+        hands_on: ["koan:choose", "eyes"]
+        core: true
+        status: planned
+      # COVER: storage repositories, the vocabulary, and the failure mode that this platform is
+      # genuinely known for.
+      #   THE NOUNS: SR (storage repository), VDI (a virtual disk), VBD (the attachment of one
+      #   to a VM), PBD (the host's connection to the SR). Learn these four — every error
+      #   message in the logs uses them.
+      #   THE TYPES: local LVM, local ext, NFS, iSCSI, and hardware HBA. And THE PROVISIONING
+      #   DIFFERENCE THAT SURPRISES PEOPLE: block-based SRs (LVM, iSCSI) are traditionally THICK
+      #   — a 100 GB disk takes 100 GB immediately — while file-based SRs (ext, NFS) are thin.
+      #   ⚠ Verify this against the release you are writing about; it has been an area of active
+      #   change. Whichever is true, it decides how much hardware you buy.
+      # AND THEN THE 3 A.M. EPISODE, WHICH IS WHY THIS ONE IS `core`: SNAPSHOTS CREATE VDI
+      # CHAINS, and a chain must be COALESCED back into its parent by a garbage collector after
+      # the snapshot is deleted. If coalescing cannot keep up or gets stuck — because a backup
+      # job runs every hour, because the SR is nearly full, because a snapshot was left behind —
+      # THE CHAIN GROWS AND THE SR FILLS, and a full SR means VMs that pause or refuse to write.
+      # TEACH: how to see it (the SR's usage against the sum of the VDIs, the coalesce queue,
+      # SMlog), how to give it room, and the rule — LEAVE HEADROOM ON AN SR THAT TAKES
+      # SNAPSHOTS. Storage for Data, Series 1 · 25's cliff, with a specific and famous shape.
+      - n: "10"
+        slug: storage-repositories
+        title: "SRs, VDIs and the Coalesce Queue — the Way This Platform Fills a Disk"
+        hands_on: ["koan:diagnose", "koan:process:tool"]
+        core: true
+        status: planned
+      # COVER: networking, in this platform's nouns, and the design decisions that are hard to
+      # change later.
+      #   PIF   a physical interface on a host. VIF a virtual one on a VM. A NETWORK joins them
+      #         across the pool, which is why a network must exist identically on every host or
+      #         a VM cannot migrate to that host.
+      #   BONDS for redundancy and throughput, and the modes, briefly.
+      #   VLANS as the normal way a pool serves several networks over one pair of cables.
+      #   THE MANAGEMENT INTERFACE, which is what the pool uses to talk to itself, and which you
+      #         do not casually reconfigure remotely.
+      # THE DESIGN RULE FOR A DATA WORKLOAD, and it lands on Storage for Data, Series 4 · 10's
+      # argument: SEPARATE THE STORAGE NETWORK FROM THE VM NETWORK. If your VMs' disks are on
+      # NFS or iSCSI, then every read your database does crosses a cable, and putting a nightly
+      # extract on the same cable at the same time is how you produce a mystery.
+      # THE WORKPLACE MOMENT: "the database got slow every night at two" is a storage network
+      # sharing a link with a backup job, more often than it is anything in the database.
+      - n: "12"
+        slug: networking-and-bonds
+        title: "PIFs, VIFs and Bonds — and the Storage Network You Should Have Separated"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        status: planned
+      # COVER: making VMs the way people actually make them in an estate.
+      #   TEMPLATES, and the fact that this platform ships a large set of them, plus your own
+      #   built the Series 1 · 22 way.
+      #   THE GUEST TOOLS (xe-guest-utilities). NOT OPTIONAL, and say why concretely rather than
+      #   as advice: without them the host cannot request a CLEAN SHUTDOWN, so "shut down" means
+      #   pulling the power on a running database; it cannot report the guest's IP address; and
+      #   it cannot quiesce the filesystem for a snapshot. Three real consequences.
+      #   CLOUD-INIT through Xen Orchestra, which is Series 1 · 22 arriving in this platform.
+      #   AND THE `xe` CLI, treated as the primary interface for anything you will do twice:
+      #   xe vm-list, vm-start, vm-shutdown, vm-param-set, vm-copy, snapshot. THE UI IS FOR THE
+      #   FIRST TIME; THE CLI IS FOR EVERY TIME AFTER, and it is also what still works when XO
+      #   is the thing that is down.
+      - n: "15"
+        slug: creating-vms
+        title: "Templates, Guest Tools and xe — Why a VM Without the Tools Cannot Be Shut Down"
+        hands_on: ["koan:process:tool", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: live migration, which is the operation that justifies the entire cost of a second
+      # host, and the maintenance workflow built on it.
+      # WHAT IT IS: moving a running VM to another host with no downtime — memory copied
+      # iteratively while it runs, then a pause of milliseconds. STORAGE MOTION moves the disk
+      # too, between SRs, which is how you empty a storage array you are retiring.
+      # THE REQUIREMENTS THAT ACTUALLY BITE: compatible CPUs across the pool (and the cost of
+      # Series 1 · 25's host-passthrough decision arriving here), a network both hosts have, and
+      # shared storage unless you are moving the disk as well.
+      # MAINTENANCE MODE as the workflow: put the host into maintenance, watch every VM migrate
+      # off it, patch it, reboot it, take it out. THE WORKPLACE MOMENT, AND IT IS THE WHOLE
+      # BUSINESS CASE FOR A POOL: it is eleven o'clock on a Tuesday morning, there is a kernel
+      # security update, and the warehouse load does not stop and nobody is asked to work at
+      # midnight.
+      # THE HONEST LIMITS: a VM with a passed-through PCI device usually cannot migrate; a VM
+      # writing memory faster than the link can copy it may never converge; and a single-host
+      # lab cannot demonstrate any of this, which is why this episode is `eyes`.
+      - n: "20"
+        slug: live-migration
+        title: "Live Migration and Maintenance Mode — Patching a Host at Eleven in the Morning"
+        hands_on: ["eyes", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: backups, and this is the strongest thing about the product, so give it the room.
+      #   THE JOB TYPES, AND WHAT EACH IS ACTUALLY FOR:
+      #     FULL BACKUP              a whole copy to a remote. Slow, simple, independent.
+      #     DELTA BACKUP             changed blocks since the last full. What you actually run.
+      #     CONTINUOUS REPLICATION   a live copy of the VM on another pool, ready to start. This
+      #                              is a DISASTER RECOVERY tool and NOT A BACKUP — a deletion
+      #                              or a corruption replicates faithfully. Say it here.
+      #     DISASTER RECOVERY / MIRROR jobs, and the difference from replication, briefly.
+      #   REMOTES: NFS, SMB, local, and S3-compatible — which is Data Ops, Series 1 · 47's
+      #   rented bucket and Storage for Data, Series 3 · 25's self-hosted one, arriving as the
+      #   place the backups land. Off-site is the point.
+      #   RETENTION and schedules, and the arithmetic of how much space a delta chain needs.
+      # AND THE FEATURE THAT DESERVES TO BE THE HEADLINE, because almost nothing else in this
+      # industry offers it: BACKUP HEALTH CHECKS THAT ACTUALLY BOOT THE RESTORED VM and confirm
+      # the guest tools answer. THE ACADEMY'S RULE IS THAT A BACKUP YOU HAVE NOT RESTORED IS A
+      # HYPOTHESIS — Data Ops, Series 1 · 42 states it and Data Ops, Series 2 · 30 states it for
+      # Postgres — and this is a product that will test the hypothesis for you, on a schedule,
+      # for free. TURN IT ON. That is the takeaway.
+      # ⚠ AND THE DATA CAVEAT THAT MUST NOT BE OMITTED: a VM-level backup of a running database
+      # is crash-consistent, not application-consistent. It usually recovers. Series 3 · 20 is
+      # where that argument is made in full, and this episode points at it rather than repeating
+      # it — but it must not imply that VM backups replace database backups. They do not.
+      - n: "25"
+        slug: backups-in-xen-orchestra
+        title: "Delta Backups and Health Checks — the Restore That Tests Itself"
+        hands_on: ["koan:process:tool", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: patching and upgrades, which is the recurring cost nobody budgets for.
+      # THE ROUTINE: applying updates to a pool, the order (master first), and the rolling pool
+      # upgrade — hosts evacuated one at a time by live migration, which is the payoff for
+      # Series 2 · 20 and only works if you have somewhere to evacuate to.
+      # THE HONEST WARNING: a single host means downtime for every patch. Plan the window, or
+      # buy the second host. There is no third option and the course should not pretend there
+      # is.
+      # WHAT ELSE MOVES WITH IT: guest tools want updating in every VM after a major upgrade,
+      # and Xen Orchestra is upgraded separately from the hosts and can be a version ahead or
+      # behind.
+      # AND THE THING THAT MAKES THIS SURVIVABLE: read the release notes, take a backup of the
+      # pool metadata, and know how to roll back a host before you upgrade the first one.
+      - n: "30"
+        slug: patching-and-upgrades
+        title: "Patching a Pool — the Order, the Rolling Upgrade, and the Single-Host Tax"
+        hands_on: ["koan:process:tool", "eyes"]
+        status: planned
+      # COVER: the diagnostic episode, and it must be specific to be worth anything.
+      # THE LOGS AND WHAT EACH IS FOR: SMlog for storage — this is where a stuck coalesce, a
+      # failing SR and a VDI problem all show up, and it is the first file to open;
+      # xensource.log for the toolstack and anything the API did; daemon.log; and `xl dmesg`
+      # for the hypervisor itself.
+      # THE THREE FAILURES A READER WILL ACTUALLY MEET, walked through as runbooks:
+      #   A VM WILL NOT START — usually a VDI still attached elsewhere, or an SR that is not
+      #   plugged on this host. `xe vbd-list`, `xe pbd-list`, and the repair.
+      #   AN SR IS FULL AND THE NUMBERS DO NOT ADD UP — Series 2 · 10's coalesce queue.
+      #   A HOST WILL NOT JOIN OR HAS GONE OFFLINE — check the management interface, the time
+      #   (clock skew breaks more clusters than anything else), and the master's view.
+      # AND THE HABIT: `xe task-list` and `xe message-list` before guessing, because the
+      # toolstack usually already knows what is wrong and is waiting to be asked.
+      - n: "35"
+        slug: when-it-breaks
+        title: "SMlog First — Reading a Stuck SR, a VM That Will Not Start, and a Lost Host"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        status: planned
+      # THE CLOSING GATE, and this course uses the academy's pattern: the decision goes at the
+      # END, where the reader has felt the cost, not only at the start where it is an assertion.
+      # BY NOW THEY KNOW WHAT IT COSTS: a control domain you must not touch, an SR that fills in
+      # a way you have to understand, a patch cycle, a management plane to host and back up, and
+      # the fact that the good half of the product needs a second host.
+      # WALK THE LADDER DOWNWARDS, AND MAKE THEM NAME THEIR RUNG:
+      #   FIVE VMS ON ONE BOX, ONE TEAM        Series 1. libvirt and Incus do this, with no
+      #                                        platform to operate, and Series 3 does it with a
+      #                                        UI if you want one.
+      #   VMS PLUS CONTAINERS, ONE TO THREE BOXES   Proxmox, in Series 3, is a better fit and
+      #                                        the reader will see why in the first episode.
+      #   AN ESTATE OF VMS, SEVERAL HOSTS, A BACKUP POLICY, AND SOMEBODY'S JOB TITLE — XCP-ng,
+      #                                        and the backup story in Series 2 · 25 is the best
+      #                                        argument for it.
+      #   A LICENCE RENEWAL YOU ARE TRYING TO ESCAPE — also XCP-ng, and be honest that migration
+      #                                        is a project rather than an afternoon.
+      #   NOBODY WHOSE JOB THIS IS             rent it. Data Ops, Series 1 · 46, and no shame in
+      #                                        it whatsoever.
+      # AND THE QUESTION THAT ACTUALLY DECIDES IT AND IS NOT TECHNICAL: WHO PATCHES THIS IN
+      # EIGHTEEN MONTHS, AND WHAT HAPPENS WHEN THEY LEAVE? A platform nobody owns is not a
+      # platform, it is a liability with an uptime counter.
+      - n: "40"
+        slug: do-you-need-xcp-ng
+        title: "Do You Need a Hypervisor Platform — and What the Second Host Is Really For"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # THE ARTEFACT: a single nested host, running, with the operation that matters proven.
+      # BUILD: install XCP-ng in a VM, deploy XO from sources on a separate Debian VM, create an
+      # SR, build a VM from a template with the guest tools and cloud-init, and put a database
+      # on it.
+      # THEN PROVE THE THING THE SERIES CLAIMED: configure a delta backup to a remote, ENABLE
+      # THE HEALTH CHECK, watch it restore and boot the copy, and then delete the original and
+      # restore it for real. Time the restore and write the number down, because that number is
+      # what somebody will ask you for.
+      # AND WRITE THE HONEST PARAGRAPH: what this single-host lab did NOT prove — migration, HA,
+      # a master failure, and coalescing under real load.
+      - n: "45"
+        slug: project-a-pool-and-a-restore
+        title: "Project — a Host, a Backup Job, and a Restore You Timed"
+        hands_on: ["koan:author", "koan:capture"]
+        status: planned
+
+  # SERIES 3 IS THE ONE MOST READERS WILL ACTUALLY DEPLOY, and it is placed third on purpose:
+  # after Series 1 it is recognisable rather than magical, and after Series 2 the reader has a
+  # second platform to compare it against instead of a marketing page.
+  - slug: series3-proxmox
+    title: Proxmox VE
+    tagline: Series 1's tools, with a cluster, a web UI and a backup server
+    level: intermediate
+    episodes:
+      # COVER: what it is, stated in a way that makes the whole series easier — PROXMOX VE IS
+      # DEBIAN, WITH KVM AND LXC, A WEB UI, A CLUSTER FILESYSTEM AND A BACKUP TOOL. Every
+      # primitive in Series 1 is still there and still works. `qm` is libvirt's job done
+      # differently; `pct` drives LXC; you can apt install things; you can ssh in and everything
+      # you know is true.
+      # WHY THAT MATTERS AND IS NOT TRIVIA: it means the UI is a convenience rather than a
+      # boundary, and when something is inexplicable the answer is one layer down in a place you
+      # have already been. This is the opposite of Series 2 · 02's dom0 rule and the contrast is
+      # worth drawing explicitly.
+      # THE ONE COMBINATION NOTHING ELSE HERE OFFERS: VMs AND SYSTEM CONTAINERS SIDE BY SIDE,
+      # managed identically. For a data team that is exactly right — the database in a VM, and
+      # a dozen containers for tools, runners and per-developer environments, at container
+      # density.
+      # ⚠ THE SUBSCRIPTION QUESTION, ANSWERED HONESTLY AND WITHOUT SNEERING: there is an
+      # enterprise repository and a no-subscription repository, the software is the same, the
+      # no-subscription one is less conservatively tested, and there is a dialog on login. It is
+      # a real company that does real work and if you depend on this in production you should
+      # pay them. Say the current state, with a date, checked rather than remembered.
+      # ⚠ AND SAY THAT THE WHOLE SERIES RUNS NESTED IN ONE VM, naming the flag.
+      - n: "00"
+        slug: what-proxmox-is
+        title: "Proxmox VE — Debian, KVM and LXC, With a Cluster Around Them"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the installation, and the ONE DECISION IN IT THAT YOU CANNOT COMFORTABLY TAKE
+      # BACK — the root filesystem and storage layout, chosen in the installer before you know
+      # anything about the product.
+      #   ext4 ON LVM        the default. LVM-thin for guest disks, which gives snapshots and
+      #                      overcommit. Simple, fine, and Storage for Data, Series 1 · 18 is
+      #                      the background.
+      #   ZFS (RAID1, RAIDZ) chosen at install, gives you checksums, cheap snapshots, replication
+      #                      between nodes, and compression. Storage for Data, Series 2 · 07 is
+      #                      the layout argument and it applies here EXACTLY — including that
+      #                      the vdev choice is permanent.
+      #   BTRFS              offered, and Storage for Data, Series 2 · 21 is the honest account.
+      # THE RECOMMENDATION AND THE REASON: for a data team's single node, ZFS with a mirrored
+      # boot pair is the layout that survives a disk dying at 2 a.m. without anybody being
+      # awake, and it enables the replication in Series 3 · 12. It costs RAM. Say both.
+      # AND THE HARDWARE PARAGRAPH: the boot device is written to constantly by the cluster
+      # filesystem, so a cheap USB stick or a low-endurance consumer SSD is a device that WILL
+      # fail — this is a known, specific, repeatedly-reported failure and it belongs in the
+      # lesson.
+      # THEN THE POST-INSTALL RUNBOOK: repositories, updates, the network bridge (vmbr0, which
+      # is Series 1 · 15 pre-built for you), and a non-root user with a real login.
+      - n: "02"
+        slug: installing-proxmox
+        title: "Installing It — the Disk Layout You Choose Before You Know Anything"
+        hands_on: ["koan:choose", "koan:process:tool"]
+        core: true
+        status: planned
+      # COVER: the CLI, treated as the real interface, and the file layout that explains the
+      # whole product.
+      #   qm   for VMs — create, start, stop, clone, migrate, set, config, snapshot. Every one
+      #        of these is Series 1 · 07's virsh with different spelling.
+      #   pct  for containers — the same verbs, over LXC.
+      #   pvesm for storage, pvecm for the cluster.
+      # AND THE THING WORTH THE WHOLE EPISODE: /etc/pve IS NOT A NORMAL DIRECTORY. It is pmxcfs,
+      # a FUSE filesystem backed by a database that is REPLICATED ACROSS THE CLUSTER by corosync.
+      # Your VM configuration files live there, which is why editing one on any node changes it
+      # everywhere and why it is the same on every node.
+      # THE CONSEQUENCE THAT WILL ONE DAY BE YOUR AFTERNOON: WHEN A NODE LOSES QUORUM,
+      # /etc/pve GOES READ-ONLY. The VMs keep running, but you cannot start one, cannot change
+      # one, and the UI throws errors that mention permissions rather than quorum. A reader who
+      # has met this sentence once diagnoses it in thirty seconds; a reader who has not spends
+      # an hour on file permissions. Series 3 · 12 is where quorum is taught; this is where its
+      # symptom is named.
+      # ALSO: where a VM's config actually is, how to read it, and the fact that a disk is a
+      # line in that file pointing at a storage identifier — which makes Series 3 · 10 legible.
+      - n: "05"
+        slug: qm-and-pct
+        title: "qm, pct and /etc/pve — the CLI, and the Directory That Goes Read-Only"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the workflow that makes this product pay for itself in a data team, and it is
+      # Series 1 · 22 with the sharp edges removed.
+      #   BUILD A TEMPLATE from a cloud image: `qm create`, import the disk, attach a cloud-init
+      #   drive, set the ssh key and the user, then `qm template`. This is a runbook and it is
+      #   the most-copied set of commands in the whole product.
+      #   FULL CLONE against LINKED CLONE: independent and slow against instant and dependent.
+      #   Linked clones need the storage to support it — which is Series 3 · 10's table arriving
+      #   with consequences.
+      #   CLOUD-INIT fields in the UI and via `qm set --ipconfig0`, and how to check what
+      #   happened when a clone comes up with the wrong hostname.
+      # THE WORKPLACE MOMENT, AND IT IS THE BUSINESS CASE: every developer needs a database with
+      # last month's data. Build one container or VM, restore into it once, template it, and
+      # hand out clones that take four seconds and almost no disk. The alternative — everybody
+      # restoring a dump for themselves — costs hours a week and a lot of storage, and this is
+      # the episode that ends it.
+      # AND THE SAME PATTERN FOR CONTAINERS: `pct` templates and the distribution templates
+      # Proxmox ships, which is the fastest way to get a throwaway Debian on the network.
+      - n: "07"
+        slug: templates-and-clones
+        title: "Templates, Linked Clones and cloud-init — a Database per Developer in Seconds"
+        hands_on: ["koan:process:tool", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: storage, which in this product means two ideas people conflate — WHERE the bytes
+      # go, and WHAT KIND of thing is allowed to go there.
+      #   THE TYPES: dir, LVM, LVM-thin, ZFS, NFS, CIFS, iSCSI, Ceph RBD, and Proxmox Backup
+      #   Server as a storage target in its own right.
+      #   CONTENT TYPES, which is the concept the UI forces on you and nobody explains: a
+      #   storage is marked as holding disk images, container rootfs, ISO files, container
+      #   templates, backups, or snippets. A storage that will not appear in a dropdown is
+      #   almost always a content type you did not tick.
+      #   AND THE FEATURE MATRIX THAT ACTUALLY DECIDES THINGS: which storages support SNAPSHOTS,
+      #   which support THIN provisioning, and which support LINKED CLONES. A directory holding
+      #   qcow2 does; plain LVM does not; LVM-thin and ZFS do. Choosing the wrong one means
+      #   discovering on migration day that you cannot snapshot before an upgrade.
+      # THE SHARED-STORAGE POINT, which Series 3 · 12 depends on: NFS or iSCSI from the box in
+      # Series 4, or Ceph, is what lets a VM run on any node. Local ZFS plus replication is the
+      # cheaper approximation and Series 3 · 12 covers the difference honestly.
+      # AND THE CLIFF: thin provisioning plus snapshots plus backups on the same pool, and
+      # Storage for Data, Series 1 · 25's 80 per cent rule as the operational answer. On ZFS a
+      # full pool is not a warning, it is guests with I/O errors.
+      - n: "10"
+        slug: storage-and-content-types
+        title: "Storage Types and Content Types — the Dropdown Your Storage Is Missing From"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: clustering, and the concept that decides whether it helps or hurts.
+      #   pvecm create / pvecm add, what actually joins, and the fact that JOINING A CLUSTER
+      #   REPLACES A NODE'S /etc/pve — so you join an empty node, and joining one with VMs on it
+      #   is a documented pain rather than a normal operation.
+      #   COROSYNC AND QUORUM: a cluster needs more than half its votes to act. Which is why
+      #   TWO NODES IS THE WORST NUMBER — either node failing leaves one vote out of two, no
+      #   quorum, and Series 3 · 05's read-only /etc/pve on the survivor. The fixes: a third
+      #   node, or a QDEVICE, which is a tiny vote-only daemon on any third machine — a NAS, a
+      #   Raspberry Pi, the box in Series 4. This is the single most useful practical fact in
+      #   the series for a small team.
+      #   COROSYNC WANTS A LOW-LATENCY, RELIABLE NETWORK, ideally its own, and a redundant ring.
+      #   A cluster whose heartbeat shares a link with a backup job will fence itself.
+      #   REMOVING A NODE PROPERLY — a documented procedure, and one you cannot improvise.
+      # AND THE ALTERNATIVE FOR PEOPLE WITHOUT SHARED STORAGE: ZFS REPLICATION between nodes on
+      # a schedule. It is asynchronous, so a failover LOSES whatever changed since the last
+      # replication — one minute, five minutes, whatever you set. For many data workloads that
+      # is an acceptable and very cheap answer, and stating the RPO out loud is the whole skill.
+      - n: "12"
+        slug: clustering-and-quorum
+        title: "Corosync, Quorum and the QDevice — Why Two Nodes Is the Worst Number"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: HA, and then the sentence this course exists partly to deliver.
+      # WHAT IT DOES: the HA manager watches resources; when a node stops answering, its VMs are
+      # started on another node. FENCING is what stops the old node writing to the same disks —
+      # a hardware watchdog reboots a node that has lost quorum. Without fencing you get split
+      # brain, which on shared storage means two machines writing to one filesystem, which means
+      # the data is gone.
+      # THE REQUIREMENTS: three nodes or a QDevice, shared storage or replication, and a
+      # watchdog that actually works. HA on two nodes with no QDevice is a way to lose data.
+      # ⚠ AND THE MISUNDERSTANDING, STATED AS PLAINLY AS THIS COURSE CAN MANAGE:
+      #   HA OF A VM IS NOT HA OF A DATABASE. What HA gives you is: the machine comes back
+      #   somewhere else, in a few minutes, having been powered off without warning. Your
+      #   database then does crash recovery, replays its write-ahead log, and comes up. Every
+      #   connection was dropped. Every in-flight transaction was rolled back. Anything that was
+      #   only in memory is gone.
+      #   THAT IS GENUINELY USEFUL AND IT IS NOT WHAT A DATABASE PERSON MEANS BY THE WORDS.
+      #   Real database availability is streaming replication and a failover decision, which is
+      #   Data Ops, Series 2 · 45 — a DIFFERENT MECHANISM AT A DIFFERENT LAYER, and the two are
+      #   complementary rather than alternatives.
+      # THE HONEST QUESTION TO CLOSE ON: what is your actual recovery time objective, and would
+      # a documented ten-minute manual restart have met it? Very often it would, and HA's
+      # complexity is then a cost with no matching benefit.
+      - n: "15"
+        slug: ha-and-fencing
+        title: "HA and Fencing — the VM Comes Back, and the Database Still Crashed"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: Ceph in Proxmox, in ONE episode, deliberately, and the episode is mostly a
+      # warning rather than a tutorial.
+      # WHAT THE PRODUCT DOES: it will install and configure a Ceph cluster from the web UI in
+      # about ten minutes — monitors, managers, OSDs, pools — and then offer you RBD as a
+      # storage. It genuinely works. THAT IS EXACTLY THE PROBLEM: it makes a decision that
+      # deserves a quarter of planning look like four clicks.
+      # WHAT YOU HAVE ACTUALLY TAKEN ON, listed so a reader can price it: a distributed storage
+      # system with its own failure modes, its own upgrade order, its own network requirements,
+      # and its own vocabulary — and it is now underneath every VM you run, so its bad day is
+      # everybody's bad day.
+      # THE MINIMUM THAT IS NOT A TOY: three nodes at the very least, a separate and fast
+      # storage network, enough RAM per OSD, and real disks rather than consumer SSDs without
+      # power-loss protection.
+      # AND THEN POINT, RATHER THAN TEACH: Storage for Data, Series 4 is fourteen episodes on
+      # what this is and how to operate it, and Storage for Data, Series 4 · 58 is the decision
+      # episode. This course's job is to make sure nobody arrives at a Ceph cluster by accident.
+      # THE ALTERNATIVES FOR A THREE-NODE DATA TEAM, said plainly: ZFS replication from
+      # Series 3 · 12 for most people, or NFS from the box in Series 4 · 10.
+      - n: "17"
+        slug: ceph-in-proxmox
+        title: "The Ceph Button — Ten Minutes to Install, and What You Just Agreed To"
+        hands_on: ["koan:choose", "eyes"]
+        status: planned
+      # COVER: vzdump, and THE MOST IMPORTANT EPISODE IN THIS COURSE FOR A DATA READER.
+      #   THE THREE MODES: STOP (shut the guest down — perfectly consistent, and an outage),
+      #   SUSPEND (freeze it — shorter outage, older mechanism), SNAPSHOT (no outage, and the
+      #   whole of the rest of this episode).
+      #   COMPRESSION, bandwidth limits, and where the backup goes.
+      # AND NOW THE PART THAT MATTERS. A SNAPSHOT-MODE BACKUP OF A RUNNING DATABASE IS
+      # CRASH-CONSISTENT: it is exactly what you would have if you pulled the power cable at
+      # that instant. Restore it and Postgres replays its write-ahead log and comes up. Usually.
+      #   "USUALLY" IS NOT A BACKUP POLICY, and the failure is not theoretical: with the disk
+      #   cache mode from Series 1 · 25 set wrong, or with a device that lies about flushes, the
+      #   snapshot can be missing writes the database believed were durable.
+      #   THE QEMU GUEST AGENT is the partial answer: with it installed, Proxmox can ask the
+      #   guest to FREEZE ITS FILESYSTEMS for the instant of the snapshot, which makes the image
+      #   filesystem-consistent. INSTALL IT IN EVERY GUEST. It is also what gives you clean
+      #   shutdowns and the guest's IP in the UI.
+      #   AND THE REAL ANSWER, WHICH IS THE SENTENCE THE EPISODE EXISTS FOR: A VM BACKUP
+      #   PROTECTS THE MACHINE. IT DOES NOT REPLACE A DATABASE BACKUP. You want both, and the
+      #   database one — pg_dump, or PITR with a base backup and WAL archiving from Data Ops,
+      #   Series 2 · 30 — is the one that gives you point-in-time recovery, that you can restore
+      #   a single table from, and that you can restore onto a different machine entirely.
+      # THE POLICY TO LEAVE THEM WITH: VM backups nightly for the machine, database backups on
+      # the database's own schedule for the data, both off the host, and both restored on a
+      # schedule rather than on the day you need them.
+      - n: "20"
+        slug: vzdump-and-consistency
+        title: "vzdump — Crash-Consistent Is Not Consistent, and the Agent That Helps"
+        hands_on: ["koan:process:tool", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: Proxmox Backup Server, which is a separate product and is genuinely the reason
+      # many teams choose this ecosystem.
+      #   WHAT IT CHANGES: content-addressed, deduplicated, INCREMENTAL FOREVER backups. After
+      #   the first one, a nightly backup of a 200 GB VM transfers and stores the changed chunks
+      #   only. Deduplication is across all backups and all VMs, so fifty clones of one template
+      #   cost close to one template. The arithmetic is worth showing, because it is the
+      #   difference between keeping four weeks and keeping four days.
+      #   VERIFY JOBS: it re-reads and checksums stored chunks on a schedule and tells you when
+      #   a backup has rotted. That is the "prove it" half, automated, and it is rare.
+      #   PRUNE AND GARBAGE COLLECTION: retention as keep-daily / keep-weekly / keep-monthly,
+      #   and the fact that pruning marks and GC frees — so space does not come back until GC
+      #   runs, which surprises everybody once.
+      #   SINGLE-FILE RESTORE: browse into a backup and pull one file out without restoring the
+      #   whole VM. THE WORKPLACE MOMENT: somebody deleted one configuration file, or one CSV,
+      #   and you are not restoring 200 GB to get it back.
+      #   ENCRYPTION client-side, and where the key lives — because a key stored only on the
+      #   machine being backed up is not a key.
+      # WHERE TO PUT IT: NOT ON THE HOST IT BACKS UP. A separate machine, and ideally a copy of
+      # the datastore off-site — sync jobs to a second PBS or to the S3-compatible storage in
+      # Data Ops, Series 1 · 47.
+      - n: "22"
+        slug: proxmox-backup-server
+        title: "Proxmox Backup Server — Deduplication, Verify Jobs, and One File Back"
+        hands_on: ["koan:process:tool", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the access-control half, kept short and practical.
+      #   USERS, GROUPS, ROLES AND THE PERMISSION PATH — permissions are granted on a path like
+      #   /vms/101 or /storage/nas, which is unusual and is the concept to teach.
+      #   REALMS: the local one, PAM, and an existing directory. Two-factor, briefly.
+      #   API TOKENS: a token with a narrow role, used by a script, that can be revoked without
+      #   changing anybody's password. THE WORKPLACE USE: the backup-checking script, the
+      #   monitoring probe, and the Terraform provider — which is where Terraform & Pulumi picks
+      #   this up and this course stops.
+      #   THE FIREWALL at datacenter, node and guest level, with the rule that catches everybody:
+      #   IT MUST BE ENABLED AT BOTH THE DATACENTER AND THE OBJECT LEVEL to take effect, and the
+      #   default-deny that follows will lock you out if you have not allowed your own SSH.
+      # AND THE PRACTICAL POSTURE FOR A SMALL TEAM: the management interface is not on the
+      # public internet, ever. It is behind a VPN or an ssh tunnel. Say it once and firmly.
+      - n: "25"
+        slug: users-firewall-and-api
+        title: "Roles, API Tokens and the Firewall — Least Privilege for the Script That Checks Backups"
+        hands_on: ["koan:process:tool", "koan:choose"]
+        status: planned
+      # COVER: upgrades, which for this product means a Debian major upgrade underneath a
+      # cluster, and it is more survivable than it sounds if the order is respected.
+      #   THE CHECKLIST TOOL: Proxmox ships a `pveXtoY` script that inspects your system and
+      #   reports what will break. RUN IT, FIX EVERYTHING IT SAYS, RUN IT AGAIN. Skipping it is
+      #   how upgrades go wrong.
+      #   THE ORDER IN A CLUSTER: one node at a time, VMs migrated off, cluster healthy between
+      #   each. Never two at once.
+      #   WHAT ELSE MOVES: the kernel, and with it the ZFS module and any out-of-tree driver;
+      #   the container templates; and occasionally a storage plugin.
+      #   ROLLBACK: honestly, there mostly is not one for a major version — which is why the
+      #   answer is a tested backup of the host configuration and a node you can rebuild.
+      # AND THE ANNUAL REALITY THIS EPISODE SHOULD LEAVE THEM WITH: this platform will need a
+      # planned maintenance day roughly once a year, plus patches in between. Put it in the
+      # calendar when you adopt it, not when it is overdue.
+      - n: "27"
+        slug: upgrades
+        title: "Major Upgrades — the Checklist Script, the Node Order, and the Missing Rollback"
+        hands_on: ["koan:process:tool", "eyes"]
+        status: planned
+      # THE CLOSING GATE FOR THIS SERIES, and it asks a different question from Series 2 · 40
+      # because the honest competitor to Proxmox is usually not another platform — it is doing
+      # less.
+      # BY NOW THE READER KNOWS THE COST: a cluster filesystem that needs quorum, a storage
+      # layout chosen early, a backup product to run as well, an upgrade day a year, and a
+      # management interface that must never face the internet.
+      # WALK THE LADDER DOWNWARDS:
+      #   ONE MACHINE, A FEW WORKLOADS, ONE PERSON   Series 1. libvirt and Incus, no web UI, no
+      #                             cluster, nothing to upgrade but Debian. This is the right
+      #                             answer far more often than the internet suggests.
+      #   ONE MACHINE, SEVERAL PEOPLE WHO NEED A UI AND SNAPSHOTS   Proxmox on a single node,
+      #                             and be clear that a single node has no HA, no migration, and
+      #                             downtime for every patch — and that this is completely fine
+      #                             for most data teams.
+      #   THREE MACHINES AND A REASON TO SURVIVE ONE DYING   Proxmox as a cluster, with a
+      #                             QDevice if you only have two, and Series 3 · 12's replication
+      #                             before you reach for Series 3 · 17's Ceph button.
+      #   WORKLOADS THAT ARE ALL CONTAINERS AND ALREADY DECLARATIVE   Kubernetes for Data
+      #                             Workloads is a different answer to a different question, and
+      #                             running it ON Proxmox VMs is a very common and sensible
+      #                             combination worth naming here.
+      #   NO HARDWARE AND NO APPETITE   rent it, per Data Ops, Series 1 · 46.
+      # AND THE COST COMPARISON DONE PROPERLY, because it is the argument that gets made badly:
+      # a bought server against a rented one is not a like-for-like price. Add the hours, the
+      # power, the network, the second box for backups, and the fact that somebody is on the
+      # hook at 3 a.m. Then compare. It often still wins, especially for large storage and
+      # steady load — but it must win on the real number.
+      - n: "30"
+        slug: do-you-need-proxmox
+        title: "Do You Need Proxmox — One Box, Three Boxes, or Somebody Else's"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # THE ARTEFACT: the environment a small data team actually runs, built and proven.
+      # BUILD, nested and on one node: Proxmox with ZFS; a Debian template with cloud-init and
+      # the guest agent; a VM cloned from it running PostgreSQL; two containers — one for a
+      # pipeline, one for a scheduler; a firewall that allows only what is needed; and an API
+      # token for a script.
+      # THEN THE BACKUP STORY, END TO END: Proxmox Backup Server on a second machine, nightly
+      # vzdump of everything, AND a database-level backup inside the guest. Restore both. Then
+      # do the exercise that teaches the episode: restore ONE FILE out of a backup, and restore
+      # the database to a point in time between two backups — and note which of the two
+      # mechanisms could do which.
+      # WRITE THE PARAGRAPH: your recovery time and recovery point objectives, measured, not
+      # guessed; and what this single node cannot do.
+      - n: "35"
+        slug: project-a-data-teams-node
+        title: "Project — the Node a Small Data Team Runs, and Two Kinds of Restore"
+        hands_on: ["koan:author", "koan:capture"]
+        status: planned
+
+  # SERIES 4 IS LAST BECAUSE IT IS THE LAYER UNDERNEATH THE OTHER TWO, and that only makes sense
+  # once a reader has met a pool that needs shared storage (Series 2 · 07) and a cluster that
+  # would rather not (Series 3 · 12). TrueNAS is not a fourth hypervisor to choose between; in
+  # most real deployments it is the box the hypervisors keep their disks on.
+  - slug: series4-truenas
+    title: TrueNAS
+    tagline: the storage box under the hypervisors — and the appliance rule
+    level: intermediate
+    episodes:
+      # COVER: what it is, and the rule that makes it different from everything else in this
+      # course and in this academy.
+      #   WHAT IT IS: ZFS, plus a management API and web interface, plus the sharing protocols,
+      #   packaged as an appliance. The modern line is Linux-based (formerly branded SCALE) and
+      #   the older one was FreeBSD-based; ⚠ THE EDITION NAMES HAVE CHANGED RECENTLY — check the
+      #   current naming and the release you are writing against, and say it in the lesson.
+      #   WHY IT IS IN A VIRTUALIZATION COURSE: because Series 2 · 07 said a pool needs shared
+      #   storage and Series 3 · 12 said the alternative is replication with a real recovery
+      #   point objective. This is the box that answers the first, and it is the commonest
+      #   answer in a small estate.
+      # AND THE APPLIANCE RULE, WHICH IS THE OPPOSITE INSTINCT TO THE REST OF THIS ACADEMY AND
+      # MUST BE STATED IN THE FIRST EPISODE: YOU CONFIGURE IT THROUGH THE UI OR THE API, NOT BY
+      # EDITING FILES OVER SSH. The configuration lives in a database that generates the config
+      # files, so hand edits are overwritten on the next change and lost on upgrade. The root
+      # filesystem is treated as replaceable.
+      #   THE COROLLARY THAT MAKES IT BEARABLE: `midclt` gives you the same API from the shell,
+      #   so scripting is fully supported — through the API, which is the point.
+      #   AND WHEN THE RULE MEANS "USE SOMETHING ELSE": if what you want requires apt and a
+      #   config file, you did not want an appliance. Debian and Storage for Data, Series 2 is
+      #   that path, and Series 4 · 25 is where the reader decides.
+      # ⚠ SAY THE WHOLE SERIES RUNS NESTED with a handful of small virtual disks.
+      - n: "00"
+        slug: what-truenas-is
+        title: "TrueNAS — ZFS as an Appliance, and Why You Do Not Edit the Config Files"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the install, and the hardware decisions that are genuinely expensive to get
+      # wrong — which is worth an episode because unlike the rest of this course, this one is
+      # usually bought as a physical box.
+      #   THE BOOT DEVICE IS SEPARATE FROM THE DATA POOLS, and it should be mirrored, and it
+      #   should not be a USB stick. Losing it costs a reinstall plus a configuration restore
+      #   rather than data — which is why EXPORTING THE CONFIGURATION FILE after every change is
+      #   the habit this episode installs.
+      #   NO HARDWARE RAID UNDER ZFS. An HBA in IT mode, passing the disks through raw. A RAID
+      #   controller hides the disks, lies about flushes, and takes away exactly the information
+      #   ZFS needs to repair anything — Storage for Data, Series 2 · 10 is why this matters and
+      #   Storage for Data, Series 1 · 15 is what the controller is doing instead. This is a
+      #   classic, expensive, extremely common mistake and it deserves to be blunt.
+      #   ECC MEMORY: the honest version. It is genuinely better and it is not a hard
+      #   requirement; the internet argument on this is worse than the facts. State what it
+      #   protects against and let the reader decide.
+      #   DISK COUNT AND LAYOUT are Storage for Data, Series 2 · 07's episode and are not
+      #   repeated here — but say plainly that the vdev layout is chosen now and is the decision
+      #   with the least room to change your mind.
+      #   AND VIRTUALIZING TRUENAS ITSELF: fine for a lab, and for production it requires
+      #   passing the HBA through to the guest, which is Series 1 · 25's passthrough paragraph
+      #   with real consequences. A TrueNAS VM given virtual disks on somebody else's RAID is
+      #   the anti-pattern.
+      - n: "02"
+        slug: installing-and-hardware
+        title: "Installing It — the Mirrored Boot Device, and No RAID Card Under ZFS"
+        hands_on: ["koan:choose", "koan:process:tool"]
+        core: true
+        status: planned
+      # COVER: pools, vdevs and datasets AS THIS PRODUCT PRESENTS THEM — deliberately thin,
+      # because Storage for Data, Series 2 owns the subject in ten episodes and repeating it
+      # here would be the worst kind of duplication.
+      # WHAT THIS EPISODE ADDS AND NOTHING ELSE:
+      #   THE UI'S NAMES for things the reader already knows, and the wizard's defaults — what
+      #   it chooses for you and where to override it.
+      #   DATASETS AS THE UNIT OF POLICY, which is the habit that pays off for years: a dataset
+      #   per share, per workload, per tenant — because snapshots, quotas, permissions,
+      #   compression, record size and replication are all set PER DATASET. One giant dataset is
+      #   the mistake, and it is invisible until the day you want to snapshot one thing.
+      #   RECORD SIZE AND VOLBLOCKSIZE per dataset for the workload — the database dataset and
+      #   the file share want different values, and Storage for Data, Series 2 · 20 is the
+      #   reasoning.
+      #   QUOTAS AND RESERVATIONS as the answer to one team filling the pool.
+      #   AND THE 80 PER CENT RULE restated because on this box it is somebody's whole job:
+      #   Storage for Data, Series 1 · 25.
+      - n: "05"
+        slug: pools-and-datasets
+        title: "Pools and Datasets in the UI — One Dataset per Thing You Will Ever Treat Differently"
+        hands_on: ["koan:choose", "koan:process:tool"]
+        status: planned
+      # COVER: sharing, which is what the box is for, and the thing that generates more support
+      # tickets than everything else combined.
+      #   SMB for Windows clients and for people. NFS for Linux clients and for machines —
+      #   Storage for Data, Series 1 · 27 taught the protocol; this is running the server.
+      #   iSCSI is Series 4 · 10 and is deliberately separate.
+      #   AND THE PERMISSIONS MODEL, WHICH IS THE EPISODE: ZFS ACLs against POSIX modes, the
+      #   preset the wizard applies, and the fact that SMB and NFS have different ideas about
+      #   identity. THE CLASSIC FAILURE: a Windows team and a Linux ETL box on the same dataset,
+      #   where files written by one are unreadable or unwritable by the other. Teach the fix —
+      #   choose ONE protocol per dataset where you can, and where you truly cannot, understand
+      #   the ACL preset you chose and the UID mapping.
+      #   THE DIAGNOSTIC LADDER: can you resolve the name, can you reach the port, does the
+      #   share exist, does the export allow this client, does the ACL allow this user. In that
+      #   order — most "permission denied" tickets are resolved above the ACL layer.
+      # THE WORKPLACE MOMENT: the analysts' shared drive and the pipeline's landing directory
+      # are the same box, and the pipeline cannot read the file somebody dropped this morning.
+      - n: "07"
+        slug: shares-and-permissions
+        title: "SMB, NFS and ACLs — Why the Pipeline Cannot Read What the Analyst Dropped"
+        hands_on: ["koan:diagnose", "koan:process:tool"]
+        core: true
+        status: planned
+      # THE EPISODE THAT JOINS THIS SERIES TO THE OTHER TWO, and the reason TrueNAS is in this
+      # course at all.
+      # COVER: exporting storage TO the hypervisors.
+      #   NFS FOR HYPERVISORS: a dataset exported and mounted as an SR in Series 2 · 10 or a
+      #   storage in Series 3 · 10. Simple, thin-provisioned, easy to browse, and the disks are
+      #   files you can see.
+      #   iSCSI: the nouns — zvol, extent, target, portal, initiator — and what the hypervisor
+      #   sees, which is a block device rather than a filesystem. Multipathing in a paragraph.
+      #   WHICH TO CHOOSE, honestly: NFS is easier to operate and to debug; iSCSI is what some
+      #   features expect. For most small estates NFS is the right answer and the course should
+      #   say so rather than being coy.
+      # AND THEN THE FAMOUS TRAP, WHICH IS THE REASON THIS EPISODE IS `core`: SYNCHRONOUS WRITES.
+      # A hypervisor writing a guest's disk over NFS asks for its writes to be made durable. ZFS
+      # honours that, which means every write waits for the disk, which means guest performance
+      # falls off a cliff compared to local storage.
+      #   THE WRONG FIX, WHICH IS EVERYWHERE ON THE INTERNET: set sync=disabled. It is enormously
+      #   faster and it means a power failure on the storage box can lose writes the GUEST'S
+      #   DATABASE BELIEVED WERE COMMITTED. That is the same violation as Series 1 · 25's
+      #   cache=writeback, one layer further out, and it is worse because it is invisible.
+      #   THE REAL FIX: a SLOG — a separate, fast, POWER-LOSS-PROTECTED device for the ZFS
+      #   intent log. A consumer SSD without power-loss protection as a SLOG is a placebo that
+      #   also loses data. Storage for Data, Series 2 · 20 has the mechanism; this is the
+      #   deployment decision.
+      #   AND THE THIRD ANSWER: decide honestly that this workload does not need it. Some do not.
+      #   Saying that deliberately is different from disabling it because a forum said so.
+      - n: "10"
+        slug: nfs-and-iscsi-for-hypervisors
+        title: "NFS and iSCSI as Hypervisor Storage — sync=disabled and the Commit That Vanished"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: data protection, which is where this appliance earns its keep, and it is Storage
+      # for Data, Series 2 · 15's mechanism turned into scheduled jobs with a UI.
+      #   PERIODIC SNAPSHOT TASKS: a schedule and a retention per dataset. Hourly for a week,
+      #   daily for a month — cheap, instant, and the thing that undoes a mistake made twenty
+      #   minutes ago. THE WORKPLACE MOMENT: somebody overwrote the file, or a script truncated
+      #   the wrong directory, and it is back in ten seconds from the .zfs snapshot directory.
+      #   REPLICATION TASKS: send/receive to a second TrueNAS, on a schedule, incremental. This
+      #   is the off-site copy and it is the strongest reason to own two of these boxes.
+      #   CLOUD SYNC: to S3-compatible storage — Data Ops, Series 1 · 47's rented bucket or
+      #   Storage for Data, Series 3 · 25's self-hosted one — with the encryption question
+      #   answered before the data leaves.
+      # AND THE ACADEMY'S SENTENCE, RESTATED FOR THE THIRD TIME IN THIS COURSE BECAUSE IT IS THE
+      # ONE THAT COSTS PEOPLE THEIR JOBS: REPLICATION IS NOT A BACKUP. A deletion replicates. A
+      # ransomware encryption replicates, promptly and reliably.
+      #   WHAT ACTUALLY DEFENDS YOU IS RETENTION PLUS IMMUTABILITY: snapshots the compromised
+      #   client cannot delete, held on the destination with its own retention, and a
+      #   destination that does not trust the source. Say how that is configured, not just that
+      #   it matters.
+      #   AND TEST THE RESTORE ON A SCHEDULE. Same rule as Series 2 · 25 and Series 3 · 22.
+      - n: "12"
+        slug: snapshots-and-replication
+        title: "Snapshot Tasks, Replication and Cloud Sync — and What Ransomware Replicates"
+        hands_on: ["koan:process:tool", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the operational half, which is the difference between a NAS that protects data
+      # and a NAS that quietly stopped.
+      #   SCHEDULED SCRUBS and SMART tests, both of which the product will run for you and both
+      #   of which are pointless if nobody reads the result. Storage for Data, Series 2 · 10 is
+      #   the mechanism; this is the schedule and the alert.
+      #   ALERTS: configure email or a webhook ON THE FIRST DAY, and then TEST IT by causing an
+      #   alert on purpose. An untested alert channel is the commonest reason a degraded pool
+      #   runs degraded for four months.
+      #   THE REPORTING GRAPHS and what to look at: pool capacity trend (Storage for Data,
+      #   Series 1 · 25's growth rate), ARC hit ratio, disk latency and network throughput.
+      #   REPLACING A FAILED DISK through the UI, as a runbook — offline, replace, resilver,
+      #   and watch it. Storage for Data, Series 2 · 12 is the command line version; this is the
+      #   appliance version and it is the operation a reader is most likely to have to do.
+      # THE SILENCE TO WORRY ABOUT: no alerts for six months usually means alerting is broken,
+      # not that nothing has happened. Prove it periodically.
+      - n: "20"
+        slug: alerts-scrubs-and-a-failed-disk
+        title: "Scrubs, SMART and the Alert You Never Tested — Replacing a Disk in the UI"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: running workloads ON the storage box, and the gate that belongs with it.
+      #   WHAT IT OFFERS: an application catalogue plus your own compose-style deployments, and
+      #   virtual machines or system containers as well. Postgres, MinIO, Grafana, a scheduler —
+      #   all one click away on the box that already has the disks and the snapshots.
+      #   ⚠ AND THE CAUTION THAT MUST BE LOUD, WITH DATES: the container platform underneath the
+      #   apps has been REPLACED within the last few releases, and the virtualization layer has
+      #   changed technology too — recent releases build on the same Incus lineage as
+      #   Series 1 · 10, which is a pleasing loop but only if you check it. Anything written
+      #   from memory here will be wrong. Open the release notes, name the version, and say what
+      #   changed and when so a reader on an older release knows where they stand.
+      #   THE PRACTICAL PART: host paths and dataset permissions for app data — which is
+      #   Series 4 · 07's ACL problem arriving again — and why app data belongs in its own
+      #   dataset with its own snapshot task.
+      # AND THE GATE, ASKED HERE RATHER THAN AT THE END BECAUSE IT IS SPECIFIC TO THIS FEATURE:
+      # SHOULD A STORAGE APPLIANCE RUN YOUR WORKLOADS AT ALL? Arguments for: one box, no extra
+      # hardware, data is local so no network in the path, and snapshots cover the app too.
+      # Arguments against, and they are serious: you now reboot your storage to update an
+      # application; a runaway container competes with the thing every other machine depends on;
+      # and the appliance's app platform is the part of the product most likely to change under
+      # you. FOR A HOME LAB, YES. FOR THE BOX THE HYPERVISORS DEPEND ON, KEEP IT BORING.
+      - n: "22"
+        slug: apps-and-instances
+        title: "Apps and Instances — What the NAS Can Run, and Why It Mostly Should Not"
+        hands_on: ["koan:choose", "eyes"]
+        status: planned
+      # COVER: upgrades, and the feature that makes this the least frightening upgrade in the
+      # whole course.
+      #   BOOT ENVIRONMENTS: the upgrade installs alongside the running system, and if it goes
+      #   badly YOU REBOOT INTO THE PREVIOUS ONE and you are back. That is a genuine rollback,
+      #   which Series 3 · 27 could not offer, and it is worth naming as a real advantage of the
+      #   appliance model.
+      #   RELEASE TRAINS and the discipline of not being on the newest one for a production
+      #   storage box. Read the release notes; this product's major releases have moved
+      #   substantial things.
+      #   EXPORT THE CONFIGURATION BEFORE EVERY UPGRADE, and keep it somewhere that is not this
+      #   machine. It is one button and it is the difference between a reinstall and a disaster.
+      #   ZFS POOL FEATURE FLAGS: upgrading the pool after upgrading the system is OPTIONAL,
+      #   IRREVERSIBLE, and it can stop an older system from importing that pool. Do not do it
+      #   reflexively because the UI suggests it. Storage for Data, Series 2 · 02 has the
+      #   background.
+      #   AND THE APPLIANCE RULE COLLECTING ITS DEBT: anything you changed by hand over ssh is
+      #   gone now. This is the episode where Series 4 · 00's rule is proved rather than
+      #   asserted.
+      - n: "24"
+        slug: upgrades-and-boot-environments
+        title: "Boot Environments — the Rollback That Is Just a Reboot, and the Flags You Must Not Set"
+        hands_on: ["koan:process:tool", "koan:predict"]
+        status: planned
+      # THE CLOSING GATE FOR THE SERIES, and it is the sharpest one in the course because this
+      # academy already teaches the alternative in full.
+      # THE HONEST COMPARISON: Debian, ZFS, Samba and nfs-kernel-server will do most of what
+      # this appliance does, and Storage for Data, Series 2 teaches every bit of it. So what are
+      # you actually buying?
+      #   WHAT THE APPLIANCE GENUINELY GIVES YOU: scheduled snapshot and replication tasks with
+      #   retention, configured in minutes rather than scripted; alerting that works out of the
+      #   box; a UI somebody else on the team can use when you are away; boot environments; and
+      #   a coherent upgrade path.
+      #   WHAT IT TAKES AWAY: apt. You cannot install your tool on it, you should not edit its
+      #   files, and you are on its release schedule rather than yours.
+      # THE LADDER, DOWNWARDS:
+      #   A FEW TERABYTES, ONE CONSUMER, ONE ADMIN WHO LIKES THE SHELL   Debian and ZFS.
+      #                             Storage for Data, Series 2 · 22 is that decision, made there.
+      #   SHARES FOR PEOPLE AND MACHINES, SNAPSHOTS ON A SCHEDULE, AND SOMEBODY WHO IS NOT YOU
+      #   HAS TO BE ABLE TO USE IT     TrueNAS, and this is the sweet spot.
+      #   SHARED STORAGE UNDER A HYPERVISOR POOL     TrueNAS, and Series 4 · 10 is the episode
+      #                             that matters — with the honest caveat that ONE NAS IS ONE
+      #                             POINT OF FAILURE for every VM in the pool, which is an
+      #                             uncomfortable thing to discover after you have built it.
+      #   MANY NODES, PETABYTES, AND A TEAM        Storage for Data, Series 4 is Ceph, and
+      #                             Storage for Data, Series 4 · 58 is that decision.
+      #   NOBODY TO CHANGE THE DISK   rent it. A NAS with a dead disk and no owner is a
+      #                             countdown.
+      # AND THE QUESTION THAT DECIDES IT: WHO NOTICES THE ALERT? Everything else in this episode
+      # is secondary to that.
+      - n: "25"
+        slug: do-you-need-truenas
+        title: "Do You Need TrueNAS — or Debian, ZFS and Twenty Minutes of Samba"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # THE COURSE-WIDE CHOOSER, and it is the last teaching episode for a reason: only now can
+      # a reader compare these honestly, because only now have they run all four.
+      # THE FIRST THING TO SAY, AND IT UNDOES THE FRAMING PEOPLE ARRIVE WITH: THESE ARE NOT FOUR
+      # COMPETITORS. Series 1 is the layer, Series 2 and Series 3 are two answers to the same
+      # question, and Series 4 is usually underneath whichever you pick. The common real-world
+      # shapes are worth drawing:
+      #   ONE BOX                    Proxmox with local ZFS, or plain Debian with libvirt and
+      #                              Incus. Most data teams, most of the time.
+      #   TWO OR THREE BOXES         Proxmox with a QDevice and ZFS replication — cheap, and the
+      #                              recovery point objective is stated rather than hidden.
+      #   A NAS PLUS TWO HYPERVISORS TrueNAS exporting NFS, with XCP-ng or Proxmox on top. The
+      #                              classic small-estate shape, and its single point of failure
+      #                              is the NAS.
+      #   AN ESTATE WITH AN OWNER    XCP-ng pools, Xen Orchestra, and its backup story.
+      #   RENTED                     Data Ops, Series 1 · 46, and it is not a failure.
+      # THEN THE COMPARISON DIMENSIONS THAT ACTUALLY DIFFER, and only those: containers as first
+      # class or not; whether the vendor's backup tool is part of the platform; how far you can
+      # get with no subscription; how much of it survives when the UI is down; and how much
+      # Linux knowledge the product assumes.
+      # AND THE DECISION THAT IS NOT ABOUT FEATURES AT ALL: WHO OPERATES THIS, WHAT ELSE IS ON
+      # THEIR PLATE, AND WHAT HAPPENS IN EIGHTEEN MONTHS WHEN THEY LEAVE. Every platform in this
+      # course is free to download. None of them is free to own, and the hours are the price.
+      - n: "27"
+        slug: choosing-between-them
+        title: "Choosing — One Box, a Pool, an Appliance, or Somebody Else's Datacentre"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # THE CAPSTONE, AND IT IS THE ONE THAT JOINS THE WHOLE COURSE: the small-estate shape,
+      # built nested on one machine, with the failure exercised on purpose.
+      # BUILD: TrueNAS with a mirrored pool, a dataset per purpose, an NFS export tuned for
+      # hypervisor storage, and periodic snapshots with retention. Then Proxmox or XCP-ng
+      # mounting that export, and a PostgreSQL VM whose disk lives on it.
+      # THEN BREAK IT, DELIBERATELY, THREE TIMES:
+      #   PULL A DISK from the NAS pool. Watch the alert arrive — the one you configured and
+      #   TESTED in Series 4 · 20 — and resilver it while the VM keeps running.
+      #   SNAPSHOT THE DATASET while the database is writing, roll it back, and read the
+      #   Postgres log recovering. That is Series 3 · 20's argument, felt.
+      #   STOP THE NAS while the VM is running, and watch what a hypervisor does when its
+      #   storage disappears. This is the single point of failure from Series 4 · 25, and every
+      #   reader should meet it in a lab rather than in production.
+      # HAND IN: the build as commands, the three failure logs, your measured recovery point and
+      # recovery time, and one paragraph naming the risk you have chosen to accept — because
+      # every architecture accepts one, and the professional difference is whether you can say
+      # which.
+      - n: "30"
+        slug: project-the-small-estate
+        title: "Project — a NAS, a Hypervisor, and Three Failures You Caused on Purpose"
+        hands_on: ["koan:author", "koan:capture"]
+        status: planned

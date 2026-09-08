@@ -325,6 +325,19 @@ series:
       #   ENFORCE IT, do not document it: sqlfluff in the same pipeline that runs the tests.
       #   A convention a human has to remember is a convention that decays, and the reader has
       #   already met that argument once in this series — it is why the tests exist.
+      # ALSO OWNS THE VOCABULARY SOMEBODY ELSE WILL USE FOR THIS, added 2026-09-07 after an
+      # audit found the words medallion, bronze, silver and gold in NONE of the academy's
+      # curricula — while the IDEA has three episodes here and more in ETL.
+      #   BRONZE = raw, landed, untouched          -> ETL & Data Pipelines' staging
+      #   SILVER = cleaned, typed, deduplicated    -> this layer, stg_ and int_
+      #   GOLD   = the tables people query         -> marts, dim_ and fct_
+      # IT IS DATABRICKS' NAMING FOR STAGED TRANSFORMATION, marketed well enough that a large
+      # share of readers meet the colours before they meet the idea. Say the mapping in three
+      # lines and move on — a reader who has been told "we use medallion" needs to recognise
+      # that they already know it, not to learn a fourth vocabulary.
+      # AND SAY WHERE IT IS OLDER THAN THE NAME: staging and marts predate the colours by
+      # decades, which is worth one sentence so nobody thinks a layered project is a Databricks
+      # invention or requires their platform.
       - n: "40"
         slug: project-structure
         title: "Project Structure — staging / intermediate / marts, and Why the Split Holds"

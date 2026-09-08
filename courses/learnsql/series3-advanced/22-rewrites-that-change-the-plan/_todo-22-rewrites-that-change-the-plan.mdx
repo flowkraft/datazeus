@@ -1,0 +1,124 @@
+---
+title: "Rewrites That Change the Plan — EXISTS, DISTINCT and Deep Pagination"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-sql"
+tags: []
+level: "advanced"
+module: "series3-advanced"
+order: 22
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build.
+    Drop the _todo- prefix when it becomes a real lesson.
+
+    READ FIRST: courses/learnsql/curriculum.yaml's header — it is the field
+    documentation the whole academy points at. Then read the comment ABOVE THIS
+    EPISODE in that file, which is the authority on coverage.
+
+    THE HOUSE METHOD, from the lessons already written:
+      - type the query yourself; copy-paste teaches your eyes only
+      - PREDICT the answer before running it, out loud, then run it
+      - every query runs on the Northwind that ships with DataPallas
+      - the koans mirror the lesson beat for beat
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: turn four common query shapes into faster ones, and prove the rewrite returns
+    exactly the same rows before believing the timing.
+    WHY IT SITS AFTER EXPLAIN: 18 is the rules you apply blind; this is the ones you apply
+    with evidence. Every rewrite here is shown as two queries and two plans.
+    seed: bulk — deep pagination in particular is invisible on a small table, and that is
+    the whole point of it.
+
+    ── THE FOUR PATTERNS, WRONG VERSION FIRST ──────────────────────────────
+
+    1. ASKING WHETHER A ROW EXISTS — three ways, and they are not equivalent:
+         COUNT(*) > 0   counts every matching row to answer yes or no
+         EXISTS         stops at the first row it finds. This is the one you want.
+         JOIN           finds every match, so it can MULTIPLY your rows — Series 2 · 06's
+                        fan-out arriving as a performance problem instead of a wrong total
+
+       AND THE CORRECTNESS BOMB, which is why this pattern leads:
+       NOT IN (subquery) RETURNS NO ROWS AT ALL IF THE SUBQUERY PRODUCES A SINGLE NULL.
+       Not fewer rows — none. It is Series 1 · 45's three-valued logic detonating inside a
+       construct that looks nothing like a NULL comparison, it is silent, and it is common.
+       NOT EXISTS does not behave this way. Teach the habit: NOT EXISTS, always.
+
+    2. DISTINCT AS A PLASTER — ask the diagnostic question: did you add DISTINCT because
+       you wanted unique values, or because you were getting duplicates? The second is a
+       fan-out you have hidden rather than fixed, and DISTINCT pays for the concealment
+       with a sort or hash over the whole result set. Fix the grain — Series 2 · 06 owns
+       how — and the DISTINCT disappears along with the cost.
+       UNION against UNION ALL is the same lesson in a second costume: UNION deduplicates,
+       and that is a sort you are buying. If the two sides cannot overlap, say ALL.
+
+    3. OR ACROSS COLUMNS — `WHERE city = 'London' OR country = 'UK'` often cannot use
+       either index, because no single index satisfies both branches. Two indexed queries
+       combined with UNION ALL frequently can. Show the plan before and after, and mark
+       this as the most ENGINE-DEPENDENT item in the episode: some optimizers do it for
+       you, and the reader should check rather than assume.
+
+    4. DEEP PAGINATION — the one every reader will use.
+       OFFSET 100000 LIMIT 20 must PRODUCE AND DISCARD one hundred thousand rows to reach
+       page 5001. Cost grows with the page number, so the LAST page of a report is the
+       slowest — backwards from what everyone expects, and why "the report is slow" is
+       sometimes only true for one person.
+       THE KEYSET (seek) ALTERNATIVE: remember the last row's sort key and ask for what
+       comes after it —
+           WHERE (order_date, order_id) < (:last_date, :last_id)
+           ORDER BY order_date DESC, order_id DESC
+           LIMIT 20
+       Constant cost per page.
+       STATE THE TRADE HONESTLY: you can no longer jump to page 900, and the ORDER BY MUST
+       END IN SOMETHING UNIQUE. Without a unique tiebreaker, paging over ties is
+       non-deterministic — a row can appear on two pages or on none. That is a correctness
+       bug that only shows up in production, and it deserves as much airtime as the speed.
+
+    ── ONE PARAGRAPH ON CTEs, BECAUSE SOMEBODY WILL ASK ────────────────────
+    On some engines and versions a CTE is materialised and blocks a filter from being
+    pushed into it; on others it is inlined. Do not teach a rule — teach that it differs,
+    that EXPLAIN answers it in ten seconds on the engine in front of you, and that
+    Series 4 owns dialect differences.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:equivalent
+      koan:count:scanned
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_22/RewritesThatChangeThePlanKoans.groovy
+
+    `equivalent` on every rewrite — same rows or it is not a rewrite. `count:scanned` to
+    show the work actually fell: a rewrite that feels faster and reads the same number of
+    rows has changed nothing.
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. The published lessons all open this way;
+    keep it. Never "SELECT is used to…". Always "your boss asks…". */}
+
+TODO
+
+## TODO — the SQL
+
+{/* BEAT 2 — the keywords, one at a time, each with a query the reader types.
+    Every query runs on Northwind. Predict, then run. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns its
+    place by preventing a number that is wrong and looks right.
+    The one to write: NOT IN against a column that is usually populated. It worked for a
+    year, somebody left a supplier's region blank, and the exception report has returned
+    zero rows ever since — which reads as "nothing to report" rather than as a failure,
+    and nobody investigates good news. */}
+
+TODO

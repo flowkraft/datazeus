@@ -1,0 +1,72 @@
+---
+title: "$lookup Is Not a JOIN — and Several of Them Is a Modelling Message"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-mongodb"
+tags: []
+level: "advanced"
+module: "series2-modelling"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/mongodb/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/mongodb/series2/_20/LookupAndAdvancedStagesKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official MongoDB Manual — the section that owns this topic (CRUD, Aggregation, Data Modeling, Indexes, Replication, Sharding).
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (NoSQL Concepts owns the shapes and the distributed theory, Data Ops owns running the server),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    A collection is not a table. The commonest failure is a relational schema transliterated into collections, with $lookup standing in for JOIN.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the stages that go beyond one collection — $lookup, $unwind, $facet, $bucket,
+     $setWindowFields — with $lookup framed carefully: IT IS NOT A JOIN AND IT IS NOT FREE. It
+     runs per input document unless the pipeline lets it use an index, and a $lookup at the
+     top of a pipeline over a large collection is the commonest way to make MongoDB slow.
+     WHEN IT IS RIGHT: a reference lookup against a small collection, or the last stage of a
+     pipeline that has already reduced the input. WHEN IT IS A SIGNAL: several $lookups in one
+     pipeline usually mean the model was transliterated from a relational schema — the failure
+     this whole track exists to prevent.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/mongodb/series2/_20/LookupAndAdvancedStagesKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

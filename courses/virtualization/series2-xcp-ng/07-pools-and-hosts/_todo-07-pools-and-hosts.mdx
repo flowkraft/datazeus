@@ -1,0 +1,81 @@
+---
+title: "Pools, Hosts and the Master — Why Two Servers Are Not Yet a Cluster"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series2-xcp-ng"
+order: 7
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series2/_07/PoolsAndHostsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the pool, which is the unit that makes this a platform rather than a hypervisor.
+       A POOL is a set of hosts sharing configuration, networks and — critically — SHARED
+       STORAGE. One host is the POOL MASTER and holds the database the others follow.
+       JOINING a host: the requirements that actually bite — matching CPU vendors and
+       compatible feature sets, matching patch levels, and a network the hosts agree about.
+       WHAT HAPPENS WHEN THE MASTER DIES: not what people assume. Designate a new master, and
+       know the procedure BEFORE you need it. HA changes this and brings its own quorum
+       requirements and its own ways to go wrong.
+     THE SENTENCE THIS EPISODE EXISTS TO DELIVER: TWO HOSTS WITH LOCAL STORAGE ARE NOT A
+     CLUSTER. They are two servers. Everything people want from a pool — migrating a VM off a
+     host to patch it, restarting a VM elsewhere when a host dies — requires storage that
+     both hosts can see. THAT IS WHY SERIES 4 EXISTS, and this is the episode that explains
+     why a shared storage box is not an optional extra but the thing that makes the second
+     host worth buying.
+     NAME XOSTOR / hyperconverged storage as the alternative to a separate storage box, say
+     what it is in two sentences, and ⚠ check its current status and licensing before writing
+     anything more than that.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      eyes
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series2/_07/PoolsAndHostsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

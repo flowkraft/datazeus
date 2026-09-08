@@ -1,0 +1,74 @@
+---
+title: "The Layout Is the Tuning — Partitions, File Size, and Ten Thousand Tiny Files"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-trino"
+tags: []
+level: "advanced"
+module: "series2-making-it-fast"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/trino/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/trino/series2/_05/LayoutAndSmallFilesKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Trino documentation (trino.io/docs) — the page that owns this topic, and above all THE CONNECTOR'S OWN PAGE, because connectors differ enormously in what they push down.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Learn SQL owns the SQL, Apache Iceberg owns the table format, Data Warehousing owns the lakehouse, Data Ops owns the cluster),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    TRINO HAS NO STORAGE. Every performance question is a question about somebody else's data layout. Say WHICH CONNECTOR each claim was verified against, and check whether a source is describing Trino or PrestoDB.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the layout of the data underneath, which is the tuning Trino actually responds to
+     and which it cannot do for you. Partitioning so whole directories are skipped, file
+     format and compression, sort order so min/max statistics let a file be skipped whole, and
+     file SIZE.
+     THE SMALL-FILES PROBLEM, given the space it deserves because it is the commonest
+     complaint in the wild: ten thousand tiny files means ten thousand splits, each with
+     per-file overhead, and the query spends its life opening files rather than reading rows.
+     Compaction is the fix and it belongs to the table format — Apache Iceberg & Table
+     Formats, Series 2 · 10 — which is exactly the point of this episode: THE FIX IS NOT IN
+     TRINO.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/trino/series2/_05/LayoutAndSmallFilesKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

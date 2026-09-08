@@ -1,0 +1,82 @@
+---
+title: "qm, pct and /etc/pve — the CLI, and the Directory That Goes Read-Only"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series3-proxmox"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series3/_05/QmAndPctKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the CLI, treated as the real interface, and the file layout that explains the
+     whole product.
+       qm   for VMs — create, start, stop, clone, migrate, set, config, snapshot. Every one
+            of these is Series 1 · 07's virsh with different spelling.
+       pct  for containers — the same verbs, over LXC.
+       pvesm for storage, pvecm for the cluster.
+     AND THE THING WORTH THE WHOLE EPISODE: /etc/pve IS NOT A NORMAL DIRECTORY. It is pmxcfs,
+     a FUSE filesystem backed by a database that is REPLICATED ACROSS THE CLUSTER by corosync.
+     Your VM configuration files live there, which is why editing one on any node changes it
+     everywhere and why it is the same on every node.
+     THE CONSEQUENCE THAT WILL ONE DAY BE YOUR AFTERNOON: WHEN A NODE LOSES QUORUM,
+     /etc/pve GOES READ-ONLY. The VMs keep running, but you cannot start one, cannot change
+     one, and the UI throws errors that mention permissions rather than quorum. A reader who
+     has met this sentence once diagnoses it in thirty seconds; a reader who has not spends
+     an hour on file permissions. Series 3 · 12 is where quorum is taught; this is where its
+     symptom is named.
+     ALSO: where a VM's config actually is, how to read it, and the fact that a disk is a
+     line in that file pointing at a storage identifier — which makes Series 3 · 10 legible.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series3/_05/QmAndPctKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

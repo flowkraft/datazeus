@@ -1,0 +1,76 @@
+---
+title: "The Sequential Key — One Mistake, Three Products, Dashboards That Look Fine"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-distributed-sql"
+tags: []
+level: "advanced"
+module: "series2-what-changes-in-your-schema"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/distributedsql/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/distributedsql/series2/_05/TheSequentialKeyProblemKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    EACH PRODUCT'S OWN CURRENT DOCUMENTATION for every product named, with the version AND EDITION stated. THIS COURSE HAS NO MANUAL OF ITS OWN and teaches no product — if a beat needs something installed, it belongs in the CockroachDB track.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (CockroachDB owns the hands-on, Learn SQL owns the SQL, NoSQL Concepts owns the non-relational models, Data Ops owns the machine),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    A COMMIT IS A CONVERSATION BETWEEN MACHINES. Licences and editions move fast here — check pricing pages, not blog posts.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the specific failure that follows, and it is the same failure in three products,
+     which is why it belongs in a concepts course rather than a product one.
+     A SEQUENTIAL KEY — a serial, an auto-increment, a timestamp — means every insert sorts
+     to the end, lands in the last range, and one machine takes the whole write load while
+     the rest idle. The cluster is busy and slow and the dashboards look fine.
+     THE SAME SHAPE, THREE NAMES: Cassandra's hot partition, MongoDB's monotonic shard key,
+     this. A reader who sees the pattern stops making it in the fourth product too, and that
+     transferability is the argument for teaching it here.
+     THE FIXES AND THEIR COSTS: random keys spread and lose natural ordering; a hash-sharded
+     index keeps the ordering and spreads the writes; a compound key with a varied leading
+     part works when one exists. And the trade to state plainly — spreading the writes can
+     scatter the range scans you wanted.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/distributedsql/series2/_05/TheSequentialKeyProblemKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

@@ -155,6 +155,8 @@ series:
       - n: "15"
         slug: staging
         title: "Staging — Land Raw Before You Transform Anything"
+        # NAME THE OTHER NAME, one line: this layer is what a Databricks shop calls BRONZE.
+        # Analytics Engineering with dbt, Series 2 · 40 owns the full bronze/silver/gold mapping.
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         status: planned
@@ -198,7 +200,7 @@ series:
       # SERIES 1 PROJECT, added 2026-08-24. The series had none: the core path
       # walked ten episodes with nothing built at the end of them.
       # Everything in Series 1 on one load: stage it, transform it, log the row counts, then run it
-      # again and prove nothing changed. Idempotency (25) is the property the whole series was
+      # again and prove nothing changed. Idempotency (30) is the property the whole series was
       # building toward and the only one a single run cannot demonstrate.
       - n: "50"
         slug: project-safe-to-rerun

@@ -1,0 +1,79 @@
+---
+title: "Scrubs, SMART and the Alert You Never Tested — Replacing a Disk in the UI"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series4-truenas"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series4/_20/AlertsScrubsAndAFailedDiskKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the operational half, which is the difference between a NAS that protects data
+     and a NAS that quietly stopped.
+       SCHEDULED SCRUBS and SMART tests, both of which the product will run for you and both
+       of which are pointless if nobody reads the result. Storage for Data, Series 2 · 10 is
+       the mechanism; this is the schedule and the alert.
+       ALERTS: configure email or a webhook ON THE FIRST DAY, and then TEST IT by causing an
+       alert on purpose. An untested alert channel is the commonest reason a degraded pool
+       runs degraded for four months.
+       THE REPORTING GRAPHS and what to look at: pool capacity trend (Storage for Data,
+       Series 1 · 25's growth rate), ARC hit ratio, disk latency and network throughput.
+       REPLACING A FAILED DISK through the UI, as a runbook — offline, replace, resilver,
+       and watch it. Storage for Data, Series 2 · 12 is the command line version; this is the
+       appliance version and it is the operation a reader is most likely to have to do.
+     THE SILENCE TO WORRY ABOUT: no alerts for six months usually means alerting is broken,
+     not that nothing has happened. Prove it periodically.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series4/_20/AlertsScrubsAndAFailedDiskKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

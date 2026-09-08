@@ -1,0 +1,83 @@
+---
+title: "Templates and cloud-init — Stop Installing Debian by Hand"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series1-linux-virtualization"
+order: 22
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series1/_22/TemplatesAndCloudInitKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the habit that separates somebody who runs three machines from somebody who runs
+     thirty. STOP INSTALLING DEBIAN BY HAND.
+       THE GOLDEN IMAGE   one machine built properly — hardened, monitored, with your keys,
+                          your CA, your apt sources, your agent — then shut down and turned
+                          into a template. Everything after is a clone.
+       CLOUD-INIT         the mechanism that makes a clone into a specific machine on first
+                          boot: hostname, user, ssh keys, packages, and a run-once script.
+                          user-data and meta-data, the NoCloud datasource, and how to see
+                          what it did — /var/log/cloud-init.log, which is where you look when
+                          a machine came up nameless.
+       LINKED CLONES      a clone that stores only its differences from the template. Fifty
+                          machines in the space of one and a half, created in seconds — and
+                          the trade, which is that they all depend on the template's disk
+                          and that deleting it is not possible.
+     THE WORKPLACE MOMENT AND IT IS THE POINT OF THE EPISODE: a new environment for a new
+     project used to be a Wednesday. It is now a command, and — because it came from the
+     template — it has the monitoring agent on it, which the hand-built one did not, which is
+     why nobody noticed its disk filling.
+     SAY THAT PACKER EXISTS for building the template repeatably, name it, and move on.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series1/_22/TemplatesAndCloudInitKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

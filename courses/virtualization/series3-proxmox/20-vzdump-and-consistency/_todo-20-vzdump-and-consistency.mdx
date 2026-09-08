@@ -1,0 +1,87 @@
+---
+title: "vzdump — Crash-Consistent Is Not Consistent, and the Agent That Helps"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series3-proxmox"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series3/_20/VzdumpAndConsistencyKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: vzdump, and THE MOST IMPORTANT EPISODE IN THIS COURSE FOR A DATA READER.
+       THE THREE MODES: STOP (shut the guest down — perfectly consistent, and an outage),
+       SUSPEND (freeze it — shorter outage, older mechanism), SNAPSHOT (no outage, and the
+       whole of the rest of this episode).
+       COMPRESSION, bandwidth limits, and where the backup goes.
+     AND NOW THE PART THAT MATTERS. A SNAPSHOT-MODE BACKUP OF A RUNNING DATABASE IS
+     CRASH-CONSISTENT: it is exactly what you would have if you pulled the power cable at
+     that instant. Restore it and Postgres replays its write-ahead log and comes up. Usually.
+       "USUALLY" IS NOT A BACKUP POLICY, and the failure is not theoretical: with the disk
+       cache mode from Series 1 · 25 set wrong, or with a device that lies about flushes, the
+       snapshot can be missing writes the database believed were durable.
+       THE QEMU GUEST AGENT is the partial answer: with it installed, Proxmox can ask the
+       guest to FREEZE ITS FILESYSTEMS for the instant of the snapshot, which makes the image
+       filesystem-consistent. INSTALL IT IN EVERY GUEST. It is also what gives you clean
+       shutdowns and the guest's IP in the UI.
+       AND THE REAL ANSWER, WHICH IS THE SENTENCE THE EPISODE EXISTS FOR: A VM BACKUP
+       PROTECTS THE MACHINE. IT DOES NOT REPLACE A DATABASE BACKUP. You want both, and the
+       database one — pg_dump, or PITR with a base backup and WAL archiving from Data Ops,
+       Series 2 · 30 — is the one that gives you point-in-time recovery, that you can restore
+       a single table from, and that you can restore onto a different machine entirely.
+     THE POLICY TO LEAVE THEM WITH: VM backups nightly for the machine, database backups on
+     the database's own schedule for the data, both off the host, and both restored on a
+     schedule rather than on the day you need them.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series3/_20/VzdumpAndConsistencyKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

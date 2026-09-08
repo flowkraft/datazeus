@@ -1,0 +1,85 @@
+---
+title: "HA and Fencing — the VM Comes Back, and the Database Still Crashed"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series3-proxmox"
+order: 15
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series3/_15/HaAndFencingKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: HA, and then the sentence this course exists partly to deliver.
+     WHAT IT DOES: the HA manager watches resources; when a node stops answering, its VMs are
+     started on another node. FENCING is what stops the old node writing to the same disks —
+     a hardware watchdog reboots a node that has lost quorum. Without fencing you get split
+     brain, which on shared storage means two machines writing to one filesystem, which means
+     the data is gone.
+     THE REQUIREMENTS: three nodes or a QDevice, shared storage or replication, and a
+     watchdog that actually works. HA on two nodes with no QDevice is a way to lose data.
+     ⚠ AND THE MISUNDERSTANDING, STATED AS PLAINLY AS THIS COURSE CAN MANAGE:
+       HA OF A VM IS NOT HA OF A DATABASE. What HA gives you is: the machine comes back
+       somewhere else, in a few minutes, having been powered off without warning. Your
+       database then does crash recovery, replays its write-ahead log, and comes up. Every
+       connection was dropped. Every in-flight transaction was rolled back. Anything that was
+       only in memory is gone.
+       THAT IS GENUINELY USEFUL AND IT IS NOT WHAT A DATABASE PERSON MEANS BY THE WORDS.
+       Real database availability is streaming replication and a failover decision, which is
+       Data Ops, Series 2 · 45 — a DIFFERENT MECHANISM AT A DIFFERENT LAYER, and the two are
+       complementary rather than alternatives.
+     THE HONEST QUESTION TO CLOSE ON: what is your actual recovery time objective, and would
+     a documented ten-minute manual restart have met it? Very often it would, and HA's
+     complexity is then a cost with no matching benefit.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series3/_15/HaAndFencingKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

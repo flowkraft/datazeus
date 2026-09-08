@@ -1,0 +1,132 @@
+---
+title: "Storage and Compute, Separated — Reads Cross a Network, Compute Can Sleep"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-warehousing"
+tags: []
+level: "intermediate"
+module: "series2-columnar-engines-and-cubes"
+order: 17
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/datawarehousing/curriculum.yaml   the track's decisions, in its header
+      the comment ABOVE THIS EPISODE in that file — the authority on coverage
+      tests/src/koans/groovy/datazeus/datawarehousing/series2/_17/StorageAndComputeSeparatedKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Warehousing · Columnar Engines & Cubes (intermediate) — "make queries fast with columnar engines and cubes"
+      before:  Partitioning, Sort Keys & Data Skipping — Read Less, Answer Sooner
+      THIS:    Storage and Compute, Separated — Reads Cross a Network, Compute Can Sleep
+      after:   The Semantic Layer — Dimensions, Measures and Hierarchies, Declared Once
+    CORE — on the shortest path to being productive. Someone will read only
+    the core episodes, so this one has to stand alone.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: read a vendor's architecture page and know which properties follow from it —
+    what scales, what costs money, and why the first query of the morning is slow.
+    DECISION: an audit found this phrase mentioned ONCE in the whole academy, while
+    Snowflake is named in four courses and Databricks in one, always in passing. Nobody
+    CHOOSES this architecture — they inherit it by choosing a product — so the reader's
+    need is comprehension rather than a decision, and that is one episode rather than a
+    course.
+
+    ── THE LADDER THE SERIES HAS ALREADY BUILT, AND THIS IS ITS THIRD RUNG ─
+      05  DUCKDB        storage and compute in ONE PROCESS, on one disk
+      10  CLICKHOUSE    compute owns its LOCAL DISKS; adding capacity means moving data
+      17  SEPARATED     the bytes live in object storage; compute is stateless and reads
+                        them over a network
+    Teach it as a progression. Each rung gives something up, and saying what is given up
+    is what makes the third one land instead of sounding like marketing.
+
+    ── WHAT SEPARATION BUYS ────────────────────────────────────────────────
+      SCALE INDEPENDENTLY        a big query gets a big cluster for ten minutes, then
+                                 gives it back
+      COMPUTE TO ZERO            a dataset nobody queried this month costs storage only,
+                                 which changes the economics of keeping history at all
+      ONE COPY, MANY ENGINES     the lakehouse claim from Series 3 · 20 — Trino, Spark and
+                                 DuckDB over the same files, no copy per tool
+      NO REBALANCING             replace or resize compute without moving a byte, which is
+                                 the operational cost the engine at 10 still has
+
+    ── WHAT IT COSTS, AND THIS HALF IS WHY THE EPISODE EXISTS ──────────────
+      EVERY READ CROSSES A NETWORK   a latency floor per request. These are throughput
+                                 machines and are genuinely poor at point lookups, which
+                                 is why nobody serves an application from one.
+      CACHING IS THE PERFORMANCE STORY   a local SSD cache on the compute node, so a COLD
+                                 cluster is slow in a way a warm one is not. This is the
+                                 "first query is always slow" phenomenon everybody notices
+                                 and nobody explains — naming it is worth the episode on
+                                 its own.
+      REQUESTS ARE BILLED        object storage charges per request, so a table stored as
+                                 two hundred thousand small files costs money as well as
+                                 time. Data Ops, Series 1 · 47 owns that cost model.
+      METADATA IS A BOTTLENECK   listing a bucket is slow and expensive, which is exactly
+                                 why a table format keeps manifests. Apache Iceberg &
+                                 Table Formats, Series 1 · 00 is that argument, and a
+                                 reader who meets this episode first will understand why
+                                 that one has to exist.
+
+    NAME WHO WORKS THIS WAY AND STOP: Snowflake, BigQuery, Databricks, ClickHouse Cloud,
+    MotherDuck, Neon for PostgreSQL, and any lakehouse assembled from a table format and
+    an engine. Examples of a shape, never products taught here.
+
+    ── SAY THIS OUT LOUD: THERE ARE TWO SNOWFLAKES ─────────────────────────
+    The one above is SNOWFLAKE INC. — a company selling a managed cloud data warehouse as
+    SaaS, which you cannot self-host. It is named because it is the commercial proof of
+    this episode's architecture: three separated layers, with virtual warehouses as
+    independently sized compute over one copy of the data.
+    THE OTHER IS A SCHEMA SHAPE and has nothing to do with the company — a star whose
+    dimensions are normalised into sub-dimensions. Data Modeling, Series 3 · 10 is
+    "Snowflake vs Star".
+    PURE COINCIDENCE, and this course causes the collision itself: two of its own excludes
+    say "star vs snowflake" while this episode says "Snowflake, BigQuery, Databricks".
+    One sentence settles it, and it belongs here because this is where the VENDOR sense
+    appears.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:choose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/datawarehousing/series2/_17/StorageAndComputeSeparatedKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: a team migrates to a separated engine, the demo is fast, and in
+    production the first query of every morning takes forty seconds. Nobody can reproduce
+    it after ten o'clock, three people spend a week tuning the SQL, and the answer is a
+    cold cache on a cluster that scaled to zero overnight. */}
+
+TODO

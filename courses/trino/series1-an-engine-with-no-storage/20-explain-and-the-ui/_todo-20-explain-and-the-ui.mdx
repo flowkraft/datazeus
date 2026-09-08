@@ -1,0 +1,72 @@
+---
+title: "EXPLAIN and the Web UI — Input Rows Against Output Rows at the Source"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-trino"
+tags: []
+level: "intermediate"
+module: "series1-an-engine-with-no-storage"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/trino/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/trino/series1/_20/ExplainAndTheUiKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Trino documentation (trino.io/docs) — the page that owns this topic, and above all THE CONNECTOR'S OWN PAGE, because connectors differ enormously in what they push down.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Learn SQL owns the SQL, Apache Iceberg owns the table format, Data Warehousing owns the lakehouse, Data Ops owns the cluster),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    TRINO HAS NO STORAGE. Every performance question is a question about somebody else's data layout. Say WHICH CONNECTOR each claim was verified against, and check whether a source is describing Trino or PrestoDB.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the tools for seeing it. EXPLAIN and EXPLAIN ANALYZE, read as a tree of stages
+     rather than as a wall of text, and the Web UI's query detail — which shows rows and bytes
+     per stage live and is the fastest diagnosis in the product.
+     THE NUMBER TO LOOK AT FIRST, and it decides most investigations: INPUT ROWS AGAINST
+     OUTPUT ROWS AT THE SOURCE STAGE. If Trino read a hundred million rows to return a
+     thousand, the filter did not reach the data, and Series 2 · 00 is why.
+     SEAM: Learn SQL, Series 3 · 20 taught reading a plan on one machine. Same discipline,
+     more stages — say so, rather than starting again.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:count:scanned
+      koan file: tests/src/koans/groovy/datazeus/trino/series1/_20/ExplainAndTheUiKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

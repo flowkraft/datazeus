@@ -1,0 +1,115 @@
+---
+title: "btrfs — Copy-on-Write in the Kernel, and the Flag That Turns Off Checksums"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-storage"
+tags: []
+level: "advanced"
+module: "series2-filesystems-and-zfs"
+order: 21
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/storage/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/storage/series2/_21/BtrfsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — OpenZFS docs for Series 2, the S3 API reference and MinIO's docs for Series 3, the Ceph docs for Series 4. SERIES 1 HAS NO MANUAL: it is physics, arithmetic and trade-offs, so teach the SHAPE and the orders of magnitude.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a bucket and watching a disk, Data Warehousing owns columnar layout, the engine tracks own their storage engines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    REPLICATION IS NOT A BACKUP — a delete is replicated faithfully to all three copies. DATE EVERY CONCRETE FIGURE: capacities, prices and rebuild times age faster here than anywhere else in the academy.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     ALSO OWNS THE GATE, added in the same review that found every other series in this
+     academy has one and this did not. WHEN NOT ZFS:
+       it wants RAM, and on a small box the ARC competes with the database you are running;
+       A POOL CANNOT BE SHRUNK, and vdevs largely cannot be removed — a layout mistake is
+         permanent in a way ext4 never is;
+       the licence keeps it out of the mainline kernel, so it is a module your distribution
+         may or may not make easy, and a kernel upgrade can break it;
+       and if you have hardware RAID underneath, ZFS cannot see the disks and its whole
+         self-healing argument evaporates — which is the commonest way people get none of
+         the benefit and all of the complexity.
+     SAY IT PLAINLY: on a rented VM with one virtual disk, ext4 or XFS is the right answer and
+     this series is background reading.
+     ADDED as its own episode 2026-09-07. It had been a paragraph inside Series 1 · 19, beside
+     ext4 and XFS, which was the wrong neighbour: btrfs is a COPY-ON-WRITE filesystem, so the
+     comparison a reader needs is with ZFS. And it is placed immediately before 22 on purpose,
+     because "use btrfs instead" is one of the real answers to "do you need ZFS?" and that
+     episode cannot weigh an option this course never taught.
+     COVER:
+       THE ONE ADVANTAGE THAT DECIDES MOST DEBIAN CASES: IT IS IN THE MAINLINE KERNEL. No
+                       DKMS, no module rebuilt against every kernel upgrade, no licence
+                       question — `apt install btrfs-progs` and the filesystem is already
+                       there. Series 2 · 02 named the DKMS build as where Debian readers get
+                       stuck; this is the option that does not have that problem at all.
+       SUBVOLUMES      not quite ZFS datasets — cheaper, and mountable as directories, which
+                       is why distributions use them for root and /home layouts.
+       SNAPSHOTS       near-instant, and WRITABLE by default, which is the opposite of ZFS's
+                       default and surprises people moving between them.
+       CHECKSUMS AND SCRUB   the same argument as 2 · 10 — it detects corruption, and with
+                       redundancy it repairs it. This is the reason to consider it at all.
+       COMPRESSION     zstd as a mount option, per-file, and the same "fewer bytes leave the
+                       disk" argument that makes it a performance win rather than a cost.
+       send/receive    exists, and does the job 2 · 15 uses ZFS's for.
+     THE CAUTION, STATED CAREFULLY BECAUSE IT IS THE MOST-QUOTED AND LEAST-CHECKED FACT ABOUT
+     THIS FILESYSTEM: single, mirror and striped-mirror profiles are what people run in
+     production. THE PARITY PROFILES have carried a long-standing warning about the write hole
+     from Series 1 · 15. That situation has been improving slowly for years, so DO NOT repeat
+     a decade-old blog post — check the project's own status page for the version in Debian
+     you are writing about, state the version, and if the answer is still "not recommended",
+     say so plainly and move on.
+     AND THE TRAP THAT MATTERS MOST TO THIS ACADEMY'S READER, which is genuinely data-specific
+     and is why this episode earns its place: COPY-ON-WRITE FRAGMENTS FILES THAT ARE WRITTEN
+     IN PLACE — a database's data directory, a VM image. The performance falls away over
+     weeks, not immediately, so it looks like the database degrading.
+     THE FIX IS `chattr +C` OR nodatacow — AND IT DISABLES CHECKSUMS FOR THOSE FILES. So the
+     standard advice for putting Postgres on btrfs turns off the exact guarantee that was the
+     reason to choose btrfs. Say that out loud. It is the cleanest example in the course of a
+     mitigation that quietly removes the benefit, and a reader who understands it will ask the
+     same question of every other tuning flag they are handed.
+     WHEN TO CHOOSE IT: a Debian box where you want copy-on-write snapshots and checksums
+     without a kernel module, mirrors are enough redundancy, and the workload is files rather
+     than a database writing in place. That is a real and common shape.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/storage/series2/_21/BtrfsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

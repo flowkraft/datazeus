@@ -1,0 +1,84 @@
+---
+title: "Installing It — the Disk Layout You Choose Before You Know Anything"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series3-proxmox"
+order: 2
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series3/_02/InstallingProxmoxKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the installation, and the ONE DECISION IN IT THAT YOU CANNOT COMFORTABLY TAKE
+     BACK — the root filesystem and storage layout, chosen in the installer before you know
+     anything about the product.
+       ext4 ON LVM        the default. LVM-thin for guest disks, which gives snapshots and
+                          overcommit. Simple, fine, and Storage for Data, Series 1 · 18 is
+                          the background.
+       ZFS (RAID1, RAIDZ) chosen at install, gives you checksums, cheap snapshots, replication
+                          between nodes, and compression. Storage for Data, Series 2 · 07 is
+                          the layout argument and it applies here EXACTLY — including that
+                          the vdev choice is permanent.
+       BTRFS              offered, and Storage for Data, Series 2 · 21 is the honest account.
+     THE RECOMMENDATION AND THE REASON: for a data team's single node, ZFS with a mirrored
+     boot pair is the layout that survives a disk dying at 2 a.m. without anybody being
+     awake, and it enables the replication in Series 3 · 12. It costs RAM. Say both.
+     AND THE HARDWARE PARAGRAPH: the boot device is written to constantly by the cluster
+     filesystem, so a cheap USB stick or a low-endurance consumer SSD is a device that WILL
+     fail — this is a known, specific, repeatedly-reported failure and it belongs in the
+     lesson.
+     THEN THE POST-INSTALL RUNBOOK: repositories, updates, the network bridge (vmbr0, which
+     is Series 1 · 15 pre-built for you), and a non-root user with a real login.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:process:tool
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series3/_02/InstallingProxmoxKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

@@ -1,0 +1,84 @@
+---
+title: "Apps and Instances — What the NAS Can Run, and Why It Mostly Should Not"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series4-truenas"
+order: 22
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series4/_22/AppsAndInstancesKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: running workloads ON the storage box, and the gate that belongs with it.
+       WHAT IT OFFERS: an application catalogue plus your own compose-style deployments, and
+       virtual machines or system containers as well. Postgres, MinIO, Grafana, a scheduler —
+       all one click away on the box that already has the disks and the snapshots.
+       ⚠ AND THE CAUTION THAT MUST BE LOUD, WITH DATES: the container platform underneath the
+       apps has been REPLACED within the last few releases, and the virtualization layer has
+       changed technology too — recent releases build on the same Incus lineage as
+       Series 1 · 10, which is a pleasing loop but only if you check it. Anything written
+       from memory here will be wrong. Open the release notes, name the version, and say what
+       changed and when so a reader on an older release knows where they stand.
+       THE PRACTICAL PART: host paths and dataset permissions for app data — which is
+       Series 4 · 07's ACL problem arriving again — and why app data belongs in its own
+       dataset with its own snapshot task.
+     AND THE GATE, ASKED HERE RATHER THAN AT THE END BECAUSE IT IS SPECIFIC TO THIS FEATURE:
+     SHOULD A STORAGE APPLIANCE RUN YOUR WORKLOADS AT ALL? Arguments for: one box, no extra
+     hardware, data is local so no network in the path, and snapshots cover the app too.
+     Arguments against, and they are serious: you now reboot your storage to update an
+     application; a runaway container competes with the thing every other machine depends on;
+     and the appliance's app platform is the part of the product most likely to change under
+     you. FOR A HOME LAB, YES. FOR THE BOX THE HYPERVISORS DEPEND ON, KEEP IT BORING.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      eyes
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series4/_22/AppsAndInstancesKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

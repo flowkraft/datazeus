@@ -1,0 +1,73 @@
+---
+title: "Rook Is an Operator, Not a Storage System — the Storage Is Ceph"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-kubernetes"
+tags: []
+level: "advanced"
+module: "series6-rook-and-choosing"
+order: 0
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/kubernetes/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/kubernetes/series6/_00/WhatRookIsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Kubernetes documentation (kubernetes.io/docs) — the Concepts section that owns this topic (Workloads, Storage, Configuration, Scheduling and Eviction).
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns the single machine and the container image, Airflow owns dependencies between steps),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    Kubernetes assumes a workload is stateless and long-running. A data job is neither, and that mismatch is the reason for most surprises here.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: what Rook is, stated precisely because the name misleads. IT IS AN OPERATOR, NOT A
+     STORAGE SYSTEM. The storage is Ceph. Rook watches custom resources and runs cephadm's job
+     for you — placing monitors and OSDs, reconciling the cluster you declared.
+     SO THIS SERIES ASSUMES Storage for Data's Ceph series and re-teaches none of it: no CRUSH,
+     no min_size, no placement groups. If a reader does not know what an OSD is, they are in
+     the wrong series and should be told so in the first paragraph.
+     WHAT ROOK CHANGES: the cluster is now a Kubernetes object, so it is declarative,
+     version-controlled and reconciled — and its failures are now ALSO Kubernetes failures,
+     which means two sets of logs and two mental models when something breaks.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/kubernetes/series6/_00/WhatRookIsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

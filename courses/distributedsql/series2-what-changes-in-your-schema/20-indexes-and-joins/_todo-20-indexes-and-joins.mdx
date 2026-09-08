@@ -1,0 +1,76 @@
+---
+title: "Indexes and Joins When the Rows Are Spread — Which Side Moves, and What It Costs"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-distributed-sql"
+tags: []
+level: "advanced"
+module: "series2-what-changes-in-your-schema"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/distributedsql/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/distributedsql/series2/_20/IndexesAndJoinsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    EACH PRODUCT'S OWN CURRENT DOCUMENTATION for every product named, with the version AND EDITION stated. THIS COURSE HAS NO MANUAL OF ITS OWN and teaches no product — if a beat needs something installed, it belongs in the CockroachDB track.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (CockroachDB owns the hands-on, Learn SQL owns the SQL, NoSQL Concepts owns the non-relational models, Data Ops owns the machine),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    A COMMIT IS A CONVERSATION BETWEEN MACHINES. Licences and editions move fast here — check pricing pages, not blog posts.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: two things whose economics invert together.
+       INDEXES   on one machine a secondary index costs disk and some write amplification.
+                 Here it is its own set of ranges with its own replica groups, so an insert
+                 touching three indexes coordinates with three groups — a multiple, not a
+                 percentage. Hence: fewer, wider indexes; covering columns so a read is one
+                 lookup rather than a hop to another machine; and real willingness to delete
+                 indexes nobody uses. Learn SQL, Series 3 · 25 said an index has a cost; this
+                 is that sentence with a far larger number in it.
+       JOINS     the question is WHICH SIDE MOVES. A small table can be sent everywhere; a
+                 large one cannot, so both sides redistribute by the join key. Co-locating
+                 tables that are always joined turns a distributed join into a local one, and
+                 that is a design-time decision rather than a tuning one.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/distributedsql/series2/_20/IndexesAndJoinsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

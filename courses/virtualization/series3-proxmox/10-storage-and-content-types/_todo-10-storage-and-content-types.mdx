@@ -1,0 +1,82 @@
+---
+title: "Storage Types and Content Types — the Dropdown Your Storage Is Missing From"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series3-proxmox"
+order: 10
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series3/_10/StorageAndContentTypesKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: storage, which in this product means two ideas people conflate — WHERE the bytes
+     go, and WHAT KIND of thing is allowed to go there.
+       THE TYPES: dir, LVM, LVM-thin, ZFS, NFS, CIFS, iSCSI, Ceph RBD, and Proxmox Backup
+       Server as a storage target in its own right.
+       CONTENT TYPES, which is the concept the UI forces on you and nobody explains: a
+       storage is marked as holding disk images, container rootfs, ISO files, container
+       templates, backups, or snippets. A storage that will not appear in a dropdown is
+       almost always a content type you did not tick.
+       AND THE FEATURE MATRIX THAT ACTUALLY DECIDES THINGS: which storages support SNAPSHOTS,
+       which support THIN provisioning, and which support LINKED CLONES. A directory holding
+       qcow2 does; plain LVM does not; LVM-thin and ZFS do. Choosing the wrong one means
+       discovering on migration day that you cannot snapshot before an upgrade.
+     THE SHARED-STORAGE POINT, which Series 3 · 12 depends on: NFS or iSCSI from the box in
+     Series 4, or Ceph, is what lets a VM run on any node. Local ZFS plus replication is the
+     cheaper approximation and Series 3 · 12 covers the difference honestly.
+     AND THE CLIFF: thin provisioning plus snapshots plus backups on the same pool, and
+     Storage for Data, Series 1 · 25's 80 per cent rule as the operational answer. On ZFS a
+     full pool is not a warning, it is guests with I/O errors.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series3/_10/StorageAndContentTypesKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

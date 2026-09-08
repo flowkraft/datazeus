@@ -73,6 +73,8 @@ excludes:
     where: "covered in ETL & Data Pipelines, Series 2 · 45 as a concept and in Apache Airflow as a tool. A CronJob runs one thing on a clock; it has no idea what ran before it"
   - topic: "Whether to use an orchestrator at all, and which one"
     where: "covered in Data Ops, Series 3 · 00. This course assumes the cluster is already the answer somebody gave"
+  - topic: "Ceph itself, ZFS, erasure coding and the S3 protocol"
+    where: "covered in Storage for Data, which is the physical layer. In this course, Series 6 is Rook — the OPERATOR that runs Ceph inside Kubernetes — and it assumes that course rather than re-teaching CRUSH"
   - topic: "Continuous delivery of the manifests"
     where: "covered in Continuous Delivery, which owns the deployment pipeline as a subject. In this course, Series 3 · 15 names the GitOps tools and does not teach them"
 
@@ -327,6 +329,278 @@ series:
         slug: project-diagnose-broken-workloads
         title: "Project — Diagnose Three Broken Workloads From Their Events Alone"
         hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  # ── THREE SERIES ON STORAGE, ADDED 2026-09-07 ──────────────────────────────
+  # Series 2 · 05 teaches a reader to ASK the cluster for a volume and never says what answers.
+  # In a managed cluster the cloud's CSI driver does, invisibly. On anything self-managed —
+  # on-prem, bare metal, edge — somebody has to install the thing that provisions storage, and
+  # these three are what they install.
+  #
+  # ONE SERIES EACH, BECAUSE THEY ARE NOT VARIANTS OF ONE IDEA. Longhorn replicates blocks
+  # between nodes. OpenEBS's centre of gravity is LOCAL disks with a lifecycle. Rook operates a
+  # Ceph cluster. Different architectures, different failure modes, different right answers —
+  # and a single "storage options" episode would flatten that into a table nobody can act on.
+  #
+  # THE STANDING RECOMMENDATION DOES NOT CHANGE, and every one of these series must say so
+  # rather than quietly contradicting it: Series 2 · 15 argues that a data job usually wants
+  # OBJECT STORAGE and no volume at all. These three are for when it genuinely needs a volume —
+  # a database, a queue, a legacy application that opens a file.
+  #
+  # FOLLOW EACH PROJECT'S OWN DOCUMENTATION for coverage and vocabulary, and reorder for the
+  # shape of a real job: why you would, get it running, then what breaks. Same rule as Storage
+  # for Data's header, and for the same reason — a reference is not a course.
+
+  - slug: series4-longhorn
+    title: Longhorn — Replicated Block, the Simple Way
+    tagline: volumes made of files on your nodes, and the node drain that eats one
+    level: advanced
+    episodes:
+      # COVER: the architecture in one sentence, because it is unusually easy to hold: a Longhorn
+      # volume is a set of REPLICAS, and each replica is FILES ON A NODE'S FILESYSTEM, with an
+      # engine process per volume doing synchronous replication between them.
+      # WHY THAT MATTERS PRACTICALLY: you can go and look at them. Debugging is reading files on
+      # a node rather than interrogating a distributed object store, which is the whole argument
+      # for Longhorn over the other two and should be said plainly.
+      # THE COST OF THE SAME CHOICE: an engine per volume, so hundreds of volumes is hundreds of
+      # processes, and synchronous replication over the pod network puts your cluster's network
+      # in the write path of every database on it.
+      - n: "00"
+        slug: what-longhorn-is
+        title: "Replicas Are Files on Your Nodes — Why You Can Debug This One"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: installation as a runbook — Helm or the manifest, the namespace, the UI — and
+      # THE PREREQUISITE THAT CATCHES EVERYONE: open-iscsi must be installed and running on
+      # EVERY node, because that is how a volume is attached. Longhorn ships a check for exactly
+      # this; run it first and read it, rather than discovering the gap when a pod stays Pending
+      # with a message about the host.
+      # Debian and the derivative most clusters run — the package name, and the systemd unit.
+      # SEAM: Data Ops owns the machine; this is the one package this course insists on.
+      - n: "05"
+        slug: installing-longhorn
+        title: "Installing It — open-iscsi on Every Node, and the Check That Saves an Afternoon"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: creating a StorageClass and a volume, replica count, and the setting people miss —
+      # DATA LOCALITY, which keeps a replica on the node running the pod so reads are local.
+      # Without it a database reads across the network to its own data.
+      # Then: expanding a volume, and the ReadWriteOnce reality from Series 2 · 05 — one node at
+      # a time, which is what a database wants anyway.
+      # THE ARITHMETIC: three replicas of a 100 GB volume is 300 GB of node disk. Longhorn does
+      # not thin-provision your planning for you, and Storage for Data, Series 1 · 25's capacity
+      # cliff is a node filling up here.
+      - n: "10"
+        slug: volumes-and-locality
+        title: "Replicas, Data Locality and Expansion — Where the Copies Actually Land"
+        hands_on: ["koan:complete", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: snapshots (in-cluster, cheap, NOT a backup) and BACKUPS to an S3 target or NFS —
+      # which is the only copy that leaves the cluster, and therefore the only one that survives
+      # the cluster. Recurring jobs to schedule both. Restore into a new volume.
+      # THE ACADEMY'S SENTENCE, AGAIN AND ON PURPOSE: replicas are not a backup. Three replicas
+      # replicate your DELETE. Storage for Data, Series 1 · 15 owns the argument; this is where a
+      # Kubernetes reader meets it with a UI that makes snapshots look like safety.
+      # THE TARGET IS USUALLY A BUCKET — Data Ops, Series 1 · 47 rented one and Storage for Data,
+      # Series 3 hosts one. This is what finally consumes it.
+      - n: "15"
+        slug: snapshots-and-backups
+        title: "Snapshots and Backups — the Only Copy That Leaves the Cluster"
+        hands_on: ["koan:process:tool", "koan:predict"]
+        core: true
+        status: planned
+      # THE OPERATIONAL EPISODE, and the one that decides whether a cluster survives its first
+      # maintenance window.
+      # COVER: draining a node with replicas on it. Longhorn must REBUILD each replica elsewhere,
+      # which takes real time and real network — Storage for Data, Series 1 · 20's rebuild storm,
+      # inside Kubernetes and triggered by a routine kubectl command.
+      # THE SETTINGS THAT DECIDE IT: node drain policy, replica auto-balance, and the eviction
+      # behaviour. Drain three nodes in a row without waiting for rebuilds and you can be left
+      # with one replica of everything, which is Storage for Data, Series 4 · 20's min_size trap
+      # in another costume.
+      # THE RUNBOOK: check volume health, drain one node, WAIT for green, then the next.
+      - n: "20"
+        slug: draining-a-node
+        title: "Draining a Node — the Rebuild a Routine kubectl Command Starts"
+        hands_on: ["koan:diagnose", "koan:process:tool"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-kill-a-node
+        title: "Project — Run a Database on Longhorn, Kill a Node, and Keep the Data"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series5-openebs
+    title: OpenEBS — Local Volumes, and Not Replicating Twice
+    tagline: fast local disks with a lifecycle, and the argument for using them
+    level: advanced
+    episodes:
+      # COVER: OpenEBS is not one thing, and choosing the wrong engine is the commonest mistake.
+      #   LOCAL PV        a volume on ONE node's disk — hostpath, LVM, ZFS or a whole device.
+      #                   Fast, simple, no replication, and the pod is pinned to that node.
+      #   REPLICATED PV   Mayastor: synchronous replication across nodes over NVMe-oF.
+      # THE FRAMING THAT MAKES THE SERIES WORTH IT: most people arrive wanting the second and
+      # most should take the first. The next episodes are why.
+      - n: "00"
+        slug: the-engines
+        title: "Local PV Against Replicated — Two Products Under One Name"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: Local PV done properly, which is more than a hostPath mount. LVM or ZFS
+      # underneath gives you a real lifecycle — dynamic provisioning, capacity accounting,
+      # snapshots, and a volume that is deleted when the claim is.
+      # ZFS-BACKED LOCAL PV is the interesting one for this academy's reader, because Storage for
+      # Data, Series 2 already taught the pool: compression, checksums and cheap snapshots
+      # underneath a Kubernetes volume, which is a genuinely strong combination and almost nobody
+      # knows it exists.
+      # THE CONSEQUENCE TO STATE: the pod is now pinned to that node. Scheduling is constrained,
+      # and if the node dies the data is not elsewhere. That is a decision, not an oversight.
+      - n: "05"
+        slug: local-pv
+        title: "Local PV on LVM or ZFS — a Real Lifecycle on One Node's Disk"
+        hands_on: ["koan:complete", "koan:process:tool"]
+        core: true
+        status: planned
+      # THE ARGUMENT THIS SERIES EXISTS TO MAKE, and it is the most valuable episode in the three.
+      # CASSANDRA, CLICKHOUSE, KAFKA, ELASTICSEARCH AND MONGODB ALL REPLICATE THEMSELVES. Put one
+      # on replicated block storage and every write is replicated twice — once by the database
+      # for correctness and once by the storage for durability — paying network and latency for a
+      # guarantee you already had.
+      # THE RULE: IF THE DATABASE REPLICATES, THE STORAGE SHOULD NOT. Give it a fast local disk
+      # and let it do its job. NoSQL Concepts, Series 3 · 05 and Apache Cassandra, Series 2 · 00
+      # taught the replication factor; this is what it means for the volume underneath.
+      # AND THE OTHER HALF, SAID HONESTLY: recovery is now the DATABASE's job. A dead node means
+      # a Cassandra bootstrap, not a storage rebuild — which is usually fine and is a different
+      # runbook that somebody must know. If nobody does, replicated storage is buying you a
+      # safety net for an operational gap, and that is a legitimate reason to pay twice.
+      - n: "10"
+        slug: do-not-replicate-twice
+        title: "Double Replication — If the Database Already Does It, the Storage Should Not"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: Mayastor for the cases where you do need replication and want it fast — NVMe-oF,
+      # and the hardware and kernel expectations that come with it, including hugepages, which is
+      # where installations stall.
+      # WHEN IT IS RIGHT: a database that does NOT replicate itself — PostgreSQL, MySQL — needing
+      # to survive a node loss without a failover procedure.
+      # AND THE COMPARISON THE READER NOW HAS: this is Longhorn's job done differently, with more
+      # performance and more prerequisites. Say which you would choose and why.
+      - n: "15"
+        slug: mayastor
+        title: "Mayastor — Replicated PV When You Genuinely Need It, and Its Prerequisites"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      - n: "20"
+        slug: project-local-pv-for-a-replicated-database
+        title: "Project — Put a Self-Replicating Database on Local PV and Prove the Failure Path"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series6-rook-and-choosing
+    title: Rook, and Choosing Between the Three
+    tagline: Ceph operated by Kubernetes, and the minimum that gets you what you need
+    level: advanced
+    episodes:
+      # COVER: what Rook is, stated precisely because the name misleads. IT IS AN OPERATOR, NOT A
+      # STORAGE SYSTEM. The storage is Ceph. Rook watches custom resources and runs cephadm's job
+      # for you — placing monitors and OSDs, reconciling the cluster you declared.
+      # SO THIS SERIES ASSUMES Storage for Data's Ceph series and re-teaches none of it: no CRUSH,
+      # no min_size, no placement groups. If a reader does not know what an OSD is, they are in
+      # the wrong series and should be told so in the first paragraph.
+      # WHAT ROOK CHANGES: the cluster is now a Kubernetes object, so it is declarative,
+      # version-controlled and reconciled — and its failures are now ALSO Kubernetes failures,
+      # which means two sets of logs and two mental models when something breaks.
+      - n: "00"
+        slug: what-rook-is
+        title: "Rook Is an Operator, Not a Storage System — the Storage Is Ceph"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the CephCluster resource as the declaration — which nodes, which devices, how many
+      # monitors — and the reconciliation loop that makes it real. Reading the operator's logs,
+      # which is where a cluster that never becomes ready explains itself.
+      # THE PREREQUISITES THAT DECIDE SUCCESS: raw, unformatted devices. Rook will not take a
+      # disk with a filesystem on it, and "the disk is right there" is the commonest reason a
+      # first attempt produces no OSDs at all.
+      # THE COMPARISON WORTH ONE LINE: Storage for Data, Series 4 · 15 bootstrapped the same
+      # thing with cephadm. Same Ceph, different control plane.
+      - n: "05"
+        slug: the-cephcluster-crd
+        title: "The CephCluster Resource — Declaring a Cluster, and Why It Found No Disks"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the three interfaces as Kubernetes objects — CephBlockPool behind a StorageClass
+      # for RBD, CephFilesystem for ReadWriteMany, and CephObjectStore for an in-cluster S3
+      # endpoint with a bucket claim.
+      # THE PAYOFF FOR A DATA READER, and it closes a loop this course opened: Series 2 · 15 said
+      # a data job usually wants object storage rather than a volume. CephObjectStore is that
+      # object storage, inside your own cluster, speaking the API Storage for Data, Series 3
+      # taught. The same client, unchanged, again.
+      # AND THE HONEST NOTE: all three from one cluster is Ceph's argument. If you only wanted
+      # one of them, 20 is the episode that says so.
+      - n: "10"
+        slug: three-interfaces-as-objects
+        title: "CephBlockPool, CephFilesystem and CephObjectStore — Storage as Manifests"
+        hands_on: ["koan:complete", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: running it. The toolbox pod as the way to reach `ceph status` and `ceph health
+      # detail` from inside the cluster — everything Storage for Data, Series 4 · 40 and 4 · 50
+      # taught, now one kubectl exec away.
+      # THE TWO-MENTAL-MODELS PROBLEM, which is this series' real operational lesson: a problem is
+      # either a Ceph problem or a Kubernetes problem, and the symptom rarely says which. A pod
+      # stuck ContainerCreating on a volume can be a CSI issue, a scheduling issue, or a
+      # HEALTH_ERR cluster. THE ORDER TO CHECK: ceph status first, then the operator log, then
+      # the pod events — because the innermost failure explains the outer ones.
+      # UPGRADES: TWO LADDERS, the Rook version and the Ceph version, upgraded separately and in
+      # a supported order. Getting this wrong is the incident this episode prevents.
+      - n: "15"
+        slug: operating-rook
+        title: "Operating Rook — Two Sets of Logs, and Two Version Ladders"
+        hands_on: ["koan:diagnose", "koan:process:tool"]
+        core: true
+        status: planned
+      # THE CLOSING DECISION EPISODE, and the one the whole storage block builds to. Nine other
+      # courses in this academy end this way, before the project.
+      # WALK THE LADDER DOWNWARDS and make the reader name their rung:
+      #   YOU ARE ON A MANAGED CLOUD    use the provider's CSI driver. It is maintained by
+      #                                 somebody else and it is almost always the right answer.
+      #                                 None of these three should be installed to replace it.
+      #   YOUR JOB WANTS OBJECT STORAGE a bucket, and no volume at all. Series 2 · 15 said this
+      #                                 first and it is still true after three series of volumes.
+      #   YOUR DATABASE REPLICATES ITSELF   OpenEBS Local PV. Fast disk, no double replication.
+      #   YOU NEED A REPLICATED VOLUME AND SIMPLICITY   Longhorn. You can read the replicas.
+      #   YOU NEED BLOCK AND FILE AND OBJECT, AT SCALE, AND SOMEBODY OWNS IT   Rook and Ceph.
+      # THE QUESTION THAT DECIDES THE LAST ONE is the same one Storage for Data, Series 4 · 58
+      # asks and it does not get easier inside Kubernetes: is there a named person whose job
+      # includes this cluster? An operator automates the running, not the understanding.
+      # THE RULE THE BLOCK CLOSES ON: USE THE MINIMUM THAT GETS YOU WHAT YOU ACTUALLY NEED.
+      # Storage you did not need is not neutral — it is a rebuild during every node drain, a
+      # second version ladder at every upgrade, and one more thing that can be the reason a pod
+      # will not start.
+      - n: "20"
+        slug: choosing-between-them
+        title: "Longhorn, OpenEBS or Rook — and the Case for None of Them"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-choose-and-defend
+        title: "Project — Choose a Storage Backend for Three Workloads and Defend Each"
+        hands_on: ["koan:author", "koan:choose"]
         core: true
         tags: ["project"]
         status: planned

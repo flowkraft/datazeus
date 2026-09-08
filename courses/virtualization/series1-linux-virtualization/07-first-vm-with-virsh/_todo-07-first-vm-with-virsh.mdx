@@ -1,0 +1,81 @@
+---
+title: "virt-install and virsh — a Cloud Image, a Machine, and an Undo Button"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series1-linux-virtualization"
+order: 7
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series1/_07/FirstVmWithVirshKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the first VM, end to end, as a runbook on Debian.
+     THE MODERN WAY AND NOT THE ISO WAY: download the distribution's CLOUD IMAGE, resize it,
+     and boot it with cloud-init supplying the user, the key and the hostname. `virt-install`
+     with --import. A machine in under a minute, with no installer and no clicking.
+     DO NOT TEACH THE INSTALLER AS THE DEFAULT — an installer is what you use once, to build
+     the template, and Series 1 · 22 is where that becomes a habit.
+     THEN THE LIFECYCLE: virsh list --all, start, shutdown against destroy (and the fact that
+     `destroy` means "pull the power cable", which is a genuinely bad name that has surprised
+     everybody once), console, and autostart.
+     AND THE OPERATION THIS WHOLE COURSE IS SECRETLY ABOUT: `virsh snapshot-create-as`, then
+     break something on purpose, then revert. THE WORKPLACE MOMENT: the schema migration is
+     on Thursday, it is the kind that cannot be rolled back with SQL, and you want to be able
+     to put the machine back exactly as it was in twenty seconds.
+     ⚠ AND THE WARNING THAT MUST TRAVEL WITH IT, stated the first time snapshots appear and
+     restated in Series 2 · 10 and Series 3 · 20: A SNAPSHOT IS NOT A BACKUP. It sits on the
+     same disks, it grows for as long as it exists, and a forgotten one is how a datastore
+     fills up. It is an undo button with a short life, and it is superb at being that.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series1/_07/FirstVmWithVirshKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

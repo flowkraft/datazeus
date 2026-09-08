@@ -1,0 +1,302 @@
+# The ordered episode list for MongoDB. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: model, query and operate a MongoDB the way it wants to be used,
+# rather than as a relational database with the joins removed.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# A COLLECTION IS NOT A TABLE AND A DOCUMENT IS NOT A ROW. The commonest failure in this
+# product is a normalized relational schema transliterated into collections — one collection per
+# entity, ids everywhere, $lookup standing in for JOIN — which gives you the operational
+# characteristics of MongoDB and the modelling of PostgreSQL, and none of the benefits of
+# either. Every modelling episode here exists to prevent that specific outcome.
+#
+# THE POSITIVE FORM: THE DOCUMENT IS THE UNIT OF ATOMICITY, so the document should be the thing
+# your application reads and writes as one. Model to that boundary and most of this product's
+# reputation for surprises disappears.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL MONGODB DOCUMENTATION
+# ============================================================================
+# The MongoDB Manual runs CRUD Operations, Aggregation, Data Modeling, Indexes, Security,
+# Replication, Sharding, and Administration. Its CRUD and Aggregation sections are the right
+# order for Series 1, Data Modeling for Series 2, and Replication and Sharding for Series 3.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's
+# series order — SHOULD FOLLOW THE OFFICIAL MONGODB MANUAL. Before writing an episode, open the
+# manual's own page for that topic, use it as the COVERAGE CHECKLIST, and use its VOCABULARY FOR
+# THE NOUNS (collection, document, field, pipeline, stage, replica set, primary, shard key,
+# chunk, read concern, write concern). Anything left out should be left out because an academy
+# rule says so — NoSQL Concepts owns the shapes and the distributed theory, Data Ops owns
+# running the server — and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the manual page named.
+#
+# STATE THE VERSION, AND CHECK IT. This is the track in the catalogue most likely to teach
+# something that stopped being true: multi-document transactions, the aggregation framework's
+# stages, the storage engine and the Atlas-only features have all moved. An episode written from
+# memory of MongoDB 3 teaches a product that no longer exists, and "MongoDB has no transactions"
+# is the specific sentence to check before writing it.
+
+course: learn-mongodb
+track: mongodb
+title: MongoDB
+
+prerequisites:
+  - course: learn-nosql
+    needs: "Series 1, and Series 2"
+    why: >-
+      Query-first modelling and the embed-or-reference decision are taught there, once, for
+      every non-relational engine. This track applies them to one product and does not re-argue
+      them.
+
+excludes:
+  - topic: "Why a document store at all, and how it differs from the other shapes"
+    where: "covered in NoSQL Concepts, Series 1 and Series 2, which this course assumes"
+  - topic: "Distributed systems theory — quorums, CAP, eventual consistency"
+    where: "covered in NoSQL Concepts, Series 3. In this course, Series 3 · 00 is what read and write concern do in this product specifically"
+  - topic: "Running the server — deployment, upgrades, monitoring, capacity"
+    where: "covered in Data Ops for the discipline. That track runs PostgreSQL, so the habits transfer and the commands do not"
+  - topic: "Storing JSON inside a relational database"
+    where: "covered in Learn SQL, Series 3 · 15 for querying it and Learn Data Modeling, Series 2 · 42 for deciding to. Often the better answer, and NoSQL Concepts, Series 4 · 00 argues that case"
+  - topic: "Atlas as a managed platform, and Atlas-only features"
+    where: "not covered beyond naming them. Search, Vector Search and Charts are a hosted product's surface, and an episode about them would age faster than anything else here"
+
+series:
+  - slug: series1-documents-and-queries
+    title: Documents and Queries
+    tagline: CRUD, the aggregation pipeline, and reading an explain
+    level: intermediate
+    episodes:
+      # COVER: database, collection, document, field. BSON rather than JSON, and why it matters
+      # in practice — real types, so a date is a date and a number has a width. _id, and the fact
+      # that ObjectId carries a timestamp you can read.
+      # THE FLEXIBILITY, said honestly in the first episode: two documents in one collection may
+      # have different fields, and that is a feature until nobody remembers which shape is
+      # current. Series 2 · 15 is the answer; plant the problem here.
+      # mongosh and Compass as the two ways in.
+      - n: "00"
+        slug: documents-and-collections
+        title: "Documents, Collections and BSON — What Replaces the Row and the Table"
+        hands_on: ["koan:capture", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: find() and the query document as data rather than syntax — the filter IS a
+      # document, which is why building one at runtime is natural and why injection looks
+      # different here. Comparison and logical operators, dot notation into nested fields,
+      # querying arrays and the surprise that a scalar match also matches an array element.
+      # PROJECTION, sort, skip and limit — and the deep-skip problem, which is Learn SQL,
+      # Series 3 · 22's OFFSET argument in another syntax.
+      - n: "05"
+        slug: find-and-operators
+        title: "find() — the Filter Is a Document, and Arrays Match Differently"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: updateOne and updateMany, and the operators that make an update a targeted change
+      # rather than a replacement — $set, $unset, $inc, $push, $pull, $addToSet. upsert.
+      # findOneAndUpdate for read-modify-write in one atomic step.
+      # THE TRAP THAT DESTROYS DATA, and it deserves the airtime: passing a plain document with
+      # no operator REPLACES the whole document. Every field you did not include is gone, there
+      # is no error, and the write succeeds. It is the single most expensive typo in this product.
+      - n: "10"
+        slug: updates
+        title: "Update Operators — and the Missing $set That Replaces the Whole Document"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: the aggregation pipeline as an ordered list of stages, each taking documents and
+      # producing documents. $match, $group, $project, $sort, $limit — and the discipline that
+      # decides performance: $MATCH AND $PROJECT AS EARLY AS POSSIBLE, which is Learn SQL,
+      # Series 3 · 18's "filter early" in a different notation and should be named as such.
+      # $group's _id as the grouping key, and the accumulators.
+      - n: "15"
+        slug: aggregation-pipeline
+        title: "The Aggregation Pipeline — Stages in Order, and Filtering Early"
+        hands_on: ["koan:complete", "koan:equivalent"]
+        core: true
+        status: planned
+      # COVER: single-field, compound and multikey indexes, and the ESR rule for compound
+      # ordering — Equality, Sort, Range — which is this product's version of the leading-column
+      # rule and is the most useful thing in the episode.
+      # explain() with executionStats, and the numbers to read: nReturned against
+      # totalDocsExamined. A ratio far from one is the diagnosis, and COLLSCAN is the word to
+      # look for. Covered queries. Multikey indexes on arrays and their limits.
+      - n: "20"
+        slug: indexes-and-explain
+        title: "Indexes and explain() — the ESR Rule, and docsExamined Against nReturned"
+        hands_on: ["koan:diagnose", "koan:count:scanned"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-query-a-real-collection
+        title: "Project — Answer Five Questions From a Collection You Did Not Design"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-modelling
+    title: Modelling for MongoDB
+    tagline: embed, reference, and the patterns that keep documents sane
+    level: advanced
+    episodes:
+      # COVER: the decision, applied to this product. Embed when the related data is BOUNDED and
+      # read WITH the parent; reference when it is unbounded, large, or read on its own.
+      # One-to-few, one-to-many and one-to-squillions as the three cases, which is the useful
+      # framing because the answer differs for each.
+      # ASSUMES NoSQL Concepts, Series 1 · 15 rather than repeating it: this is where the general
+      # rule meets 16MB, arrays and $lookup.
+      - n: "00"
+        slug: embed-or-reference
+        title: "Embed or Reference — One-to-Few, One-to-Many, One-to-Squillions"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the hard limit — a document is capped at 16MB — and the antipattern that walks
+      # into it, THE UNBOUNDED ARRAY. A comments array on a post, an events array on a device: it
+      # works for a year and then one document is enormous, every read of it is expensive whether
+      # or not you wanted the array, and updates rewrite it.
+      # THE FIXES: reference out, or the BUCKET PATTERN — a document per hour or per hundred
+      # entries — which is the same bucketing idea as NoSQL Concepts, Series 3 · 00's unbounded
+      # partition and should be named as the same idea.
+      # WORKING SET as the reason document size matters even when you are under the limit.
+      - n: "05"
+        slug: document-size-and-unbounded-arrays
+        title: "16MB and the Unbounded Array — the Antipattern That Takes a Year to Appear"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the named patterns, each as a problem first and a pattern second — extended
+      # reference (copy the two fields the screen shows, accept staleness deliberately), computed
+      # (store the total, maintain it on write), bucket (from 05), subset (keep the last ten in
+      # the parent), outlier (the one document that breaks the rule), schema versioning (a
+      # version field, so old and new shapes can coexist during a migration).
+      # THE THREAD THROUGH ALL OF THEM: each trades write-time work and duplication for read-time
+      # simplicity, which is NoSQL Concepts, Series 1 · 10's bargain made concrete.
+      - n: "10"
+        slug: patterns
+        title: "The Patterns — Extended Reference, Computed, Bucket, Subset and Versioning"
+        hands_on: ["koan:choose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: JSON Schema validation on a collection — required fields, types, ranges — with
+      # validationLevel and validationAction, so it can be advisory before it is enforced.
+      # THE ARGUMENT, and it is the episode: "schemaless" was always a description of the ENGINE,
+      # never of the application. The application has a schema; the only question is whether it
+      # is written down anywhere. Adding validation late, in warn mode, on a collection nobody
+      # documented, is a genuinely useful afternoon and this episode should walk it.
+      - n: "15"
+        slug: schema-validation
+        title: "Schema Validation — Schemaless Was Never a Property of Your Application"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the stages that go beyond one collection — $lookup, $unwind, $facet, $bucket,
+      # $setWindowFields — with $lookup framed carefully: IT IS NOT A JOIN AND IT IS NOT FREE. It
+      # runs per input document unless the pipeline lets it use an index, and a $lookup at the
+      # top of a pipeline over a large collection is the commonest way to make MongoDB slow.
+      # WHEN IT IS RIGHT: a reference lookup against a small collection, or the last stage of a
+      # pipeline that has already reduced the input. WHEN IT IS A SIGNAL: several $lookups in one
+      # pipeline usually mean the model was transliterated from a relational schema — the failure
+      # this whole track exists to prevent.
+      - n: "20"
+        slug: lookup-and-advanced-stages
+        title: "$lookup Is Not a JOIN — and Several of Them Is a Modelling Message"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-remodel-a-schema
+        title: "Project — Take a Relational Schema and Model It as MongoDB Wants It"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-in-production
+    title: In Production
+    tagline: replica sets, shard keys, transactions and change streams
+    level: advanced
+    episodes:
+      # COVER: a replica set as primary plus secondaries with automatic election, and then the
+      # two settings a developer actually controls:
+      #   WRITE CONCERN  how many members must acknowledge before your write returns. w:1 is
+      #                  fast and can be lost in a failover; majority survives one. journal
+      #                  acknowledgement as the separate question of durability on disk.
+      #   READ PREFERENCE  primary, or a secondary that may be behind. Reading from secondaries
+      #                  is the most common self-inflicted staleness bug in this product, because
+      #                  it is a one-line change that looks like free capacity.
+      # READ CONCERN alongside, and the combination that gives read-your-writes.
+      # ASSUMES NoSQL Concepts, Series 3 · 05 and 3 · 15 for the theory; this is the dial.
+      - n: "00"
+        slug: replica-sets-and-concerns
+        title: "Replica Sets — Write Concern, Read Preference, and Reading Your Own Writes"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: sharding, and the fact that the shard key is the whole of it. Ranged against
+      # hashed, chunks and balancing, and what a query without the shard key does — a scatter-
+      # gather to every shard, which is the difference between one hop and all of them.
+      # THE FAILURES, each with its shape: a MONOTONICALLY INCREASING key (a timestamp, an
+      # ObjectId) puts every insert on one shard; a LOW-CARDINALITY key cannot be split; a key
+      # absent from your common queries makes every read a fan-out.
+      # AND SAY THE STAKES: changing it is a data migration. NoSQL Concepts, Series 3 · 00 said
+      # this in general; here it has a name and a command.
+      # THE HONEST GATE: most deployments should not shard. A replica set on a large machine
+      # goes a very long way, and sharding adds a component, a failure mode and a modelling
+      # constraint. Shard when one machine genuinely cannot take the writes.
+      - n: "05"
+        slug: sharding-and-the-shard-key
+        title: "Sharding — the Shard Key Decides Everything, and Most Deployments Need None"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: what is atomic without asking — a single document, always — and multi-document
+      # transactions, which exist, work, and are not the default answer. Sessions, the retry
+      # loop for transient errors, and the constraints: a time limit, a size limit, and a cost
+      # in coordination.
+      # THE POSITION TO TEACH: reach for the model first. A transaction spanning three
+      # collections is usually a sign that the aggregate boundary is wrong, and Series 2 is where
+      # that gets fixed. Transactions are for the cases where it genuinely is not.
+      # CORRECT THE FOLKLORE EXPLICITLY: "MongoDB has no transactions" was true and has not been
+      # for years. Give the version, verified on the day.
+      - n: "10"
+        slug: transactions
+        title: "Multi-Document Transactions — They Exist, and They Are Not the First Answer"
+        hands_on: ["koan:choose", "koan:complete"]
+        status: planned
+      # COVER: change streams over the oplog — a resumable, filtered feed of what changed —
+      # with resume tokens as the part that makes them usable after a restart.
+      # WHY A DATA READER CARES: this is CDC without a separate connector, and it is how a
+      # MongoDB feeds a warehouse, a search index or a cache. ETL & Data Pipelines, Series 3 · 15
+      # owns CDC as a concept; this is the mechanism in this product.
+      # THE TRAP: the oplog is a capped collection, so a consumer offline longer than the oplog
+      # window cannot resume and must re-snapshot. Size the window for your worst outage.
+      - n: "15"
+        slug: change-streams
+        title: "Change Streams — CDC Built In, and the Oplog Window That Limits It"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: performance as this engine experiences it. The WORKING SET and why RAM is the
+      # number that matters most — the same argument as Data Ops, Series 1 · 46, arriving from
+      # the other side. WiredTiger cache. The slow query log and the database profiler. Index
+      # intersection, and why one compound index usually beats two single-field ones.
+      # THE HABIT: measure with explain from Series 1 · 20, on production-shaped data, before
+      # changing anything.
+      - n: "20"
+        slug: performance
+        title: "The Working Set — Why RAM Is the Number, and the Profiler That Proves It"
+        hands_on: ["koan:diagnose", "koan:count:scanned"]
+        status: planned
+      - n: "25"
+        slug: project-shard-key-review
+        title: "Project — Review a Shard Key Against Its Real Queries and Say What Breaks"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned

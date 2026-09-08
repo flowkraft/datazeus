@@ -1,0 +1,91 @@
+---
+title: "Querying Across Databases — Federation, and Where the Join Actually Runs"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-warehousing"
+tags: []
+level: "advanced"
+module: "series3-advanced-warehousing"
+order: 22
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/datawarehousing/curriculum.yaml   the track's decisions, in its header
+      the comment ABOVE THIS EPISODE in that file — the authority on coverage
+      tests/src/koans/groovy/datazeus/datawarehousing/series3/_22/QueryingAcrossDatabasesKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Warehousing · Advanced Warehousing (advanced) — "billions of rows, streaming loads, and controlling the cost"
+      before:  Lakehouse — Parquet, Iceberg and DuckDB Straight on Files
+      THIS:    Querying Across Databases — Federation, and Where the Join Actually Runs
+      after:   Streaming Ingestion — Minutes Behind Instead of a Day
+    NOT CORE — the shortest path does not run through here, so this episode
+    may assume the core ones before it.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: decide whether to copy a table from another database or query it across the wire, and know which side of the wire the work will happen on.
+    DECISION: an audit found federation present ONLY as engine mechanics — DuckDB's ATTACH and scanners, ClickHouse's table functions, PostgreSQL's foreign data wrappers — each taught correctly in its own delta track and nowhere taught as a DECISION. A reader knows three ways to do it and has never been asked whether to. After 20, because the lakehouse episode is the same shape of answer one step earlier: query it where it lies instead of copying it.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      WHERE DOES THE WORK HAPPEN     the whole episode in one question. If the remote side applies your
+                                     filter and your aggregate, a small answer comes back. If it cannot,
+                                     the engine drags the whole table across the network and joins it
+                                     locally — one second against 100,000 rows becomes twenty minutes
+                                     against fifty million. PUSHDOWN is the word. Check it; never assume
+                                     it.
+      STATISTICS                     the local planner knows nothing about the remote table's size or
+                                     distribution, so it guesses — and a join order chosen from a guess is
+                                     where federated queries go wrong in ways the plan does not explain.
+      THE BLAST RADIUS               a federated query puts analytical load on somebody else's OLTP
+                                     database, at a time you chose. The first person to find out is on call
+                                     for that system.
+      FRESHNESS AGAINST STABILITY    the honest argument FOR it: no copy means no staleness and no pipeline
+                                     to maintain. Say that fairly.
+      THE RULE TO LEAVE THEM WITH    FEDERATE WHAT IS SMALL, OCCASIONAL OR REFERENCE. COPY WHAT IS LARGE,
+                                     HOT, OR JOINED IN EVERY QUERY. A currency table, a lookup somebody
+                                     maintains elsewhere, a one-off reconciliation — federate. A fact table
+                                     — never.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:choose
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/datawarehousing/series3/_22/QueryingAcrossDatabasesKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: the reconciliation query that ran fine all year against a small remote table and now takes the reporting database down every morning, because the remote table grew and nothing about the query changed. */}
+
+TODO

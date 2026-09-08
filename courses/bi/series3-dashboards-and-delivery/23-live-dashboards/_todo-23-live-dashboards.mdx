@@ -1,0 +1,96 @@
+---
+title: "Live Dashboards — Refresh, Poll or Push, and Whether Anyone Is Watching"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-bi"
+tags: []
+level: "advanced"
+module: "series3-dashboards-and-delivery"
+order: 23
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/bi/curriculum.yaml   the track's decisions, in its header
+      the comment ABOVE THIS EPISODE in that file — the authority on coverage
+      tests/src/koans/groovy/datazeus/bi/series3/_23/LiveDashboardsKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    BI & Data Visualization · Dashboards, Delivery & Adoption (advanced) — "build a dashboard, then schedule, share and secure it"
+      before:  Dashboard Performance — Why It Takes Forty Seconds, and What to Cache
+      THIS:    Live Dashboards — Refresh, Poll or Push, and Whether Anyone Is Watching
+      after:   Report Bursting — One Report, Many Recipients, Each Seeing Only Theirs
+    NOT CORE — the shortest path does not run through here, so this episode
+    may assume the core ones before it.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: decide whether a dashboard needs to update itself, and pick the cheapest mechanism that satisfies the actual requirement.
+    DECISION: ETL & Data Pipelines, Series 4 owns STREAMING PIPELINES — the data arriving continuously — and Next.js owns streaming a PAGE RENDER. Nobody owned the widget: does the number on screen change by itself, and how. At 23, immediately after Dashboard Performance, because it is the same conversation continued — 22 asks how expensive the answer is, this asks how fresh it has to be, and together they are the only honest way to size a dashboard.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      START WITH THE GATE            MOST "REAL-TIME" REQUESTS ARE NOT. Ask what decision gets made
+                                     differently because the number is thirty seconds old rather than five
+                                     minutes old. Usually none, and a refresh interval is the entire
+                                     solution.
+      THE ONE CASE THAT NEEDS PUSH   somebody is WATCHING the screen in order to act — an operations
+                                     wallboard, a queue, a live event. If nobody is watching, nothing needs
+                                     pushing.
+      SCHEDULED REFRESH              re-run the query every N seconds. Simple, cacheable, and correct for
+                                     almost every dashboard anybody has ever asked for.
+      POLL A CHEAP CHECK             ask "has anything changed" — a max timestamp, a version — and re-run
+                                     the expensive query only when the answer moved. The underused middle
+                                     option, and it deserves the most airtime.
+      PUSH                           websockets or server-sent events with a pub/sub channel behind them.
+                                     Genuinely live, and now you own connection state, reconnection, and
+                                     what a client disconnected for ten minutes sees when it returns.
+      THE COST NOBODY PRICES         A LIVE DASHBOARD RUNS ITS QUERY FOREVER. A forty-second query on a
+                                     five-second refresh is not a dashboard, it is a denial-of-service
+                                     against your own warehouse — which is why this comes after 22. Pre-
+                                     aggregate, then choose the interval, then cap how many people can have
+                                     it open.
+      SHOW WHEN THE DATA IS FROM     a dashboard that silently displays a stale number is worse than one
+                                     that says "as of 09:14", and the timestamp costs nothing. 22 owns
+                                     explaining why a number is stale; this owns showing that it is.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:choose
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/bi/series3/_23/LiveDashboardsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: the wallboard that froze. The pub/sub connection dropped at 03:00, the last values stayed on screen, and for six hours everyone read them as current — which is worse than a blank panel, because a blank panel gets reported. */}
+
+TODO

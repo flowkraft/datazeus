@@ -1,0 +1,93 @@
+---
+title: "Do You Need Ceph — and What Would Have Been Enough"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-storage"
+tags: []
+level: "advanced"
+module: "series4-ceph"
+order: 58
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/storage/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/storage/series4/_58/DoYouNeedCephKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — OpenZFS docs for Series 2, the S3 API reference and MinIO's docs for Series 3, the Ceph docs for Series 4. SERIES 1 HAS NO MANUAL: it is physics, arithmetic and trade-offs, so teach the SHAPE and the orders of magnitude.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a bucket and watching a disk, Data Warehousing owns columnar layout, the engine tracks own their storage engines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    REPLICATION IS NOT A BACKUP — a delete is replicated faithfully to all three copies. DATE EVERY CONCRETE FIGURE: capacities, prices and rebuild times age faster here than anywhere else in the academy.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     ADDED in the same review, and this one corrects a decision I recorded earlier in this
+     file. The gate was moved to 00 so nobody would invest fourteen episodes wrongly — that
+     reasoning still holds and 00 keeps its short version. But a gate at 00 is the only one
+     this series had, and it asks the WRONG QUESTION: at 00 the reader cannot weigh a cost
+     they have not met. THE TWO GATES ARE DIFFERENT QUESTIONS.
+       AT 00   should you even read this? — so nobody wastes fourteen episodes.
+       HERE    now that you have bootstrapped one, issued a keyring, watched a backfill and
+               read a HEALTH_WARN — what is the MINIMUM that gets you what you actually need?
+     WALK THE LADDER DOWNWARDS, and make the reader name their rung:
+       ONLY AN S3 ENDPOINT       Series 3. Smaller in every dimension — one binary, one
+                                 layout decision, an afternoon rather than a quarter. This is
+                                 the answer for most data teams and the series must say so.
+       ONLY BLOCK, FOR A FEW VMs LVM, or ZFS zvols from Series 2, or whatever the hypervisor
+                                 already provides.
+       ONLY A SHARED FILESYSTEM  NFS. Unglamorous, decades old, and it works. CephFS is a lot
+                                 of machinery to arrive at a mount point.
+       ANY OF THEM, RENTED       somebody else's on-call rota. Data Ops, Series 1 · 47.
+       TWO OR THREE OF THEM, FROM ONE POOL, AT SCALE, WITH AN OWNER — Ceph, and now for a
+                                 reason the reader can defend rather than because it was the
+                                 impressive option.
+     THE QUESTION THAT ACTUALLY DECIDES IT, and it is not technical: IS THERE A NAMED PERSON
+     WHOSE JOB INCLUDES THIS CLUSTER — and what happens when they leave? 00 says a cluster
+     nobody owns is a data-loss event on a schedule. This is where the reader answers it
+     about their own team, with fourteen episodes of evidence for what "owning it" means.
+     AND THE RULE THE WHOLE COURSE CLOSES ON, stated here because this is the last decision
+     episode in it: USE THE MINIMUM THAT GETS YOU WHAT YOU ACTUALLY NEED. Every layer in this
+     course is something that must be operated, upgraded, monitored and eventually recovered
+     by somebody. Complexity you did not need is not neutral — it is a cost you pay every
+     week, in the one currency a data team never has spare.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/storage/series4/_58/DoYouNeedCephKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

@@ -1,0 +1,372 @@
+# The ordered episode list for Trino. Field docs live in courses/learnsql/curriculum.yaml.
+# `short` is omitted until an episode has a video.
+#
+# The job this track teaches: run SQL across data you do not own, in storage you do not control,
+# and know where the work actually happened.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# TRINO HAS NO STORAGE. It is a query engine and nothing else — no tables of its own, no
+# indexes, no statistics it gathers, no data it is responsible for. Every table it shows you
+# lives somewhere else and is described by somebody else's catalog.
+#
+# THAT SENTENCE IS THE WHOLE COURSE, because everything a reader will ask follows from it:
+#   "How do I add an index?"        You do not. Change the layout of the data underneath.
+#   "Why is this query slow?"       Almost always because the connector could not push your
+#                                   filter down, so Trino read everything and discarded it.
+#   "Where are my statistics?"      In the table format's metadata, or nowhere.
+#   "Can I make this table faster?" It is not Trino's table.
+# A reader who treats it as a database will spend weeks tuning the wrong layer.
+#
+# ============================================================================
+# AND THE SECOND ONE, WHICH DECIDES WHETHER A TEAM SUCCEEDS WITH IT
+# ============================================================================
+# IT IS BUILT FOR INTERACTIVE ANALYTICS, NOT FOR ETL. It is optimised for getting an answer to a
+# person who is waiting, which is why it holds work in memory and why a query that does not fit
+# has historically FAILED rather than slowed down. Teams that adopt it as a batch transformation
+# engine meet that behaviour at three in the morning.
+# FAULT-TOLERANT EXECUTION changed the absolute form of that claim and Series 3 · 15 covers it
+# properly — but the default posture, and the reason the product exists, is still latency.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL TRINO DOCUMENTATION
+# ============================================================================
+# trino.io/docs runs Overview, Installation, Clients, Security, Administration (web UI, tuning,
+# resource groups, fault-tolerant execution, spill), the Query optimizer, Connectors, Object
+# storage, Functions and operators, and the SQL language. Its CONNECTORS section is the largest
+# and most important part of the set for this reader, and its OBJECT STORAGE section is where
+# the performance answers live.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's series
+# order — SHOULD FOLLOW THE OFFICIAL TRINO DOCUMENTATION. Before writing an episode, open its
+# page for that topic, use it as the COVERAGE CHECKLIST, and use its VOCABULARY FOR THE NOUNS
+# (catalog, schema, connector, coordinator, worker, split, stage, task, exchange, pushdown,
+# resource group). Anything left out should be left out because an academy rule says so — Learn
+# SQL owns the SQL, Apache Iceberg & Table Formats owns the table, Data Ops owns the cluster —
+# and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the docs page named, AND SAY WHICH
+# CONNECTOR a claim was verified against. Connectors differ enormously in what they push down,
+# and a sentence that is true of the Iceberg connector may be false of the PostgreSQL one.
+#
+# ⚠ THE FORK IS PART OF THE SUBJECT. This project was renamed from PrestoSQL to Trino and there
+# is a separate PrestoDB lineage, so search results, blog posts and job advertisements mix the
+# two freely and some of what you will read is about the other project. Series 3 · 20 covers it.
+# State versions, and check which project a source is describing before believing it.
+#
+# TEACH AGAINST WHAT A LEARNER CAN RUN: a single container in coordinator-and-worker mode with a
+# couple of catalogs, which Data Ops, Series 1 · 37 already taught them to start. Say where a
+# claim needs a real multi-worker cluster — a broadcast join's memory limit cannot be felt on
+# one node — rather than implying they can see it.
+
+course: learn-trino
+track: trino
+title: Trino
+
+prerequisites:
+  - course: learn-data-warehousing
+    needs: "Series 2, and Series 3"
+    why: >-
+      Columnar storage, partitioning and data skipping are what make a query over object storage
+      fast, and Series 3 · 20 there is the lakehouse this engine reads. Trino cannot make badly
+      laid-out data fast, so a reader who has not met those ideas will blame the engine.
+
+excludes:
+  - topic: "SQL itself"
+    where: "covered in Learn SQL. Trino's dialect is close to the standard, and where it differs is a footnote rather than a series"
+  - topic: "What makes a folder of Parquet into a table"
+    where: "covered in Apache Iceberg & Table Formats. In this course, Series 1 · 05 covers only how Trino is pointed at one and what it expects a catalog to provide"
+  - topic: "Object storage itself — buckets, keys, lifecycle rules and cost"
+    where: "covered in Data Ops, Series 1 · 47. This engine reads it and never manages it"
+  - topic: "Whether to federate at all"
+    where: "covered in Data Warehousing, Series 3 · 22, which is federation as a decision. In this course, Series 3 · 00 is the mechanism and what it costs when a connector cannot push down"
+  - topic: "Large batch transformation and machine learning pipelines"
+    where: "covered in Apache Spark, which is built for long jobs that survive a lost worker. In this course, Series 3 · 25 says so plainly rather than pretending the overlap is total"
+  - topic: "Running the cluster — sizing, deployment, upgrades, monitoring"
+    where: "covered in Data Ops for the discipline, and Kubernetes for Data Workloads if it lands on a cluster. In this course, Series 3 · 10 covers only what a query author must know about sharing one"
+
+series:
+  - slug: series1-an-engine-with-no-storage
+    title: An Engine With No Storage
+    tagline: catalogs, connectors, and how one query becomes many tasks
+    level: intermediate
+    episodes:
+      # COVER: what it is, in the negative first because that is what surprises people. NO
+      # STORAGE, no tables of its own, no indexes, no data it owns. It is a distributed SQL
+      # engine that reads other people's data through connectors and returns an answer.
+      # WHAT THAT BUYS: one SQL dialect and one client over object storage, a warehouse, several
+      # relational databases and a message log at the same time — without copying anything.
+      # WHAT IT COSTS, and say it in the first episode so nothing later is a surprise: every
+      # performance question becomes a question about somebody ELSE'S data layout, and you
+      # cannot fix it from here.
+      # WHERE IT SITS: Data Warehousing, Series 3 · 20 described a lakehouse; the table format
+      # is Apache Iceberg & Table Formats; THIS IS THE ENGINE HALF, and the three together are
+      # what people mean when they say they query their lake with SQL.
+      - n: "00"
+        slug: no-storage
+        title: "No Storage, No Indexes, No Tables of Its Own — What Trino Actually Is"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the three-part name — catalog.schema.table — and what each part means here.
+      # A CATALOG IS A CONFIGURED CONNECTOR, not a database: one properties file pointing at one
+      # data source, and the name in that file becomes the first part of every query.
+      # SHOW IT CONCRETELY: two catalogs configured, and one SELECT naming both. That single
+      # query is the product's entire pitch and it belongs in the second episode rather than at
+      # the end of Series 3.
+      # SESSION properties and USE, briefly, because they are how people avoid typing the prefix.
+      - n: "05"
+        slug: catalogs-and-names
+        title: "catalog.schema.table — a Catalog Is a Configured Connector, Not a Database"
+        hands_on: ["koan:complete", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: connectors as the real surface area of this product, and the two kinds a data
+      # reader meets:
+      #   OBJECT STORAGE     the Iceberg, Delta and Hive connectors, reading Parquet or ORC on
+      #                      S3-compatible storage with a catalog holding the metadata.
+      #   DATABASE           PostgreSQL, MySQL, ClickHouse and the rest — Trino issues SQL to the
+      #                      remote engine and reads the result.
+      # THE FACT TO INSTALL NOW AND KEEP REPEATING: CONNECTORS DIFFER ENORMOUSLY IN WHAT THEY
+      # PUSH DOWN. The same query is a small pushdown on one and a full table read on another,
+      # nothing in the SQL says which, and the connector's own documentation page is the only
+      # honest answer. Teach reading that page as a skill.
+      - n: "10"
+        slug: connectors
+        title: "Connectors — Object Storage and Databases, and Why They Are Not Equivalent"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the execution model, at the depth needed to read a plan and no further. A
+      # COORDINATOR parses, plans and schedules; WORKERS execute; a table is divided into SPLITS
+      # so many workers read at once; a query becomes STAGES connected by EXCHANGES, and an
+      # exchange is where data moves between machines.
+      # THE ONE INSIGHT TO CARRY FORWARD: MOVING DATA BETWEEN STAGES IS THE EXPENSIVE PART. Every
+      # optimisation in Series 2 is a way of moving less of it, which is why the model has to
+      # come before the tuning.
+      - n: "15"
+        slug: coordinator-workers-splits
+        title: "Coordinator, Workers, Splits and Stages — Where a Query Actually Runs"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the tools for seeing it. EXPLAIN and EXPLAIN ANALYZE, read as a tree of stages
+      # rather than as a wall of text, and the Web UI's query detail — which shows rows and bytes
+      # per stage live and is the fastest diagnosis in the product.
+      # THE NUMBER TO LOOK AT FIRST, and it decides most investigations: INPUT ROWS AGAINST
+      # OUTPUT ROWS AT THE SOURCE STAGE. If Trino read a hundred million rows to return a
+      # thousand, the filter did not reach the data, and Series 2 · 00 is why.
+      # SEAM: Learn SQL, Series 3 · 20 taught reading a plan on one machine. Same discipline,
+      # more stages — say so, rather than starting again.
+      - n: "20"
+        slug: explain-and-the-ui
+        title: "EXPLAIN and the Web UI — Input Rows Against Output Rows at the Source"
+        hands_on: ["koan:diagnose", "koan:count:scanned"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-query-a-lake
+        title: "Project — Answer a Business Question From Parquet You Did Not Load"
+        hands_on: ["koan:author", "koan:count:scanned"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-making-it-fast
+    title: Making It Fast
+    tagline: pushdown, layout, joins and the memory that stops a query dead
+    level: advanced
+    episodes:
+      # THE CENTRAL EPISODE OF THE COURSE.
+      # COVER: pushdown — the connector doing work at the source instead of Trino doing it after
+      # the data arrives. Predicate pushdown, projection pushdown, and aggregate or limit
+      # pushdown where a connector supports it.
+      # WHY IT DOMINATES EVERYTHING ELSE: without pushdown a filter is applied AFTER the rows
+      # cross the network, so a query that returns a thousand rows may have moved a hundred
+      # million. No amount of cluster is a cure for that; it is the same argument Learn SQL,
+      # Series 3 · 18 makes about filtering early, at a scale where it is the entire cost.
+      # HOW TO CHECK RATHER THAN HOPE: EXPLAIN shows what the connector accepted; the connector's
+      # documentation page lists what it supports; and the source-stage row count from
+      # Series 1 · 20 proves it.
+      # THE TRAPS THAT SILENTLY DEFEAT IT, and they are the same family Learn SQL taught: a
+      # function wrapped around the column, a type that does not map cleanly across the
+      # connector, and a predicate on an expression rather than on a column.
+      - n: "00"
+        slug: pushdown
+        title: "Pushdown — the Only Optimisation That Really Matters, and How to Prove It Happened"
+        hands_on: ["koan:diagnose", "koan:count:scanned"]
+        core: true
+        status: planned
+      # COVER: the layout of the data underneath, which is the tuning Trino actually responds to
+      # and which it cannot do for you. Partitioning so whole directories are skipped, file
+      # format and compression, sort order so min/max statistics let a file be skipped whole, and
+      # file SIZE.
+      # THE SMALL-FILES PROBLEM, given the space it deserves because it is the commonest
+      # complaint in the wild: ten thousand tiny files means ten thousand splits, each with
+      # per-file overhead, and the query spends its life opening files rather than reading rows.
+      # Compaction is the fix and it belongs to the table format — Apache Iceberg & Table
+      # Formats, Series 2 · 10 — which is exactly the point of this episode: THE FIX IS NOT IN
+      # TRINO.
+      - n: "05"
+        slug: layout-and-small-files
+        title: "The Layout Is the Tuning — Partitions, File Size, and Ten Thousand Tiny Files"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: joins in a distributed engine, and the one question that decides them — WHICH SIDE
+      # MOVES. A BROADCAST join sends the small side to every worker; a PARTITIONED join
+      # redistributes both sides by the join key, which is an exchange and therefore the
+      # expensive path. Reading which one the plan chose, and the session properties that
+      # override it.
+      # JOIN ORDER and why the biggest table should drive it. The dynamic filtering that lets one
+      # side's values prune the other side's splits at runtime, which is one of the largest wins
+      # available on a star-shaped query.
+      # SEAM: Data Warehousing, Series 3 · 22 owns federation as a decision and Apache Spark owns
+      # skew. This owns making a join in this engine read less.
+      - n: "10"
+        slug: joins
+        title: "Broadcast or Partitioned — Which Side Moves, and Dynamic Filtering"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: memory, and the behaviour that surprises people arriving from a database. Trino
+      # holds working state IN MEMORY, so a query that exceeds its limit does not get slower —
+      # IT FAILS, with an error naming the memory pool. That is a design choice about latency,
+      # not a defect, and a reader who expects graceful degradation will misread it as instability.
+      # The per-query and per-node limits, and spill-to-disk as the partial mitigation it is.
+      # WHAT ACTUALLY FIXES IT: read less. Aggregate earlier, filter at the source, avoid the
+      # unbounded ORDER BY over everything, and reconsider whether this query wanted a batch
+      # engine — which is Series 3 · 15 and Series 3 · 25.
+      - n: "15"
+        slug: memory
+        title: "Memory Limits — Why a Query Fails Instead of Slowing Down"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the cost-based optimizer and, more importantly for this engine, WHERE ITS
+      # STATISTICS COME FROM — not from Trino, which gathers none of its own, but from the table
+      # format's metadata or the remote database. Missing statistics mean the planner guesses,
+      # and a guessed join order on a large query is the difference between seconds and an hour.
+      # ANALYZE where a connector supports it, and checking what statistics exist before blaming
+      # the optimizer.
+      # THE CALLBACK: PostgreSQL, Series 2 · 20 taught that a planner is only as good as its
+      # statistics. Same lesson, and here the statistics belong to somebody else.
+      - n: "20"
+        slug: statistics
+        title: "Statistics It Does Not Own — Why the Planner Guessed, and Where to Look"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        status: planned
+      - n: "25"
+        slug: project-halve-a-query
+        title: "Project — Halve a Query Without Changing a Word of the SQL"
+        hands_on: ["koan:author", "koan:count:scanned"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-federation-and-reality
+    title: Federation, Sharing and Reality
+    tagline: several systems in one query, a cluster shared with others, and when not to
+    level: advanced
+    episodes:
+      # COVER: the party trick — one SELECT joining a table in object storage to a table in
+      # PostgreSQL to a topic in Kafka, with no copying and no pipeline. Demonstrate it, because
+      # it is genuinely impressive and it is why people adopt this.
+      # THEN THE BILL, immediately, in the same episode: the join happens IN TRINO unless the
+      # connector pushed it down, and it almost never can across two systems. So the remote rows
+      # cross the network, the planner has no statistics for them, and your analytical query is
+      # now running against somebody's production OLTP database at a time you chose.
+      # THE RULE, which is Data Warehousing, Series 3 · 22's rule arriving with a mechanism:
+      # FEDERATE WHAT IS SMALL, OCCASIONAL OR REFERENCE. Copy what is large, hot or joined in
+      # every query. Exploration and reconciliation are the honest use; a daily dashboard is not.
+      - n: "00"
+        slug: federation
+        title: "One Query, Several Systems — the Party Trick, and Who Pays For It"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: naming things so a team can share them. Views as saved SQL, and the difference
+      # between a view Trino stores in a catalog and one the underlying system owns. Materialized
+      # views where a connector supports them, and their refresh — with the honest note that this
+      # is where Trino comes closest to owning data, and that it is a per-connector capability
+      # rather than a Trino feature.
+      # SEAM: Data Warehousing owns pre-aggregation as a strategy; this is one engine's mechanism.
+      - n: "05"
+        slug: views
+        title: "Views and Materialized Views — the One Place Trino Nearly Owns Something"
+        hands_on: ["koan:complete", "koan:choose"]
+        status: planned
+      # COVER: what changes when the cluster is shared, which it always is.
+      #   ACCESS CONTROL     Trino sits in front of several systems, so it becomes the place
+      #                      where "who can see which column" is answered ACROSS all of them —
+      #                      and if it is misconfigured it is also the place where somebody sees
+      #                      a source they could not otherwise reach. Say that plainly.
+      #   RESOURCE GROUPS    one analyst's unbounded query taking the memory everybody else
+      #                      needed. Queues and limits per group, and why a shared cluster
+      #                      without them fails in a way that looks random.
+      # THE FRAMING: this is the episode where a query author learns why their query was queued,
+      # rejected or killed — which is otherwise the most confusing experience in the product.
+      - n: "10"
+        slug: sharing-a-cluster
+        title: "Sharing a Cluster — Column Access Across Every Source, and Why You Were Queued"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: fault-tolerant execution, and it needs care because it changes a claim this course
+      # makes early. By default a lost worker fails the query, which is acceptable when a person
+      # is waiting thirty seconds and unacceptable for a job that has been running an hour.
+      # Fault-tolerant execution adds an exchange manager that spools intermediate results, so
+      # tasks can be retried.
+      # WHAT IT COSTS: latency and storage for the spooled data, which is why it is a per-cluster
+      # or per-query choice rather than a default.
+      # THE HONEST POSITION TO TEACH, and it is a judgement rather than a fact: this narrows the
+      # gap with a batch engine and does not close it. If most of your work is long
+      # transformations, Series 3 · 25 is the conversation.
+      # ⚠ VERIFY THE CURRENT CAPABILITIES AND DEFAULTS against the documentation for the version
+      # you are writing about; this area has moved more than any other in the product.
+      - n: "15"
+        slug: fault-tolerant-execution
+        title: "Fault-Tolerant Execution — When a Lost Worker Stops Killing the Query"
+        hands_on: ["koan:choose", "koan:predict"]
+        status: planned
+      # COVER: the landscape, factually, because a reader searching for help will land in the
+      # middle of it without warning. This project was PrestoSQL and was renamed Trino; a
+      # separate PrestoDB lineage continues; and managed distributions from several vendors wrap
+      # one or the other.
+      # WHAT IT MEANS IN PRACTICE, which is the useful part: BLOG POSTS, STACK OVERFLOW ANSWERS
+      # AND JOB ADVERTISEMENTS MIX THE TWO FREELY, and configuration properties, connector names
+      # and behaviour have diverged. Check which project a source is describing before believing
+      # it — that habit is worth more than the history.
+      # ⚠ VERIFY NAMES, DATES AND THE CURRENT STATE against both projects' own pages on the day.
+      - n: "20"
+        slug: trino-and-presto
+        title: "Trino, Presto and the Managed Distributions — Which One Is That Answer About?"
+        hands_on: ["koan:capture", "koan:choose"]
+        status: planned
+      # THE EPISODE THIS TRACK OWES ITS READER, before the project so the project can be judged
+      # against it. Three honest alternatives, each with the case where it wins:
+      #   DUCKDB              one machine, one analyst, data that fits. Enormously simpler, and
+      #                       the right answer far more often than a cluster's advocates admit.
+      #                       Data Warehousing, Series 2 · 05 and the DuckDB track.
+      #   A WAREHOUSE         if the data is already loaded and the questions are known,
+      #                       ClickHouse or a warehouse will beat this on latency and on
+      #                       operational cost, because they own their storage and can lay it out.
+      #   SPARK               long transformations, machine learning, and jobs that must survive
+      #                       a lost worker. Different tool, overlapping syntax.
+      # AND WHERE TRINO GENUINELY WINS: interactive SQL over data you do not own and cannot move,
+      # several sources at once, many analysts sharing one endpoint, and no copy.
+      - n: "25"
+        slug: when-not-to
+        title: "When Not to Use Trino — DuckDB, a Warehouse, or Just Spark"
+        hands_on: ["koan:choose", "koan:equivalent"]
+        core: true
+        status: planned
+      - n: "30"
+        slug: project-federate-and-prove-it
+        title: "Project — Federate Two Sources and Prove Where the Work Happened"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned

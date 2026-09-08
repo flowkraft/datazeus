@@ -1,0 +1,76 @@
+---
+title: "Cache-Aside and the Stampede — When a Cache Working Correctly Takes You Down"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-redis"
+tags: []
+level: "advanced"
+module: "series2-patterns"
+order: 0
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/redis/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/redis/series2/_00/CachingPatternsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Redis documentation (redis.io/docs) — the data type or command page that owns this topic, INCLUDING ITS TIME COMPLEXITY, which in this product is the whole story.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (NoSQL Concepts owns the key-value shape, Data Ops owns running the server, Kafka owns durable streaming at scale),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    A data structure server, not a cache and not a database. Every episode answers: if this process died now, what would you lose?
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: cache-aside as the default — look in Redis, miss, read the database, write it back
+     with a TTL — plus write-through and write-behind named with their trade-offs.
+     INVALIDATION, which is the hard half: TTL as the honest simple answer, explicit deletion
+     on write, and versioned keys as the trick that avoids invalidation entirely.
+     THE TWO FAILURES WORTH THE EPISODE:
+       STAMPEDE / DOGPILE   a popular key expires, and a thousand requests miss simultaneously
+                            and all hit the database at once — which is a self-inflicted
+                            outage caused by a cache working correctly. Jitter the TTL, or
+                            let one requester recompute while the rest serve the stale value.
+       CACHING A QUERY YOU SHOULD FIX   Learn SQL, Series 3 · 20 exists; read the plan before
+                            reaching for a cache, because a cache hides a bad query until the
+                            morning it misses.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/redis/series2/_00/CachingPatternsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

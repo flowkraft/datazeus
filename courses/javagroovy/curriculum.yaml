@@ -990,6 +990,176 @@ series:
         hands_on: ["koan:diagnose"]
         short: "Performance & Memory — measure before you change"
         status: planned
+      # ADDED 2026-09-07 as a FOUR-EPISODE BLOCK, and the first draft was one episode. That is
+      # recorded because the correction is the useful part: a single episode covering the gate,
+      # thread pools, shared state, associativity, bounded queues, partitioning, checkpointing
+      # and coordination is not a lesson, it is a syllabus — and it was out of scale with every
+      # neighbour in this series, each of which teaches ONE construct or ONE discipline.
+      #
+      # AND IT WAS NOT "FOR DATA" ENOUGH. The first draft was organised around concurrency
+      # primitives, which reads the same in any backend course. This block is organised around
+      # the shapes DATA work takes, and it opens with the sentence a Java course must say first
+      # and almost never does: THE FASTEST PARALLELISM IS USUALLY NOT IN YOUR JVM.
+      #
+      # PLACED AFTER 35 "Measure Before You Change Anything", and that order is the argument.
+      # Parallelism is a change; 35 is how you find out whether you need it. Series 3 then reads
+      # ships -> measure -> parallelise -> project.
+      #
+      # CONCEPTS AND PATTERNS BEFORE ANY FRAMEWORK. Series 4 has Spring Batch and Beam and both
+      # are answers. This block is the question, and every episode must be readable by someone
+      # who will use neither.
+
+      # THE GATE, AND THE MOST DATA-SPECIFIC EPISODE IN THE BLOCK.
+      # COVER, in this order:
+      #   IS IT SLOW BECAUSE IT IS SERIAL, OR BADLY WRITTEN?   One thread with the right
+      #                     algorithm, the right index or one fewer round trip beats four threads
+      #                     doing the wrong thing, and costs nothing afterwards. 35 is how you
+      #                     tell; Learn SQL, Series 3 · 18 and Series 3 · 20 are usually the fix.
+      #   THE DATABASE IS ALREADY PARALLEL, and this is the episode's spine. PostgreSQL runs
+      #                     parallel query plans, DuckDB uses every core in your own process, and
+      #                     ClickHouse was built for it. A GROUP BY over fifty million rows
+      #                     belongs in the engine, which has the threads, the statistics and the
+      #                     storage layout — none of which your loop has.
+      #   THE RULE: MOVE THE COMPUTATION TO THE DATA, NOT THE DATA TO THE COMPUTATION. Pulling
+      #                     fifty million rows into the JVM to aggregate them is the mistake this
+      #                     episode exists to prevent, and it is committed by good programmers
+      #                     precisely because they are comfortable in Java.
+      #   WHEN THE JVM GENUINELY MUST DO IT, said fairly or the episode is a scolding: the work
+      #                     is not expressible in SQL (an API call per row, a parser, generating
+      #                     a PDF or a workbook), the data is not all in one database, or the
+      #                     source is files. Series 2 · 45 — DuckDB inside your process — is the
+      #                     middle answer people forget.
+      #   THEN THE SHAPE OF THE WORK: I/O-bound is waiting, CPU-bound is computing, and it
+      #                     decides which of the next two episodes you are in. Series 2 · 60
+      #                     already teaches it; cite it.
+      # KOAN: `reconcile` — the same answer computed by a JVM loop and by one SQL statement,
+      # proven identical. That is exactly what this track means by reconcile, and it is a
+      # better fit than a generic equivalence: the point is two computations agreeing.
+      # `choose` on four workloads: which belongs in the engine.
+      - n: "36"
+        slug: push-it-down
+        title: "Before You Reach for Threads — Push It Down to the Engine"
+        short: "Before You Reach for Threads — push it down"
+        hands_on: ["koan:reconcile", "koan:choose"]
+        core: true
+        status: planned
+
+      # THE I/O-BOUND CASE, DONE PROPERLY. The motivating shape is Series 2's: four hundred API
+      # calls, fifty files, a database round trip per row.
+      # COVER:
+      #   THE POOL              ExecutorService, and sizing that is not a guess — roughly the
+      #                         core count for CPU work, far more for waiting. Series 2 · 60's
+      #                         virtual threads sit on top of this; a reader who has only met the
+      #                         convenience cannot reason about a pool they did not create.
+      #   THE SHARED POOL TRAP  every parallel stream in the JVM uses the SAME common
+      #                         ForkJoinPool, so one long parallel stream starves every other one
+      #                         in the process — including a request handler in the same
+      #                         application. Invisible in code review, and it is why a library
+      #                         should never call parallelStream() on a caller's behalf.
+      #   BOUNDED PRODUCER-CONSUMER   one reader thread, N workers, and A QUEUE WITH A LIMIT.
+      #                         That is how a large file goes through N workers with FLAT MEMORY.
+      #                         Series 2 · 40 streams a large result set with one consumer; this
+      #                         is the same discipline with several, and AN UNBOUNDED QUEUE IS
+      #                         THE WHOLE FILE IN RAM WITH EXTRA STEPS.
+      #   THE CONNECTION POOL IS THE REAL CEILING, and this is the data-specific half nobody
+      #                         teaches: thirty-two threads against a pool of four is a queue
+      #                         with extra steps, and thirty-two connections against one Postgres
+      #                         is slower than eight. THE POOL SIZE, NOT THE THREAD COUNT, IS
+      #                         YOUR PARALLELISM. Data Ops, Series 2 · 20 owns pooling as an
+      #                         operational subject; this is what it means for your loop.
+      # KOAN: `count:roundtrips`, never a stopwatch — the header forbids asserting wall-clock
+      # time and this is the episode most tempted to break it.
+      - n: "37"
+        slug: fan-out-and-bounded-memory
+        title: "Fan-Out and Bounded Memory — N Calls, One Queue, a Flat Heap"
+        short: "Fan-Out & Bounded Memory — N calls, flat heap"
+        hands_on: ["koan:count:roundtrips", "koan:diagnose"]
+        status: planned
+
+      # THE CPU-BOUND CASE, and the one where a wrong answer is produced silently.
+      # COVER:
+      #   THE SHAPE             partition the rows by key or by range, compute a result per
+      #                         partition, then COMBINE the partial results. Name it as map and
+      #                         reduce, once — not for the buzzword but because recognising the
+      #                         shape here is what makes Spark and Beam legible in Series 4
+      #                         instead of magical.
+      #   FAILURE MODE ONE — SHARED MUTABLE STATE. The groupingBy aggregation from Series 1 · 35,
+      #                         accumulating into a plain HashMap from several threads, produces
+      #                         A WRONG NUMBER RATHER THAN AN EXCEPTION. That is the worst class
+      #                         of bug this whole track exists to prevent, and it is one line of
+      #                         apparently reasonable code. Concurrent collections, or better, a
+      #                         result per partition and no sharing at all.
+      #   FAILURE MODE TWO — A REDUCE THAT IS NOT ASSOCIATIVE. Parallel reduction splits and
+      #                         recombines in an order you do not control, so subtraction, or a
+      #                         floating-point sum, gives a DIFFERENT ANSWER than the serial run.
+      #                         Series 1 · 32 already taught that money is not a double; this is
+      #                         the second bill for the same mistake.
+      #   THE DETERMINISM COST  output order changes, and logs from several threads interleave,
+      #                         so Series 3 · 25's readable failure stops being readable. Decide
+      #                         that trade deliberately.
+      # NAME THE MODEL, ITS ORIGIN AND THE ONE SQL READERS ALREADY KNOW. Added 2026-09-07 after
+      # an audit found the words Hadoop and MapReduce in NONE of the academy's curricula, while
+      # three episodes teach the shape.
+      #   THE READER HAS JUST WRITTEN A MAPREDUCE. Map transforms each record independently,
+      #   shuffle groups by key, reduce combines per key. Google's 2004 paper named it and
+      #   APACHE HADOOP WAS IT AS A PRODUCT.
+      #   AND THE FRAMING THIS ACADEMY SHOULD USE, because it lands in one sentence for a
+      #   SQL-first reader: A GROUP BY IS A MAPREDUCE. SELECT and WHERE are the map, GROUP BY is
+      #   the shuffle, the aggregate is the reduce. Someone who sees that stops treating Spark
+      #   and Beam as alien machinery and reads them as the same idea with an explicit shuffle.
+      #   THE TRADE THAT MAKES IT A MODEL RATHER THAN A TRICK: accept a restricted shape, and a
+      #   framework can parallelise, distribute, retry and scale it without you writing a line of
+      #   concurrency code. That sentence is what 39 then cashes in.
+      #   NO HADOOP AS A TECHNOLOGY TO USE. One clause of history, not a paragraph.
+      # KOAN: `predict` on a non-associative reduction run both ways — deterministic, no clock,
+      # and the cleanest koan in the block.
+      - n: "38"
+        slug: partitioned-work
+        title: "Partitioned Work — Splitting Rows and Combining Answers"
+        short: "Partitioned Work — split rows, combine answers"
+        tags: ["dean-mapreduce"]
+        credits:
+          - source: dean-mapreduce
+            concept: "The map/shuffle/reduce model — accept a restricted shape and a framework can parallelise, distribute and retry the work for you"
+        hands_on: ["koan:predict", "koan:complete"]
+        status: planned
+
+      # THE THIRD LEVEL, AND THE HANDOVER. Everything here is a concept: this track cannot run a
+      # cluster and should not pretend to.
+      # COVER what actually changes, and none of it is about threads:
+      #   THE WORK MUST PARTITION     into units that do not need to see each other. If unit 7
+      #                               needs a number unit 3 computed, that is not a partition, it
+      #                               is a pipeline stage — and the distinction decides whether
+      #                               any of this is possible.
+      #   STATE CANNOT BE A VARIABLE  38's per-partition result becomes a database row, a file,
+      #                               or a reduce step somebody has to run.
+      #   FAILURE IS PARTIAL          three partitions finished and one died, and a restart must
+      #                               not redo the three. IDEMPOTENCY — ETL & Data Pipelines,
+      #                               Series 1 · 30 — plus a checkpoint of what completed.
+      #   SOMETHING MUST COORDINATE   hand out partitions, notice a dead worker, decide when the
+      #                               job is done. Naming that job is what makes the frameworks
+      #                               legible rather than magical.
+      # AND THE GATE AGAIN, because it is cheaper than everything above: one large machine goes a
+      # very long way, and Data Ops, Series 1 · 46 priced them. Most jobs that reach for a cluster
+      # needed an index or a partitioned file layout.
+      # THE HANDOVER, one line each and no more: Series 4 · 27 Spring Batch partitions and
+      # restarts; Series 4 · 28 Apache Beam describes the work and lets a runner place it; Apache
+      # Spark is the answer when one machine genuinely is not enough.
+      #
+      # AND WHY A FRAMEWORK CAN DO ANY OF THIS FOR YOU, one line, cashing in 38's model: because
+      # you agreed to the map/shuffle/reduce shape, something else can decide where each unit
+      # runs, retry the one that died and combine the answers. Spring Batch, Beam and Spark are
+      # not magic — they are that bargain, honoured.
+      #
+      # THE RULE THAT CLOSES THE BLOCK, and it is the whole of it in six words: PARTITION THE
+      # DATA, NOT THE CODE. If the work can be expressed as N independent units over disjoint
+      # data, every level in this block is available. If it cannot, no framework rescues it.
+      - n: "39"
+        slug: more-than-one-machine
+        title: "When One Machine Is Not Enough — What Changes, and What Breaks"
+        short: "When One Machine Is Not Enough — what changes"
+        hands_on: ["koan:choose", "koan:predict"]
+        status: planned
       # Series 3 ENDS framework-free, on purpose. What used to be episode 40 — one episode
       # covering Spring Data, GORM and JPA at once — became Series 4. See that series' header
       # for why, and for the header trigger it satisfies.

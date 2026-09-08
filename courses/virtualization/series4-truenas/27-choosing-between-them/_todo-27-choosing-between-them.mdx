@@ -1,0 +1,86 @@
+---
+title: "Choosing — One Box, a Pool, an Appliance, or Somebody Else's Datacentre"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series4-truenas"
+order: 27
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series4/_27/ChoosingBetweenThemKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE COURSE-WIDE CHOOSER, and it is the last teaching episode for a reason: only now can
+     a reader compare these honestly, because only now have they run all four.
+     THE FIRST THING TO SAY, AND IT UNDOES THE FRAMING PEOPLE ARRIVE WITH: THESE ARE NOT FOUR
+     COMPETITORS. Series 1 is the layer, Series 2 and Series 3 are two answers to the same
+     question, and Series 4 is usually underneath whichever you pick. The common real-world
+     shapes are worth drawing:
+       ONE BOX                    Proxmox with local ZFS, or plain Debian with libvirt and
+                                  Incus. Most data teams, most of the time.
+       TWO OR THREE BOXES         Proxmox with a QDevice and ZFS replication — cheap, and the
+                                  recovery point objective is stated rather than hidden.
+       A NAS PLUS TWO HYPERVISORS TrueNAS exporting NFS, with XCP-ng or Proxmox on top. The
+                                  classic small-estate shape, and its single point of failure
+                                  is the NAS.
+       AN ESTATE WITH AN OWNER    XCP-ng pools, Xen Orchestra, and its backup story.
+       RENTED                     Data Ops, Series 1 · 46, and it is not a failure.
+     THEN THE COMPARISON DIMENSIONS THAT ACTUALLY DIFFER, and only those: containers as first
+     class or not; whether the vendor's backup tool is part of the platform; how far you can
+     get with no subscription; how much of it survives when the UI is down; and how much
+     Linux knowledge the product assumes.
+     AND THE DECISION THAT IS NOT ABOUT FEATURES AT ALL: WHO OPERATES THIS, WHAT ELSE IS ON
+     THEIR PLATE, AND WHAT HAPPENS IN EIGHTEEN MONTHS WHEN THEY LEAVE. Every platform in this
+     course is free to download. None of them is free to own, and the hours are the price.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series4/_27/ChoosingBetweenThemKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

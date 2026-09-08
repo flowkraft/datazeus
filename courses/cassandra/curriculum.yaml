@@ -1,0 +1,329 @@
+# The ordered episode list for Apache Cassandra. Field docs live in
+# courses/learnsql/curriculum.yaml. `short` is omitted until an episode has a video.
+#
+# The job this track teaches: design tables from the queries, understand what the ring does with
+# your writes, and recognise the mistakes that only appear after six months.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# CQL LOOKS LIKE SQL AND IS NOT SQL. It has SELECT, INSERT, WHERE and a thing called a table,
+# and that familiarity is the most expensive feature of the product. There are no joins, no
+# subqueries, no aggregates worth the name across partitions, and a WHERE clause that does not
+# start from the partition key is either refused or — worse — allowed with ALLOW FILTERING and
+# then scans the cluster.
+#
+# THE RULE THAT REPLACES EVERYTHING A RELATIONAL READER KNOWS: ONE TABLE PER QUERY. You write
+# the same data several times, in several shapes, on purpose. A reader who resists that will
+# build a normalized schema in Cassandra and get the worst of both worlds — no joins, and none
+# of the performance that was supposed to compensate.
+#
+# ============================================================================
+# THE SECOND ONE, WHICH IS WHAT ACTUALLY TAKES CLUSTERS DOWN
+# ============================================================================
+# DELETES DO NOT DELETE. A delete writes a TOMBSTONE — a marker saying "this is gone" — which
+# must be read on every subsequent query until compaction removes it, and which cannot be
+# removed early without risking deleted data coming back. A queue built on Cassandra, or a table
+# where rows are regularly removed, degrades in a way that looks like nothing until reads start
+# timing out. Series 2 · 10 owns it, and Series 1 should already be hinting at it.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL CASSANDRA DOCUMENTATION
+# ============================================================================
+# The Apache Cassandra documentation runs Architecture (dynamo, storage engine, guarantees),
+# Data Modeling (conceptual, logical, physical, refining), the CQL reference, and Operating.
+# Its DATA MODELING section is unusually good and unusually opinionated — follow its order for
+# Series 1, its Architecture section for Series 2, and Operating for Series 3.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's series
+# order — SHOULD FOLLOW THE OFFICIAL APACHE CASSANDRA DOCUMENTATION. Before writing an episode,
+# open its own page for that topic, use it as the COVERAGE CHECKLIST, and use its VOCABULARY FOR
+# THE NOUNS (keyspace, partition key, clustering column, replication factor, consistency level,
+# SSTable, memtable, compaction, tombstone, hint, repair). Anything left out should be left out
+# because an academy rule says so — NoSQL Concepts owns the wide-column shape and the quorum
+# theory, Data Ops owns operating a cluster — and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the docs page named.
+#
+# STATE THE VERSION. Cassandra 4 and 5 changed defaults, added features and improved several of
+# the sharp edges this course teaches. Check before writing that a warning is still true.
+
+course: learn-cassandra
+track: cassandra
+title: Apache Cassandra
+
+prerequisites:
+  - course: learn-nosql
+    needs: "Series 1, Series 2, and Series 3"
+    why: >-
+      Partition keys, quorums and eventual consistency are taught there once, for every engine.
+      This track is unusable without them — nearly every design decision in Cassandra is one of
+      those three ideas wearing a CQL keyword.
+
+excludes:
+  - topic: "Why wide-column at all, and how it differs from the other shapes"
+    where: "covered in NoSQL Concepts, Series 2 · 10, which this course assumes"
+  - topic: "Quorums, CAP and eventual consistency as theory"
+    where: "covered in NoSQL Concepts, Series 3. In this course, Series 2 · 00 is what the consistency levels do in this product specifically"
+  - topic: "SQL itself"
+    where: "covered in Learn SQL. CQL borrows its spelling and almost none of its semantics. In this course, Series 1 · 05 is about that gap rather than about SQL"
+  - topic: "Running the cluster — provisioning, upgrades, monitoring, capacity"
+    where: "covered in Data Ops for the discipline. In this course, Series 3 covers only the maintenance a data person's design decisions create"
+  - topic: "Analytics over the data once it is there"
+    where: "covered in Data Warehousing and Apache Spark. Cassandra answers known questions fast and is a poor place to ask new ones"
+
+series:
+  - slug: series1-the-ring-and-the-table
+    title: The Ring and the Table
+    tagline: how a row finds a machine, and why you design from the query
+    level: intermediate
+    episodes:
+      # COVER: the ring — no primary, every node equal, a hash of the partition key deciding
+      # which nodes hold a row, and the replication factor deciding how many copies exist.
+      # Keyspaces and replication strategy per keyspace, per datacentre.
+      # THE CONSEQUENCE TO INSTALL EARLY: there is no coordinator that knows everything and no
+      # node that is authoritative. Every read is an agreement between replicas, which is why
+      # the next series is about consistency levels rather than about transactions.
+      # NoSQL Concepts, Series 3 · 00 taught partition keys in general; this is the machine that
+      # makes them physical.
+      - n: "00"
+        slug: the-ring
+        title: "The Ring — No Primary, and the Hash That Chooses Your Machine"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: CQL, taught as a list of what is missing rather than a tour of what is there,
+      # because the reader already knows the syntax and needs the boundaries. NO JOINS. No
+      # subqueries. No GROUP BY across partitions. No ORDER BY except along the clustering
+      # columns you declared. No foreign keys, no referential integrity, no uniqueness beyond
+      # the primary key.
+      # ALLOW FILTERING, and it deserves its own paragraph: it is not a hint, it is a confession.
+      # It tells the coordinator to fetch and discard rows across the cluster, it works fine on
+      # your laptop's test data, and it is the single commonest way a Cassandra application
+      # becomes unusable in production. Teach it as a word you should almost never type.
+      # UPSERT SEMANTICS: INSERT and UPDATE are the same operation, and there is no "row already
+      # exists" error. That surprises people once and silently overwrites data once.
+      - n: "05"
+        slug: cql-is-not-sql
+        title: "CQL Is Not SQL — No Joins, No Groups, and ALLOW FILTERING Is a Confession"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # THE CENTRAL EPISODE. Everything else in the track depends on it landing.
+      # COVER: the primary key has two parts and they do completely different jobs.
+      #   THE PARTITION KEY      decides WHICH NODES hold the data. Every query must supply it.
+      #   THE CLUSTERING COLUMNS decide the ORDER WITHIN the partition, and therefore which range
+      #                          queries are possible and in which direction.
+      # PRIMARY KEY ((a, b), c, d) read out loud, slowly, with what each position buys.
+      # WHAT FOLLOWS: you can range-scan on clustering columns, you can never range-scan on the
+      # partition key, and the sort order is a storage property rather than a query option —
+      # ORDER BY can only ask for the order you already declared, or its reverse.
+      - n: "10"
+        slug: the-primary-key
+        title: "Partition Key and Clustering Columns — Two Halves, Two Completely Different Jobs"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: the method the official docs teach, and it is genuinely good — list the
+      # application's queries first, then design a table for each, then check each table against
+      # the query it exists for. Denormalize without apology; write the same fact into three
+      # tables in one batch if three queries need it.
+      # THE MENTAL SHIFT TO NAME, because a relational reader feels it as a loss: the schema is
+      # no longer a description of the business. It is a description of the ACCESS PATTERNS.
+      # Learn Data Modeling's rules have not become wrong; they answer a different question.
+      # THE COST TO SAY OUT LOUD: a new question that nobody anticipated may need a new table and
+      # a backfill. That is the price of the design, not a failure of it, and a reader who knows
+      # that in advance makes better decisions than one who discovers it.
+      - n: "15"
+        slug: one-table-per-query
+        title: "One Table Per Query — the Schema Describes the Access Patterns, Not the Business"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-design-from-queries
+        title: "Project — Five Queries, Five Tables, and One Write That Feeds Them All"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-consistency-and-storage
+    title: Consistency and What the Disk Does
+    tagline: tunable consistency, the LSM tree, and tombstones
+    level: advanced
+    episodes:
+      # COVER: consistency as a PER-QUERY setting, which is the product's best idea. ONE, QUORUM,
+      # LOCAL_QUORUM, ALL — and the arithmetic from NoSQL Concepts, Series 3 · 05 made concrete:
+      # write QUORUM and read QUORUM and a read sees the latest write; write ONE and read ONE and
+      # it may not.
+      # LOCAL_QUORUM as the one most multi-datacentre deployments actually use, and why: a quorum
+      # within your own datacentre avoids paying for a transatlantic round trip on every request.
+      # THE DESIGN POINT: this is a dial per statement, not a property of the database. The same
+      # application can write an audit record at QUORUM and a click event at ONE, and choosing
+      # deliberately per operation is the skill.
+      - n: "00"
+        slug: consistency-levels
+        title: "Consistency Levels — a Dial on Every Statement, Not a Property of the Database"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the write path, because it explains why this engine is fast and why deletes hurt.
+      # A write goes to the commit log and a memtable in memory, is acknowledged, and is later
+      # flushed to an immutable SSTable. NOTHING IS EVER MODIFIED IN PLACE. That is the LSM tree,
+      # and it is why writes are close to sequential and close to free.
+      # THE READ PATH AS THE CONSEQUENCE: a read may have to consult several SSTables plus the
+      # memtable and merge by timestamp. Bloom filters keep that cheap, most of the time.
+      # LAST WRITE WINS, by timestamp, with no conflict detection — so two concurrent updates to
+      # the same cell do not conflict, one simply disappears. Say it plainly.
+      - n: "05"
+        slug: the-write-path
+        title: "Commit Log, Memtable, SSTable — Why Writes Are Cheap and Nothing Is Modified"
+        tags: ["oneil-lsm"]
+        credits:
+          - source: oneil-lsm
+            concept: "The log-structured merge-tree — memory then immutable sorted files merged in the background, which is why writes are near-sequential and why deletes cost what they do"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      # THE EPISODE THAT SAVES A CLUSTER, and the one most Cassandra teams learn the hard way.
+      # COVER: a delete writes a TOMBSTONE. It must be read by every subsequent query over that
+      # range until it is compacted away, and it cannot be compacted before gc_grace_seconds —
+      # ten days by default — because removing it early lets deleted data come back from a
+      # replica that never heard about the delete.
+      # WHAT THAT MEANS IN PRACTICE: a table you delete from regularly gets slower to read, the
+      # slowdown is invisible in the data model, and reads eventually fail on a tombstone
+      # threshold rather than on anything that looks like a cause.
+      # THE ANTIPATTERNS TO NAME OUTRIGHT: a QUEUE in Cassandra. A table where rows are removed
+      # after processing. A partition that is repeatedly rewritten. NULL INSERTS, which write
+      # tombstones without anybody typing DELETE — that one catches everybody.
+      # WHAT TO DO INSTEAD: TTLs so rows expire rather than being deleted, or time-bucketed
+      # tables you drop whole.
+      - n: "10"
+        slug: tombstones
+        title: "Tombstones — Deletes Make Reads Slower, and Inserting NULL Is a Delete"
+        hands_on: ["koan:diagnose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: compaction as the background work that makes the LSM tree sustainable, and the
+      # strategies as a choice with real consequences — size-tiered (write-friendly, more space
+      # amplification, older data lingering in big SSTables), levelled (read-friendly, more write
+      # amplification), and time-window (the right answer for time-series with a TTL, because a
+      # whole window can be dropped at once).
+      # THE PRACTICAL FRAMING: choose from the workload, not from the default. And know that
+      # compaction competes with your queries for disk and CPU, which is why a cluster can be
+      # slow for reasons nothing in your application explains.
+      - n: "15"
+        slug: compaction
+        title: "Compaction Strategies — Choosing Which Amplification You Would Rather Pay"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # COVER: the features that look like the relational answer and mostly should not be used.
+      # SECONDARY INDEXES are local to each node, so a query using one asks every node — fine on
+      # low cardinality within a partition, disastrous as a general index. SASI and storage-
+      # attached indexes as the more modern attempt, with versions stated.
+      # MATERIALIZED VIEWS: server-maintained denormalization, and their consistency caveats have
+      # a long history — check the current status against the project's own documentation before
+      # writing, and report what it says rather than folklore.
+      # THE ADVICE THAT SURVIVES ALL OF IT: the supported answer is another table, written by
+      # your application. NoSQL Concepts, Series 3 · 25 predicted this; here is the product that
+      # proves the point.
+      - n: "20"
+        slug: secondary-indexes-and-views
+        title: "Secondary Indexes and Materialized Views — Why the Answer Is Another Table"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # COVER: the two constructs that borrow relational words and mean something else.
+      # BATCH is not a transaction. A LOGGED batch gives atomicity across partitions — all or
+      # none, eventually — at a real cost in coordination, and it is NOT isolation: other readers
+      # see partial results while it runs. An UNLOGGED batch spanning partitions is simply a
+      # slower way to send several writes, and is an antipattern.
+      # WHERE BATCH IS RIGHT: several writes to the SAME partition, which is one operation on one
+      # node — and that is exactly the "one write feeds five tables" case from Series 1 · 20,
+      # done properly.
+      # LIGHTWEIGHT TRANSACTIONS: IF NOT EXISTS and compare-and-set, implemented with Paxos,
+      # costing several round trips. Correct, occasionally necessary, and not something to put on
+      # a hot path.
+      - n: "25"
+        slug: batches-and-lwt
+        title: "BATCH Is Not a Transaction — and Lightweight Transactions Cost Four Round Trips"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      - n: "30"
+        slug: project-diagnose-a-slow-table
+        title: "Project — Diagnose a Table That Got Slower Every Month, and Say Why"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-living-with-a-cluster
+    title: Living With a Cluster
+    tagline: wide partitions, repair, and the relatives worth knowing
+    level: advanced
+    episodes:
+      # COVER: the second modelling failure that only appears with time — a partition that grows
+      # forever. Sensor readings keyed by device, events keyed by customer: correct on day one,
+      # and after two years one partition holds tens of millions of rows, cannot be split, and is
+      # slow to read no matter what you ask for.
+      # BUCKETING as the fix: put a time component in the partition key — device and month —
+      # so partitions stay bounded, at the cost of querying several of them for a long range.
+      # THE NUMBER TO GIVE THEM: partitions in the low hundreds of megabytes are comfortable, and
+      # a partition beyond that is a warning. Check the current guidance before writing.
+      # THE CALLBACK: this is NoSQL Concepts, Series 3 · 00's unbounded partition, and MongoDB's
+      # unbounded array, and Elasticsearch's index-per-day. Three products, one idea — say so.
+      - n: "00"
+        slug: wide-partitions
+        title: "Wide Partitions — the Modelling Mistake That Takes Two Years to Show"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: how replicas that fell behind catch up, and why it is not automatic in the way
+      # people assume. Hinted handoff for a node briefly down. Read repair, which fixes what a
+      # read happened to notice. And ANTI-ENTROPY REPAIR, which is a scheduled operation somebody
+      # has to run and which is not optional.
+      # THE CONNECTION TO TOMBSTONES, and it is the reason this episode is here rather than in an
+      # ops track: gc_grace_seconds is a promise that repair will run within that window. IF
+      # REPAIR DOES NOT RUN, DELETED DATA CAN COME BACK. The modelling decision in Series 2 · 10
+      # and the operational task in this episode are the same subject, and a data person needs
+      # to know that even if somebody else runs the command.
+      - n: "05"
+        slug: repair
+        title: "Repair — the Scheduled Job That Stops Deleted Data Coming Back"
+        hands_on: ["koan:process:tool", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: time-series, which is what a very large share of Cassandra actually stores, as a
+      # worked design bringing the whole course together — bucketed partition key, clustering by
+      # timestamp descending so the newest rows are first, TTL so expiry does not create
+      # tombstones the hard way, and time-window compaction so a whole expired window drops at
+      # once.
+      # WHY IT IS THE RIGHT CLOSING DESIGN: every earlier lesson shows up in it, and the reader
+      # can see the four decisions interlocking rather than as separate rules.
+      - n: "10"
+        slug: time-series-design
+        title: "A Time-Series Table, Properly — Buckets, TTLs and the Compaction to Match"
+        hands_on: ["koan:author", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: the family, so a reader can read a job advertisement. ScyllaDB — the same data
+      # model and protocol, reimplemented, with its own performance claims that should be
+      # reported as claims. DynamoDB — a managed service with the same partition-key thinking and
+      # a different vocabulary, which is worth an honest paragraph because it is what many teams
+      # actually end up on. HBase and Bigtable, named.
+      # THE TRANSFERABLE PART, and it is the point of the episode: the partition key thinking
+      # transfers completely. Everything in Series 1 · 10 and 1 · 15 is true of all of them.
+      - n: "15"
+        slug: the-relatives
+        title: "The Relatives — Where the Partition Key Thinking Transfers Unchanged"
+        hands_on: ["koan:choose", "koan:capture"]
+        status: planned
+      - n: "20"
+        slug: project-a-model-that-survives
+        title: "Project — Design a Model That Is Still Fast After Two Years of Data"
+        hands_on: ["koan:author", "koan:predict"]
+        core: true
+        tags: ["project"]
+        status: planned

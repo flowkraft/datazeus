@@ -1,0 +1,78 @@
+---
+title: "Pushdown — the Only Optimisation That Really Matters, and How to Prove It Happened"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-trino"
+tags: []
+level: "advanced"
+module: "series2-making-it-fast"
+order: 0
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/trino/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/trino/series2/_00/PushdownKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Trino documentation (trino.io/docs) — the page that owns this topic, and above all THE CONNECTOR'S OWN PAGE, because connectors differ enormously in what they push down.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Learn SQL owns the SQL, Apache Iceberg owns the table format, Data Warehousing owns the lakehouse, Data Ops owns the cluster),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    TRINO HAS NO STORAGE. Every performance question is a question about somebody else's data layout. Say WHICH CONNECTOR each claim was verified against, and check whether a source is describing Trino or PrestoDB.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE CENTRAL EPISODE OF THE COURSE.
+     COVER: pushdown — the connector doing work at the source instead of Trino doing it after
+     the data arrives. Predicate pushdown, projection pushdown, and aggregate or limit
+     pushdown where a connector supports it.
+     WHY IT DOMINATES EVERYTHING ELSE: without pushdown a filter is applied AFTER the rows
+     cross the network, so a query that returns a thousand rows may have moved a hundred
+     million. No amount of cluster is a cure for that; it is the same argument Learn SQL,
+     Series 3 · 18 makes about filtering early, at a scale where it is the entire cost.
+     HOW TO CHECK RATHER THAN HOPE: EXPLAIN shows what the connector accepted; the connector's
+     documentation page lists what it supports; and the source-stage row count from
+     Series 1 · 20 proves it.
+     THE TRAPS THAT SILENTLY DEFEAT IT, and they are the same family Learn SQL taught: a
+     function wrapped around the column, a type that does not map cleanly across the
+     connector, and a predicate on an expression rather than on a column.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:count:scanned
+      koan file: tests/src/koans/groovy/datazeus/trino/series2/_00/PushdownKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

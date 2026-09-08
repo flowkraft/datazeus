@@ -1,0 +1,89 @@
+---
+title: "NFS — the Shared Filesystem This Academy Keeps Telling You to Use"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-storage"
+tags: []
+level: "intermediate"
+module: "series1-what-storage-is"
+order: 27
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/storage/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/storage/series1/_27/NfsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — OpenZFS docs for Series 2, the S3 API reference and MinIO's docs for Series 3, the Ceph docs for Series 4. SERIES 1 HAS NO MANUAL: it is physics, arithmetic and trade-offs, so teach the SHAPE and the orders of magnitude.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a bucket and watching a disk, Data Warehousing owns columnar layout, the engine tracks own their storage engines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    REPLICATION IS NOT A BACKUP — a delete is replicated faithfully to all three copies. DATE EVERY CONCRETE FIGURE: capacities, prices and rebuild times age faster here than anywhere else in the academy.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: encryption at rest, in three honest layers — self-encrypting drives, filesystem
+     or volume encryption (LUKS, ZFS native), and application or object-level encryption.
+     WHAT EACH ACTUALLY PROTECTS AGAINST, because the marketing blurs it: a stolen disk, yes;
+     a compromised running host, no — the key is loaded and the data is readable.
+     AND THE QUESTION THAT MATTERS MORE THAN THE ALGORITHM: WHO HOLDS THE KEY, and what
+     happens when they are unavailable? A key management story nobody has rehearsed is an
+     outage waiting for a reboot.
+     SEAM: Data Ops, Series 1 · 35 and 1 · 43 own secrets in a job and in git. This owns the
+     key that decrypts a volume.
+     ADDED. NFS is what this academy tells people to use instead of CephFS — Kubernetes for
+     Data Workloads, Series 6 · 20 and this course's own Ceph gate both point at it — and
+     nothing anywhere said how. Recommending a thing you never teach is the flaw this review
+     found twice.
+     COVER: exports on the server and a mount on the client, as a runbook on Debian, with the
+     package names. The options that matter for data work — sync against async and what async
+     is actually risking, root_squash, and the ro/rw decision.
+     WHY A DATA TEAM STILL USES IT IN 2026, said without embarrassment: several machines
+     writing to one namespace, a legacy application that opens a file, or a shared scratch
+     area. It is decades old, it is in every kernel, and for those jobs it is enough.
+     WHERE IT HURTS, and be specific: latency on many small files, and it is a SINGLE SERVER
+     unless you have built something more — so it is a shared point of failure with none of
+     the redundancy the rest of this series has been teaching.
+     THE SEAM: Series 5 · 35 is CephFS, which is this problem solved with a distributed system
+     and a great deal more machinery. That episode's own gate says most people should have
+     used NFS. This is the episode that makes that advice actionable.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/storage/series1/_27/NfsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

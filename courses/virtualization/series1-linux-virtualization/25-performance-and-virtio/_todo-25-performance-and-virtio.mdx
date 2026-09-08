@@ -1,0 +1,90 @@
+---
+title: "virtio and cache=writeback — the Setting That Can Lose a Commit"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series1-linux-virtualization"
+order: 25
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series1/_25/PerformanceAndVirtioKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the performance settings that matter, MEASURED rather than asserted, using the
+     tool Storage for Data, Series 1 · 07 already taught. Run fio in the guest and on the
+     host and compare — that is the episode.
+       VIRTIO IS NOT OPTIONAL   emulated IDE or e1000 hardware is a compatibility crutch and
+                                costs a factor, not a percentage. virtio-blk or virtio-scsi
+                                for disk, virtio-net for network, and the guest needs the
+                                drivers (which every modern Linux has and Windows does not).
+       THE DISK CACHE MODE      the setting that matters most and is understood least.
+                                `cache=none` sends writes to the disk; `cache=writeback` lets
+                                the HOST'S page cache acknowledge them. Writeback is faster
+                                and MEANS THE GUEST'S fsync CAN RETURN BEFORE THE DATA IS
+                                SAFE — which is Storage for Data, Series 2 · 00's argument,
+                                arriving in the one place a data person can actually get it
+                                wrong. A database on cache=writeback is a database that can
+                                lose committed transactions when the HOST loses power. Say
+                                this once, plainly, and make it the takeaway.
+       CPU MODEL                host-passthrough against a stable model, and the trade with
+                                live migration in Series 2 · 20 — passthrough is faster and
+                                pins you to matching hardware.
+       THE ONES TO NAME AND NOT TEACH   pinning, hugepages, NUMA and SR-IOV matter at a scale
+                                most readers are not at. One paragraph, point at the docs.
+       PCI AND GPU PASSTHROUGH  one paragraph, honest: IOMMU groups, and the fact that a
+                                passed-through device usually blocks live migration.
+     AND THE HONEST HEADLINE: CPU and memory overhead is small enough to ignore; storage and
+     network latency is where virtualization actually costs you, which is why the settings
+     above are the ones on the list.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series1/_25/PerformanceAndVirtioKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

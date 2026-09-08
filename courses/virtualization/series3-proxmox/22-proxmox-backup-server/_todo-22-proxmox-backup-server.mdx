@@ -1,0 +1,84 @@
+---
+title: "Proxmox Backup Server — Deduplication, Verify Jobs, and One File Back"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series3-proxmox"
+order: 22
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series3/_22/ProxmoxBackupServerKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: Proxmox Backup Server, which is a separate product and is genuinely the reason
+     many teams choose this ecosystem.
+       WHAT IT CHANGES: content-addressed, deduplicated, INCREMENTAL FOREVER backups. After
+       the first one, a nightly backup of a 200 GB VM transfers and stores the changed chunks
+       only. Deduplication is across all backups and all VMs, so fifty clones of one template
+       cost close to one template. The arithmetic is worth showing, because it is the
+       difference between keeping four weeks and keeping four days.
+       VERIFY JOBS: it re-reads and checksums stored chunks on a schedule and tells you when
+       a backup has rotted. That is the "prove it" half, automated, and it is rare.
+       PRUNE AND GARBAGE COLLECTION: retention as keep-daily / keep-weekly / keep-monthly,
+       and the fact that pruning marks and GC frees — so space does not come back until GC
+       runs, which surprises everybody once.
+       SINGLE-FILE RESTORE: browse into a backup and pull one file out without restoring the
+       whole VM. THE WORKPLACE MOMENT: somebody deleted one configuration file, or one CSV,
+       and you are not restoring 200 GB to get it back.
+       ENCRYPTION client-side, and where the key lives — because a key stored only on the
+       machine being backed up is not a key.
+     WHERE TO PUT IT: NOT ON THE HOST IT BACKS UP. A separate machine, and ideally a copy of
+     the datastore off-site — sync jobs to a second PBS or to the S3-compatible storage in
+     Data Ops, Series 1 · 47.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series3/_22/ProxmoxBackupServerKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

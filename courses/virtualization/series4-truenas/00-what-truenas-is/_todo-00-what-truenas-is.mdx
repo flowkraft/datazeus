@@ -1,0 +1,85 @@
+---
+title: "TrueNAS — ZFS as an Appliance, and Why You Do Not Edit the Config Files"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series4-truenas"
+order: 0
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series4/_00/WhatTruenasIsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: what it is, and the rule that makes it different from everything else in this
+     course and in this academy.
+       WHAT IT IS: ZFS, plus a management API and web interface, plus the sharing protocols,
+       packaged as an appliance. The modern line is Linux-based (formerly branded SCALE) and
+       the older one was FreeBSD-based; ⚠ THE EDITION NAMES HAVE CHANGED RECENTLY — check the
+       current naming and the release you are writing against, and say it in the lesson.
+       WHY IT IS IN A VIRTUALIZATION COURSE: because Series 2 · 07 said a pool needs shared
+       storage and Series 3 · 12 said the alternative is replication with a real recovery
+       point objective. This is the box that answers the first, and it is the commonest
+       answer in a small estate.
+     AND THE APPLIANCE RULE, WHICH IS THE OPPOSITE INSTINCT TO THE REST OF THIS ACADEMY AND
+     MUST BE STATED IN THE FIRST EPISODE: YOU CONFIGURE IT THROUGH THE UI OR THE API, NOT BY
+     EDITING FILES OVER SSH. The configuration lives in a database that generates the config
+     files, so hand edits are overwritten on the next change and lost on upgrade. The root
+     filesystem is treated as replaceable.
+       THE COROLLARY THAT MAKES IT BEARABLE: `midclt` gives you the same API from the shell,
+       so scripting is fully supported — through the API, which is the point.
+       AND WHEN THE RULE MEANS "USE SOMETHING ELSE": if what you want requires apt and a
+       config file, you did not want an appliance. Debian and Storage for Data, Series 2 is
+       that path, and Series 4 · 25 is where the reader decides.
+     ⚠ SAY THE WHOLE SERIES RUNS NESTED with a handful of small virtual disks.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series4/_00/WhatTruenasIsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

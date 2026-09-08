@@ -1,0 +1,81 @@
+---
+title: "System Containers — LXC, Incus, and Why This Is Not Docker"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series1-linux-virtualization"
+order: 10
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series1/_10/LxcAndIncusKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the distinction almost nobody is taught, and it is the reason this episode exists
+     in a course whose readers all already know Docker.
+       AN APPLICATION CONTAINER  one process, no init, no ssh, no cron, immutable, thrown
+                                 away and rebuilt. Docker. Data Ops, Series 1 · 37 owns it.
+       A SYSTEM CONTAINER        a full userspace with its own init, its own systemd, its own
+                                 package manager, its own logs and users. It behaves like a
+                                 small VM and you keep it for a year. LXC and Incus.
+     WHY A DATA TEAM WANTS THE SECOND KIND: a per-developer Postgres they can ssh into, a
+     build box, a legacy tool that expects to be a machine, an environment somebody needs to
+     poke at. Density is the reason it is not just a VM — forty system containers on one host
+     is unremarkable and forty VMs is not.
+     ⚠ AND THE NAMING, WHICH IS GENUINELY CONFUSING AND MUST BE STATED PLAINLY WITH DATES:
+     LXC is the low-level tooling. LXD was the friendly manager built on it; in 2023 it moved
+     under Canonical and the original maintainers forked it as INCUS under the Linux
+     Containers project. Debian ships Incus. Say which one the lesson uses, say which one the
+     reader's distribution ships, and check both before writing — this is a live situation
+     and a lesson that names the wrong one is useless at the command line.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:process:tool
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series1/_10/LxcAndIncusKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

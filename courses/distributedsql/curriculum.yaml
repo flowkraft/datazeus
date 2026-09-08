@@ -1,0 +1,361 @@
+# The ordered episode list for Distributed SQL. Field docs live in
+# courses/learnsql/curriculum.yaml. `short` is omitted until an episode has a video.
+#
+# The job this track teaches: decide whether your workload needs a relational database spread
+# across machines, and know what that decision costs before anybody installs one.
+#
+# ============================================================================
+# THIS IS A CONCEPTS TRACK. IT TEACHES NO PRODUCT.
+# ============================================================================
+# REWRITTEN 2026-09-07, and the reason is worth recording because the first version made the
+# mistake this header now forbids. It was named for the category and taught CockroachDB in
+# fifteen of eighteen episodes — a product course wearing a concepts name, which is exactly the
+# thing the shelf's naming convention exists to prevent. The product half is now its own track,
+# CockroachDB, and this one keeps the decisions.
+#
+# THE SPLIT, and it should be legible in every episode:
+#   HERE            what the category is, what it costs, what changes in a schema, and which
+#                   of the four products chose which compromise. Every product is an EXAMPLE.
+#   COCKROACHDB     the cluster you start, the console you read, the retry error you catch,
+#                   the schema you fix. Everything hands-on.
+#
+# NO EPISODE HERE MAY REQUIRE A PARTICULAR PRODUCT TO BE INSTALLED. If a beat only works by
+# running something, it belongs in the other track. That constraint is what keeps this course
+# honest, and it is also what makes it short.
+#
+# ============================================================================
+# WHY IT IS FILED WITH THE RELATIONAL ENGINES
+# ============================================================================
+# Tables, SQL, foreign keys, serializable transactions. NoSQL Concepts, Series 4 · 05 names this
+# category as the thing that took back NoSQL's strongest argument — you no longer have to
+# abandon the relational model to spread writes across machines — and points here.
+#
+# What changed is WHERE THE ROWS LIVE and WHAT A COMMIT COSTS. Both change enough that a schema
+# which is correct on PostgreSQL can be badly wrong here, and that is the whole subject.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# A COMMIT IS A CONVERSATION BETWEEN MACHINES. Once that sentence is in the reader's head, the
+# primary-key advice, the retry loop, the index cost and the latency numbers all follow from it
+# rather than arriving as a list of rules to memorise.
+#
+# THE SECOND ONE, which decides most adoptions badly: "PostgreSQL compatible" is a wire protocol
+# and a dialect, NOT A PROMISE OF BEHAVIOUR. The driver connects and the ORM is happy, and then
+# a transaction that never retried now has to.
+#
+# ============================================================================
+# THERE IS NO OFFICIAL DOCUMENTATION TO FOLLOW — THE STATED EXCEPTION
+# ============================================================================
+# The same exception as NoSQL Concepts and Database X vs Database Y, and for the same reason:
+# no neutral manual describes this category, and every document that tries was written by one of
+# the vendors in it.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# SO THE SOURCING RULE IS STRICTER, NOT LOOSER. Every claim about a product comes from THAT
+# PRODUCT'S OWN CURRENT DOCUMENTATION, with the version and the EDITION stated, on the day of
+# writing. A vendor's comparison page is a source ABOUT a claim, never the claim.
+#
+# ⚠ LICENCES, EDITIONS AND WHAT IS FREE MOVE FAST IN THIS CATEGORY, and have changed more than
+# once for more than one of these products. This is the track most likely to teach something
+# that was true last year. Check pricing and licence pages, not blog posts.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT BOTH RULES.
+
+course: learn-distributed-sql
+track: distributedsql
+title: Distributed SQL
+
+prerequisites:
+  - course: learn-postgresql
+    needs: "Series 1, and Series 2"
+    why: >-
+      Every decision in this track is a decision you already know how to make on one machine,
+      changed by the rows being spread across several. Series 2 there is indexes, plans and
+      statistics, and Series 2 here is what happens to each of them.
+
+excludes:
+  - topic: "Any one product, hands-on"
+    where: "covered in CockroachDB, which is this category taught as a running cluster and assumes this course. Here every product is an example of a compromise, never the subject"
+  - topic: "SQL itself"
+    where: "covered in Learn SQL. This track changes where the rows are, not the language"
+  - topic: "The non-relational data models"
+    where: "covered in NoSQL Concepts, and NoSQL Concepts, Series 4 · 05 names this category and points here. This is the relational answer to the same pressure"
+  - topic: "Consensus, quorums and CAP as distributed-systems theory"
+    where: "covered in NoSQL Concepts, Series 3. In this course, Series 1 · 15 covers only what consensus does to one of your commits"
+  - topic: "Operating a cluster — provisioning, monitoring, capacity, on-call"
+    where: "covered in Data Ops for the discipline"
+  - topic: "Analytical workloads and warehousing"
+    where: "covered in Data Warehousing, and ClickHouse for the engine. These systems are built for transactional work spread across machines, and a large analytical query is not what they are for"
+
+series:
+  - slug: series1-the-problem-and-the-idea
+    title: The Problem, and the Idea
+    tagline: the ceiling, what was tried first, and what a commit becomes
+    level: intermediate
+    episodes:
+      # COVER: the ceiling, before any product. A single primary accepts every write, and
+      # vertical scaling ends at the largest machine you can rent — Data Ops, Series 1 · 46
+      # already priced those, so give the reader real numbers rather than an abstraction.
+      # WHAT DOES NOT RAISE IT: read replicas add read capacity and no write capacity. Say that
+      # early, because "we added replicas and it is still slow" is where many readers arrive
+      # from.
+      - n: "00"
+        slug: the-ceiling
+        title: "The Ceiling — One Primary, and Why You Cannot Buy Your Way Past It"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the three reasons teams actually adopt this, and only one is the famous one.
+      #   WRITE THROUGHPUT   the argument everyone quotes and the rarest in practice.
+      #   SURVIVABILITY      the cluster keeps serving when a node, a zone or a region goes,
+      #                      with no failover procedure and no promotion decision made under
+      #                      pressure. Data Ops, Series 2 · 45 is the job this removes.
+      #   DATA LOCALITY      rows that must physically stay in a jurisdiction, served locally,
+      #                      inside one logical database.
+      # THE EPISODE'S ACTUAL WORK: make the reader name WHICH ONE is driving their case, out
+      # loud. Adopting this for throughput they do not have is the commonest way to buy a
+      # latency floor for nothing, and it is a decision usually made from a conference talk.
+      - n: "05"
+        slug: three-reasons
+        title: "Three Reasons Teams Adopt This — and Only One Is Throughput"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: what came before, because the reader's team has probably already done two of them
+      # and the history explains the category better than any definition.
+      #   READ REPLICAS        reads scale, writes do not, and staleness arrives.
+      #   MANUAL SHARDING      it works. It costs cross-shard joins, cross-shard transactions,
+      #                        and a rebalancing project every eighteen months — and the
+      #                        application now contains the routing logic.
+      #   SHARDING MIDDLEWARE  Vitess over MySQL, Citus over PostgreSQL: the sharding made
+      #                        somebody else's problem while the engine stays familiar.
+      # DISTRIBUTED SQL AS THE FOURTH ANSWER, and framed as a trade rather than a triumph: the
+      # database does the sharding and the transactions, and you accept a latency floor and a
+      # smaller pool of people who have run one.
+      - n: "10"
+        slug: what-was-tried-first
+        title: "Replicas, Manual Shards and Middleware — What Teams Do Before This"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the mechanism, at exactly the depth a schema author needs and no further. A table
+      # is cut into RANGES by key order; each range is replicated an odd number of times; the
+      # replicas agree by consensus, so a write is acknowledged once a majority has it.
+      # THE SENTENCE THE WHOLE TRACK HANGS ON: A COMMIT IS A CONVERSATION BETWEEN MACHINES.
+      # A write is no longer a local disk flush — it is at least one network round trip to a
+      # majority. That is not a defect; it is what you are buying in exchange for surviving a
+      # node loss with no data loss and no promotion decision.
+      # WHAT MUST FOLLOW, and every Series 2 episode is one of these: writes have a floor, keys
+      # decide which machines are in the conversation, and every index is another conversation.
+      # SEAM: NoSQL Concepts, Series 3 · 05 owns quorum arithmetic as theory. This owns what it
+      # does to one of your commits, and should not re-derive it.
+      - n: "15"
+        slug: what-a-commit-becomes
+        title: "Consensus, in One Episode — Why a Commit Becomes a Conversation"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-do-you-have-the-problem
+        title: "Project — Decide Whether Your Workload Actually Has This Problem"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-what-changes-in-your-schema
+    title: What Changes in Your Schema
+    tagline: keys, transactions, indexes and joins, all changed by distance
+    level: advanced
+    episodes:
+      # THE CENTRAL EPISODE OF THE TRACK.
+      # COVER: on one machine a primary key is an identity and an index. Here it is also a
+      # PLACEMENT DECISION, because ranges are cut by key order — so the key decides which rows
+      # sit together, which machines serve them, and whether load spreads.
+      # THE TWO OUTCOMES: rows READ together sharing a range is a win, because one request
+      # touches one machine. Rows WRITTEN together sharing the newest range is a loss, because
+      # every writer queues behind one replica group.
+      # THE CALLBACK WORTH MAKING: NoSQL Concepts, Series 3 · 00 said the partition key is the
+      # decision everything inherits, and Cassandra says it in CQL. Here it wears a PRIMARY KEY,
+      # which is precisely why a relational reader walks straight past it.
+      - n: "00"
+        slug: the-key-is-placement
+        title: "The Primary Key — Now a Placement Decision, Not Just an Identity"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the specific failure that follows, and it is the same failure in three products,
+      # which is why it belongs in a concepts course rather than a product one.
+      # A SEQUENTIAL KEY — a serial, an auto-increment, a timestamp — means every insert sorts
+      # to the end, lands in the last range, and one machine takes the whole write load while
+      # the rest idle. The cluster is busy and slow and the dashboards look fine.
+      # THE SAME SHAPE, THREE NAMES: Cassandra's hot partition, MongoDB's monotonic shard key,
+      # this. A reader who sees the pattern stops making it in the fourth product too, and that
+      # transferability is the argument for teaching it here.
+      # THE FIXES AND THEIR COSTS: random keys spread and lose natural ordering; a hash-sharded
+      # index keeps the ordering and spreads the writes; a compound key with a varied leading
+      # part works when one exists. And the trade to state plainly — spreading the writes can
+      # scatter the range scans you wanted.
+      - n: "05"
+        slug: the-sequential-key-problem
+        title: "The Sequential Key — One Mistake, Three Products, Dashboards That Look Fine"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: the reason many teams are here at all, and the one that has nothing to do with
+      # scale. Rows pinned to a region, tables replicated everywhere, or partitioned by a
+      # locality column — so a European customer's row is served from Europe and a regulator's
+      # requirement becomes a schema property rather than a second deployment.
+      # SURVIVAL GOALS in the same breath: surviving a node is cheap; surviving a region needs
+      # replicas far enough apart that every write pays the distance. YOU ARE CHOOSING BETWEEN
+      # LATENCY AND HOW MUCH FAILURE YOU SURVIVE, per table — and this category makes that
+      # explicit where a single-node database never asks the question at all.
+      - n: "10"
+        slug: locality-and-survival
+        title: "Locality and Survival Goals — Latency Against How Much Failure You Survive"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # THE EPISODE THAT CHANGES APPLICATION CODE, and the one migrations trip over.
+      # COVER: these systems typically default to SERIALIZABLE — stronger than the read
+      # committed that Data Ops, Series 2 · 05 taught on PostgreSQL. That is a correctness
+      # upgrade nobody asked for and mostly wants.
+      # THE PRICE: under contention the database aborts a transaction with a RETRYABLE ERROR and
+      # expects the client to try again. On a single node that class of error effectively did not
+      # exist, so existing application code does not handle it — and the failure surfaces as rare
+      # production errors nobody can reproduce.
+      # WHAT TO ACTUALLY DO, and it is architecture rather than a setting: wrap transactions in a
+      # retry loop with backoff, keep them short, and never hold one open across a user's think
+      # time or an external call. Most drivers ship a helper; know what it does.
+      # SAY THE MIGRATION COST OUT LOUD: this is the line item people leave out of the proposal.
+      - n: "15"
+        slug: transactions-become-retryable
+        title: "Transactions Become Retryable — the Application Change Nobody Budgets For"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: two things whose economics invert together.
+      #   INDEXES   on one machine a secondary index costs disk and some write amplification.
+      #             Here it is its own set of ranges with its own replica groups, so an insert
+      #             touching three indexes coordinates with three groups — a multiple, not a
+      #             percentage. Hence: fewer, wider indexes; covering columns so a read is one
+      #             lookup rather than a hop to another machine; and real willingness to delete
+      #             indexes nobody uses. Learn SQL, Series 3 · 25 said an index has a cost; this
+      #             is that sentence with a far larger number in it.
+      #   JOINS     the question is WHICH SIDE MOVES. A small table can be sent everywhere; a
+      #             large one cannot, so both sides redistribute by the join key. Co-locating
+      #             tables that are always joined turns a distributed join into a local one, and
+      #             that is a design-time decision rather than a tuning one.
+      - n: "20"
+        slug: indexes-and-joins
+        title: "Indexes and Joins When the Rows Are Spread — Which Side Moves, and What It Costs"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-predict-what-breaks
+        title: "Project — Take a Working Schema and Predict Which Decisions Break"
+        hands_on: ["koan:author", "koan:predict"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-the-landscape-and-the-decision
+    title: The Landscape, and the Decision
+    tagline: the four, the other route, physics, and the honest gate
+    level: advanced
+    episodes:
+      # COVER: the four, fairly, each in terms of the compromise it chose rather than a ranking.
+      #   COCKROACHDB   PostgreSQL wire protocol and dialect, its own storage and query layer.
+      #                 This academy's CockroachDB track is the hands-on version.
+      #   YUGABYTEDB    PostgreSQL compatibility taken further by reusing the upstream query
+      #                 layer, with distributed storage underneath.
+      #   TIDB          MySQL-compatible, and notable for pairing transactional storage with a
+      #                 columnar replica — a different answer to this course's own analytics
+      #                 exclusion.
+      #   SPANNER       the origin of the category and the paper everyone cites; managed only,
+      #                 using synchronised clocks where the others use more messages.
+      # THE TRANSFERABLE PART, which is the point of the episode: ranges, placement by key,
+      # consensus writes and retryable transactions are true of all four. Say that, instead of
+      # producing a scorecard that will be wrong within a year.
+      # ⚠ VERIFY EDITIONS, LICENCES AND WHAT IS ACTUALLY FREE, on the day, from each vendor's
+      # own pages.
+      - n: "00"
+        slug: the-four
+        title: "The Four — What CockroachDB, YugabyteDB, TiDB and Spanner Each Chose"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the adjacent route, properly rather than dismissively, because for many teams it
+      # is the better answer. Vitess over MySQL and Citus over PostgreSQL keep the engine you
+      # already run, already back up and already know, and add sharding on top.
+      # WHAT YOU KEEP: the engine's ecosystem, its extensions, its operational knowledge, and no
+      # rewrite of your transactions.
+      # WHAT YOU DO NOT GET: transparent cross-shard transactions with the same guarantees, and
+      # a single logical database that behaves like one everywhere.
+      # THE DECIDING QUESTION: is your data naturally partitionable by one column — a tenant, a
+      # customer — with almost no queries crossing it? Then middleware is often simpler and
+      # cheaper than a new database.
+      - n: "05"
+        slug: the-other-route
+        title: "Sharding Middleware — Keeping the Engine You Already Operate"
+        hands_on: ["koan:choose", "koan:predict"]
+        status: planned
+      # COVER: the managed and serverless offerings, and the fact that this is how most readers
+      # will actually meet the category — nobody in a data team is standing up a five-node
+      # cluster themselves any more.
+      # WHAT MANAGED REMOVES: the upgrade, the rebalancing, the capacity planning, the on-call.
+      # WHAT "SERVERLESS" ACTUALLY MEANS HERE, and it needs saying because the word is doing
+      # marketing work: separated storage and compute, scale-to-zero or near it, and BILLING BY
+      # REQUEST — which turns a bad access pattern into an invoice rather than a slow query, and
+      # makes cost a design input in a way it never was on a rented machine.
+      # THE LOCK-IN QUESTION, asked plainly: what would moving off cost, and can you get your
+      # data out in a form another engine reads?
+      - n: "10"
+        slug: managed-and-serverless
+        title: "Managed and Serverless — When a Bad Access Pattern Becomes an Invoice"
+        hands_on: ["koan:choose", "koan:capture"]
+        status: planned
+      # COVER: the constraint nothing engineers away. Within a datacentre, consensus costs
+      # sub-millisecond to a few milliseconds. ACROSS CONTINENTS IT IS TENS OF MILLISECONDS AND
+      # PHYSICS SETS IT — the speed of light in fibre is a number you can compute, and a chatty
+      # transaction crossing a region on every statement will never be fast.
+      # THE DESIGN RESPONSES, in order: fewer and larger statements; keep a transaction's rows
+      # in one region; use follower or stale reads where slightly old is acceptable — which is
+      # NoSQL Concepts, Series 3 · 15's trade arriving inside a relational database.
+      # THE POINT TO LAND: latency here is a PROPERTY OF YOUR SCHEMA AND YOUR TRANSACTION SHAPE,
+      # not of the vendor. Choosing a different product does not repeal geography.
+      - n: "15"
+        slug: the-latency-floor
+        title: "The Latency Floor — Physics, and the Chatty Transaction Nothing Can Fix"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # THE EPISODE THIS TRACK OWES ITS READER, placed before the project so the project can be
+      # judged against it.
+      # COVER: one PostgreSQL on a large machine handles far more than most proposals assume,
+      # and Data Ops, Series 2 exists to get you there. Before adopting a cluster: have you
+      # actually hit a write ceiling, or an unindexed query? Is the requirement throughput, or
+      # survivability, or locality — Series 1 · 05's question, asked again now that the reader
+      # knows the price?
+      # THE COSTS FOR THE SCALE: a latency floor on every write, forever; application changes
+      # for retries; a smaller pool of people who have operated one; and a compatibility surface
+      # you must keep re-checking.
+      # AND WHERE IT IS GENUINELY RIGHT, stated without hedging, because a gate episode that only
+      # says no is as useless as marketing that only says yes: multi-region with local reads,
+      # regulatory residency inside one logical database, zero-touch survival of a zone loss, and
+      # write volume a single primary truly cannot take.
+      - n: "20"
+        slug: when-you-do-not-need-this
+        title: "When You Do Not Need This — One Postgres Goes Further Than the Proposal Says"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-the-decision-memo
+        title: "Project — Write the Memo, With the Latency Number In It"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        tags: ["project"]
+        status: planned

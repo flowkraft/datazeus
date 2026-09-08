@@ -1,0 +1,109 @@
+---
+title: "Do You Need ZFS — and the Simpler Things That Would Have Worked"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-storage"
+tags: []
+level: "advanced"
+module: "series2-filesystems-and-zfs"
+order: 22
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/storage/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/storage/series2/_22/DoYouNeedZfsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — OpenZFS docs for Series 2, the S3 API reference and MinIO's docs for Series 3, the Ceph docs for Series 4. SERIES 1 HAS NO MANUAL: it is physics, arithmetic and trade-offs, so teach the SHAPE and the orders of magnitude.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a bucket and watching a disk, Data Warehousing owns columnar layout, the engine tracks own their storage engines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    REPLICATION IS NOT A BACKUP — a delete is replicated faithfully to all three copies. DATE EVERY CONCRETE FIGURE: capacities, prices and rebuild times age faster here than anywhere else in the academy.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     ALSO OWNS THE GATE, added in the same review that found every other series in this
+     academy has one and this did not. WHEN NOT ZFS:
+       it wants RAM, and on a small box the ARC competes with the database you are running;
+       A POOL CANNOT BE SHRUNK, and vdevs largely cannot be removed — a layout mistake is
+         permanent in a way ext4 never is;
+       the licence keeps it out of the mainline kernel, so it is a module your distribution
+         may or may not make easy, and a kernel upgrade can break it;
+       and if you have hardware RAID underneath, ZFS cannot see the disks and its whole
+         self-healing argument evaporates — which is the commonest way people get none of
+         the benefit and all of the complexity.
+     SAY IT PLAINLY: on a rented VM with one virtual disk, ext4 or XFS is the right answer and
+     this series is background reading.
+     ADDED after a review asked whether each series ENDS on "do you actually need this".
+     It did not. ZFS's gate was a paragraph inside 20, a tuning episode — which is the wrong
+     place twice over: buried, and read before the reader knows what the thing costs.
+     NINE OTHER COURSES IN THIS ACADEMY END THIS WAY, before the project, so the project can
+     be judged against it — Neo4j, Trino, Kubernetes, Distributed SQL, Spark. This series now
+     matches them.
+     WHY AT THE END AND NOT ONLY AT THE START: at 02 "ZFS has real overhead" is an assertion a
+     reader cannot weigh. Here they have created a pool, chosen a layout they cannot change,
+     replaced a disk, and watched a resilver. NOW the cost is a thing they have felt, and the
+     decision is theirs to make honestly.
+     THE INSTINCT TO TEACH, and state it as the rule: USE THE MINIMUM THAT GETS YOU WHAT YOU
+     ACTUALLY NEED. Walk the ladder DOWNWARDS, and make the reader say which rung they are on:
+       INTEGRITY YOU CAN PROVE   ZFS is genuinely close to alone here. If silent corruption
+                                 matters — and for a warehouse it should — this is the reason,
+                                 and it is the only one that cannot be bought elsewhere.
+       CHEAP SNAPSHOTS           LVM has them and they are worse; btrfs has them; a rented
+                                 volume has them at the hypervisor. If snapshots are the whole
+                                 requirement, you may already have them.
+       REDUNDANCY                mdadm with ext4 or XFS does this, ships in every kernel, and
+                                 needs no DKMS. It cannot self-heal, which is the trade.
+       COMPRESSION               and here is the point a data reader must not miss: YOUR
+                                 WAREHOUSE ALREADY COMPRESSES AND ALREADY CHECKSUMS. Parquet
+                                 and ClickHouse both do. So ZFS's compression is not the
+                                 argument for a warehouse box — its snapshots and its pool
+                                 management are.
+       NOTHING BUT A FILESYSTEM  ext4. Stop. This is the right answer more often than this
+                                 series' existence implies, and saying so is what makes the
+                                 rest of it trustworthy.
+     THE COSTS THE READER NOW KNOWS, listed back to them: a DKMS module rebuilt against every
+     kernel upgrade on Debian; RAM the ARC will take; a pool that cannot shrink; and the
+     layout decisions from 07 that are permanent.
+     THE HONEST RECOMMENDATION SHAPE: disks you own, data you cannot silently corrupt, and
+     snapshots you want to be free — ZFS. Anything less than all three — probably not.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/storage/series2/_22/DoYouNeedZfsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

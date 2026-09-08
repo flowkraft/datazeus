@@ -1,0 +1,82 @@
+---
+title: "Boot Environments — the Rollback That Is Just a Reboot, and the Flags You Must Not Set"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series4-truenas"
+order: 24
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series4/_24/UpgradesAndBootEnvironmentsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: upgrades, and the feature that makes this the least frightening upgrade in the
+     whole course.
+       BOOT ENVIRONMENTS: the upgrade installs alongside the running system, and if it goes
+       badly YOU REBOOT INTO THE PREVIOUS ONE and you are back. That is a genuine rollback,
+       which Series 3 · 27 could not offer, and it is worth naming as a real advantage of the
+       appliance model.
+       RELEASE TRAINS and the discipline of not being on the newest one for a production
+       storage box. Read the release notes; this product's major releases have moved
+       substantial things.
+       EXPORT THE CONFIGURATION BEFORE EVERY UPGRADE, and keep it somewhere that is not this
+       machine. It is one button and it is the difference between a reinstall and a disaster.
+       ZFS POOL FEATURE FLAGS: upgrading the pool after upgrading the system is OPTIONAL,
+       IRREVERSIBLE, and it can stop an older system from importing that pool. Do not do it
+       reflexively because the UI suggests it. Storage for Data, Series 2 · 02 has the
+       background.
+       AND THE APPLIANCE RULE COLLECTING ITS DEBT: anything you changed by hand over ssh is
+       gone now. This is the episode where Series 4 · 00's rule is proved rather than
+       asserted.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series4/_24/UpgradesAndBootEnvironmentsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

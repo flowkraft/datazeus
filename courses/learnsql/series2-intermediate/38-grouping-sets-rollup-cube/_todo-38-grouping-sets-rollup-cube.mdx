@@ -1,0 +1,109 @@
+---
+title: "GROUPING SETS, ROLLUP & CUBE — Subtotals and Grand Totals in One Pass"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-sql"
+tags: []
+level: "intermediate"
+module: "series2-intermediate"
+order: 38
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build.
+    Drop the _todo- prefix when it becomes a real lesson.
+
+    READ FIRST: courses/learnsql/curriculum.yaml's header — it is the field
+    documentation the whole academy points at. Then read the comment ABOVE THIS
+    EPISODE in that file, which is the authority on coverage.
+
+    THE HOUSE METHOD, from the lessons already written:
+      - type the query yourself; copy-paste teaches your eyes only
+      - PREDICT the answer before running it, out loud, then run it
+      - every query runs on the Northwind that ships with DataPallas
+      - the koans mirror the lesson beat for beat
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: produce a report with per-group totals, subtotals and a grand total from one
+    query and one pass over the data, and label the subtotal rows correctly.
+    WHY IT EXISTS AT ALL: Series 1 · 30's comment promised GROUPING SETS "in a later
+    series" and no later series delivered. An audit found the whole family absent from
+    every curriculum in the academy.
+    WHY IT SITS AT 38, RIGHT AFTER UNION: the reader has just learnt to stack result sets,
+    so they can feel exactly what this replaces — three queries UNION ALLed together,
+    reading the same table three times to build one report.
+
+    ── COVER, IN THIS ORDER ────────────────────────────────────────────────
+      GROUPING SETS   the explicit list — you name each grouping you want and the engine
+                      reads the source once. START HERE, not with ROLLUP: it is the
+                      general form and the other two are shorthands for it.
+      ROLLUP(a,b,c)   the hierarchical shorthand: (a,b,c), (a,b), (a), (). Built for
+                      natural hierarchies — year/quarter/month, country/region/city.
+      CUBE(a,b)       every combination, 2^n of them. Say the cost out loud: CUBE over
+                      four columns is sixteen groupings and most reports want three.
+
+    ── THE TRAP, AND IT IS WHY THIS IS NOT A SYNTAX TOUR ───────────────────
+    A SUBTOTAL ROW CARRIES NULL IN THE COLUMN IT IS TOTALLING OVER, and that NULL is
+    indistinguishable from a real NULL in the data. On a table where region is sometimes
+    blank, the report shows two rows that look identical and mean completely different
+    things — "the rows with no region" and "all regions". Nothing warns you.
+
+      GROUPING(col)   returns 1 for the superaggregate NULL, 0 otherwise
+      GROUPING_ID()   packs several into one number, for ordering and filtering
+      the labelling idiom to leave them with:
+        CASE WHEN GROUPING(category) = 1 THEN 'All categories' ELSE category END
+
+    This is Series 1 · 45's three-valued logic arriving through a door nobody is watching.
+    Make that callback explicit.
+
+    Then ORDER BY, briefly: a result with subtotals interleaved is unreadable unless you
+    sort it deliberately, usually by GROUPING_ID and then by the columns.
+
+    ── PORTABILITY, SAID HERE RATHER THAN DEFERRED ─────────────────────────
+    PostgreSQL, Oracle, SQL Server and Db2 have all three. MYSQL HAS ONLY
+    `GROUP BY ... WITH ROLLUP` — a suffix rather than a function, with no GROUPING SETS
+    and no CUBE — and GROUPING() from 8.0. Say it here, because a reader on MySQL will
+    otherwise type something that does not parse. Series 4 owns dialects; this is a
+    pointer, not a second lesson.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:equivalent
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_38/GroupingSetsRollupCubeKoans.groovy
+
+    `equivalent` is the spine: write the UNION ALL version and the GROUPING SETS version
+    and prove they return the same rows. `predict` on where the NULLs land — nobody gets
+    that right the first time.
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. The published lessons all open this way;
+    keep it. Never "SELECT is used to…". Always "your boss asks…". */}
+
+TODO
+
+## TODO — the SQL
+
+{/* BEAT 2 — the keywords, one at a time, each with a query the reader types.
+    Every query runs on Northwind. Predict, then run. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns its
+    place by preventing a number that is wrong and looks right.
+    The one to write: the total that is right and the subtotal that is not. Somebody
+    UNIONed the detail and the grand total and then added a category filter to only one
+    half — or read a real NULL region as the "all regions" row and reported the same
+    money twice. Both look plausible on a slide, which is how they survive. */}
+
+TODO

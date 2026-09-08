@@ -1,0 +1,86 @@
+---
+title: "XCP-ng — Xen, a Fork of XenServer, and the Licence Renewal That Sells It"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series2-xcp-ng"
+order: 0
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series2/_00/WhatXcpNgIsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: what it is and where it came from, because the lineage explains the product.
+       IT IS XEN, and Xen is a TYPE-1 hypervisor — it boots before Linux does, and what you
+       log into is dom0, a privileged VM that manages the others. That is a genuinely
+       different architecture from Series 1, where Linux is the host and KVM is a module in
+       it, and the difference shows up everywhere: in what dom0 is for, in how you patch, and
+       in why you do not install things on it.
+       IT IS A FORK OF CITRIX XENSERVER, open source, driven by Vates. Say this plainly — a
+       reader will meet XenServer documentation and needs to know why it looks familiar.
+     XEN AGAINST KVM, IN ONE HONEST PARAGRAPH AND NOT A HOLY WAR: both are mature, both are
+     in production at enormous scale, performance differences are workload-specific and
+     smaller than the internet suggests. THE REAL DECISION IS THE MANAGEMENT PLANE AND THE
+     ECOSYSTEM AROUND IT, not the hypervisor, and this course says so once here so it never
+     has to be argued again.
+     THE WORKPLACE MOMENT THAT PUTS THIS PRODUCT ON THE TABLE, and it is the same one every
+     time: the per-socket licence renewal arrived and it has a new number on it. VMware and
+     Hyper-V are named here as context — this is what a team is usually migrating FROM — and
+     not taught, per this course's excludes.
+     AND WHO IT IS FOR: an organisation that wants a hypervisor PLATFORM with a support
+     contract available, rather than a Linux box it also runs VMs on. If that distinction
+     does not describe you, Series 3 probably does.
+     ⚠ SAY HERE THAT THE WHOLE SERIES RUNS NESTED, in a single VM with 8–16 GB, with the
+     nested-virtualization flag named.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      eyes
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series2/_00/WhatXcpNgIsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

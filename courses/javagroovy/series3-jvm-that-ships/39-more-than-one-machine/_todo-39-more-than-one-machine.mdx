@@ -1,0 +1,93 @@
+---
+title: "When One Machine Is Not Enough — What Changes, and What Breaks"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-java-groovy"
+tags: []
+level: "advanced"
+module: "series3-jvm-that-ships"
+order: 39
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build
+    and out of your way. Drop the _todo- prefix when it becomes a real lesson.
+
+    Delete each comment below as its beat is filled in.
+
+    READ FIRST: courses/javagroovy/curriculum.yaml's header. It carries the
+    track-level decisions this episode is one instance of — the koan rules, the
+    Java-or-Groovy rule, the ordering rationale and the title rules. Then read
+    the comment ABOVE THIS EPISODE in that file, which is the authority on
+    coverage.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    One of FOUR episodes on parallelism, 36 to 39, placed after 35 "Measure
+    Before You Change Anything" because parallelism is a change and 35 is how
+    you find out whether you need it. Series 3 reads: ships → measure →
+    parallelise → project.
+      before:  Partitioned Work — Splitting Rows and Combining Answers
+      THIS:    When One Machine Is Not Enough — What Changes, and What Breaks
+      after:   Project — A Job That Reads, Transforms, Loads and Reports
+
+    CONCEPTS AND PATTERNS BEFORE ANY FRAMEWORK. Series 4 has Spring Batch and
+    Beam and both are answers; this block is the question, and every episode
+    must be readable by someone who will use neither.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: say whether work can cross machines at all, and what has to be true before it does.
+    DECISION: the third level, and the handover. Everything here is a concept — this track cannot run a cluster and should not pretend to. It ends the block and hands Series 4 its reason to exist.
+
+    ── COVER ───────────────────────────────────────────────────────────────
+      THE WORK MUST PARTITION      into units that do not need to see each other. If unit 7 needs a
+                                   number unit 3 computed, that is not a partition, it is a pipeline
+                                   stage — and the distinction decides whether any of this is possible.
+      STATE CANNOT BE A VARIABLE   38's per-partition result becomes a database row, a file, or a
+                                   reduce step somebody has to run.
+      FAILURE IS PARTIAL           three partitions finished and one died, and a restart must not redo
+                                   the three. Idempotency — ETL & Data Pipelines, Series 1 - 30 — plus
+                                   a checkpoint of what completed.
+      SOMETHING MUST COORDINATE    hand out partitions, notice a dead worker, decide when the job is
+                                   done. Naming that job is what makes the frameworks legible.
+      THE GATE AGAIN               one large machine goes a very long way, and Data Ops, Series 1 - 46
+                                   priced them. Most jobs that reach for a cluster needed an index or a
+                                   partitioned file layout.
+      THE HANDOVER                 one line each: Series 4 - 27 Spring Batch partitions and restarts;
+                                   Series 4 - 28 Beam describes the work and lets a runner place it;
+                                   Apache Spark is the answer when one machine genuinely is not enough.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/javagroovy/series3/_39/MoreThanOneMachineKoans.groovy
+
+    `choose` on four jobs: which of them can cross machines, and what would have to change.
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## TODO — the constructs
+
+{/* BEAT 2 — one at a time, each with code the reader types and runs. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns
+    its place by preventing a number that is wrong and looks right, or a job
+    that fails in a way nobody can read.
+    The one to write: the distributed job that reruns everything after one worker died, because nobody checkpointed — so a nine-hour job becomes eighteen and finishes after the business needed it. */}
+
+TODO

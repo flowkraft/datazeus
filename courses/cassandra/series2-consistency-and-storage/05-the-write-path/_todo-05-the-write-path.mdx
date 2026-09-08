@@ -1,0 +1,72 @@
+---
+title: "Commit Log, Memtable, SSTable — Why Writes Are Cheap and Nothing Is Modified"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-cassandra"
+tags: []
+level: "advanced"
+module: "series2-consistency-and-storage"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/cassandra/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/cassandra/series2/_05/TheWritePathKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the official Apache Cassandra documentation — especially its Data Modeling section, which is unusually good and unusually opinionated.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (NoSQL Concepts owns the wide-column shape and the quorum theory, Learn SQL owns SQL, Data Ops owns the cluster),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    CQL looks like SQL and is not. One table per query, and deletes make reads slower.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the write path, because it explains why this engine is fast and why deletes hurt.
+     A write goes to the commit log and a memtable in memory, is acknowledged, and is later
+     flushed to an immutable SSTable. NOTHING IS EVER MODIFIED IN PLACE. That is the LSM tree,
+     and it is why writes are close to sequential and close to free.
+     THE READ PATH AS THE CONSEQUENCE: a read may have to consult several SSTables plus the
+     memtable and merge by timestamp. Bloom filters keep that cheap, most of the time.
+     LAST WRITE WINS, by timestamp, with no conflict detection — so two concurrent updates to
+     the same cell do not conflict, one simply disappears. Say it plainly.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/cassandra/series2/_05/TheWritePathKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

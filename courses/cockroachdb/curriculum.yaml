@@ -1,0 +1,314 @@
+# The ordered episode list for CockroachDB. Field docs live in
+# courses/learnsql/curriculum.yaml. `short` is omitted until an episode has a video.
+#
+# The job this track teaches: run a cluster, see what it is doing, and write a schema and an
+# application that behave well on it.
+#
+# ============================================================================
+# THIS IS THE HANDS-ON HALF OF A PAIR
+# ============================================================================
+# Distributed SQL is the concepts track: the ceiling, the three reasons teams adopt this, what a
+# commit becomes, what changes in a schema, and which of the four products chose which
+# compromise. IT TEACHES NO PRODUCT, on purpose.
+#
+# THIS TRACK IS THE PRODUCT. Every abstraction that course states, this one shows: ranges you
+# can watch move in the console, a retry error you can catch, a hot node you can create on
+# purpose and then fix, a node you can kill while a workload runs.
+#
+# SO DO NOT RE-ARGUE THE DECISIONS. If an episode here finds itself explaining WHY consensus
+# costs a round trip or WHETHER the reader should adopt this at all, it has wandered into the
+# other course. Point and move on.
+#
+# ============================================================================
+# WHY COCKROACHDB IS THE ONE WITH A TRACK
+# ============================================================================
+# Not a verdict on the category. It speaks the PostgreSQL wire protocol and dialect, so this
+# academy's reader arrives with a client they already know and a mental model they already have;
+# a multi-node cluster runs on a laptop in containers; and its console makes ranges, replicas
+# and leaseholders VISIBLE, which is what turns the concepts track's diagrams into something a
+# reader has seen.
+#
+# Distributed SQL, Series 3 · 00 covers YugabyteDB, TiDB and Spanner. A reader who has run one of
+# these can read another's documentation, and this track should say so rather than implying the
+# choice was made for them.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# "POSTGRESQL COMPATIBLE" IS A WIRE PROTOCOL AND A DIALECT, NOT A PROMISE OF BEHAVIOUR. The
+# driver connects, the queries run, the ORM is happy — and then a transaction that never retried
+# on PostgreSQL now has to, an INSERT pattern that was fine now lands every row on one node, and
+# a query that was a millisecond is several round trips.
+#
+# THE HABIT THIS TRACK INSTALLS: read the compatibility page for the features your schema
+# actually uses, before believing that a successful connection means anything.
+#
+# ============================================================================
+# IN THIS COURSE, TRY TO FOLLOW THE STRUCTURE OF THE OFFICIAL DOCUMENTATION
+# ============================================================================
+# CockroachDB's documentation runs Get Started, Develop (SQL, transactions, schema design,
+# performance recipes), Deploy, and Migrate — plus two documents that are the most useful in the
+# set for this reader and should be named in the lessons themselves: the POSTGRESQL
+# COMPATIBILITY page and the SQL PERFORMANCE BEST PRACTICES page.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# THE COVERAGE, THE TOPICS AND THE ORDER OF EACH INDIVIDUAL LESSON — not only this file's series
+# order — SHOULD FOLLOW THE OFFICIAL COCKROACHDB DOCUMENTATION. Before writing an episode, open
+# its page for that topic, use it as the COVERAGE CHECKLIST, and use its VOCABULARY FOR THE NOUNS
+# (range, replica, leaseholder, raft group, region, locality, survival goal, retry error,
+# changefeed, finalisation). Anything left out should be left out because an academy rule says
+# so — Distributed SQL owns the decisions, Learn SQL owns the SQL, Data Ops owns the machine —
+# and never because it was missed.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the docs page named.
+#
+# ⚠ STATE THE VERSION AND THE EDITION. What is free, what is source-available, what needs a
+# licence key and what is cloud-only has changed for this product more than once. Check the
+# vendor's own licence and pricing pages on the day of writing, and say which edition a claim
+# was verified against.
+#
+# TEACH AGAINST WHAT A LEARNER CAN RUN: three nodes in containers on one machine, which Data
+# Ops, Series 1 · 37 already taught them to start. SAY CLEARLY WHERE A CLAIM NEEDS REAL NETWORK
+# DISTANCE — cross-region latency cannot be felt on a laptop, and a lesson that pretends
+# otherwise teaches the wrong instinct.
+
+course: learn-cockroachdb
+track: cockroachdb
+title: CockroachDB
+
+prerequisites:
+  - course: learn-distributed-sql
+    needs: "Series 1, and Series 2"
+    why: >-
+      Why a commit is a conversation, why the primary key is now a placement decision, and why
+      transactions become retryable are taught there once, for the whole category. This track
+      shows them running and does not re-derive them.
+  - course: learn-postgresql
+    needs: "Series 1, and Series 2"
+    why: >-
+      This is PostgreSQL's dialect and PostgreSQL's client. You need to be able to read a plan
+      and reason about an index on one machine before the interesting part — what changes when
+      the rows are on three.
+
+excludes:
+  - topic: "Whether to adopt distributed SQL at all, and which product"
+    where: "covered in Distributed SQL, which is the concepts track this one assumes. In this course, Series 1 · 00 gets a cluster running and takes the decision as already made"
+  - topic: "The other products in the category"
+    where: "covered in Distributed SQL, Series 3 · 00. Named here where a difference matters and never compared at length"
+  - topic: "SQL itself"
+    where: "covered in Learn SQL. In this course, Series 1 · 05 covers only where the dialect and the behaviour differ from what a PostgreSQL client expects"
+  - topic: "Operating the cluster — provisioning, monitoring, capacity, on-call"
+    where: "covered in Data Ops for the discipline. In this course, Series 3 covers only what a schema author owns"
+  - topic: "Analytical workloads over the data"
+    where: "covered in Data Warehousing. In this course, Series 3 · 05 covers changefeeds, which is how the data leaves for a warehouse"
+
+series:
+  - slug: series1-running-a-cluster
+    title: Running a Cluster, and Seeing It
+    tagline: three nodes on a laptop, the console, and where the rows went
+    level: intermediate
+    episodes:
+      # COVER: three nodes in containers, the SQL shell, and the admin console — with the
+      # console as the point of the episode rather than an aside. RANGES, REPLICAS AND
+      # LEASEHOLDERS ARE VISIBLE THERE, and seeing them once is what makes everything the
+      # concepts track described stop being a diagram.
+      # THE EXERCISE THAT LANDS IT: create a table, insert enough rows to force a range split,
+      # and watch the split happen and the replicas place themselves.
+      - n: "00"
+        slug: a-cluster-on-your-laptop
+        title: "Three Nodes and the Console — Watching a Range Split for the First Time"
+        hands_on: ["koan:process:tool", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: compatibility, honestly and as a SKILL rather than a list. The driver connects and
+      # most SQL runs. What is missing or different varies by version — triggers, sequences,
+      # extensions, stored procedures, specific types, some session settings — and any list
+      # printed here will be wrong within a year.
+      # SO TEACH THE HABIT INSTEAD: open the compatibility page, check the features YOUR schema
+      # actually uses, and treat a successful ORM connection as evidence of nothing. Series 3 · 15
+      # is the migration episode that depends on this being second nature.
+      - n: "05"
+        slug: postgres-compatibility
+        title: "PostgreSQL Compatibility — a Wire Protocol, Not a Promise of Behaviour"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: the vocabulary made concrete, using the console from 00. A range is a contiguous
+      # slice of the key space; replicas are its copies; the LEASEHOLDER is the one that serves
+      # reads and coordinates writes. Splits, merges and rebalancing as things you can watch
+      # rather than things you configure.
+      # THE PRACTICAL SKILL: given a slow query, find out WHICH nodes it touched and why. That
+      # question has no equivalent on a single-node database and it is the first thing to ask
+      # here.
+      - n: "10"
+        slug: ranges-replicas-leaseholders
+        title: "Ranges, Replicas and Leaseholders — Finding Out Which Nodes Answered"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: this product's EXPLAIN, which reports something PostgreSQL's never has to — the
+      # DISTRIBUTION of the plan, and whether work is spread across nodes or collected onto one.
+      # Reading it beside a familiar PostgreSQL plan, so the reader maps what they know onto what
+      # is new rather than starting again.
+      # THE STATEMENT DIAGNOSTICS AND STATISTICS PAGES as the tools for "why was that slow", and
+      # the habit from PostgreSQL, Series 2 · 00 carried over unchanged: measure, do not guess.
+      - n: "15"
+        slug: explain-here
+        title: "EXPLAIN Here — Distribution, and the Round Trips the SQL Does Not Mention"
+        hands_on: ["koan:diagnose", "koan:count:scanned"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-northwind-on-three-nodes
+        title: "Project — Run Northwind on Three Nodes and Say Where Every Table Lives"
+        hands_on: ["koan:author", "koan:capture"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-schema-and-transactions
+    title: Schema and Transactions
+    tagline: keys that spread, regions in DDL, and the retry loop
+    level: advanced
+    episodes:
+      # COVER: the concepts track's sequential-key problem, created deliberately and then fixed.
+      # Insert with a sequential key, watch one node take the whole load in the console, and see
+      # the difference when the key spreads.
+      # THE OPTIONS IN THIS PRODUCT, with their costs: UUID keys; hash-sharded indexes, which
+      # keep an ordered column usable while spreading the writes; and compound keys with a varied
+      # leading column. Show the DDL for each.
+      # AND THE COST TO DEMONSTRATE RATHER THAN ASSERT: a spread key scatters the range scan you
+      # wanted. Run both and let the reader see both numbers.
+      - n: "00"
+        slug: keys-that-spread
+        title: "Making the Hot Node Happen, Then Fixing It — Hash-Sharded Indexes and UUIDs"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: locality as DDL, which is this product's most distinctive surface. Multi-region
+      # database settings, regional-by-row and regional-by-table, global tables, and survival
+      # goals declared in SQL.
+      # WHY IT IS WORTH AN EPISODE: a regulatory data-residency requirement becomes a line in a
+      # schema rather than a second deployment and a synchronisation job. That is a genuine
+      # change in what is possible, and it is the reason a share of readers are here at all.
+      # THE HONEST NOTE, per this file's header: the LATENCY effect of these settings cannot be
+      # felt on a laptop. Show the syntax and the semantics, state what real distance would do,
+      # and do not fake a number.
+      - n: "05"
+        slug: regions-in-ddl
+        title: "Regions and Survival Goals as DDL — Data Residency in a Schema Line"
+        hands_on: ["koan:complete", "koan:choose"]
+        core: true
+        status: planned
+      # THE EPISODE THAT CHANGES APPLICATION CODE.
+      # COVER: cause a contention retry on purpose — two concurrent transactions on the same
+      # rows — and READ THE ERROR. The class, the message, and what the driver does with it.
+      # Then write the loop: retry with backoff, a cap, and the savepoint pattern where the
+      # driver needs one. Show the framework helper and what it is doing underneath.
+      # THE DESIGN RULES THAT PREVENT MOST OF IT: keep transactions short, never hold one across
+      # a network call or a user's think time, and order your writes consistently.
+      # SEAM: Distributed SQL, Series 2 · 15 owns why this exists. This owns catching it.
+      - n: "10"
+        slug: retry-errors
+        title: "Retry Errors — Causing One on Purpose, and Writing the Loop That Handles It"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: indexes with their distributed economics made visible. STORING columns so a read
+      # is satisfied without a second hop to another node, and measuring the difference. Index
+      # creation as an online operation. Unused-index detection, and deleting with confidence.
+      # THE MEASUREMENT THAT TEACHES IT: the same query with and without a covering index, with
+      # the plan showing the extra hop. A number the reader produced beats a rule they were told.
+      - n: "15"
+        slug: indexes-and-storing
+        title: "STORING and Covering — Paying for a Second Hop, or Not"
+        hands_on: ["koan:count:scanned", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: joins across nodes, seen in the plan. Which side moved, and why. Then the design
+      # lever this product gives you — co-locating tables that are always joined so the join
+      # becomes local — with the plan before and after as the evidence.
+      # THE BOUNDARY, restated because readers push at it: a large analytical join is not what
+      # this system is for. Data Warehousing owns that, and Series 3 · 05's changefeed is how the
+      # data gets there.
+      - n: "20"
+        slug: joins-and-colocation
+        title: "Distributed Joins — Reading Which Side Moved, and Co-locating So Neither Does"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        status: planned
+      - n: "25"
+        slug: project-fix-a-hot-node
+        title: "Project — Diagnose a Schema Whose Inserts All Land on One Node, Then Fix It"
+        hands_on: ["koan:author", "koan:diagnose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series3-operating-and-moving
+    title: Operating It, and Moving Onto It
+    tagline: schema changes, backups, upgrades, and a migration that tells the truth
+    level: advanced
+    episodes:
+      # COVER: the payoff, demonstrated rather than asserted. Kill a node while a workload runs
+      # and watch the cluster continue — no promotion, no failover script, no data loss. Then the
+      # honest limit: a majority must survive, so replication factor and placement decide what
+      # "survivable" actually means, and losing a majority is unavailability rather than
+      # corruption.
+      # WHAT THIS REPLACES: Data Ops, Series 2 · 45 is replication and failover on PostgreSQL,
+      # with a promotion decision somebody makes under pressure at three in the morning. For many
+      # teams THAT is the real reason to adopt this, and it is worth more than the throughput
+      # argument in the proposal.
+      - n: "00"
+        slug: kill-a-node
+        title: "Kill a Node and Watch — What You Stop Having to Do at Three in the Morning"
+        hands_on: ["koan:process:tool", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: online schema changes, which this product performs without the table locks Data
+      # Ops, Series 2 · 35 spends a whole episode avoiding — a genuine improvement, with its own
+      # caveats about long backfills and the job that is still running after you stopped watching.
+      # BACKUPS AND RESTORE, including point-in-time, and the fact that proving a restore is the
+      # same discipline Data Ops, Series 1 · 42 taught and this changes none of it.
+      # CHANGEFEEDS as the CDC mechanism — how the cluster feeds a warehouse or a search index —
+      # pointing at ETL & Data Pipelines, Series 3 · 15 for the concept.
+      - n: "05"
+        slug: schema-changes-backups-changefeeds
+        title: "Online Schema Changes, Backups and Changefeeds — the Parts You Still Own"
+        hands_on: ["koan:process:tool", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: rolling upgrades, and the step people do not expect — FINALISATION, after which
+      # the version change cannot be rolled back. The window before it is the only cheap way out,
+      # and knowing that in advance is the difference between a routine upgrade and an incident.
+      # Release cadence and support windows, checked against the vendor's own page.
+      # THE PRACTICE: upgrade a test cluster, exercise the application, then finalise — in that
+      # order, deliberately, with somebody who knows what finalisation means.
+      - n: "10"
+        slug: upgrades-and-finalisation
+        title: "Rolling Upgrades and Finalisation — the Step After Which There Is No Way Back"
+        hands_on: ["koan:process:tool", "koan:predict"]
+        status: planned
+      # COVER: the migration a reader will actually attempt, and the episode Series 1 · 05 was
+      # preparing them for. The mechanics — schema conversion, bulk import, dual-write or
+      # cutover — and then the part the compatibility page does not tell you:
+      #   THE RETRY LOOP           every write path now needs one. Series 2 · 10.
+      #   THE SEQUENTIAL KEYS      every SERIAL primary key is now a hot node. Series 2 · 00.
+      #   THE CHATTY TRANSACTIONS  code that did twenty small statements in one transaction was
+      #                            free on one machine and is not here.
+      #   THE MISSING FEATURES     the extensions, triggers or procedures your schema quietly
+      #                            depends on.
+      # THE DELIVERABLE TO ASK FOR: a written list of everything that changed, which is the same
+      # artefact as the project below and is what an honest migration plan actually looks like.
+      - n: "15"
+        slug: migrating-from-postgres
+        title: "Migrating From PostgreSQL — What the Compatibility Page Will Not Tell You"
+        hands_on: ["koan:diagnose", "koan:author"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: project-migrate-and-list-what-changed
+        title: "Project — Migrate a Postgres Schema and List Everything That Had to Change"
+        hands_on: ["koan:author", "koan:equivalent"]
+        core: true
+        tags: ["project"]
+        status: planned

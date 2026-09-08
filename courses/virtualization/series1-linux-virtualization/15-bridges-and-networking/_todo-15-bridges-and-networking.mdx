@@ -1,0 +1,82 @@
+---
+title: "Bridges and NAT — the Address Your VM Did Not Get"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series1-linux-virtualization"
+order: 15
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series1/_15/BridgesAndNetworkingKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the thing that breaks first and is explained last in most tutorials. NETWORKING.
+       NAT / THE DEFAULT BRIDGE   the guest gets an address on a private network and reaches
+                                  the world through the host. Nothing on the LAN can reach
+                                  the guest. Fine for a laptop, wrong for a server.
+       A REAL BRIDGE              the guest gets an address on YOUR network from YOUR DHCP,
+                                  and is a peer of every other machine. This is what you want
+                                  on a host that other people connect to, and it is the
+                                  configuration every product in this course defaults to.
+     THE RUNBOOK: a bridge on Debian with systemd-networkd or /etc/network/interfaces, the
+     physical interface enslaved to it, and the host's own address moved onto the bridge —
+     including the warning that GETTING THIS WRONG OVER SSH LOCKS YOU OUT OF THE MACHINE, so
+     have console access before you start. That sentence has saved more afternoons than any
+     other in this series.
+     THEN: VLANs in one paragraph, port forwarding for the laptop case, and the diagnostic
+     ladder — `ip a` inside, `bridge link`, `ip route`, and can you ping the gateway.
+     THE WORKPLACE MOMENT: "the VM works but nobody can reach the database on it" is
+     ninety per cent of the time this episode, and ten per cent of the time it is
+     Data Ops, Series 1 · 32.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:process:tool
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series1/_15/BridgesAndNetworkingKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

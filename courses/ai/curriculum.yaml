@@ -245,6 +245,19 @@ series:
         core: true
         hands_on: ["koan:predict", "koan:diagnose"]
         status: planned
+      # ALSO NAMES WHERE THE RESULTS GO, added 2026-09-07 after an audit found MLflow absent
+      # from every curriculum in the academy. A harness that prints a score to a terminal is a
+      # harness nobody can compare against last week.
+      # MLFLOW is the tool most teams reach for — tracking runs, versioning prompts, and keeping
+      # evaluation results next to the configuration that produced them. Name it, show what a
+      # tracked run holds, and stop.
+      # TWO THINGS TO SAY PLAINLY, because both are commonly misunderstood: it is OPEN SOURCE
+      # and runs anywhere, so it is not a reason to buy a platform — and it predates the LLM
+      # work it is now used for, which is why parts of it are shaped for training runs rather
+      # than for prompts.
+      # THE ACADEMY RULE STILL APPLIES: the SKILL is keeping a comparable record of what you
+      # tried. A spreadsheet and a git-committed results file satisfy it. The tool is the
+      # demonstration, never the lesson.
       - n: "15"
         slug: eval-harnesses
         title: "Eval Harnesses — Score Generated SQL Against Known-Good Answers"

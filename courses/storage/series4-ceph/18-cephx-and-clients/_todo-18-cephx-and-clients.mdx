@@ -1,0 +1,79 @@
+---
+title: "cephx, Users and Keyrings — the Credential Every Client Needs First"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-storage"
+tags: []
+level: "advanced"
+module: "series4-ceph"
+order: 18
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/storage/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/storage/series4/_18/CephxAndClientsKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — OpenZFS docs for Series 2, the S3 API reference and MinIO's docs for Series 3, the Ceph docs for Series 4. SERIES 1 HAS NO MANUAL: it is physics, arithmetic and trade-offs, so teach the SHAPE and the orders of magnitude.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a bucket and watching a disk, Data Warehousing owns columnar layout, the engine tracks own their storage engines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    REPLICATION IS NOT A BACKUP — a delete is replicated faithfully to all three copies. DATE EVERY CONCRETE FIGURE: capacities, prices and rebuild times age faster here than anywhere else in the academy.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     ADDED to close the gap that most embarrassed this course when it was tested: THREE
+     EPISODES STOOD UP THREE INTERFACES AND NONE OF THEM CREATED THE CREDENTIAL A CLIENT
+     NEEDS TO REACH ANY OF THEM. cephx appeared nowhere in the file.
+     COVER, as a runbook, and it belongs here — after the cluster exists at 15, before
+     anything uses it at 25, 30 and 35:
+       WHAT CEPHX IS      mutual authentication between clients and the cluster, on by
+                          default, and not optional in any deployment worth running.
+       USERS AND CAPS     a client is an identity with CAPABILITIES — read on the monitors,
+                          read/write on a named pool. Least privilege, the same discipline as
+                          Series 3 · 27 and Data Ops, Series 1 · 35, expressed in Ceph's own
+                          grammar.
+       THE KEYRING        create the user, export the keyring, put it on the client machine,
+                          and the exact command each of the next three episodes will assume.
+       WHAT FAILURE LOOKS LIKE   a permission denied that names neither the user nor the
+                          capability that was missing. Knowing where to look is the episode.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/storage/series4/_18/CephxAndClientsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

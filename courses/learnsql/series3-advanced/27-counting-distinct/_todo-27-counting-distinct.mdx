@@ -1,0 +1,121 @@
+---
+title: "COUNT(DISTINCT) — the Aggregate That Will Not Decompose"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-sql"
+tags: []
+level: "advanced"
+module: "series3-advanced"
+order: 27
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build.
+    Drop the _todo- prefix when it becomes a real lesson.
+
+    READ FIRST: courses/learnsql/curriculum.yaml's header — it is the field
+    documentation the whole academy points at. Then read the comment ABOVE THIS
+    EPISODE in that file, which is the authority on coverage.
+
+    THE HOUSE METHOD, from the lessons already written:
+      - type the query yourself; copy-paste teaches your eyes only
+      - PREDICT the answer before running it, out loud, then run it
+      - every query runs on the Northwind that ships with DataPallas
+      - the koans mirror the lesson beat for beat
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: know why distinct counting behaves unlike every other aggregate, and have four
+    answers for it — ask whether it must be exact, pre-aggregate to a distinct grain,
+    reshape the query, or approximate.
+    WHY IT SITS AFTER INDEXES: half the value is the sentence "you have indexed it and it
+    is still slow, and here is why an index was never going to fix this."
+    seed: bulk — on 79 rows there is nothing to feel.
+
+    ── THE IDEA THE EPISODE EXISTS FOR, IN ONE BREATH ──────────────────────
+        SUM, COUNT, MIN and MAX DECOMPOSE. COUNT(DISTINCT) DOES NOT.
+
+    A sum of daily sums is the monthly sum. A count of daily counts is the monthly count.
+    The distinct customers in January PLUS the distinct customers in February IS NOT the
+    distinct customers over both months — anyone who bought in both has been counted
+    twice.
+
+    That single fact explains, all at once: why you cannot pre-aggregate it into a summary
+    table, why a warehouse rollup gets it wrong, why it does not split cheaply across
+    workers or partitions, and why the query is slow.
+
+    ── THEN THE MECHANISM, BRIEFLY ─────────────────────────────────────────
+    To count distinct values the engine must HOLD THEM ALL — a hash set or a sort — so
+    cost and memory scale with the number of DISTINCT values, not with the size of the
+    answer. Past the memory grant it spills to disk and falls off a cliff. Several
+    COUNT(DISTINCT) expressions in one SELECT means several such sets at once, and some
+    engines handle that far worse than one.
+
+    ── THE FOUR TECHNIQUES, PORTABLE FIRST ─────────────────────────────────
+      ASK WHETHER IT MUST BE EXACT       a business question, not a technical one, and the
+                                        reader should be taught to ask it out loud
+      PRE-AGGREGATE TO A DISTINCT GRAIN  one row per (day, customer), or a first-seen date
+                                        per customer, and count over something far
+                                        smaller. The honest exact answer.
+      GROUP BY THEN COUNT                SELECT COUNT(*) FROM (SELECT DISTINCT ...)
+                                        sometimes plans better. NOT a rule — a thing to
+                                        measure, with EXPLAIN from 20.
+      APPROXIMATE IT                     HyperLogLog: a fixed-size sketch, typically one or
+                                        two per cent error, and the size does not grow
+                                        with the data.
+
+    ── THE DEEP POINT ABOUT APPROXIMATION ──────────────────────────────────
+    SKETCHES MERGE. Two HLL sketches combine into the sketch of the union, so an
+    approximate distinct count IS decomposable — store one sketch per day and answer any
+    date range from them. Approximation does not merely make the query faster: it gives
+    back the property the exact aggregate lacks, which is the entire reason warehouses
+    use it. That is what makes this an episode rather than a footnote.
+
+    WHAT EACH ENGINE OFFERS, named and left there — the engine tracks own the detail:
+    Oracle and SQL Server both ship APPROX_COUNT_DISTINCT; PostgreSQL has no built-in and
+    uses the postgresql-hll extension; MySQL has nothing; ClickHouse's uniq family and
+    DuckDB's approx_count_distinct are why analytical engines answer this instantly.
+
+    ONE LINE ON WINDOWS: COUNT(DISTINCT ...) OVER (...) is unsupported on several engines,
+    which surprises people who reach for it after Series 2 · 50.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:predict
+      koan:count:scanned
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_27/CountingDistinctKoans.groovy
+
+    `predict` teaches the whole episode: given daily distinct counts, predict whether
+    summing them equals the monthly distinct count — then run both.
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. The published lessons all open this way;
+    keep it. Never "SELECT is used to…". Always "your boss asks…". */}
+
+TODO
+
+## TODO — the SQL
+
+{/* BEAT 2 — the keywords, one at a time, each with a query the reader types.
+    Every query runs on Northwind. Predict, then run. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns its
+    place by preventing a number that is wrong and looks right.
+    The one to write: monthly active users computed by summing daily active users out of
+    a summary table. Every returning customer is counted once per day they visited, so the
+    number is inflated — often heavily — and it is inflated CONSISTENTLY, which means the
+    trend line still looks sensible and nobody questions it. The cleanest example in the
+    course of a number that is wrong and looks right. */}
+
+TODO

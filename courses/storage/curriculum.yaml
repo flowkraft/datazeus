@@ -1,0 +1,1264 @@
+# The ordered episode list for Storage for Data. Field docs live in
+# courses/learnsql/curriculum.yaml. `short` is omitted until an episode has a video.
+#
+# The job this track teaches: understand the layer every other course assumes — what the bytes
+# actually sit on, what it survives, what it costs, and how to run it yourself when the data
+# cannot leave the building.
+#
+# ============================================================================
+# WHY THIS TRACK EXISTS
+# ============================================================================
+# STORAGE IS ASSUMED BY EIGHT COURSES AND OWNED BY NONE. Data Ops rents a bucket and watches a
+# disk fill; Data Warehousing lays out columns; Kubernetes asks a cluster for a volume; every
+# engine track has its own storage engine. Not one of them can explain what a block device is,
+# what erasure coding survives, why the first write after a disk dies is slow, or what to do
+# when the data legally may not leave the building.
+#
+# THE READER THIS IS FOR: the data person who has been handed disks. Not a storage engineer —
+# this track never becomes a SAN administration manual — but somebody who has to size, choose,
+# and answer for the thing the database sits on.
+#
+# ============================================================================
+# THE ONE MISUNDERSTANDING THIS TRACK EXISTS TO PREVENT
+# ============================================================================
+# REPLICATION IS NOT A BACKUP. Three copies protect you against a disk dying. They protect you
+# against nothing else: a deletion is replicated faithfully, in milliseconds, to all three.
+# Every durability episode here returns to that sentence, because it is the single most
+# expensive misunderstanding in this subject and Data Ops, Series 1 · 42 can only state it —
+# this track is where the mechanism explains it.
+#
+# ============================================================================
+# THE SCOPE, DECIDED BEFORE A LINE WAS WRITTEN
+# ============================================================================
+# Storage is scattered across four other tracks and a new course could eat all of them. It does
+# not, and the split is stated here so it stays honest:
+#   HERE                  the PHYSICAL LAYER — the three interfaces, the numbers, disks,
+#                         filesystems, durability and erasure coding, capacity and tiering,
+#                         object storage as a protocol, self-hosting it, and encryption at rest.
+#   DATA OPS              the OPERATOR'S USE of it — df and du, backups as a scheduled job, and
+#                         the bucket you rent from somebody. That track stays "the machine, the
+#                         database and the job".
+#   DATA WAREHOUSING      ANALYTICAL LAYOUT — columnar storage, Parquet internals, compression
+#                         for analytics, and storage separated from compute.
+#   THE ENGINE TRACKS     each engine's own storage engine — MergeTree, InnoDB, SSTables, heap
+#                         and TOAST.
+# WHEN AN EPISODE HERE STARTS EXPLAINING WHAT A DATA PERSON DOES WITH A BUCKET, it has crossed
+# into Data Ops. When it starts explaining how to lay out Parquet, it has crossed into Data
+# Warehousing. Both are one sentence away at all times.
+#
+# ============================================================================
+# THERE IS NO SINGLE OFFICIAL DOCUMENTATION FOR THIS SUBJECT
+# ============================================================================
+# Series 1 is vendor-neutral and has no manual — it is physics, arithmetic and trade-offs.
+# Series 2 to 4 each have one:
+#   ZFS      the OpenZFS documentation, and its own vocabulary — pool, vdev, dataset, zvol,
+#            recordsize, ARC, RAIDZ, scrub, resilver.
+#   S3       the S3 API reference for the semantics, since it is the de facto specification
+#            every implementation is measured against — and MinIO's own documentation for
+#            the second half: erasure sets, drive layout and expansion.
+#   CEPH     the Ceph documentation — RADOS, CRUSH, placement groups, RGW, RBD, CephFS.
+#
+# ── WHEN YOU WRITE THE LESSONS, REMEMBER THIS ───────────────────────────────
+# FOLLOW THAT PROJECT'S OWN DOCUMENTATION for the series it owns, use its VOCABULARY FOR THE
+# NOUNS, and say which version a claim was checked against. Anything left out should be left
+# out because the scope above says so, and never because it was missed.
+#
+# ── BUT FOLLOW IT FOR COVERAGE AND VOCABULARY, NOT FOR SHAPE ────────────────
+# THE DOCS ARE A REFERENCE. THIS IS A COURSE. They are written to be complete and to be looked
+# things up in; we are written to take somebody from nothing to a working system they can
+# defend on Monday. Two different jobs, and copying a reference's running order produces a
+# reference nobody finishes.
+#
+# SO THE RULE IS: THE DOCUMENTATION SETS WHAT MUST BE COVERED AND WHAT THINGS ARE CALLED. THE
+# ORDER IS OURS, AND IT FOLLOWS THE ORDER OF A REAL JOB.
+#   WHAT WE TAKE      every topic the manual treats as essential, so nothing is missed; and its
+#                     exact nouns, so a reader who finishes can live in those docs afterwards.
+#   WHAT WE REORDER   the sequence. A manual can open with an architecture chapter because
+#                     nobody reads it front to back. A course opens with WHY YOU WOULD, then
+#                     gets something running, then explains what just happened.
+#   WHAT WE LEAVE     the exhaustive option lists, the configuration reference, and the
+#                     features that exist for somebody else's deployment. Name them, point at
+#                     the page, move on. A reader who needs the eightieth tunable can read the
+#                     manual; they cannot read the manual to learn why they are here.
+#
+# THE TEST FOR ANY EPISODE: IS THIS SOMETHING SOMEBODY DOES ON A REAL PROJECT? If it is in the
+# docs and nobody does it in the first year, it is a pointer and not an episode. If somebody
+# does it constantly and the docs bury it on page forty — replacing a failed disk, finding out
+# which client lacks a capability, reading a health warning at 3 a.m. — IT IS AN EPISODE, and
+# its prominence here should be nothing like its prominence there.
+#
+# EVERY SERIES ENDS IN A PROJECT FOR THE SAME REASON: a manual has no projects because a manual
+# is not trying to make anybody competent.
+#
+# EVERY _todo BRIEF IN THIS COURSE MUST REPEAT THIS, with the docs section named.
+#
+# ⚠ NUMBERS AGE FASTER HERE THAN ANYWHERE ELSE IN THE ACADEMY. Drive capacities, prices per
+# terabyte, IOPS figures and rebuild times all move. Teach the SHAPE of the arithmetic and the
+# ORDERS OF MAGNITUDE, and date every concrete figure so a reader knows when it was true.
+#
+# ============================================================================
+# THE PLATFORM IS DEBIAN, AND THE LESSONS SAY SO
+# ============================================================================
+# Added after a review asked a question this file could not answer: will a reader finish able to
+# DO this? Not without a platform. "Install ZFS" is not a command, and a course that stays
+# distribution-neutral produces prose about concepts and no working pool.
+#
+# DEBIAN STABLE IS THE REFERENCE PLATFORM, named in the lesson, with the version stated. Every
+# command must be the one a reader types on Debian — the real package names, the real paths, the
+# real units. For ZFS that means saying out loud that the packages live in contrib and that the
+# module is built by DKMS, because that is where a Debian reader actually gets stuck.
+#
+# ONE LINE PER EPISODE ON WHAT CHANGES ELSEWHERE, and no more: the RHEL-family package name, or
+# "the concepts transfer, the package manager does not". A second distribution taught in parallel
+# doubles the length and halves the confidence.
+#
+# ============================================================================
+# EVERY OPERATIONAL EPISODE CARRIES A RUNBOOK, NOT A DESCRIPTION
+# ============================================================================
+# THE ACCEPTANCE TEST FOR THIS COURSE, and it is stricter than the academy's usual one: A READER
+# FINISHES AN EPISODE AND CAN DO THE THING ON THEIR OWN MACHINE. Not recognise it, not discuss
+# it — do it.
+#
+# So every episode in Series 2, 3 and 4 that installs, configures or operates something must
+# contain THE ACTUAL COMMAND SEQUENCE, in order, copy-pasteable, run by the author on Debian
+# before it ships — with the expected output shown, so a reader knows whether it worked.
+# A paragraph explaining what zpool does is not a lesson. `zpool create tank mirror sda sdb`,
+# followed by what `zpool status` then prints, is.
+#
+# ============================================================================
+# AND THE KOAN IS THE RUNBOOK, SO "IT WAS RUN ON DEBIAN" IS A TEST AND NOT A PROMISE
+# ============================================================================
+# The paragraph above is a rule nothing enforces. CurriculumSpec checks titles, pointers and
+# credits; it cannot check that a command works, and a runbook nobody re-runs rots into a
+# runbook that does not.
+#
+# SO THE KOAN FOR AN OPERATIONAL EPISODE IS THE RUNBOOK ITSELF, EXECUTED. Same commands, same
+# order, in a Debian container, asserting the state each step produced. If the lesson's
+# sequence stops working — a package renamed, a flag deprecated, a default changed — CI says so
+# before a reader does.
+#
+# THIS IS NOT A SECOND FRAMEWORK, and it must not become one. JvmKoanBase already says it:
+# there is ONE mechanism, the koan, and what varies is WHAT YOU ASSERT ON — a value, a counter,
+# captured output, or a process's exit code and output. A storage koan is the fourth of those,
+# pointed at a shell instead of a jar. Nothing new is being invented; a Runner is being reused.
+#
+# WHAT A STORAGE KOAN ASSERTS — the STATE the commands produced, never how long they took:
+#   `zpool status` says ONLINE after create; DEGRADED after a device is corrupted; ONLINE again
+#   after `zpool replace` resilvers. `mc ls` finds the object that `mc cp` put there. An
+#   unauthorised client gets AccessDenied, and the authorised one does not. `ceph -s` reaches
+#   HEALTH_OK on a bootstrapped single node.
+# THE ACADEMY'S EXISTING RULE APPLIES WITH FORCE HERE: NEVER ASSERT WALL-CLOCK TIME. This is
+# the track most tempted to, because storage is where people reach for stopwatches. Every
+# performance lesson has a countable proxy instead — fio reports IOPS, and 1 · 07's koan asserts
+# that the direct=1 run and the cached run differ by an order of magnitude, which is the actual
+# lesson and is deterministic in a way a duration never is.
+#
+# ── THREE TIERS, AND SAY WHICH ONE AN EPISODE IS IN ─────────────────────────
+# Being honest about what can be tested is the point; a green suite that skips the hard half
+# would be worse than no suite.
+#   TIER 1  RUNS ANYWHERE, IN CI, IN A CONTAINER. MinIO, the whole S3 protocol series, rclone
+#           and mc, fio against a loopback file. No kernel dependency, seconds to run. Most of
+#           Series 3 and 1 · 07 belong here and there is no excuse for anything less.
+#   TIER 2  NEEDS A CAPABLE RUNNER. ZFS koans work on loopback files — `truncate` four sparse
+#           files, `zpool create` a mirror over them, corrupt one with `dd`, watch it heal —
+#           but they need THE ZFS MODULE ON THE HOST and a privileged container. That is a real
+#           prerequisite and the koan file must say so in its header and skip cleanly, with a
+#           message naming what is missing, rather than failing and looking broken.
+#   TIER 3  CANNOT HONESTLY BE TESTED, so mark the episode `eyes` and say why in the brief.
+#           Multi-node behaviour, rebuild storms under load, two-network topology, hardware
+#           sizing: a three-container Ceph proves the commands parse and proves nothing about
+#           the thing the episode is teaching. JvmKoanBase already reserves `eyes` for exactly
+#           this and calls a bolted-on test theatre. It is right.
+#
+# THE RULE THAT KEEPS IT HONEST: AN EPISODE IS TIER 3 BECAUSE THE SUBJECT CANNOT BE TESTED, NEVER
+# BECAUSE THE TEST WOULD BE INCONVENIENT. `zpool replace` is Tier 2 and must have a koan. "Why
+# Ceph is network-bound" is Tier 3 and must not pretend to.
+#
+# AND EVERY TECHNOLOGY GETS THE SAME FIVE ANSWERS, because that is what a reader is actually
+# asking: WHAT IT IS · WHY IT EXISTS · WHEN IT EARNS ITS PLACE AND WHEN IT DOES NOT · THE
+# COMMANDS · WHAT GOES WRONG. Series 2 · 02, Series 3 · 20 and Series 4 · 00 are where the first
+# three are answered for ZFS, self-hosted S3 and Ceph respectively.
+#
+# TEACH AGAINST WHAT A LEARNER CAN RUN: loopback files and containers go a very long way here —
+# a ZFS pool on files, a MinIO with four directories, a single-node Ceph. Say clearly where a
+# claim needs real hardware or a real cluster, because a rebuild storm cannot be felt on a
+# laptop and pretending otherwise teaches the wrong instinct.
+
+course: learn-storage
+track: storage
+title: Storage for Data
+
+prerequisites:
+  - course: learn-data-ops
+    needs: "Series 1"
+    why: >-
+      You need the terminal, and you need to have already met the two episodes this track goes
+      underneath — the machine with a disk that fills, and the bucket you rented from somebody
+      else. This course is what both of those are standing on.
+
+excludes:
+  - topic: "Renting object storage, its bill, and using it in a job"
+    where: "covered in Data Ops, Series 1 · 47, which is the bucket a data person rents and pays for. In this course, Series 3 is the protocol itself and running one yourself"
+  - topic: "Backups as a scheduled job, rotation and proving a restore"
+    where: "covered in Data Ops, Series 1 · 42. In this course, Series 1 · 20 explains what replication does and does not survive, which is the mechanism under that episode's rule"
+  - topic: "Columnar layout, Parquet internals and compression for analytics"
+    where: "covered in Data Warehousing, Series 2. This track ends at the bytes; how you arrange rows inside a file to be skipped is that course's subject"
+  - topic: "Each engine's own storage engine"
+    where: "covered in the engine tracks — ClickHouse for MergeTree, MySQL & MariaDB for InnoDB, Apache Cassandra for SSTables, PostgreSQL for the heap and TOAST"
+  - topic: "Asking a Kubernetes cluster for a volume"
+    where: "covered in Kubernetes for Data Workloads, Series 2 · 05. In this course, Series 4 · 55 covers only how Ceph ends up being what answers that request"
+  - topic: "Provisioning storage with infrastructure as code"
+    where: "covered in Terraform & Pulumi, Series 2 · 05"
+  - topic: "Enterprise SAN arrays, fibre channel and vendor appliances"
+    where: "not covered. This track is storage a data team can obtain, run and reason about, and a six-figure appliance with a support contract is somebody else's job"
+
+series:
+  # SERIES 1 GREW ON 2026-09-07, after a review asked whether this course covers the mainstream
+  # Linux filesystems, LVM and NFS. It did not — ext4 was six passing mentions, LVM two, NFS one,
+  # and partition tables none — while Series 2 spent ten episodes on ZFS.
+  # THE ABSURDITY THAT MADE IT OBVIOUS: this course's own gate at 3 · 22 tells a reader "ext4,
+  # stop" — sending them to a thing the course never taught.
+  # SO THE LAYERS GO HERE, where they belong: partitions, mdadm, LVM, the filesystems, and NFS.
+  # AND IT MAKES SERIES 2 STRONGER RATHER THAN LONGER. The standard Linux stack is LAYERED —
+  # disk, partition, RAID, volume manager, filesystem, mount — and each layer is blind to the
+  # others, which is exactly why an mdadm array cannot tell you WHICH copy is right. ZFS's
+  # radical move is collapsing all of them into one thing that owns everything. A reader who has
+  # built the layered stack understands that argument in a sentence; one who has not takes it on
+  # faith.
+  - slug: series1-what-storage-is
+    title: What Storage Is, and the Linux Stack On Top
+    tagline: three interfaces, four numbers, and the layers between a disk and a directory
+    level: intermediate
+    episodes:
+      # COVER: the taxonomy, because everything else in the course hangs off it and almost
+      # nobody is taught it explicitly.
+      #   BLOCK   a disk. Fixed-size blocks, no idea what is in them, one writer. What a
+      #           database wants, because it manages its own layout.
+      #   FILE    a filesystem. Names, directories, permissions, several readers and writers,
+      #           partial writes and appends.
+      #   OBJECT  a key and a blob over HTTP. NO PARTIAL WRITES, NO APPEND, NO SEEK — you
+      #           replace a whole object — which is the constraint that produced table formats,
+      #           and Data Ops, Series 1 · 47 already states it as a rule. Here it gets its
+      #           reason.
+      # THE TEST TO LEAVE THEM WITH: can a process modify byte 4,000,000 in place? Block yes,
+      # file yes, object no. That single question sorts most storage arguments.
+      - n: "00"
+        slug: block-file-object
+        title: "Block, File and Object — Three Interfaces, and the Question That Sorts Them"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the numbers, taught as FOUR SEPARATE THINGS people collapse into "fast".
+      #   IOPS         operations per second. What a database doing random reads lives on.
+      #   THROUGHPUT   bytes per second. What a scan or a backup lives on.
+      #   LATENCY      how long one operation takes, and why an average hides everything —
+      #                p99 is the number a user experiences.
+      #   QUEUE DEPTH  how many requests are in flight, and why a benchmark at depth 64 says
+      #                nothing about a single-threaded job.
+      # THE POINT: a device can be excellent at one and poor at another, and a vendor will quote
+      # whichever flatters it. A reader who asks "at what queue depth, and what block size?" has
+      # learnt the episode.
+      # DATA NUANCE: an analytical scan wants throughput, an OLTP index lookup wants IOPS and
+      # low latency, and a nightly load wants both at different minutes.
+      - n: "05"
+        slug: the-four-numbers
+        title: "IOPS, Throughput, Latency and Queue Depth — Four Numbers, Not One"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: what you can actually buy, with the ORDERS OF MAGNITUDE rather than this year's
+      # prices — NVMe, SATA SSD, spinning disk, and network-attached storage — and the fact
+      # that the gap between them is not a percentage but a factor of hundreds on random reads.
+      # NETWORK STORAGE AS THE ONE PEOPLE MISJUDGE: it looks like a disk and behaves like a
+      # network, so latency is a round trip and throughput is a shared link. Data Ops,
+      # Series 1 · 46 already told a reader to check disk TYPE and not only size; this is why.
+      # ⚠ DATE EVERY CONCRETE FIGURE. Capacities and prices move; the ratios move far more
+      # slowly, so teach the ratios.
+      # ADDED after a review asked whether a reader could actually DO any of this: 05 teaches
+      # four numbers and the series never once measured them. A table of definitions is not a
+      # skill, and "is this disk fast?" is the question those four numbers exist to answer.
+      # COVER: fio, and the job file as the unit of work. The four dimensions from 05 become
+      # four jobs — random read at 4k, sequential read at 1M, and the same two writing — because
+      # THE PATTERN YOU MEASURE MUST BE THE PATTERN YOU RUN. A vendor's headline figure is a
+      # sequential number quoted at a queue depth nobody's database uses.
+      # THE TWO TRAPS, and both produce beautiful wrong answers:
+      #   THE PAGE CACHE   without direct=1 you are benchmarking RAM. The number is glorious and
+      #                    means nothing.
+      #   THE FIRST THIRTY SECONDS   consumer SSDs have a fast write buffer that exhausts. Run
+      #                    long enough to fall off it, or you have measured the cache and not the
+      #                    disk.
+      # THEN THE HABIT: measure the claim. Take the figure the provider quoted in Data Ops,
+      # Series 1 · 46 and check it — this is the episode that turns that shopping decision into
+      # evidence.
+      - n: "07"
+        slug: measuring-it
+        title: "fio — Measuring the Four Numbers Instead of Reading Them"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "10"
+        slug: disks
+        title: "NVMe, SSD, Spinning Disk and Network Storage — Ratios That Outlive the Prices"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # ADDED. Before any layer owns a disk, a reader has to be able to look at one.
+      # COVER: what /dev actually contains, lsblk as the command you will type most, and GPT
+      # partition tables with parted or sgdisk. Whole-disk against partitioned, and when each is
+      # right — ZFS and mdadm usually want whole disks; a boot device does not.
+      # THE HABIT THAT PREVENTS A DISASTER, and 2 · 12 depends on it: /dev/sdX IS NOT STABLE
+      # ACROSS REBOOTS. Use /dev/disk/by-id. Every command in this course that names a device
+      # will name it that way, and the reason is that the disk you destroy is the one you did
+      # not mean to.
+      # blkid and lsblk -f to see what is already on a disk before you take it.
+      - n: "12"
+        slug: partitions-and-block-devices
+        title: "lsblk, GPT and by-id — Looking at a Disk Before Anything Owns It"
+        hands_on: ["koan:process:tool", "koan:capture"]
+        core: true
+        status: planned
+      # THE CENTRAL EPISODE OF SERIES 1, and the one that carries the track's thesis.
+      # COVER: three different mechanisms people call "redundancy", and what each survives.
+      #   RAID              mirroring or parity across disks in one machine — and it is a FAMILY,
+      #                     which a review found this episode had reduced to one line. Teach the
+      #                     levels, because "we use RAID" tells you nothing:
+      #                       RAID 0   striping, NO redundancy. Any disk dies, everything dies.
+      #                                It is a performance and capacity choice, not a safety one.
+      #                       RAID 1   a mirror. Survives one of two. Simple, fast to rebuild,
+      #                                costs half your capacity.
+      #                       RAID 5   single parity across N disks. Survives ONE. Cheap in
+      #                                capacity, and see the arithmetic below.
+      #                       RAID 6   double parity. Survives TWO, which is the whole point.
+      #                       RAID 10  striped mirrors. Survives a disk in each mirror, rebuilds
+      #                                by copying ONE disk rather than reading all of them, and
+      #                                is what databases usually want.
+      #                     AND THE ARITHMETIC THAT RETIRED RAID 5, which is the most useful
+      #                     paragraph in the episode: a rebuild must read every remaining disk in
+      #                     full. Disks have an UNRECOVERABLE READ ERROR rate, so the chance of
+      #                     hitting one DURING the rebuild grows with disk size — and on a
+      #                     single-parity array a second error during rebuild is data loss. That
+      #                     is why RAID 6 or mirrors are the default advice at modern capacities,
+      #                     and why "RAID 5 is fine, we have backups" misunderstands both words.
+      #                     THE WRITE HOLE, named here because it is ZFS's best argument and
+      #                     Series 2 collects on it: a traditional parity array interrupted
+      #                     mid-write can leave data and parity disagreeing, and it cannot tell
+      #                     which is right. ZFS does not have this problem, and Series 2 · 10
+      #                     explains why.
+      #   REPLICATION       whole copies on other machines. Survives a machine, a rack, a site.
+      #   ERASURE CODING    data split into k data and m parity shards, any k of which rebuild
+      #                     the object. Survives m failures at a fraction of replication's
+      #                     space — 1.5x rather than 3x is typical — and costs CPU and network
+      #                     on every read that has to reconstruct.
+      # THE ARITHMETIC ON SCREEN, because it is the whole decision: 3x replication against
+      # k=4,m=2 erasure coding, for the same failure tolerance, at very different capacity.
+      # AND THE SENTENCE THE COURSE IS BUILT ON: NONE OF THIS IS A BACKUP. All three replicate a
+      # DELETE faithfully and immediately. Data Ops, Series 1 · 42 owns backups; this episode
+      # exists so the reader stops confusing the two, which is the commonest and most expensive
+      # error in the subject.
+      - n: "15"
+        slug: durability
+        title: "RAID, Replication and Erasure Coding — What Each One Survives, and What None Does"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: what happens after a failure, which nobody plans for and everybody meets.
+      # REBUILD is not free: the surviving copies must be read in full to reconstruct the lost
+      # one, so the cluster is doing a large amount of extra I/O precisely while it is already
+      # degraded. On large disks this takes HOURS TO DAYS.
+      # THE REBUILD STORM: that traffic competes with your queries, so the symptom is "everything
+      # got slow on Tuesday" with no query to blame. And the risk nobody prices — A SECOND
+      # FAILURE DURING THE REBUILD, whose probability is not negligible because the rebuild is
+      # itself stressing every remaining disk.
+      # WHAT FOLLOWS: bigger disks mean longer rebuilds, which is an argument for more, smaller
+      # failure domains rather than fewer, larger ones.
+      # ADDED. 15 teaches the RAID levels as concepts; this is them as commands, on Debian, on
+      # loopback files a reader can create in a minute.
+      # COVER: mdadm --create for a mirror and for RAID 6, /proc/mdstat as the thing you watch,
+      # mdadm --detail, and assembly across reboots via mdadm.conf and the initramfs. Failing a
+      # disk deliberately with --fail, removing it, adding a replacement, and watching the
+      # rebuild — which is 20's subject, felt.
+      # WHY IT MATTERS EVEN IF THEY CHOOSE ZFS: mdadm is IN EVERY KERNEL, needs no module, and is
+      # what a rented VM or an inherited box will already be running. The reader will meet one
+      # whether or not they would have chosen it.
+      # AND THE LIMIT THAT SETS UP SERIES 2: an mdadm array knows the two copies DISAGREE and
+      # cannot know which is right, because the layer that stores the data is not the layer that
+      # understands it. That single sentence is ZFS's entire argument, and it lands here.
+      - n: "17"
+        slug: mdadm
+        title: "mdadm — the RAID Levels as Commands, and the Question It Cannot Answer"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      # ADDED, and of the four things this review found missing this is the one that matters
+      # most: LVM is on nearly every Linux box a data person will ever touch.
+      # COVER: the three nouns, in order, because the vocabulary is most of the difficulty —
+      # PHYSICAL VOLUME (a disk or partition given to LVM), VOLUME GROUP (a pool of them), and
+      # LOGICAL VOLUME (the thing you format and mount). pvcreate, vgcreate, lvcreate.
+      # WHAT IT BUYS, and it is why it is everywhere: GROWING A FILESYSTEM WITHOUT DOWNTIME.
+      # lvextend then resize2fs or xfs_growfs, online, while the database is running — which is
+      # the single most useful storage operation in a data person's life and is impossible on a
+      # bare partition. Add a disk to the group and the volume grows onto it.
+      # LVM SNAPSHOTS, and the honest comparison Series 3 · 22 later relies on: they are
+      # copy-on-WRITE INTO A RESERVED AREA, so they cost performance while they exist and they
+      # BREAK IF THAT AREA FILLS. Fine for the twenty minutes of a backup; not what ZFS means by
+      # the word. Say the difference here, so the ZFS episode does not have to argue it.
+      # THIN PROVISIONING in one paragraph, with the warning: overcommitting a thin pool and then
+      # filling it is Series 1 · 25's cliff with a shorter fuse.
+      - n: "18"
+        slug: lvm
+        title: "LVM — PVs, VGs and LVs, and Growing a Filesystem While It Is Mounted"
+        hands_on: ["koan:process:tool", "koan:complete"]
+        core: true
+        status: planned
+      # ADDED. The filesystem most readers will actually use had six passing mentions and no
+      # episode, in a course whose own gate recommends it.
+      # COVER: ext4 and XFS as the two real answers on Debian, and the honest guidance — either
+      # is fine for most data work; XFS tends to be preferred for very large files and heavily
+      # parallel writes; ext4 SHRINKS and XFS DOES NOT, which is the difference that will one day
+      # matter to somebody.
+      # THEN THE OPERATIONS, as a runbook: mkfs, mount, and /etc/fstab with UUID rather than a
+      # device name — the same stability argument as 12. The mount options a database cares
+      # about, noatime chief among them, and why the defaults are usually right.
+      # CHECKING AND REPAIR: fsck, when it runs, and why an unclean shutdown is survivable on a
+      # journalling filesystem. df against du when they disagree, which Data Ops, Series 1 · 07
+      # already taught a reader to notice and this explains.
+      # BTRFS IS NAMED HERE AND TAUGHT AT Series 2 · 21, because it belongs beside ZFS rather
+      # than beside ext4: it is the other COPY-ON-WRITE filesystem, and the comparison a reader
+      # needs is with ZFS, not with a journalling one. One sentence here so nobody thinks it was
+      # forgotten, and no more.
+      - n: "19"
+        slug: ext4-and-xfs
+        title: "ext4, XFS and fstab — Formatting, Mounting, and the One That Cannot Shrink"
+        hands_on: ["koan:process:tool", "koan:choose"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: rebuilds
+        title: "When a Disk Dies — Rebuild Time, the Storm, and the Second Failure"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: capacity as a discipline rather than a number. THE 80 PER CENT CLIFF — most
+      # storage systems degrade sharply when nearly full, because allocation gets harder and
+      # copy-on-write systems have nowhere to write. Plan to the cliff, not to the capacity.
+      # THEN: growth rate as the number that actually matters, lead time to add capacity (weeks
+      # on-prem, minutes in a cloud, and that difference IS the argument for each), and tiering
+      # — hot, warm, cold — with the question people forget: WHAT IS THE RESTORE TIME YOU JUST
+      # AGREED TO? Cold storage is cheap because getting it back is slow.
+      # SEAM: Data Ops, Series 3 · 35 owns retention as an operational policy; this owns the
+      # physics that policy runs on.
+      - n: "25"
+        slug: capacity-and-tiering
+        title: "The 80% Cliff, Growth Rate and Tiering — and the Restore Time You Agreed To"
+        hands_on: ["koan:choose", "koan:capture"]
+        status: planned
+      # COVER: encryption at rest, in three honest layers — self-encrypting drives, filesystem
+      # or volume encryption (LUKS, ZFS native), and application or object-level encryption.
+      # WHAT EACH ACTUALLY PROTECTS AGAINST, because the marketing blurs it: a stolen disk, yes;
+      # a compromised running host, no — the key is loaded and the data is readable.
+      # AND THE QUESTION THAT MATTERS MORE THAN THE ALGORITHM: WHO HOLDS THE KEY, and what
+      # happens when they are unavailable? A key management story nobody has rehearsed is an
+      # outage waiting for a reboot.
+      # SEAM: Data Ops, Series 1 · 35 and 1 · 43 own secrets in a job and in git. This owns the
+      # key that decrypts a volume.
+      # ADDED. NFS is what this academy tells people to use instead of CephFS — Kubernetes for
+      # Data Workloads, Series 6 · 20 and this course's own Ceph gate both point at it — and
+      # nothing anywhere said how. Recommending a thing you never teach is the flaw this review
+      # found twice.
+      # COVER: exports on the server and a mount on the client, as a runbook on Debian, with the
+      # package names. The options that matter for data work — sync against async and what async
+      # is actually risking, root_squash, and the ro/rw decision.
+      # WHY A DATA TEAM STILL USES IT IN 2026, said without embarrassment: several machines
+      # writing to one namespace, a legacy application that opens a file, or a shared scratch
+      # area. It is decades old, it is in every kernel, and for those jobs it is enough.
+      # WHERE IT HURTS, and be specific: latency on many small files, and it is a SINGLE SERVER
+      # unless you have built something more — so it is a shared point of failure with none of
+      # the redundancy the rest of this series has been teaching.
+      # THE SEAM: Series 5 · 35 is CephFS, which is this problem solved with a distributed system
+      # and a great deal more machinery. That episode's own gate says most people should have
+      # used NFS. This is the episode that makes that advice actionable.
+      - n: "27"
+        slug: nfs
+        title: "NFS — the Shared Filesystem This Academy Keeps Telling You to Use"
+        hands_on: ["koan:process:tool", "koan:choose"]
+        status: planned
+      - n: "30"
+        slug: encryption-at-rest
+        title: "Encryption at Rest — What It Protects Against, and Who Holds the Key"
+        hands_on: ["koan:choose", "koan:capture"]
+        status: planned
+      - n: "35"
+        slug: project-size-a-workload
+        title: "Project — Size and Cost the Storage for a Real Workload, and Defend It"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series2-filesystems-and-zfs
+    title: Filesystems, and ZFS
+    tagline: what a filesystem owes a database, and the one that can prove it
+    level: advanced
+    episodes:
+      # COVER: what a filesystem actually does — allocate blocks, name them, and survive a
+      # crash — and the two mechanisms that decide the last one: JOURNALLING and COPY-ON-WRITE.
+      # ext4 and XFS as the sensible defaults, with the honest note that for most data workloads
+      # either is fine and XFS tends to be preferred for large files and parallel writes.
+      # WHAT A DATABASE ACTUALLY WANTS, which is a shorter list than people expect: that fsync
+      # means the bytes are durable, that a partial write cannot corrupt a page, and that the
+      # filesystem does not reorder what it promised not to. Everything else is preference.
+      - n: "00"
+        slug: what-a-filesystem-owes-you
+        title: "Journalling, Copy-on-Write and fsync — What a Database Needs From a Filesystem"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: ZFS's model, in its own vocabulary because the docs use it and nothing else does:
+      # POOL, VDEV, DATASET and ZVOL. The structural fact that surprises everybody: REDUNDANCY
+      # LIVES IN THE VDEV, and a pool is only as redundant as its weakest vdev — so adding a
+      # single disk to a mirrored pool quietly destroys the guarantee.
+      # MIRRORS AGAINST RAIDZ, with the trade stated: mirrors resilver fast and cost half the
+      # capacity, RAIDZ stores more and rebuilds slowly. Series 1 · 20 is why that matters.
+      # ADDED after a review asked whether a reader would finish knowing WHAT ZFS IS AND WHY.
+      # 00 is filesystems in general and 05 dives straight into vdevs — the mechanism arrived
+      # before the motivation, which is the wrong order for somebody deciding.
+      # THE FIVE ANSWERS, and this episode owes four of them:
+      #   WHAT IT IS      a filesystem and a volume manager IN ONE — which now means something
+      #                   concrete, because Series 1 just built the layered version by hand.
+      #                   ZFS COLLAPSES 17, 18 AND 19 INTO ONE THING: mdadm's redundancy, LVM's
+      #                   pooling and growing, and the filesystem, all owned by one component
+      #                   that can therefore see across all three. That is the unusual part, and
+      #                   1 · 17's closing sentence — an array that knows the copies disagree and
+      #                   cannot know which is right — is the problem this design solves.
+      #   WHY IT EXISTS   because a filesystem that does not own the redundancy cannot repair
+      #                   what it detects. 10 is the proof; this is the claim.
+      #   WHEN IT EARNS ITS PLACE   a machine with several disks you control; data you cannot
+      #                   silently corrupt; snapshots you want to be free; a database or
+      #                   warehouse where a pre-load snapshot costs nothing and saves a night.
+      #                   FOR A WAREHOUSE SPECIFICALLY, say it plainly: snapshot before the
+      #                   nightly load, roll back in seconds if it goes wrong, and compression
+      #                   usually makes the scans FASTER because fewer bytes leave the disk.
+      #   WHEN IT DOES NOT   one virtual disk on a rented VM — use ext4 and read 20's gate.
+      # ON DEBIAN, CONCRETELY: the packages are in contrib, the module is built by DKMS against
+      # your running kernel, and that build is where people get stuck. Give the exact apt lines
+      # and what a successful `modprobe zfs` looks like. One line on RHEL-family and stop.
+      - n: "02"
+        slug: what-zfs-is
+        title: "ZFS — What It Is, Why It Exists, and When It Earns Its Place"
+        hands_on: ["koan:choose", "koan:process:tool"]
+        core: true
+        status: planned
+      - n: "05"
+        slug: pools-and-vdevs
+        title: "Pools, vdevs and Datasets — Why Redundancy Lives in the vdev"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # THE EPISODE THAT JUSTIFIES ZFS EXISTING, and the reason to teach it rather than any
+      # other filesystem.
+      # COVER: every block is checksummed, and because the filesystem also holds the redundancy
+      # it can DETECT corruption and REPAIR it from another copy. SILENT CORRUPTION — bit rot, a
+      # cable, a controller lying — is otherwise invisible: the disk returns bytes, they are the
+      # wrong bytes, and nothing tells you. A traditional filesystem on RAID cannot even tell
+      # which copy is right.
+      # SCRUB as the scheduled proof, and the practice: scrub regularly and read the output.
+      # THE HONEST FRAMING: this is the one property that would make a data team choose ZFS on
+      # purpose, and it is worth more to a data team than to almost anyone else — because a
+      # wrong number that looks right is exactly what this academy exists to prevent.
+      # ADDED after a review asked whether a reader could choose EXACTLY the redundancy they
+      # need — no more, no less. 05 teaches what a vdev is and states the mirrors-against-RAIDZ
+      # trade in two lines. That is not enough to lay out a pool you will live with for years,
+      # and the layout is the decision with the least room to change your mind.
+      #
+      # COVER, as a decision procedure rather than a table:
+      #   THE LEVELS, IN ZFS's OWN NAMES   stripe (no redundancy), mirror, RAIDZ1, RAIDZ2,
+      #                     RAIDZ3, and STRIPED MIRRORS — several mirror vdevs in one pool,
+      #                     which is RAID 10's shape and the usual answer under a database.
+      #   HOW MANY DISKS PER VDEV   a vdev is the failure and rebuild unit, so a twelve-disk
+      #                     RAIDZ2 rebuilds by reading eleven disks and a pool of six mirrors
+      #                     rebuilds by reading one. FEWER, WIDER VDEVS BUY CAPACITY; MORE,
+      #                     NARROWER VDEVS BUY IOPS AND FAST RESILVER. Series 1 · 20's rebuild
+      #                     window is why the second usually wins for a warehouse that must stay
+      #                     up.
+      #   THE RULE OF THUMB WORTH GIVING: mirrors or striped mirrors for anything a database
+      #                     writes to; RAIDZ2 for bulk and archival; RAIDZ1 almost never at
+      #                     modern disk sizes, for exactly the reason 1 · 15 gives about single
+      #                     parity; RAIDZ3 when a rebuild takes days and you are honest about it.
+      #
+      # THE THREE DECISIONS YOU CANNOT TAKE BACK, and they are the point of the episode:
+      #   ASHIFT   the sector size, set at pool creation and PERMANENT. Get it wrong on 4K-sector
+      #            disks and every write is amplified for the life of the pool, with no symptom
+      #            except that it is slower than it should be forever. Set it deliberately;
+      #            do not let it be autodetected from a disk that lies about its geometry.
+      #   VDEV TYPE   you cannot convert a RAIDZ2 into mirrors. Rebuilding the pool and restoring
+      #            is the migration path.
+      #   ADDING A SINGLE DISK   a bare disk added to a redundant pool becomes a vdev with no
+      #            redundancy, and the pool now dies with it. ZFS will warn; people use -f.
+      # ⚠ RAIDZ EXPANSION LANDED IN RECENT OpenZFS AND CHANGES PART OF THIS. Check the version in
+      # front of you before writing that a vdev cannot grow, and state what your Debian's
+      # packaged version actually supports rather than what the project supports.
+      #
+      # HOT SPARES and autoreplace, briefly, and the honest note that a spare shortens the window
+      # in Series 1 · 20 rather than removing it.
+      - n: "07"
+        slug: choosing-your-layout
+        title: "Mirrors, RAIDZ or Striped Mirrors — Exactly the Redundancy You Need"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      - n: "10"
+        slug: checksums-and-scrub
+        title: "Checksums and Scrub — the Filesystem That Can Tell You the Data Is Wrong"
+        hands_on: ["koan:diagnose", "koan:process:tool"]
+        core: true
+        status: planned
+      # COVER: copy-on-write and what it buys — SNAPSHOTS THAT COST ALMOST NOTHING because
+      # nothing is copied until it changes, clones for a writable copy, and send/receive for
+      # replication to another machine.
+      # WHY A DATA TEAM CARES: a snapshot before a migration, a clone as a test database with
+      # production-shaped data, and incremental send as an offsite copy. Data Ops, Series 1 · 42
+      # said a copy on the same disk is not a backup, and send/receive is how that copy leaves.
+      # AND THE WARNING THAT COMES WITH COPY-ON-WRITE: snapshots hold space, so a pool can fill
+      # because of what you deleted. That is Series 1 · 25's cliff arriving from an unexpected
+      # direction.
+      # ADDED to close a proven gap: a review tested this course against what deploying and
+      # RUNNING each thing requires, and `zpool replace` appeared nowhere. 10 teaches that ZFS
+      # detects and repairs corruption, 1 · 20 teaches rebuilds as a concept — and nothing told
+      # the reader the command for the single most likely event in a pool's life.
+      # COVER, as a runbook: notice it (zpool status, and what DEGRADED reads like), identify the
+      # disk by a stable name rather than by /dev/sdb which moves, physically swap it, then
+      # `zpool replace`, then watch the resilver. WITH THE OUTPUT SHOWN AT EACH STEP.
+      # THE DETAIL THAT SAVES A POOL: use /dev/disk/by-id, not /dev/sdX. Kernel device names are
+      # not stable across reboots, and replacing the wrong disk in a degraded pool is how a
+      # single failure becomes a data-loss event.
+      # HOT SPARES and autoreplace in a paragraph. QUOTAS AND RESERVATIONS here too — also
+      # absent before this review — because "one dataset ate the pool" is the other thing that
+      # actually happens, and Series 1 · 25's cliff is where it ends.
+      - n: "12"
+        slug: replacing-a-failed-disk
+        title: "zpool replace — the Command for the Thing That Will Actually Happen"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "15"
+        slug: snapshots-and-send
+        title: "Snapshots, Clones and send/receive — Copies That Cost Nothing Until They Change"
+        hands_on: ["koan:process:tool", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the settings that actually change behaviour, and the two that a database cares
+      # about most.
+      #   RECORDSIZE   match it to the workload — a large default is right for big sequential
+      #                files and wrong for a database writing 8 or 16 KB pages, where it causes
+      #                read-modify-write amplification.
+      #   COMPRESSION  on by default in modern ZFS, and usually a WIN even for speed, because
+      #                fewer bytes leave the disk. Say that plainly; it surprises people.
+      #   ARC and L2ARC   the cache, and why ZFS appearing to use all your memory is correct.
+      #   SYNC and the SLOG, and the dangerous advice found on forums — sync=disabled makes
+      #                benchmarks beautiful and breaks the one promise a database depends on.
+      # THE RULE: change one setting, measure, and know which workload you measured.
+      - n: "20"
+        slug: tuning-zfs
+        title: "recordsize, Compression and the ARC — the Settings That Matter, and One That Lies"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # ALSO OWNS THE GATE, added in the same review that found every other series in this
+      # academy has one and this did not. WHEN NOT ZFS:
+      #   it wants RAM, and on a small box the ARC competes with the database you are running;
+      #   A POOL CANNOT BE SHRUNK, and vdevs largely cannot be removed — a layout mistake is
+      #     permanent in a way ext4 never is;
+      #   the licence keeps it out of the mainline kernel, so it is a module your distribution
+      #     may or may not make easy, and a kernel upgrade can break it;
+      #   and if you have hardware RAID underneath, ZFS cannot see the disks and its whole
+      #     self-healing argument evaporates — which is the commonest way people get none of
+      #     the benefit and all of the complexity.
+      # SAY IT PLAINLY: on a rented VM with one virtual disk, ext4 or XFS is the right answer and
+      # this series is background reading.
+      # ADDED as its own episode 2026-09-07. It had been a paragraph inside Series 1 · 19, beside
+      # ext4 and XFS, which was the wrong neighbour: btrfs is a COPY-ON-WRITE filesystem, so the
+      # comparison a reader needs is with ZFS. And it is placed immediately before 22 on purpose,
+      # because "use btrfs instead" is one of the real answers to "do you need ZFS?" and that
+      # episode cannot weigh an option this course never taught.
+      #
+      # COVER:
+      #   THE ONE ADVANTAGE THAT DECIDES MOST DEBIAN CASES: IT IS IN THE MAINLINE KERNEL. No
+      #                   DKMS, no module rebuilt against every kernel upgrade, no licence
+      #                   question — `apt install btrfs-progs` and the filesystem is already
+      #                   there. Series 2 · 02 named the DKMS build as where Debian readers get
+      #                   stuck; this is the option that does not have that problem at all.
+      #   SUBVOLUMES      not quite ZFS datasets — cheaper, and mountable as directories, which
+      #                   is why distributions use them for root and /home layouts.
+      #   SNAPSHOTS       near-instant, and WRITABLE by default, which is the opposite of ZFS's
+      #                   default and surprises people moving between them.
+      #   CHECKSUMS AND SCRUB   the same argument as 2 · 10 — it detects corruption, and with
+      #                   redundancy it repairs it. This is the reason to consider it at all.
+      #   COMPRESSION     zstd as a mount option, per-file, and the same "fewer bytes leave the
+      #                   disk" argument that makes it a performance win rather than a cost.
+      #   send/receive    exists, and does the job 2 · 15 uses ZFS's for.
+      #
+      # THE CAUTION, STATED CAREFULLY BECAUSE IT IS THE MOST-QUOTED AND LEAST-CHECKED FACT ABOUT
+      # THIS FILESYSTEM: single, mirror and striped-mirror profiles are what people run in
+      # production. THE PARITY PROFILES have carried a long-standing warning about the write hole
+      # from Series 1 · 15. That situation has been improving slowly for years, so DO NOT repeat
+      # a decade-old blog post — check the project's own status page for the version in Debian
+      # you are writing about, state the version, and if the answer is still "not recommended",
+      # say so plainly and move on.
+      #
+      # AND THE TRAP THAT MATTERS MOST TO THIS ACADEMY'S READER, which is genuinely data-specific
+      # and is why this episode earns its place: COPY-ON-WRITE FRAGMENTS FILES THAT ARE WRITTEN
+      # IN PLACE — a database's data directory, a VM image. The performance falls away over
+      # weeks, not immediately, so it looks like the database degrading.
+      # THE FIX IS `chattr +C` OR nodatacow — AND IT DISABLES CHECKSUMS FOR THOSE FILES. So the
+      # standard advice for putting Postgres on btrfs turns off the exact guarantee that was the
+      # reason to choose btrfs. Say that out loud. It is the cleanest example in the course of a
+      # mitigation that quietly removes the benefit, and a reader who understands it will ask the
+      # same question of every other tuning flag they are handed.
+      #
+      # WHEN TO CHOOSE IT: a Debian box where you want copy-on-write snapshots and checksums
+      # without a kernel module, mirrors are enough redundancy, and the workload is files rather
+      # than a database writing in place. That is a real and common shape.
+      - n: "21"
+        slug: btrfs
+        title: "btrfs — Copy-on-Write in the Kernel, and the Flag That Turns Off Checksums"
+        hands_on: ["koan:process:tool", "koan:choose"]
+        status: planned
+      # ADDED after a review asked whether each series ENDS on "do you actually need this".
+      # It did not. ZFS's gate was a paragraph inside 20, a tuning episode — which is the wrong
+      # place twice over: buried, and read before the reader knows what the thing costs.
+      # NINE OTHER COURSES IN THIS ACADEMY END THIS WAY, before the project, so the project can
+      # be judged against it — Neo4j, Trino, Kubernetes, Distributed SQL, Spark. This series now
+      # matches them.
+      #
+      # WHY AT THE END AND NOT ONLY AT THE START: at 02 "ZFS has real overhead" is an assertion a
+      # reader cannot weigh. Here they have created a pool, chosen a layout they cannot change,
+      # replaced a disk, and watched a resilver. NOW the cost is a thing they have felt, and the
+      # decision is theirs to make honestly.
+      #
+      # THE INSTINCT TO TEACH, and state it as the rule: USE THE MINIMUM THAT GETS YOU WHAT YOU
+      # ACTUALLY NEED. Walk the ladder DOWNWARDS, and make the reader say which rung they are on:
+      #   INTEGRITY YOU CAN PROVE   ZFS is genuinely close to alone here. If silent corruption
+      #                             matters — and for a warehouse it should — this is the reason,
+      #                             and it is the only one that cannot be bought elsewhere.
+      #   CHEAP SNAPSHOTS           LVM has them and they are worse — Series 1 · 18 showed why —
+      #                             and BTRFS HAS THEM PROPERLY, in the mainline kernel with no
+      #                             DKMS, which 21 just taught. If snapshots and checksums are
+      #                             the requirement and mirrors are enough redundancy, btrfs is a
+      #                             serious answer and this episode must treat it as one rather
+      #                             than as a footnote. A rented volume may also snapshot at the
+      #                             hypervisor, in which case you already have them.
+      #   REDUNDANCY                mdadm with ext4 or XFS does this, ships in every kernel, and
+      #                             needs no DKMS. It cannot self-heal, which is the trade.
+      #   COMPRESSION               and here is the point a data reader must not miss: YOUR
+      #                             WAREHOUSE ALREADY COMPRESSES AND ALREADY CHECKSUMS. Parquet
+      #                             and ClickHouse both do. So ZFS's compression is not the
+      #                             argument for a warehouse box — its snapshots and its pool
+      #                             management are.
+      #   NOTHING BUT A FILESYSTEM  ext4. Stop. This is the right answer more often than this
+      #                             series' existence implies, and saying so is what makes the
+      #                             rest of it trustworthy.
+      #
+      # THE COSTS THE READER NOW KNOWS, listed back to them: a DKMS module rebuilt against every
+      # kernel upgrade on Debian; RAM the ARC will take; a pool that cannot shrink; and the
+      # layout decisions from 07 that are permanent.
+      # THE HONEST RECOMMENDATION SHAPE: disks you own, data you cannot silently corrupt, and
+      # snapshots you want to be free — ZFS. Anything less than all three — probably not.
+      - n: "22"
+        slug: do-you-need-zfs
+        title: "Do You Need ZFS — and the Simpler Things That Would Have Worked"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      - n: "25"
+        slug: project-a-pool-that-heals
+        title: "Project — Build a Pool, Corrupt a Disk on Purpose, and Watch It Repair"
+        hands_on: ["koan:author", "koan:process:tool"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  # ONE SERIES, NOT TWO. It was drafted as "Object Storage, Explained" followed by
+  # "Self-Hosting S3", and that split was wrong: the protocol and running it yourself are the
+  # same subject, and separating them put the payoff — the same client, unchanged, against your
+  # own disks — two series away from the mechanism that makes it true. Read as one arc: what the
+  # API promises (00 to 15), then why and how you would provide it yourself (20 to 35).
+  - slug: series3-object-storage
+    title: Object Storage — the Protocol, and Running It Yourself
+    tagline: what the API promises, and the same thing on your own disks
+    level: intermediate
+    episodes:
+      # COVER: the API as a data model rather than as a product. A flat KEY SPACE with no
+      # directories; PUT, GET, DELETE, LIST; and metadata attached to the object.
+      # LISTING IS A PREFIX SCAN, and it is the operation people misjudge — it is not a
+      # directory read, it is paginated, it costs per request, and it gets slower as the bucket
+      # grows. Data Ops, Series 1 · 47 states this; here the reader sees why it follows from a
+      # flat key space.
+      # SEAM STATED UP FRONT: that course owns renting one and paying for it. This series owns
+      # what the protocol actually guarantees.
+      - n: "00"
+        slug: the-api
+        title: "A Flat Key Space — Why Listing Is a Scan and There Are No Directories"
+        hands_on: ["koan:predict", "koan:process:tool"]
+        core: true
+        status: planned
+      # COVER: the operations that make it usable for real data, each with the reason it exists.
+      #   MULTIPART UPLOAD   because a single PUT of a hundred gigabytes over a flaky link is a
+      #                      bad idea. Parts, retries, completion — and the ABANDONED UPLOAD
+      #                      that is invisible in a listing and billed monthly.
+      #   RANGE GET          reading bytes 4,000 to 8,000 of an object without downloading it,
+      #                      which is EXACTLY what lets DuckDB and Trino read one column of a
+      #                      Parquet file over the network. That single operation is why the
+      #                      lakehouse is possible at all — say so.
+      #   PRESIGNED URLS     handing someone time-limited access without giving them a key.
+      #   CONDITIONAL WRITES the newer primitive that makes safe coordination possible.
+      - n: "05"
+        slug: multipart-and-range
+        title: "Multipart, Range GET and Presigned URLs — the Operations That Make It Usable"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: what the store promises. Read-after-write for new objects, and what overwrite and
+      # delete actually guarantee — with the historical note that this is one of the areas where
+      # old advice is now wrong, because guarantees strengthened over the years and blog posts
+      # did not.
+      # VERSIONING as the mechanism that turns an overwrite into a new version, and DELETE
+      # MARKERS as the reason a deleted object still costs money.
+      # OBJECT LOCK and write-once retention as the ransomware answer, and the one property that
+      # makes it real: IT MUST BE UNBREAKABLE BY THE ACCOUNT THAT WRITES THE DATA, or it is
+      # decoration.
+      # ⚠ CHECK CURRENT CONSISTENCY GUARANTEES against the implementation being described. This
+      # is the paragraph most likely to be out of date.
+      - n: "10"
+        slug: consistency-and-versioning
+        title: "Consistency, Versioning and Object Lock — What the Store Actually Promises"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: the two automatic behaviours a bucket can have. LIFECYCLE RULES — transition to a
+      # colder class after N days, expire after M — which is Series 1 · 25's tiering expressed as
+      # configuration. And STORAGE CLASSES, with the restore time attached to each, because a
+      # class whose retrieval takes hours is a decision about an incident, not about a bill.
+      # THE FAILURE TO NAME: a lifecycle rule that expired the backups nobody realised were
+      # governed by it. Quiet, dated, and discovered on the worst day.
+      - n: "15"
+        slug: lifecycle-and-classes
+        title: "Lifecycle Rules and Storage Classes — Tiering as Configuration, and Its Trap"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        status: planned
+      # ── THE SERIES TURNS HERE ────────────────────────────────────────────────
+      # Everything above is what the API promises. Everything below is why you would provide it
+      # yourself, and what that costs. The turn is deliberate and the reader should feel it.
+
+      # THE EPISODE THE SECOND HALF EXISTS FOR, and the question no other track in the academy
+      # answers: WHAT IF THE DATA CANNOT LEAVE THE BUILDING?
+      # COVER the four reasons, because they are different decisions: legal residency or
+      # sovereignty; a contract or a regulator; an air-gapped network; and plain economics at
+      # volume, where egress on petabytes stops being a line item and becomes the budget.
+      # THEN THE COST MODEL, INVERTED, which is the genuinely useful part: renting is opex, per
+      # gigabyte and per request, with egress. Owning is capex plus power, space, replacement
+      # disks and YOUR TIME — and no egress at all. Work the break-even out loud rather than
+      # asserting one, because it moves with volume, read pattern and how much your time costs.
+      # AND THE HONEST GATE: for most teams, most of the time, renting wins. Self-host when the
+      # data may not leave, when the volume makes egress prohibitive, or when you already run
+      # the hardware and the people.
+      - n: "20"
+        slug: when-it-cannot-leave
+        title: "When the Data Cannot Leave — Four Reasons, and the Cost Model Inverted"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: MinIO as the demonstration, because it is one binary and a reader can run it in
+      # minutes. The S3 API on your own directories, the console, and a client that does not
+      # know the difference — which is Data Ops, Series 1 · 47's "S3 is a protocol, not a
+      # product" proven rather than asserted.
+      # THE POINT OF THE EPISODE: run the same rclone command against a rented bucket and a
+      # local one and see it work unchanged. That is the whole argument for the protocol.
+      - n: "25"
+        slug: minio
+        title: "MinIO — the Same API, on Four Directories, in Ten Minutes"
+        hands_on: ["koan:process:tool", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: what makes a single binary into durable storage — erasure sets, drive and node
+      # layout, and the parity you chose in Series 1 · 15 now expressed as a deployment.
+      # THE PRACTICAL DECISIONS: how many drives per set, what a node loss costs you, and why
+      # the layout is fixed at deployment and not adjustable afterwards.
+      # DO THE ARITHMETIC ON SCREEN, because "it is erasure coded" is not an answer. For a given
+      # number of drives across a given number of nodes: HOW MANY DRIVES AND HOW MANY WHOLE
+      # NODES can you lose and still READ, and still WRITE? THOSE TWO NUMBERS ARE DIFFERENT — a
+      # deployment goes READ-ONLY BEFORE IT GOES OFFLINE — and being able to state both about
+      # your own cluster is the outcome of this episode.
+      # THE TRAP: parity chosen for the drive count you had on day one, with no room for the node
+      # you add in year two. Series 1 · 15's arithmetic meeting a layout you cannot change
+      # without moving all the data.
+      # HEALING as the counterpart to Series 1 · 20's rebuild, watched on something small enough
+      # to observe.
+      # ⚠ VERIFY the current deployment topology, expansion model and licence against the
+      # project's own documentation. This area has changed and vendor terms in self-hosted
+      # storage move as fast as they do in databases.
+      # ADDED after a review asked whether a reader could put this into production: the series
+      # went from "MinIO in ten minutes" straight to erasure-set layout without ever securing
+      # it. You cannot run that, and answering "yes, in dev" to a production question is how
+      # courses mislead.
+      # COVER:
+      #   IDENTITIES        access keys, users and service accounts — an application gets its
+      #                     own key, never yours.
+      #   POLICIES          least privilege expressed per bucket and per PREFIX, which is the
+      #                     same discipline Terraform & Pulumi, Series 2 · 10 teaches for a
+      #                     pipeline's credentials and Data Ops, Series 1 · 35 teaches for what
+      #                     a job may read.
+      #   PRESIGNED URLS    from 05, revisited as the answer to "give them the file, not a key".
+      #   TLS               a certificate in front of it, and the reason it is not optional:
+      #                     WITHOUT IT YOUR ACCESS KEY CROSSES THE NETWORK IN CLEAR TEXT on
+      #                     every single request. Self-signed for a lab, a real certificate for
+      #                     anything else.
+      # THE FAILURE TO BUILD IT AROUND: the bucket left open. Data Ops, Series 1 · 47 names it as
+      # the commonest way a company's data reaches the news; this is the episode where the
+      # reader configures it not to happen, on a server they control.
+      - n: "27"
+        slug: access-control-and-tls
+        title: "Users, Policies and TLS — Securing a Bucket You Host Yourself"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "30"
+        slug: erasure-sets-and-layout
+        title: "Erasure Sets and Drive Layout — the Parity You Chose, as a Deployment"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: what you now own that a rented bucket did. Capacity — you cannot conjure a
+      # terabyte, so Series 1 · 25's lead time is real. Expansion, and why it is rarely as
+      # simple as adding a disk. Upgrades on a system holding all your data. Monitoring what
+      # matters: free space, drive health, healing progress. And backups, because — the track's
+      # thesis again — REPLICATION ACROSS YOUR OWN NODES IS NOT A BACKUP, and now nobody else
+      # is quietly keeping a second copy for you.
+      # AND THE SAME REDUCTIVE QUESTION THE OTHER TWO SERIES CLOSE ON, in a paragraph here
+      # because self-hosting was already gated at 20 before the work started: now that you have
+      # done it, was it the minimum? Renting is one line of configuration and somebody else's
+      # on-call. Self-hosting earns its place when the data may not leave, when egress at your
+      # volume is the budget, or when the hardware and the people already exist. If none of those
+      # is true any more — and they change — moving back is a legitimate outcome, not a defeat.
+      # SEAM: Data Ops owns operating a machine; this is the storage-specific half only.
+      # ADDED to close two proven gaps. 35 said you now own monitoring and backup and never said
+      # how, which is the difference between owning a service and hoping about one.
+      # COVER, as runbooks:
+      #   MONITORING     the Prometheus metrics endpoint, the handful of series that matter —
+      #                  free capacity, drive health, healing progress, request errors — and one
+      #                  alert that would have woken you: capacity crossing the threshold from
+      #                  Series 1 · 25, early enough to order disks.
+      #   SITE REPLICATION   bucket or site replication to a second deployment, which is how the
+      #                  copy leaves the building. THE POINT THIS TRACK KEEPS MAKING: this is
+      #                  still not a backup — a delete replicates — so pair it with versioning
+      #                  and object lock from Series 3 · 10, which is what makes the second copy
+      #                  survive a mistake rather than merely a fire.
+      #   RESTORE, PROVED   read something back from the second site. Data Ops, Series 1 · 42's
+      #                  rule is the one that matters here too: a backup you have never restored
+      #                  is a guess.
+      - n: "32"
+        slug: monitoring-and-replication
+        title: "Monitoring and Replication — an Alert, and a Copy That Survives a Delete"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "35"
+        slug: what-you-now-own
+        title: "What You Now Own — Capacity, Upgrades, and the Backup Nobody Else Is Taking"
+        hands_on: ["koan:choose", "koan:capture"]
+        status: planned
+      # ONE PROJECT FOR BOTH HALVES, which is what the merge makes possible: host the bucket,
+      # point an unchanged client at it, and then read a single column out of a remote Parquet
+      # file and count the bytes that crossed. The first half proves the protocol is a protocol;
+      # the second proves the range GET at 05 is what the lakehouse stands on.
+      - n: "40"
+        slug: project-host-it-and-read-one-column
+        title: "Project — Host a Bucket, Point a Pipeline At It, and Read One Column"
+        hands_on: ["koan:author", "koan:count:scanned"]
+        core: true
+        tags: ["project"]
+        status: planned
+
+  - slug: series4-ceph
+    title: Ceph
+    tagline: one cluster, three interfaces, and the algorithm underneath
+    level: advanced
+    episodes:
+      # COVER: what Ceph is and why it is unlike the previous series. ONE CLUSTER, THREE
+      # INTERFACES — object through RGW, which is S3-compatible; block through RBD, which is
+      # what a VM or a container gets; and a POSIX filesystem through CephFS — all on RADOS
+      # underneath.
+      # THAT IS THE REASON TO CHOOSE IT: Series 1 · 00's three interfaces, from one pool of
+      # disks, instead of three separate systems. MinIO gives you one of the three and is far
+      # simpler; that is the trade.
+      # THE DAEMONS, named so logs are readable: OSD per disk, MON for the map, MGR, MDS for
+      # CephFS. Keep it to what a reader needs to interpret a health message.
+      # AND THE GATE GOES HERE, moved from the operations episode in a review: a reader should
+      # meet it BEFORE investing thirteen episodes, not after.
+      # CEPH NEEDS SOMEBODY WHO OPERATES IT. It is powerful, it is genuinely complex, and a
+      # cluster nobody owns is a data-loss event on a schedule. If all you need is an S3
+      # endpoint, Series 3 is smaller in every dimension and is usually the right answer. Choose
+      # Ceph when you need two or three of the interfaces from one pool of disks, or when you are
+      # already committed to it.
+      # KEEP THIS SHORT — it is the "should you even read this?" gate, and its job is to stop
+      # somebody spending fourteen episodes on the wrong answer. THE REAL DECISION IS AT 58,
+      # after the reader has bootstrapped one and can weigh a cost they have actually met.
+      - n: "00"
+        slug: one-cluster-three-interfaces
+        title: "One Cluster, Three Interfaces — RGW, RBD and CephFS on One Pool of Disks"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # THE TECHNICAL CONTRIBUTION, and the episode worth teaching even to somebody who will
+      # never run Ceph.
+      # COVER: CRUSH. Placement is COMPUTED by the client from a map, deterministically, rather
+      # than looked up in a central index. So there is no metadata server to ask, no lookup
+      # table to grow, and no single component that every read must pass through.
+      # WHY IT MATTERS: it is the same problem NoSQL Concepts, Series 3 · 00 poses — where does
+      # this data live? — answered by arithmetic instead of by a directory, and the contrast is
+      # worth drawing explicitly.
+      # PLACEMENT GROUPS as the layer between objects and disks, and the honest note that their
+      # count used to be a notorious tuning decision and is now largely automatic — say which
+      # version that changed in.
+      - n: "05"
+        slug: crush
+        title: "CRUSH — Computing Where the Data Lives Instead of Looking It Up"
+        hands_on: ["koan:predict", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: pools, replication against erasure coding chosen per pool, and CRUSH rules that
+      # express a failure domain — replicas on different hosts, racks or rooms.
+      # THIS IS SERIES 1 · 15 MADE CONFIGURABLE, and it is where a reader sees that "survive a
+      # rack" is a line of configuration rather than a hope.
+      # THE PRACTICAL CHOICE: erasure coding for bulk and archival pools, replication for
+      # anything latency-sensitive such as RBD volumes under a database.
+      #
+      # AND THE TWO SETTINGS THAT DECIDE WHETHER YOU LOSE DATA, which a review found nothing
+      # named:
+      #   SIZE AND MIN_SIZE   size is how many copies exist; MIN_SIZE IS HOW MANY MUST BE
+      #                       PRESENT FOR THE POOL TO ACCEPT WRITES. size=3, min_size=2 is the
+      #                       default for a reason: it keeps serving with one copy missing and
+      #                       STOPS when only one remains, because writing to a single surviving
+      #                       copy is how you lose data quietly.
+      #   size=2, min_size=1  the configuration people reach for to save disk, and the one that
+      #                       loses data. One copy left, still accepting writes, and no way to
+      #                       tell which version is right when the other returns. Say this
+      #                       plainly and say it once — it is the Ceph equivalent of RAID 5 on
+      #                       large disks.
+      # AND THE SURPRISE THAT READS LIKE AN OUTAGE: when a pool drops below min_size, Ceph
+      # BLOCKS WRITES ON PURPOSE. It looks like the cluster has failed. It is the cluster
+      # refusing to lose your data, and a reader who does not know that will "fix" it by
+      # lowering min_size at exactly the wrong moment.
+      # ERASURE-CODED POOLS have the same shape: k data and m coding chunks, and a min_size that
+      # follows from them. Work one example through with real numbers.
+      # ADDED. Nothing in the first draft told a reader what to buy or how to wire it, and Ceph
+      # is one of the most network-sensitive systems a data team will ever run.
+      # COVER:
+      #   THE UNITS         one OSD per disk, and what each one wants in RAM and CPU. Multiply
+      #                     before buying, because the answer surprises people.
+      #   TWO NETWORKS      a PUBLIC network for clients and a CLUSTER network for replication
+      #                     and recovery. Series 1 · 20's rebuild storm is why: recovery traffic
+      #                     will saturate a shared link at exactly the moment clients still need
+      #                     it. Separating them is the single most consequential physical
+      #                     decision here.
+      #   LATENCY OVER THROUGHPUT for RBD under a database — a write is not acknowledged until
+      #                     the replicas have it, so every hop is in the write path.
+      #   THE HONEST MINIMUM  three nodes for redundancy that means anything, and failure
+      #                     domains that map onto hosts or racks you actually have.
+      # ⚠ ORDERS OF MAGNITUDE, NOT THIS YEAR'S NUMBERS, and date anything concrete.
+      - n: "10"
+        slug: sizing-and-network
+        title: "Sizing and Two Networks — Why Ceph Is Network-Bound Before It Is Disk-Bound"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # ADDED. The first draft explained Ceph and never installed one.
+      # COVER: cephadm as the supported path — bootstrap the first monitor, add hosts, let the
+      # orchestrator place daemons, add OSDs from available devices. The fact that everything
+      # runs in containers, which is why Data Ops, Series 1 · 37 is a prerequisite in practice.
+      # WHAT A HEALTHY NEW CLUSTER LOOKS LIKE, so the reader has a baseline to compare against
+      # when 50 goes wrong.
+      # TEACH AGAINST WHAT THEY CAN RUN: a few VMs or containers with spare block devices is
+      # enough to bootstrap and see it work. SAY CLEARLY that performance, recovery behaviour and
+      # the network split cannot be judged there.
+      - n: "15"
+        slug: cephadm
+        title: "cephadm — Bootstrapping a Cluster, and What Healthy Looks Like"
+        hands_on: ["koan:process:tool", "koan:capture"]
+        core: true
+        status: planned
+      # ADDED to close the gap that most embarrassed this course when it was tested: THREE
+      # EPISODES STOOD UP THREE INTERFACES AND NONE OF THEM CREATED THE CREDENTIAL A CLIENT
+      # NEEDS TO REACH ANY OF THEM. cephx appeared nowhere in the file.
+      # COVER, as a runbook, and it belongs here — after the cluster exists at 15, before
+      # anything uses it at 25, 30 and 35:
+      #   WHAT CEPHX IS      mutual authentication between clients and the cluster, on by
+      #                      default, and not optional in any deployment worth running.
+      #   USERS AND CAPS     a client is an identity with CAPABILITIES — read on the monitors,
+      #                      read/write on a named pool. Least privilege, the same discipline as
+      #                      Series 3 · 27 and Data Ops, Series 1 · 35, expressed in Ceph's own
+      #                      grammar.
+      #   THE KEYRING        create the user, export the keyring, put it on the client machine,
+      #                      and the exact command each of the next three episodes will assume.
+      #   WHAT FAILURE LOOKS LIKE   a permission denied that names neither the user nor the
+      #                      capability that was missing. Knowing where to look is the episode.
+      - n: "18"
+        slug: cephx-and-clients
+        title: "cephx, Users and Keyrings — the Credential Every Client Needs First"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      - n: "20"
+        slug: pools-and-failure-domains
+        title: "Pools and Failure Domains — Saying 'Survive a Rack' in Configuration"
+        hands_on: ["koan:choose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: running one, honestly. Reading `ceph status` and what HEALTH_WARN actually means,
+      # since a Ceph cluster is frequently not HEALTH_OK and that is not always an emergency.
+      # Recovery and backfill after a disk or host loss, which is Series 1 · 20's rebuild storm
+      # with names attached and throttles you can set.
+      # THE GATE IS AT 00 NOW, stated before the reader invests thirteen episodes rather than
+      # after. This episode keeps the operations and hands the health warnings to 50.
+      # ADDED — the payoff episode, and the one that closes the loop with Series 3.
+      # COVER: radosgw as the S3-compatible endpoint on top of the same cluster. Users and access
+      # keys, and the one moment worth staging deliberately: POINT THE SAME rclone CONFIG FROM
+      # SERIES 3 AT IT AND WATCH IT WORK UNCHANGED. That is "S3 is a protocol, not a product"
+      # proven twice, and it is the most persuasive thirty seconds in the course.
+      # Realms, zonegroups and zones named only as far as a single-site deployment needs.
+      # WHEN RGW RATHER THAN MinIO: you already run Ceph, or you need object storage beside block
+      # and file from one pool. Otherwise Series 3.
+      - n: "25"
+        slug: rgw
+        title: "RGW — the S3 Endpoint, and the Same Client Pointed at It"
+        hands_on: ["koan:process:tool", "koan:complete"]
+        core: true
+        status: planned
+      # ADDED. RBD is how most databases and VMs actually consume Ceph.
+      # COVER: images as thin-provisioned block devices, snapshots and clones, and mapping one on
+      # a host. What a database on RBD actually experiences — every write waits for replicas, so
+      # the network from 10 is in the write path and this is where that decision is felt.
+      # THE COMPARISON WORTH MAKING: Kubernetes for Data Workloads, Series 2 · 15 argues a data
+      # job usually wants object storage rather than a volume. This is the volume, and the reader
+      # should be able to say when it is nonetheless right — a database that needs a filesystem,
+      # or a VM.
+      - n: "30"
+        slug: rbd
+        title: "RBD — Block Devices, and What a Database on Them Feels"
+        hands_on: ["koan:process:tool", "koan:predict"]
+        status: planned
+      # ADDED. The third interface, and the one with the most operational surface per unit of use.
+      # COVER: the MDS and the separate metadata pool, mounting it, and what POSIX semantics buy
+      # you — several machines writing to one namespace, with locking.
+      # WHEN IT IS RIGHT: a legacy application that needs a filesystem, shared scratch space, home
+      # directories. WHEN IT IS NOT: as a substitute for object storage in a data pipeline, where
+      # you are paying for POSIX guarantees nothing in the pipeline uses.
+      # THE OPERATIONAL NOTE: metadata-heavy workloads stress the MDS, and "many small files" is
+      # the shape that hurts — the same shape Trino, Series 2 · 05 warns about, one layer down.
+      - n: "35"
+        slug: cephfs
+        title: "CephFS — a Shared Filesystem, and When You Are Paying for POSIX You Do Not Use"
+        hands_on: ["koan:choose", "koan:complete"]
+        status: planned
+      - n: "40"
+        slug: operating-it
+        title: "ceph status, Recovery and Backfill — and Whether Anyone Will Own This"
+        hands_on: ["koan:diagnose", "koan:process:tool"]
+        core: true
+        status: planned
+      # COVER: how a data team most often actually meets Ceph — as the thing answering a
+      # PersistentVolumeClaim, deployed by Rook, providing RBD volumes and an S3 endpoint to a
+      # cluster. Kubernetes for Data Workloads, Series 2 · 05 asks the cluster for storage; this
+      # is one of the commonest answers, and naming it closes a loop that course leaves open.
+      # AND THE RECOMMENDATION THAT SURVIVES THE COURSE: for a data workload, object storage
+      # beats a block volume more often than people expect — which is that track's Series 2 · 15
+      # arriving from the storage side with the same conclusion.
+      # ADDED. An upgrade on a system holding all of your data, done wrong, is the incident this
+      # episode exists to prevent.
+      # COVER: the orchestrator-driven staggered upgrade, and THE ORDER, which is not negotiable
+      # — monitors, then managers, then OSDs, then MDS, then RGW. The maintenance flags such as
+      # noout that stop the cluster helpfully rebalancing away from a host you took down for four
+      # minutes, and the discipline of setting them and REMEMBERING TO CLEAR THEM.
+      # Version support windows, and reading the release notes for the version you are leaving as
+      # well as the one you are entering.
+      # THE PRACTICE: upgrade a test cluster first. On this system that advice is not a platitude.
+      - n: "45"
+        slug: upgrades
+        title: "Upgrades — the Order That Is Not Negotiable, and the Flag You Must Clear"
+        hands_on: ["koan:process:tool", "koan:predict"]
+        status: planned
+      # ADDED — the episode a reader will return to, and the one that makes the difference
+      # between owning a cluster and being owned by one.
+      # COVER the health warnings you will actually meet, each with what it means and the command
+      # that narrows it:
+      #   PG DEGRADED / UNDERSIZED   copies missing. Usually recovery in progress; sometimes not.
+      #   NEARFULL / FULL OSD        Series 1 · 25's cliff, and Ceph stops accepting writes rather
+      #                              than filling — which reads as an outage and is a safety
+      #                              feature. Rebalance or add capacity; there is no third option.
+      #   SLOW OPS                   almost always a disk dying or the network, and this is where
+      #                              10's two-network decision is either vindicated or regretted.
+      #   CLOCK SKEW                 monitors need agreeing clocks. Unglamorous, common, and it
+      #                              takes down consensus.
+      #   OSD DOWN / OUT             the difference between the two, and why the timing between
+      #                              them decides whether a five-minute reboot triggers a rebuild.
+      # ALSO OWNS REPLACING A DEAD OSD, added in the same review: 15 adds OSDs from available
+      # devices and nothing replaced a failed one, which is the operation you will actually
+      # perform. As a runbook: identify it, `ceph osd out`, wait for the data to move, stop the
+      # daemon, `ceph osd purge`, swap the disk, and let the orchestrator take it back in — with
+      # the output at each step, and the reason to wait between them.
+      # THE HABIT: `ceph -s` first, `ceph health detail` second, and HEALTH_WARN is not always an
+      # emergency — knowing which warnings are normal is most of the skill.
+      - n: "50"
+        slug: troubleshooting
+        title: "HEALTH_WARN — the Warnings You Will Meet, and Which Ones Are Normal"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      - n: "55"
+        slug: ceph-under-kubernetes
+        title: "Rook — What Answers a PersistentVolumeClaim, and What Should"
+        hands_on: ["koan:choose", "koan:predict"]
+        status: planned
+      # ADDED in the same review, and this one corrects a decision I recorded earlier in this
+      # file. The gate was moved to 00 so nobody would invest fourteen episodes wrongly — that
+      # reasoning still holds and 00 keeps its short version. But a gate at 00 is the only one
+      # this series had, and it asks the WRONG QUESTION: at 00 the reader cannot weigh a cost
+      # they have not met. THE TWO GATES ARE DIFFERENT QUESTIONS.
+      #   AT 00   should you even read this? — so nobody wastes fourteen episodes.
+      #   HERE    now that you have bootstrapped one, issued a keyring, watched a backfill and
+      #           read a HEALTH_WARN — what is the MINIMUM that gets you what you actually need?
+      #
+      # WALK THE LADDER DOWNWARDS, and make the reader name their rung:
+      #   ONLY AN S3 ENDPOINT       Series 3. Smaller in every dimension — one binary, one
+      #                             layout decision, an afternoon rather than a quarter. This is
+      #                             the answer for most data teams and the series must say so.
+      #   ONLY BLOCK, FOR A FEW VMs LVM, or ZFS zvols from Series 2, or whatever the hypervisor
+      #                             already provides.
+      #   ONLY A SHARED FILESYSTEM  NFS. Unglamorous, decades old, and it works. CephFS is a lot
+      #                             of machinery to arrive at a mount point.
+      #   ANY OF THEM, RENTED       somebody else's on-call rota. Data Ops, Series 1 · 47.
+      #   TWO OR THREE OF THEM, FROM ONE POOL, AT SCALE, WITH AN OWNER — Ceph, and now for a
+      #                             reason the reader can defend rather than because it was the
+      #                             impressive option.
+      #
+      # THE QUESTION THAT ACTUALLY DECIDES IT, and it is not technical: IS THERE A NAMED PERSON
+      # WHOSE JOB INCLUDES THIS CLUSTER — and what happens when they leave? 00 says a cluster
+      # nobody owns is a data-loss event on a schedule. This is where the reader answers it
+      # about their own team, with fourteen episodes of evidence for what "owning it" means.
+      #
+      # AND THE RULE THE WHOLE COURSE CLOSES ON, stated here because this is the last decision
+      # episode in it: USE THE MINIMUM THAT GETS YOU WHAT YOU ACTUALLY NEED. Every layer in this
+      # course is something that must be operated, upgraded, monitored and eventually recovered
+      # by somebody. Complexity you did not need is not neutral — it is a cost you pay every
+      # week, in the one currency a data team never has spare.
+      - n: "58"
+        slug: do-you-need-ceph
+        title: "Do You Need Ceph — and What Would Have Been Enough"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      - n: "60"
+        slug: project-choose-a-storage-layer
+        title: "Project — Choose a Storage Layer for Three Workloads, With the Numbers"
+        hands_on: ["koan:author", "koan:choose"]
+        core: true
+        tags: ["project"]
+        status: planned

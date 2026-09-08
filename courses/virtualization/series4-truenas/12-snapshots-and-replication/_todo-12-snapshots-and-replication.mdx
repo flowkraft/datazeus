@@ -1,0 +1,83 @@
+---
+title: "Snapshot Tasks, Replication and Cloud Sync — and What Ransomware Replicates"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-virtualization"
+tags: []
+level: "intermediate"
+module: "series4-truenas"
+order: 12
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/virtualization/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/virtualization/series4/_12/SnapshotsAndReplicationKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    the project that owns the series — the XCP-ng docs and the Xen Orchestra docs for Series 2, the Proxmox VE Administration Guide for Series 3, the TrueNAS documentation for Series 4. SERIES 1 HAS NO PRODUCT MANUAL: it is the kernel, libvirt and the Linux Containers project.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Ops owns renting a machine and using Docker, Storage for Data owns the disks and ZFS itself, Kubernetes for Data Workloads owns what schedules pods onto these machines),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    EVERY EPISODE OPENS ON A MOMENT SOMEBODY HAS ACTUALLY HAD AT WORK — that is what this course has that the manual does not. A SNAPSHOT IS NOT A BACKUP, and HA OF A VM IS NOT HA OF A DATABASE. THE RUNBOOK IS THE CLI, never a screenshot. ⚠ VERSION-DEPENDENT CLAIMS MUST BE CHECKED, NEVER REMEMBERED: this subject has moved recently.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: data protection, which is where this appliance earns its keep, and it is Storage
+     for Data, Series 2 · 15's mechanism turned into scheduled jobs with a UI.
+       PERIODIC SNAPSHOT TASKS: a schedule and a retention per dataset. Hourly for a week,
+       daily for a month — cheap, instant, and the thing that undoes a mistake made twenty
+       minutes ago. THE WORKPLACE MOMENT: somebody overwrote the file, or a script truncated
+       the wrong directory, and it is back in ten seconds from the .zfs snapshot directory.
+       REPLICATION TASKS: send/receive to a second TrueNAS, on a schedule, incremental. This
+       is the off-site copy and it is the strongest reason to own two of these boxes.
+       CLOUD SYNC: to S3-compatible storage — Data Ops, Series 1 · 47's rented bucket or
+       Storage for Data, Series 3 · 25's self-hosted one — with the encryption question
+       answered before the data leaves.
+     AND THE ACADEMY'S SENTENCE, RESTATED FOR THE THIRD TIME IN THIS COURSE BECAUSE IT IS THE
+     ONE THAT COSTS PEOPLE THEIR JOBS: REPLICATION IS NOT A BACKUP. A deletion replicates. A
+     ransomware encryption replicates, promptly and reliably.
+       WHAT ACTUALLY DEFENDS YOU IS RETENTION PLUS IMMUTABILITY: snapshots the compromised
+       client cannot delete, held on the destination with its own retention, and a
+       destination that does not trust the source. Say how that is configured, not just that
+       it matters.
+       AND TEST THE RESTORE ON A SCHEDULE. Same rule as Series 2 · 25 and Series 3 · 22.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:process:tool
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/virtualization/series4/_12/SnapshotsAndReplicationKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition. */}
+
+TODO
+
+## The principle, then how this tool spells it
+
+{/* BEAT 2 — the general idea first, then the syntax. A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse. */}
+
+TODO
+
+## See it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The hands-on above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number or silent failure this prevents, and how you would notice it. */}
+
+TODO

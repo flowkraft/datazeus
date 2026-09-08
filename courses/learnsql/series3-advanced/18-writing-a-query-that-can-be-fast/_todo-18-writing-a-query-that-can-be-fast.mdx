@@ -1,0 +1,121 @@
+---
+title: "Writing a Query That Can Be Fast — Filter Early, Don't Hide the Column"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-sql"
+tags: []
+level: "advanced"
+module: "series3-advanced"
+order: 18
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build.
+    Drop the _todo- prefix when it becomes a real lesson.
+
+    READ FIRST: courses/learnsql/curriculum.yaml's header — it is the field
+    documentation the whole academy points at, and it carries the title, short
+    and core conventions this episode has to follow. Then read the comment
+    ABOVE THIS EPISODE in that file, which is the authority on coverage.
+
+    THE HOUSE METHOD, from the lessons already written:
+      - type the query yourself; copy-paste teaches your eyes only
+      - PREDICT the answer before running it, out loud, then run it
+      - every query runs on the Northwind that ships with DataPallas
+      - the koans mirror the lesson beat for beat
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: write a query that does not need rescuing — one that filters before it groups,
+    leaves the indexed column alone, and asks for the columns it actually uses.
+    WHY IT IS FIRST IN THE BLOCK: everything here costs nothing to apply and needs no plan,
+    no permission and no index. A reader who stops after this episode is already better off,
+    which is not true of any other episode in Series 3.
+    seed: bulk — on 79 rows none of this is measurable and the lesson lands as pedantry.
+
+    ── THE SPINE: THE LOGICAL PROCESSING ORDER ─────────────────────────────
+      FROM/JOIN -> WHERE -> GROUP BY -> HAVING -> SELECT -> DISTINCT -> ORDER BY -> LIMIT
+
+    NOT the order you write it in. Teach it as a COST DIAGRAM, not as trivia: every stage
+    works on whatever the stage before it handed over, so a row removed early is a row
+    every later stage never sees.
+
+    It also retires three things the reader has already met as arbitrary rules:
+      - why a SELECT alias cannot be used in WHERE              (Series 1 · 20)
+      - why HAVING sees groups and WHERE sees rows              (Series 1 · 35)
+      - why LIMIT cannot rescue an ORDER BY that sorts everything first
+
+    ── THE FOUR THINGS TO COVER, IN ORDER ──────────────────────────────────
+      1. FILTER EARLY
+         A predicate on a non-aggregated column belongs in WHERE. In HAVING, the engine
+         builds every group and throws most away — same answer, much more work. Series
+         1 · 35 taught which is CORRECT; this is the first time the course says which is
+         CHEAP, and the pair is the cleanest before-and-after in the episode.
+         Same idea across a join: filter a table before joining it where you can.
+
+      2. SARGABILITY — give them the word, then reduce it to one rule:
+         DO NOT WRAP THE COLUMN. An index is on the column's value; hide the value inside
+         a function and the index cannot be used, and nothing warns you. Show each as a
+         pair with identical results:
+           WHERE YEAR(order_date) = 1997
+             -> WHERE order_date >= DATE '1997-01-01' AND order_date < DATE '1998-01-01'
+           WHERE unit_price * 1.2 > 100     -> WHERE unit_price > 100 / 1.2
+           WHERE COALESCE(region,'') = ''   -> WHERE region IS NULL OR region = ''
+           WHERE UPPER(company_name) = ...  -> case handling, or an expression index (25)
+           LIKE '%ana%'  a leading wildcard cannot use a B-tree; a trailing one can.
+
+      3. IMPLICIT CONVERSION — the invisible member of the family. Compare a text column
+         to a number, or join across mismatched types or collations, and the engine wraps
+         YOUR column in a conversion: the same defeat, with nothing in the query that
+         looks like a function. Name it and point at the engine tracks, which own the
+         specifics — SQL Server and MySQL each teach their own version of this.
+
+      4. PROJECTION — SELECT * moves bytes nobody asked for and prevents an index from
+         COVERING the query (a term 25 defines; plant it here). The correctness argument
+         lands harder: a view or an INSERT ... SELECT built on SELECT * changes meaning
+         the day somebody adds a column.
+
+    ── THE HONEST LIMIT, AND IT MUST BE IN THE LESSON ──────────────────────
+    Modern optimizers rewrite some of this for you, and which ones differ by engine and by
+    version. That is the argument FOR the rules, not against them: you cannot see which
+    help you got, the help is not portable, and writing it correctly costs nothing.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:equivalent
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_18/WritingAQueryThatCanBeFastKoans.groovy
+
+    `equivalent` is the whole exercise: rewrite the predicate and prove the result set is
+    unchanged. A "faster" query that returns different rows is not a rewrite, it is a bug.
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. The published lessons all open this way;
+    keep it. Never "SELECT is used to…". Always "your boss asks…". */}
+
+TODO
+
+## TODO — the SQL
+
+{/* BEAT 2 — the keywords, one at a time, each with a query the reader types.
+    Every query runs on Northwind. Predict, then run. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns its
+    place by preventing a number that is wrong and looks right.
+    The one to write: the report that got slower after a helpful edit. Somebody wrapped
+    order_date in a formatting function to make the output prettier, the index stopped
+    being used, and nothing failed — the number is still right, it just takes nine seconds
+    now, and it will be blamed on the data growing. */}
+
+TODO

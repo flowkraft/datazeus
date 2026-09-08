@@ -1,0 +1,119 @@
+---
+title: "Median and Percentiles — WITHIN GROUP, and Why AVG Is Not the Answer"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-sql"
+tags: []
+level: "intermediate"
+module: "series2-intermediate"
+order: 58
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build.
+    Drop the _todo- prefix when it becomes a real lesson.
+
+    READ FIRST: courses/learnsql/curriculum.yaml's header — it is the field
+    documentation the whole academy points at. Then read the comment ABOVE THIS
+    EPISODE in that file, which is the authority on coverage.
+
+    THE HOUSE METHOD, from the lessons already written:
+      - type the query yourself; copy-paste teaches your eyes only
+      - PREDICT the answer before running it, out loud, then run it
+      - every query runs on the Northwind that ships with DataPallas
+      - the koans mirror the lesson beat for beat
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: answer "what is typical" correctly — a median, a p95, and either of them per
+    group — and know what to do on an engine that has no percentile function.
+    WHY IT EXISTS: an audit found the words median and percentile in NONE of the academy's
+    twenty-eight curricula. For a course whose promise is answering business questions,
+    that is a strange silence: "what is typical" is one of the questions people ask most,
+    and AVG is the wrong answer to it.
+    WHY IT SITS AT 58: a percentile is defined by ORDERING, the ANSI spelling is literally
+    an ORDER BY inside the aggregate, its neighbours (NTILE, PERCENT_RANK, CUME_DIST) are
+    window functions, and the MySQL workaround below needs ROW_NUMBER from 2 · 50. It is
+    before the project so the project can ask for a median.
+
+    ── THE FRAMING — A BUSINESS POINT BEFORE A SYNTAX POINT ────────────────
+    The average is dragged around by outliers and the median is not. One enterprise order
+    of £2,000,000 moves the average order value and does not move the median at all. When
+    somebody asks for "the typical order" they mean the median and they say average, and
+    that difference has changed real decisions.
+
+    ── COVER ───────────────────────────────────────────────────────────────
+    THE ORDERED-SET AGGREGATES look unlike anything else in SQL. Present the shape, not a
+    function signature:
+
+        PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY amount)
+
+      PERCENTILE_CONT   INTERPOLATES between the two middle rows
+      PERCENTILE_DISC   RETURNS AN ACTUAL VALUE FROM THE DATA
+
+    That is the episode's one real decision:
+      DISC  when the answer must be a value that exists — a real price, a real duration
+      CONT  for a continuous measure, where a number between two rows is meaningful
+    A CONT median of 47.50 on a table where no order was ever 47.50 is correct, and will
+    still get you asked whether the query is broken.
+
+      MODE() WITHIN GROUP — the third member of the family, one line
+      PER GROUP           — the whole thing under GROUP BY: a median per category, which
+                            is where it earns its place in a reporting course
+      p95 AND p99         — the same function with a different argument, which is how the
+                            reader will meet it outside reporting
+      NTILE, PERCENT_RANK, CUME_DIST — from the window family, with the distinction said
+                            plainly: NTILE BUCKETS ROWS, a percentile RETURNS A VALUE.
+                            People reach for NTILE expecting the second.
+
+    ── PORTABILITY, IN THE LESSON RATHER THAN DEFERRED TO SERIES 4 ─────────
+    PostgreSQL, Oracle, SQL Server and Db2 all have PERCENTILE_CONT and PERCENTILE_DISC.
+    MYSQL HAS NEITHER, and neither does SQLite. SHOW THE WORKAROUND: ROW_NUMBER() and
+    COUNT(*) over the group, then take the middle row — or the two middle rows and average
+    them when the count is even. It needs 2 · 50, it is genuinely fiddly, and a large share
+    of readers will need it.
+
+    ── COST, ONE PARAGRAPH AND A POINTER ───────────────────────────────────
+    A percentile must ORDER the whole group, so it is one of the aggregates that does not
+    get cheap as the data grows. Series 3 · 27 owns approximation and already names
+    Oracle's and SQL Server's APPROX_PERCENTILE functions. Point there and stop.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:predict
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_58/MedianAndPercentilesKoans.groovy
+
+    `predict` on CONT against DISC over an even-numbered group — nobody gets both right the
+    first time. `complete` on the per-category median.
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. The published lessons all open this way;
+    keep it. Never "SELECT is used to…". Always "your boss asks…". */}
+
+TODO
+
+## TODO — the SQL
+
+{/* BEAT 2 — the keywords, one at a time, each with a query the reader types.
+    Every query runs on Northwind. Predict, then run. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents.
+    The one to write, and it is unusual for this track: the average presented as
+    "typical". One enterprise customer's £2M order lifts the average order value by a
+    third, a pricing decision is made on it, and the number was never wrong — it was the
+    wrong statistic. The purest example in the course of a number that is RIGHT and still
+    misleads, which is the flip side of the rule used everywhere else. */}
+
+TODO
