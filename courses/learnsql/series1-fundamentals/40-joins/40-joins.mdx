@@ -13,11 +13,13 @@ videoId: "learnsql-series1-40-joins"
 
 ## The situation this lesson prepares you for
 
-You have spent eight lessons getting good at one table. You can pick columns, filter rows, sort them, cut them down to the top few, and add them up.
+You have spent nine lessons getting good at one table. You can pick columns, filter rows, sort them, cut them down to the top few, and add them up.
 
 And you still cannot answer "what did this customer actually buy?"
 
-Not because it is hard. Because the answer is not in the table you have been querying. `"Orders"` knows that an order happened — who placed it, when, what the delivery cost. What was *in* it is in a different table entirely. Ask `"Orders"` what somebody bought and it has nothing to say, because there is no product name anywhere in it.
+Not because it is hard, but because no single table holds the whole answer. `"Orders"` knows that an order happened — who placed it, when, what the delivery cost — and nothing about what was in it. The lines of the order live in `"Order Details"`, one row per thing bought.
+
+And even that table cannot answer you on its own. It records what was bought as a **number** — a `"ProductID"` like `1` or `17` — not as a name. The information is genuinely there; it is just written as a reference to another table. To turn `1` into `Chai` you have to go and read `"Products"`, where that number is spelled out.
 
 That is not a flaw. It is how every database you will ever work with is built, and this lesson is where you stop working inside one table at a time.
 
@@ -35,6 +37,8 @@ cd c:/DataPallas/db/datazeus
 ## First, the thing nobody tells you
 
 **A database is not one big table. It is a lot of small ones that point at each other.**
+
+<JoinDiagram />
 
 Ask why, and the answer is short: a row holds one value per column, not a list. An order with three products in it cannot be one row, because there is nowhere to put the second and third product. So the products bought go in a table of their own — `"Order Details"` — one row per thing bought, each row carrying the number of the order it belongs to.
 
@@ -55,11 +59,11 @@ ORDER BY "ProductID";
 
 | OrderID | ProductID | UnitPrice | Quantity | Discount |
 | ------- | --------- | --------- | -------- | -------- |
-| 3       | 1         | 18.0000   | 8        | 0.0000   |
-| 3       | 2         | 19.0000   | 5        | 0.0000   |
-| 3       | 4         | 22.0000   | 3        | 0.1000   |
+| 3       | 1         | 18        | 8        | 0        |
+| 3       | 2         | 19        | 5        | 0        |
+| 3       | 4         | 22        | 3        | 0.1      |
 
-Three rows, so three different things were bought. And read what it says they were: product 1, product 2, product 4. Quantities, prices, a discount — and not one word anywhere in it.
+Three rows, so three different things were bought. And read what it says they were: product 1, product 2, product 4. Quantities, prices, a discount — and not one product name word anywhere in it.
 
 This is the same problem you met when you sorted the unshipped backlog, one level deeper. There, a customer was a code: `ALFKI`. Here the *whole table* is codes. `"ProductID"` is a pointer, and the thing it points at — the name — lives in `"Products"`.
 
@@ -67,7 +71,7 @@ This is the same problem you met when you sorted the unshipped backlog, one leve
 
 ## JOIN: reading two tables as one
 
-```sql file=./scripts/order-lines-with-names.sql
+```sql file=./scripts/order-lines-with-names.sql {2-4}
 SELECT p."ProductName", d."Quantity", d."UnitPrice"
 FROM "Order Details" d
 JOIN "Products" p
@@ -78,9 +82,9 @@ ORDER BY p."ProductName";
 
 | ProductName                 | Quantity | UnitPrice |
 | --------------------------- | -------- | --------- |
-| Chai                        | 8        | 18.0000   |
-| Chang                       | 5        | 19.0000   |
-| Chef Antons Cajun Seasoning | 3        | 22.0000   |
+| Chai                        | 8        | 18        |
+| Chang                       | 5        | 19        |
+| Chef Antons Cajun Seasoning | 3        | 22        |
 
 Same three lines. Same quantities. And now it reads like something you could hand to a person: eight Chai, five Chang, three Chef Antons Cajun Seasoning.
 
@@ -99,7 +103,7 @@ Mechanically it works row by row: take an order line, read its `"ProductID"`, go
 
 They save typing, but that is not why they are there. Watch what happens without them:
 
-```sql file=./scripts/ambiguous-column.sql
+```sql file=./scripts/ambiguous-column.sql {1}#err
 SELECT p."ProductName", "UnitPrice", d."Quantity"
 FROM "Order Details" d
 JOIN "Products" p
@@ -121,6 +125,31 @@ That refusal is worth more than it looks, because those two columns **mean diffe
 
 On an invoice you want the first. On a "what would this order cost now" report you want the second. They are different questions, and the error is the database making you say which one you asked. Once two tables are in play, prefix everything — it costs two characters and removes a whole class of quiet mistake.
 
+## Your turn: who is ALFKI?
+
+You now have everything you need to close a question this course left open. Back when you sorted the unshipped backlog, the report came back with a column of customer codes and no way to turn `ALFKI` into a name. `"Orders"` has a `"CustomerID"`; `"Customers"` has a `"CustomerID"` and a `"CompanyName"`. That is a pointer and a table to follow it into.
+
+**Who placed our five most recent orders?** Write the `ON` clause yourself before you read on.
+
+```sql file=./scripts/orders-with-customer-names.sql {4}
+SELECT o."OrderID", c."CompanyName", o."OrderDate"
+FROM "Orders" o
+JOIN "Customers" c
+  ON c."CustomerID" = o."CustomerID"
+ORDER BY o."OrderDate" DESC
+LIMIT 5;
+```
+
+| OrderID | CompanyName                        | OrderDate               |
+| ------- | ---------------------------------- | ----------------------- |
+| 7       | Berglunds snabbköp                 | 2024-06-12 00:00:00.000 |
+| 5       | Ana Trujillo Emparedados y helados | 2024-06-10 00:00:00.000 |
+| 6       | Around the Horn                    | 2024-06-07 00:00:00.000 |
+| 4       | Alfreds Futterkiste                | 2024-06-05 00:00:00.000 |
+| 79      | Ottilies Käseladen                 | 2024-05-26 00:00:00.000 |
+
+There it is: `ALFKI` is **Alfreds Futterkiste**, and it took order 4. Nothing new was learned about joins here — it is the same `JOIN ... ON` from the last section, pointed at a different pair of tables. That is the whole trick, and it is worth noticing how quickly it stopped feeling like a trick.
+
 ## A different shape of question
 
 Now a job that looks just as easy and is not.
@@ -129,7 +158,7 @@ Your sales manager wants the June review: **each of our three people, and the or
 
 The `ON` clause is not limited to the key. It is the whole matching rule, so you can put more in it — match this rep to this order, **and** only if the order is from June:
 
-```sql file=./scripts/june-by-rep-inner.sql
+```sql file=./scripts/june-by-rep-inner.sql {4-5}
 SELECT e."FirstName", o."OrderID", o."OrderDate"
 FROM "Employees" e
 JOIN "Orders" o
@@ -138,12 +167,12 @@ JOIN "Orders" o
 ORDER BY e."FirstName", o."OrderDate";
 ```
 
-| FirstName | OrderID | OrderDate  |
-| --------- | ------- | ---------- |
-| Janet     | 4       | 2024-06-05 |
-| Janet     | 7       | 2024-06-12 |
-| Nancy     | 6       | 2024-06-07 |
-| Nancy     | 5       | 2024-06-10 |
+| FirstName | OrderID | OrderDate               |
+| --------- | ------- | ----------------------- |
+| Janet     | 4       | 2024-06-05 00:00:00.000 |
+| Janet     | 7       | 2024-06-12 00:00:00.000 |
+| Nancy     | 6       | 2024-06-07 00:00:00.000 |
+| Nancy     | 5       | 2024-06-10 00:00:00.000 |
 
 Four orders. All real. And **two people**, in a report about three.
 
@@ -163,7 +192,7 @@ That is the shape of this bug in the wild. Not a crash. A report that is the rig
 
 So say what you actually want. One word:
 
-```sql file=./scripts/june-by-rep-left.sql
+```sql file=./scripts/june-by-rep-left.sql {3}
 SELECT e."FirstName", o."OrderID", o."OrderDate"
 FROM "Employees" e
 LEFT JOIN "Orders" o
@@ -172,13 +201,13 @@ LEFT JOIN "Orders" o
 ORDER BY e."FirstName", o."OrderDate";
 ```
 
-| FirstName | OrderID | OrderDate  |
-| --------- | ------- | ---------- |
-| Andrew    | `[NULL]` | `[NULL]` |
-| Janet     | 4       | 2024-06-05 |
-| Janet     | 7       | 2024-06-12 |
-| Nancy     | 6       | 2024-06-07 |
-| Nancy     | 5       | 2024-06-10 |
+| FirstName | OrderID  | OrderDate               |
+| --------- | -------- | ----------------------- |
+| Andrew    | `[NULL]` | `[NULL]`                |
+| Janet     | 4        | 2024-06-05 00:00:00.000 |
+| Janet     | 7        | 2024-06-12 00:00:00.000 |
+| Nancy     | 6        | 2024-06-07 00:00:00.000 |
+| Nancy     | 5        | 2024-06-10 00:00:00.000 |
 
 **`LEFT JOIN` keeps every row of the left-hand table** — "left" meaning the one named in your `FROM` line, here `"Employees"` — whether it found a match or not.
 
@@ -202,9 +231,9 @@ The row count follows the *matches*, not the table. Count the matches and it alw
 
 Here is the one that costs people days.
 
-The query above works. Now "tidy it up" by moving the date condition down into a `WHERE`, which is where you have put every condition since lesson 4:
+The query above works. Now "tidy it up" by moving the date condition down into a `WHERE`, which is where you have put every condition since you first learned `WHERE`:
 
-```sql file=./scripts/june-by-rep-where.sql
+```sql file=./scripts/june-by-rep-where.sql {5}#err
 SELECT e."FirstName", o."OrderID", o."OrderDate"
 FROM "Employees" e
 LEFT JOIN "Orders" o
@@ -213,12 +242,12 @@ WHERE o."OrderDate" >= DATE '2024-06-01'
 ORDER BY e."FirstName", o."OrderDate";
 ```
 
-| FirstName | OrderID | OrderDate  |
-| --------- | ------- | ---------- |
-| Janet     | 4       | 2024-06-05 |
-| Janet     | 7       | 2024-06-12 |
-| Nancy     | 6       | 2024-06-07 |
-| Nancy     | 5       | 2024-06-10 |
+| FirstName | OrderID | OrderDate               |
+| --------- | ------- | ----------------------- |
+| Janet     | 4       | 2024-06-05 00:00:00.000 |
+| Janet     | 7       | 2024-06-12 00:00:00.000 |
+| Nancy     | 6       | 2024-06-07 00:00:00.000 |
+| Nancy     | 5       | 2024-06-10 00:00:00.000 |
 
 Andrew is gone again. The words `LEFT JOIN` are still sitting there on line 3.
 
@@ -243,7 +272,7 @@ The reason is the same one either way: `WHERE` cannot take away a left-hand row 
 
 There is a single exception, and it is genuinely useful. If you want **only** the rows that matched nothing, test the right-hand side for `NULL`:
 
-```sql file=./scripts/reps-with-no-june-order.sql
+```sql file=./scripts/reps-with-no-june-order.sql {6}
 SELECT e."FirstName", e."LastName"
 FROM "Employees" e
 LEFT JOIN "Orders" o
@@ -263,7 +292,7 @@ It works precisely *because* of the trap above — you are deliberately keeping 
 
 ## RIGHT JOIN: the same thing, mirrored
 
-```sql file=./scripts/june-by-rep-right.sql
+```sql file=./scripts/june-by-rep-right.sql {2-3}
 SELECT e."FirstName", o."OrderID", o."OrderDate"
 FROM "Orders" o
 RIGHT JOIN "Employees" e
@@ -278,7 +307,7 @@ The practical advice is short: **pick `LEFT` and stay there.** Anything a `RIGHT
 
 ## FULL OUTER JOIN: keep both sides
 
-```sql file=./scripts/june-by-rep-full.sql
+```sql file=./scripts/june-by-rep-full.sql {3}
 SELECT e."FirstName", o."OrderID", o."OrderDate"
 FROM "Employees" e
 FULL JOIN "Orders" o
@@ -287,15 +316,15 @@ FULL JOIN "Orders" o
 ORDER BY e."FirstName", o."OrderDate";
 ```
 
-| FirstName | OrderID | OrderDate  |
-| --------- | ------- | ---------- |
-| Andrew    | `[NULL]` | `[NULL]` |
-| Janet     | 4       | 2024-06-05 |
-| Janet     | 7       | 2024-06-12 |
-| Nancy     | 6       | 2024-06-07 |
-| Nancy     | 5       | 2024-06-10 |
-| `[NULL]` | 8       | 2022-12-05 |
-| …         | …       | …          |
+| FirstName | OrderID  | OrderDate               |
+| --------- | -------- | ----------------------- |
+| Andrew    | `[NULL]` | `[NULL]`                |
+| Janet     | 4        | 2024-06-05 00:00:00.000 |
+| Janet     | 7        | 2024-06-12 00:00:00.000 |
+| Nancy     | 6        | 2024-06-07 00:00:00.000 |
+| Nancy     | 5        | 2024-06-10 00:00:00.000 |
+| `[NULL]`  | 8        | 2022-12-05 00:00:00.000 |
+| …         | …        | …                       |
 
 **Eighty rows** — and the number is the lesson. It decomposes exactly: four matched June orders, one employee with no June order, and then all seventy-five orders that are not June orders, each with a blank where the rep's name should be.
 
@@ -305,12 +334,12 @@ And it is honestly not a report. You will write `LEFT JOIN` a thousand times bef
 
 ## The four joins, in one picture
 
-| Join | What it keeps | When you want it |
-| ---- | ------------- | ---------------- |
-| `INNER` (plain `JOIN`) | only rows that matched | the default; when a non-match means "not relevant" |
-| `LEFT` | every row of the first table, matched or not | almost always, when the first table is your list of things |
-| `RIGHT` | every row of the second table | rarely — swap the tables and write `LEFT` |
-| `FULL OUTER` | every row of both | reconciling two lists neither of which you trust |
+| Join                   | What it keeps                                | When you want it                                           |
+| ---------------------- | -------------------------------------------- | ---------------------------------------------------------- |
+| `INNER` (plain `JOIN`) | only rows that matched                       | the default; when a non-match means "not relevant"         |
+| `LEFT`                 | every row of the first table, matched or not | almost always, when the first table is your list of things |
+| `RIGHT`                | every row of the second table                | rarely — swap the tables and write `LEFT`                  |
+| `FULL OUTER`           | every row of both                            | reconciling two lists neither of which you trust           |
 
 The question that picks between them is not "which join is correct". It is:
 
@@ -351,7 +380,7 @@ They walk the same path this lesson did: match on a shared column, say which tab
 
 One more query to try on your own, using a third pair of tables. Which courier carried our five most expensive deliveries?
 
-```sql file=./scripts/orders-with-courier.sql
+```sql file=./scripts/orders-with-courier.sql {4}
 SELECT o."OrderID", s."CompanyName", o."Freight"
 FROM "Orders" o
 JOIN "Shippers" s
@@ -362,12 +391,12 @@ LIMIT 5;
 
 | OrderID | CompanyName      | Freight |
 | ------- | ---------------- | ------- |
-| 72      | United Package   | 98.9200 |
-| 59      | Speedy Express   | 97.5300 |
-| 46      | Federal Shipping | 96.1400 |
-| 33      | United Package   | 95.7500 |
-| 20      | Speedy Express   | 94.3600 |
+| 72      | United Package   | 98.92   |
+| 59      | Speedy Express   | 97.53   |
+| 46      | Federal Shipping | 96.14   |
+| 33      | United Package   | 95.75   |
+| 20      | Speedy Express   | 94.36   |
 
 ## What is next
 
-You just manufactured your first `NULL`s. The next lesson is what they do to everything else — why `WHERE "ShippedDate" = NULL` returns nothing at all, why a `NULL` is not equal to another `NULL`, and why `COUNT(column)` and `COUNT(*)` can disagree by a third of your business.
+You just manufactured your first `NULL`s — the empty cells the `LEFT JOIN` invented for Andrew. The next lesson is how those empty cells behave once they are in your results, because they do not behave like a value: why `WHERE "ShippedDate" = NULL` returns nothing at all, why one `NULL` is not equal to another, and why `COUNT(column)` and `COUNT(*)` can disagree by a third of your business.

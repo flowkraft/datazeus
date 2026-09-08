@@ -428,6 +428,51 @@ class JoinsSpec extends NorthwindGateSpec {
     }
 
     @Unroll
+    def "[#engine] FULL OUTER really is two LEFT JOINs unioned — and UNION ALL really is wrong"() {
+        // LEO WORKS THIS OUT ON SCREEN and Mnemosyne confirms it flatly, so the gate has to
+        // stand behind it. The claim has three parts and all three are asserted:
+        //   1. the rewrite returns the SAME NUMBER of rows as the FULL OUTER JOIN
+        //   2. it returns the SAME ROWS — checked with EXCEPT in BOTH directions, because
+        //      equal counts alone would pass on two different 80-row sets
+        //   3. UNION ALL does NOT work, and the size of the error is exactly the number of
+        //      MATCHED rows (4), since those come back from both halves. That number is the
+        //      reason her line names UNION specifically instead of hand-waving at "a union".
+        given: "the FULL OUTER JOIN the slide shows"
+        String fullOuter = '''SELECT e."FirstName" AS n, o."OrderID" AS id
+                             FROM "Employees" e FULL JOIN "Orders" o
+                               ON o."EmployeeID" = e."EmployeeID"
+                              AND o."OrderDate" >= DATE '2024-06-01''''
+
+        and: "and the rewrite Leo proposes: one LEFT JOIN each way, unioned"
+        String viaUnion = '''SELECT e."FirstName" AS n, o."OrderID" AS id
+                            FROM "Employees" e LEFT JOIN "Orders" o
+                              ON o."EmployeeID" = e."EmployeeID"
+                             AND o."OrderDate" >= DATE '2024-06-01'
+                            UNION
+                            SELECT e."FirstName", o."OrderID"
+                            FROM "Orders" o LEFT JOIN "Employees" e
+                              ON o."EmployeeID" = e."EmployeeID"
+                             AND o."OrderDate" >= DATE '2024-06-01''''
+
+        expect: "same size"
+        sqlFor(engine).rows(fullOuter).size() == 80
+        sqlFor(engine).rows(viaUnion).size() == 80
+
+        and: "AND THE SAME ROWS — nothing in either that is not in the other"
+        sqlFor(engine).firstRow("SELECT count(*) AS n FROM ((${fullOuter}) EXCEPT (${viaUnion})) x".toString()).n == 0
+        sqlFor(engine).firstRow("SELECT count(*) AS n FROM ((${viaUnion}) EXCEPT (${fullOuter})) x".toString()).n == 0
+
+        and: "UNION ALL is NOT equivalent, and it is over by exactly the matched-row count"
+        def viaUnionAll = viaUnion.replace("UNION", "UNION ALL")
+        sqlFor(engine).rows(viaUnionAll).size() == 84
+        sqlFor(engine).rows(viaUnionAll).size() - 80 ==
+                sqlFor(engine).rows(script("june-by-rep-inner")).size()
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
     def "[#engine] the four join types give four different row counts on the same ON clause"() {
         // The four-way picture, as arithmetic. This is what makes "each one keeps a different
         // set of rows" a claim the gate proves rather than a slogan on a summary slide.
