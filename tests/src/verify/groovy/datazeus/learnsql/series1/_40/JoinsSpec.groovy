@@ -36,6 +36,21 @@ import spock.lang.Unroll
  * exactly the shape the ON-versus-WHERE lesson needs. If a future dataset gains an orphan
  * row, the integrity feature below goes red first, and that is the intended order.
  *
+ * THE JUNE WINDOW IS HALF-OPEN — `>= 2024-06-01 AND < 2024-07-01` — AND THE UPPER BOUND IS
+ * NOT DECORATION. It used to be missing, and every count in this file was still correct,
+ * which is precisely why it was worth fixing: NorthwindDataGenerator pins REFERENCE_DATE to
+ * 2024-06-15 and generates no order after it, so June is the dataset's terminal month BY
+ * CONSTRUCTION and an open-ended `>= 1 June` could not let a later row through. The query
+ * said "on or after June" and the lesson called it "June"; those agreed only by luck, and a
+ * learner copying the shape onto data with a July in it would get silently wrong answers.
+ *
+ * WHY `< 1 JULY` AND NOT `<= 30 JUNE`: "OrderDate" is a TIMESTAMP, not a DATE. `<= DATE
+ * '2024-06-30'` compares against midnight and drops anything stamped later that day. The
+ * half-open interval is the only form that stays correct when a time component appears, and
+ * it is the one the lesson should be teaching. Closing the window changes no result the
+ * lesson quotes — inner 4, left 5, where 4, full 80, all unchanged — so every assertion here
+ * stood before and after.
+ *
  * NOTHING HERE IS ASSERTED AS AN UNORDERED ROW ORDER. Every result the lesson shows carries
  * its own ORDER BY (by "FirstName", then "OrderDate"), so pinning the rows asserts something
  * the queries actually promise. The one place engines could have differed — where a NULL
@@ -263,7 +278,8 @@ class JoinsSpec extends NorthwindGateSpec {
         !("Andrew" in rows*.FirstName)
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
                                    WHERE "EmployeeID" = 2
-                                     AND "OrderDate" >= DATE '2024-06-01' ''').n == 0
+                                     AND "OrderDate" >= DATE '2024-06-01'
+                                     AND "OrderDate" <  DATE '2024-07-01' ''').n == 0
 
         where:
         engine << ENGINES
@@ -325,11 +341,13 @@ class JoinsSpec extends NorthwindGateSpec {
         // Stated as arithmetic so it cannot drift: rows = matches + employees with no match.
         given:
         def matches = sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
-                                                 WHERE "OrderDate" >= DATE '2024-06-01' ''').n
+                                                 WHERE "OrderDate" >= DATE '2024-06-01'
+                                                   AND "OrderDate" <  DATE '2024-07-01' ''').n
         def unmatched = sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Employees" e
                                                    WHERE NOT EXISTS (SELECT 1 FROM "Orders" o
                                                      WHERE o."EmployeeID" = e."EmployeeID"
-                                                       AND o."OrderDate" >= DATE '2024-06-01')''').n
+                                                       AND o."OrderDate" >= DATE '2024-06-01'
+                                                       AND o."OrderDate" <  DATE '2024-07-01')''').n
 
         expect:
         matches == 4
@@ -441,18 +459,21 @@ class JoinsSpec extends NorthwindGateSpec {
         String fullOuter = '''SELECT e."FirstName" AS n, o."OrderID" AS id
                              FROM "Employees" e FULL JOIN "Orders" o
                                ON o."EmployeeID" = e."EmployeeID"
-                              AND o."OrderDate" >= DATE '2024-06-01''''
+                              AND o."OrderDate" >= DATE '2024-06-01'
+                              AND o."OrderDate" <  DATE '2024-07-01''''
 
         and: "and the rewrite Leo proposes: one LEFT JOIN each way, unioned"
         String viaUnion = '''SELECT e."FirstName" AS n, o."OrderID" AS id
                             FROM "Employees" e LEFT JOIN "Orders" o
                               ON o."EmployeeID" = e."EmployeeID"
                              AND o."OrderDate" >= DATE '2024-06-01'
+                             AND o."OrderDate" <  DATE '2024-07-01'
                             UNION
                             SELECT e."FirstName", o."OrderID"
                             FROM "Orders" o LEFT JOIN "Employees" e
                               ON o."EmployeeID" = e."EmployeeID"
-                             AND o."OrderDate" >= DATE '2024-06-01''''
+                             AND o."OrderDate" >= DATE '2024-06-01'
+                             AND o."OrderDate" <  DATE '2024-07-01''''
 
         expect: "same size"
         sqlFor(engine).rows(fullOuter).size() == 80

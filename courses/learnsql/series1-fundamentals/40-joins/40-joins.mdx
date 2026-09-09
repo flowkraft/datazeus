@@ -158,12 +158,13 @@ Your sales manager wants the June review: **each of our three people, and the or
 
 The `ON` clause is not limited to the key. It is the whole matching rule, so you can put more in it — match this rep to this order, **and** only if the order is from June:
 
-```sql file=./scripts/june-by-rep-inner.sql {4-5}
+```sql file=./scripts/june-by-rep-inner.sql {4-6}
 SELECT e."FirstName", o."OrderID", o."OrderDate"
 FROM "Employees" e
 JOIN "Orders" o
   ON o."EmployeeID" = e."EmployeeID"
  AND o."OrderDate" >= DATE '2024-06-01'
+ AND o."OrderDate" <  DATE '2024-07-01'
 ORDER BY e."FirstName", o."OrderDate";
 ```
 
@@ -198,6 +199,7 @@ FROM "Employees" e
 LEFT JOIN "Orders" o
   ON o."EmployeeID" = e."EmployeeID"
  AND o."OrderDate" >= DATE '2024-06-01'
+ AND o."OrderDate" <  DATE '2024-07-01'
 ORDER BY e."FirstName", o."OrderDate";
 ```
 
@@ -233,12 +235,13 @@ Here is the one that costs people days.
 
 The query above works. Now "tidy it up" by moving the date condition down into a `WHERE`, which is where you have put every condition since you first learned `WHERE`:
 
-```sql file=./scripts/june-by-rep-where.sql {5}#err
+```sql file=./scripts/june-by-rep-where.sql {5-6}#err
 SELECT e."FirstName", o."OrderID", o."OrderDate"
 FROM "Employees" e
 LEFT JOIN "Orders" o
   ON o."EmployeeID" = e."EmployeeID"
 WHERE o."OrderDate" >= DATE '2024-06-01'
+  AND o."OrderDate" <  DATE '2024-07-01'
 ORDER BY e."FirstName", o."OrderDate";
 ```
 
@@ -255,7 +258,7 @@ Andrew is gone again. The words `LEFT JOIN` are still sitting there on line 3.
 
 1. The `LEFT JOIN` runs first. Andrew gets his row, with an empty `"OrderDate"`.
 2. **Then** the `WHERE` runs, on the rows that came out of the join.
-3. Andrew's date is empty, so it is not on or after the first of June. His row is thrown away.
+3. Andrew's date is empty, so it does not fall inside the June window. His row is thrown away.
 
 The `WHERE` deleted precisely the rows the `LEFT JOIN` went to the trouble of keeping. Put a condition on the right-hand table into a `WHERE` and you have turned your `LEFT JOIN` back into an `INNER JOIN` — and left the word `LEFT` there to reassure you.
 
@@ -272,12 +275,13 @@ The reason is the same one either way: `WHERE` cannot take away a left-hand row 
 
 There is a single exception, and it is genuinely useful. If you want **only** the rows that matched nothing, test the right-hand side for `NULL`:
 
-```sql file=./scripts/reps-with-no-june-order.sql {6}
+```sql file=./scripts/reps-with-no-june-order.sql {7}
 SELECT e."FirstName", e."LastName"
 FROM "Employees" e
 LEFT JOIN "Orders" o
   ON o."EmployeeID" = e."EmployeeID"
  AND o."OrderDate" >= DATE '2024-06-01'
+ AND o."OrderDate" <  DATE '2024-07-01'
 WHERE o."OrderID" IS NULL
 ORDER BY e."FirstName";
 ```
@@ -298,6 +302,7 @@ FROM "Orders" o
 RIGHT JOIN "Employees" e
   ON o."EmployeeID" = e."EmployeeID"
  AND o."OrderDate" >= DATE '2024-06-01'
+ AND o."OrderDate" <  DATE '2024-07-01'
 ORDER BY e."FirstName", o."OrderDate";
 ```
 
@@ -313,6 +318,7 @@ FROM "Employees" e
 FULL JOIN "Orders" o
   ON o."EmployeeID" = e."EmployeeID"
  AND o."OrderDate" >= DATE '2024-06-01'
+ AND o."OrderDate" <  DATE '2024-07-01'
 ORDER BY e."FirstName", o."OrderDate";
 ```
 

@@ -3,4 +3,5 @@ FROM "Orders" o
 RIGHT JOIN "Employees" e
   ON o."EmployeeID" = e."EmployeeID"
  AND o."OrderDate" >= DATE '2024-06-01'
+ AND o."OrderDate" <  DATE '2024-07-01'
 ORDER BY e."FirstName", o."OrderDate";

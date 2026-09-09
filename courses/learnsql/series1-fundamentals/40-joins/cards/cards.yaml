@@ -83,8 +83,8 @@ cards:
 
   # ── 6. THE TRAP — the hardest idea in the lesson, and the one worth the most ──
   - basic:
-      front: "This is supposed to list every employee and their June orders, including employees with none. It returns only employees who had a June order. Why?<br><br><code>SELECT e.name, o.id<br>FROM employees e<br>LEFT JOIN orders o ON o.emp_id = e.id<br>WHERE o.order_date &gt;= '2024-06-01'</code>"
-      back: "The WHERE ran after the join and undid it. The LEFT JOIN did keep the employees with no June order — with an empty order_date — but then WHERE tested that empty date against the first of June, it failed, and the row was thrown away. A condition on the RIGHT-hand table in a WHERE turns a LEFT JOIN back into an INNER JOIN, while the word LEFT stays on screen reassuring you. The fix is to move the date up into the ON clause with an AND."
+      front: "This is supposed to list every employee and their June orders, including employees with none. It returns only employees who had a June order. Why?<br><br><code>SELECT e.name, o.id<br>FROM employees e<br>LEFT JOIN orders o ON o.emp_id = e.id<br>WHERE o.order_date &gt;= '2024-06-01'<br>  AND o.order_date &lt; '2024-07-01'</code>"
+      back: "The WHERE ran after the join and undid it. The LEFT JOIN did keep the employees with no June order — with an empty order_date — but then WHERE tested that empty date against the June window, it failed, and the row was thrown away. A condition on the RIGHT-hand table in a WHERE turns a LEFT JOIN back into an INNER JOIN, while the word LEFT stays on screen reassuring you. The fix is to move the date up into the ON clause with an AND."
 
   - cloze: "{{c1::ON}} decides what counts as a match while the join is being built; {{c2::WHERE}} runs afterwards, on the rows that came out of it."
 
