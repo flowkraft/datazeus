@@ -1,0 +1,85 @@
+---
+title: "Costs First — Spread, Slippage, and the Turnover Arithmetic That Ends Strategies"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-algotrading"
+tags: []
+level: "intermediate"
+module: "series2-the-backtester"
+order: 10
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/algotrading/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/algotrading/series2/_10/CostsAndSlippageKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — research from THE BROKER AND EXCHANGE DOCS (name which broker and which date), THE EXCHANGE CALENDARS AND CORPORATE-ACTION RULES (facts, checkable), and for Series 2 · 25 the credited literature on backtest overfitting. ⚠ Everything else in this subject is confident people with nothing to show: prefer a claim you can demonstrate in code, and where nobody knows, write that.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (ETL & Data Pipelines owns the ingestion technique, Python for Data owns the language, AI & Data owns the model, the engine tracks own the storage engines, Data Ops owns running the jobs),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    ⚠ WE TEACH THE SYSTEM, NOT A STRATEGY, AND NO EPISODE MAY IMPLY OTHERWISE. Most backtested edges are noise. An episode that would read well in a trading-course advertisement has gone wrong: no return figures, no approving equity curves, no use of the word profitable outside a warning. THE PROMISE IS THAT A READER CAN LOOK AT ANY BACKTEST AND SAY WHAT IS WRONG WITH IT.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: costs, and the ordering rule that makes this episode land: MODEL THE COSTS BEFORE
+     YOU LOOK AT THE RETURNS. Otherwise you have already decided the strategy is good and you
+     will negotiate with the fee model.
+     WHAT TO MODEL, from most to least certain:
+       COMMISSION AND FEES        known, published, easy, and usually the smallest component.
+       THE SPREAD                 you buy at the ask and sell at the bid. This is Series 1 · 05
+                                  becoming a number, it applies to every trade, and it is the
+                                  cost most amateur backtests omit entirely.
+       SLIPPAGE                   the difference between the price you decided on and the price
+                                  you got. Model it as a function of spread and of your size
+                                  against typical volume, and be pessimistic.
+       MARKET IMPACT              your own order moving the price. Ignorable at small size,
+                                  which is a real reason a small account has an advantage —
+                                  say so, and say where it stops being true.
+       BORROW AND FINANCING       for short positions and anything held on margin.
+     THE ARITHMETIC THAT ENDS MOST STRATEGIES, and it should be done on screen: cost per round
+     trip multiplied by turnover. A strategy trading daily needs to clear costs daily, and a
+     small edge multiplied by high turnover is a reliable way to pay a broker.
+     THE RULE: A STRATEGY THAT ONLY WORKS AT ZERO COST DOES NOT WORK. Run every result at
+     double your cost estimate and see what survives; if the conclusion changes, you did not
+     have a conclusion.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:reconcile
+      koan file: tests/src/koans/groovy/datazeus/algotrading/series2/_10/CostsAndSlippageKoans.groovy
+   ========================================================================== */}
+
+## The failure this lesson prevents
+
+{/* BEAT 1 — the specific way this gets somebody. 'The split made it look like a 50% loss.' 'The order timed out but had been placed.' Always concrete, never a definition. */}
+
+TODO
+
+## The mechanism
+
+{/* BEAT 2 — why it happens, at the level of the data or the protocol. The general idea first, then the code. */}
+
+TODO
+
+## The build that makes it impossible
+
+{/* BEAT 3 — NON-NEGOTIABLE, and note the wording: STRUCTURAL, not disciplinary. A convention a tired person has to remember is not a fix. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — the assertion, reconciliation or report that proves it is still true next month. */}
+
+TODO

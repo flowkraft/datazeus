@@ -1,0 +1,84 @@
+---
+title: "Paper, Then Small — and Feeding Real Slippage Back Into the Backtest"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-algotrading"
+tags: []
+level: "intermediate"
+module: "series3-execution"
+order: 15
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/algotrading/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/algotrading/series3/_15/PaperToLiveKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — research from THE BROKER AND EXCHANGE DOCS (name which broker and which date), THE EXCHANGE CALENDARS AND CORPORATE-ACTION RULES (facts, checkable), and for Series 2 · 25 the credited literature on backtest overfitting. ⚠ Everything else in this subject is confident people with nothing to show: prefer a claim you can demonstrate in code, and where nobody knows, write that.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (ETL & Data Pipelines owns the ingestion technique, Python for Data owns the language, AI & Data owns the model, the engine tracks own the storage engines, Data Ops owns running the jobs),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    ⚠ WE TEACH THE SYSTEM, NOT A STRATEGY, AND NO EPISODE MAY IMPLY OTHERWISE. Most backtested edges are noise. An episode that would read well in a trading-course advertisement has gone wrong: no return figures, no approving equity curves, no use of the word profitable outside a warning. THE PROMISE IS THAT A READER CAN LOOK AT ANY BACKTEST AND SAY WHAT IS WRONG WITH IT.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the gap between a backtest, paper trading and real money, and the graduated path
+     across it.
+     WHY PAPER RESULTS STILL FLATTER, specifically: paper fills at the quoted price, gets a
+     fill for any size, is never rejected, never queues behind other orders, and never moves
+     the market. It validates YOUR PLUMBING and it does not validate your execution
+     assumptions.
+     WHAT PAPER TRADING IS ACTUALLY FOR, which is a great deal: does the daily cycle run
+     unattended; does reconciliation stay clean for a month; do the alerts fire; what happens
+     when the data feed is late; does anything break at a month boundary or a holiday. Those
+     are the failures that end real systems, and they are all findable without money.
+     THE PATH, WITH A GATE AT EACH STEP AND THE GATE WRITTEN DOWN BEFOREHAND:
+       BACKTEST → PAPER, for long enough to cross a month end and a holiday
+       → REAL MONEY AT A SIZE THAT DOES NOT MATTER, which is the only step that tests
+         execution honestly and is where slippage becomes a measured number rather than an
+         assumed one
+       → SIZE UP SLOWLY, only against evidence.
+     AND THE MEASUREMENT THAT CLOSES THE LOOP AND IS THE POINT OF THE EPISODE: RUN THE
+     BACKTEST OVER THE SAME PERIOD YOU JUST TRADED AND COMPARE, trade by trade. The difference
+     between simulated and actual fills IS your true slippage, and feeding it back into
+     Series 2 · 10's cost model is what makes every future backtest honest.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:reconcile
+      koan:capture
+      koan file: tests/src/koans/groovy/datazeus/algotrading/series3/_15/PaperToLiveKoans.groovy
+   ========================================================================== */}
+
+## The failure this lesson prevents
+
+{/* BEAT 1 — the specific way this gets somebody. 'The split made it look like a 50% loss.' 'The order timed out but had been placed.' Always concrete, never a definition. */}
+
+TODO
+
+## The mechanism
+
+{/* BEAT 2 — why it happens, at the level of the data or the protocol. The general idea first, then the code. */}
+
+TODO
+
+## The build that makes it impossible
+
+{/* BEAT 3 — NON-NEGOTIABLE, and note the wording: STRUCTURAL, not disciplinary. A convention a tired person has to remember is not a fix. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — the assertion, reconciliation or report that proves it is still true next month. */}
+
+TODO

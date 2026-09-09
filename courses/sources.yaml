@@ -323,6 +323,27 @@ sources:
       Second, the TEST QUADRANTS in chapter 4 are Brian Marick's and the book says so — credit
       him there, not these authors.
 
+  lopez-de-prado:
+    author: "Marcos López de Prado"
+    work: "Advances in Financial Machine Learning"
+    publisher: "Wiley"
+    year: 2018
+    isbn: "978-1119482086"
+    note: >-
+      BACKTEST OVERFITTING AS A MULTIPLE-TESTING PROBLEM is the contribution being credited, and
+      it is the intellectual core of Build Your Own: Algotrading System, Series 2 · 25. The
+      argument: run enough backtests on one dataset and the best one looks excellent BY CHANCE,
+      so a Sharpe ratio means nothing without knowing how many trials produced it — hence the
+      deflated Sharpe ratio, which adjusts for exactly that. He has made the same case in
+      several papers with co-authors; the book is the accessible single source and is what a
+      reader should be handed.
+      WHAT WE CREDIT AND WHAT WE DO NOT: the overfitting and multiple-testing argument, which is
+      his and is named. NOT the machine-learning methods that fill most of the book — that track
+      deliberately treats the model as a black box, and crediting him for the parts we do not
+      teach would be padding.
+      ⚠ AND THE TONE RULE FOR THAT EPISODE: he is making a SCEPTICAL argument. Any writing that
+      turns it into a technique for producing better-looking results has inverted it.
+
   lewis-rag:
     author: "Patrick Lewis et al."
     work: "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks"

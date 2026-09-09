@@ -1,0 +1,770 @@
+# The ordered episode list for Build Your Own: ERP & CRM. Field docs live in
+# courses/learnsql/curriculum.yaml. `short` is omitted until an episode has a video.
+#
+# The job this track teaches: build the system a business actually runs on — the customer, the
+# quote, the order, the stock, the invoice, the payment, and the ledger underneath that has to
+# balance — and understand why every ERP you will ever meet looks the way it does.
+#
+# ============================================================================
+# WHY THIS TRACK EXISTS, AND WHY IT IS NOT THE TWO TRACKS BESIDE IT
+# ============================================================================
+# THREE TRACKS IN THIS STAGE, AND THEY ARE THREE DIFFERENT VERBS.
+#   DATA MODEL PATTERNS   hands you the patterns the industry already agreed on. Party, roles,
+#                         effective dating, order-to-cash. It teaches you to RECOGNISE them.
+#   SCHEMA TEARDOWNS      opens up what real teams shipped — ERPNext, Odoo, Dolibarr,
+#                         InvoiceNinja — and judges the decisions. It teaches you to READ them.
+#   THIS TRACK            makes you BUILD one. Not a pattern, not a critique — a running system
+#                         where a confirmed invoice moves stock, posts to a ledger, and appears
+#                         on an aged receivables report that agrees with the general ledger to
+#                         the penny.
+# READ IN ORDER: recognise, read, build. Each is a different skill and the third is the one
+# that exposes whether you actually had the first two.
+#
+# WHY AN ERP IS THE RIGHT THING TO BUILD, and not an arbitrary choice of app: IT IS WHERE EVERY
+# PATTERN IN THE ACADEMY COLLIDES AT ONCE. Effective dating, hierarchies, polymorphic
+# references, money, multi-currency, audit trails, row-level permissions, state machines,
+# idempotency, and a set of numbers that must agree with each other or the business is
+# mis-stating its accounts. Nothing else a single developer can build applies this much
+# pressure to a schema.
+#
+# ============================================================================
+# THE THING THAT MAKES AN ERP HARD, SAID ONCE AT THE TOP
+# ============================================================================
+# IT IS NOT THE SCHEMA. A competent modeller can draw an ERP's tables in an afternoon, and
+# every reader of Data Model Patterns already can.
+#
+# IT IS THAT THE NUMBERS MUST AGREE. Stock on hand must equal the sum of stock movements. The
+# accounts-receivable control account must equal the sum of unpaid invoices. The trial balance
+# must balance. The moment two places in your system can answer the same question differently,
+# you no longer have an ERP — you have a set of screens, and somebody's month-end is now four
+# days long.
+#
+# SO EVERY SERIES ENDS ON A RECONCILIATION rather than on a feature, and `koan:reconcile` is
+# this track's characteristic exercise. That is a deliberate design decision and it is the
+# difference between this course and a CRUD tutorial.
+#
+# ============================================================================
+# THE SCOPE, DECIDED BEFORE A LINE WAS WRITTEN
+# ============================================================================
+# YOU ARE NOT BUILDING ODOO, AND THE COURSE MUST SAY SO IN THE FIRST EPISODE. Odoo and ERPNext
+# are the work of hundreds of people over more than a decade, in dozens of jurisdictions.
+#
+# WHAT WE BUILD IS THE PART ALMOST EVERY BUSINESS USES: contacts and a sales pipeline; products
+# and prices; the quote → order → delivery → invoice → payment chain; a stock ledger; a general
+# ledger with tax and multi-currency; permissions; and an audit trail.
+#
+# WHAT WE DELIBERATELY LEAVE OUT, named in Series 4 · 20 so it is a decision rather than an
+# omission: manufacturing and bills of materials, payroll, project accounting, consolidation
+# across companies, per-country statutory filing, and e-invoicing mandates. EACH OF THOSE IS A
+# PRODUCT, and the honest lesson is knowing which of them means "stop building and buy".
+#
+# ============================================================================
+# THIS TRACK HAS NO OFFICIAL MANUAL, AND THAT CHANGES HOW IT IS RESEARCHED
+# ============================================================================
+# There is no vendor documentation to follow, because the subject is not a product. There are
+# three sources of truth instead, and a writer should use all three:
+#   THE REAL SCHEMAS      ERPNext, Odoo and Dolibarr are open source. When a design decision is
+#                         genuinely hard, GO AND LOOK AT WHAT THEY DID — three independent
+#                         teams converging on the same shape is evidence, and one of them
+#                         diverging is a question worth asking. Schema Teardowns has already
+#                         done this reading for several of them; use its findings, do not
+#                         repeat its episodes.
+#   THE ACCOUNTING        double-entry bookkeeping is five hundred years old, has no owner, and
+#                         is not negotiable. Series 3 must be correct, not approximate. Where
+#                         this course simplifies, it says it is simplifying.
+#   THE PATTERNS          Data Model Patterns, and its literature. This track applies them; it
+#                         does not re-teach them.
+#
+# ⚠ AND THE ONE PLACE TO BE CAREFUL WITH CLAIMS: TAX AND STATUTORY RULES DIFFER BY COUNTRY AND
+# CHANGE. Teach the MECHANISM — a per-line rate resolved as of the document date — and never
+# write a lesson that reads as advice about a particular jurisdiction's rules. Say plainly that
+# the reader's accountant owns the rates and that this course owns the machinery.
+#
+# ============================================================================
+# THE SHAPE OF AN EPISODE — four beats, every time
+# ============================================================================
+#   1. THE MOMENT     the concrete thing a business needed and the naive design could not do.
+#                     "The customer paid half." "Last year's invoice changed when we edited the
+#                     product." Never a definition.
+#   2. THE DESIGN     the tables and the rule that holds them together, with the alternatives
+#                     that were rejected and WHY — because in this domain the rejected option
+#                     is usually the one the reader would have picked.
+#   3. THE BUILD      it standing up and running, clickable, in DataPallas. The proof.
+#   4. THE CHECK      the query that proves it is still true. This beat is this track's
+#                     signature: an ERP episode is not finished until something can be
+#                     reconciled or an invariant asserted.
+#
+# ============================================================================
+# THE RULES THIS DOMAIN ENFORCES, COLLECTED SO NO EPISODE FORGETS ONE
+# ============================================================================
+#   A POSTED DOCUMENT IS IMMUTABLE. You reverse it, you do not edit it. Series 2 · 10.
+#   A DOCUMENT COPIES WHAT IT NEEDS. An invoice must never join to the current price. Series 2 · 05.
+#   MONEY IS NEVER A FLOAT. Series 3 · 15, and no episode may show one.
+#   ON-HAND IS DERIVED, NEVER STORED AS THE TRUTH. Series 4 · 05.
+#   THE LEDGER SUMS TO ZERO, per entry, always. Series 3 · 05.
+#   HISTORY IS KEPT, NOT OVERWRITTEN. Series 4 · 00.
+# ANY EPISODE THAT APPEARS TO BREAK ONE OF THESE IS EITHER WRONG OR IS DELIBERATELY SHOWING THE
+# NAIVE VERSION BEFORE FIXING IT, AND MUST SAY WHICH.
+
+course: learn-build-erp-crm
+track: erpcrm
+title: "Build Your Own: ERP & CRM"
+
+prerequisites:
+  - course: learn-data-model-patterns
+    needs: "Series 1 and Series 2"
+    why: >-
+      This track applies the patterns rather than teaching them. Series 1 · 00 is the party
+      model, Series 1 · 15 is effective dating and Series 2 · 10 is the order-to-cash chain —
+      all three are assumed here from the first episode, and an episode that stopped to explain
+      them again would be the wrong course.
+  - course: learn-sql
+    needs: "Series 1"
+    why: >-
+      Every check in this track is a query. You need joins and GROUP BY well enough to write the
+      reconciliation that proves the ledger agrees with the subledger, because that query is the
+      artefact each series ends on.
+
+excludes:
+  - topic: "The patterns themselves — party, roles, effective dating, order-to-cash, hierarchies"
+    where: "covered in Data Model Patterns. In this course, Series 1 · 05 and Series 2 · 05 apply them and argue the concrete choice for a system you will maintain, which is a different exercise from learning what they are"
+  - topic: "How ERPNext, Odoo, Dolibarr and InvoiceNinja modelled it, and where they diverge"
+    where: "covered in Schema Teardowns, Series 2 · 05 and Schema Teardowns, Series 2 · 10. This track builds one rather than reading theirs — go and look at their schemas when a decision is hard, which is what that track teaches you to do"
+  - topic: "Deciding what the tables should be, keys and normalization"
+    where: "covered in Data Modeling. This track starts after that decision, from a domain whose shape has been settled by fifty years of people getting it wrong"
+  - topic: "Building an invoicing app from three schemas you took apart"
+    where: "covered in Schema Teardowns, Series 3 · 05, which is a smaller build and a different exercise — that one is informed by reading, this one is informed by the ledger having to balance"
+  - topic: "Warehouse and reporting layers, star schemas and OLAP"
+    where: "covered in Data Warehousing. In this course, Series 4 · 15 covers only the moment your reports start hurting the transactional database, and hands over"
+  - topic: "Running the database in production — backups, tuning, connection pooling"
+    where: "covered in Data Ops, Series 2. This track builds the system; keeping it up is that course's subject"
+  - topic: "Manufacturing, payroll, project accounting and per-country statutory filing"
+    where: "not covered, deliberately. In this course, Series 4 · 20 names each one and explains why it is the point where a sensible team stops building and buys — which is the useful lesson, and the one nobody writes down"
+  - topic: "Tax advice, or the rules of any particular jurisdiction"
+    where: "not covered and never will be. This track teaches the machinery that applies a rate as of a document's date; which rate, and which rules, belongs to the reader's accountant"
+
+series:
+  # SERIES 1 IS THE CRM HALF, AND IT COMES FIRST BECAUSE IT HAS NO MONEY IN IT. A reader gets a
+  # complete, useful, running system — contacts, a pipeline, activities, permissions — before
+  # meeting a single debit. That is a real product on its own, and it means the accounting in
+  # Series 3 lands on a working application rather than on an empty database.
+  - slug: series1-the-crm
+    title: The CRM — People, Pipeline and Who Can See What
+    tagline: a running system before a single number has to balance
+    level: intermediate
+    episodes:
+      # COVER: the scope decision, made out loud, because a reader who does not make it will
+      # build for six months and ship nothing.
+      # WHAT AN ERP ACTUALLY IS, stripped of the vendor language: ONE DATABASE THAT SEVERAL
+      # DEPARTMENTS SHARE. That is the whole idea and it is the entire source of both its value
+      # and its difficulty — sales, stock and finance disagreeing is impossible when they read
+      # the same rows, and every hard problem in this course comes from making that true.
+      # WHAT A CRM IS: the front half of the same database, before anything is owed.
+      # THEN THE SCOPE, DRAWN ON SCREEN: what this course builds and what it does not, per the
+      # header. Say the sentence — YOU ARE NOT BUILDING ODOO — and say what you are building
+      # instead, which is the part almost every business uses.
+      # AND THE SENTENCE THE WHOLE TRACK HANGS ON, delivered here first: THE HARD PART IS NOT
+      # THE SCHEMA, IT IS THAT THE NUMBERS MUST AGREE. Show it concretely with the two numbers
+      # a reader can already imagine disagreeing — what the warehouse says is on the shelf, and
+      # what the system says is on the shelf.
+      - n: "00"
+        slug: what-an-erp-is
+        title: "One Database, Several Departments — and the 5% You Are Actually Building"
+        hands_on: ["koan:choose", "eyes"]
+        core: true
+        status: planned
+        tags: ["foundational"]
+      # COVER: the first real decision, and it is the party model arriving with consequences.
+      # Data Model Patterns, Series 1 · 00 taught it. HERE YOU HAVE TO COMMIT.
+      # THE CONCRETE PROBLEM: an account is a company, a contact is a person, a contact belongs
+      # to an account — until the customer is a sole trader and is both, or an employee changes
+      # employer and you have to decide whether the history follows the person or the company.
+      # THE THREE DESIGNS AND THEIR REAL COSTS:
+      #   SEPARATE COMPANY AND PERSON TABLES   simplest to read, and every relationship that can
+      #                                        point at either has to be written twice.
+      #   ONE PARTY TABLE WITH A TYPE          the pattern. One foreign key everywhere, at the
+      #                                        cost of every query knowing about the type.
+      #   PARTY PLUS ROLE RECORDS              the full version, where "customer" is something a
+      #                                        party IS ON A DATE rather than a table it lives
+      #                                        in — which is what makes the customer-who-is-also-
+      #                                        a-supplier free.
+      # THE RECOMMENDATION AND THE HONEST CAVEAT: take the middle one for a system you will
+      # maintain alone, and know exactly what you gave up. Data Model Patterns, Series 3 · 20 is
+      # the decision rule; this is that rule applied to a schema you are about to live in.
+      - n: "05"
+        slug: accounts-and-contacts
+        title: "Accounts and Contacts — the Party Decision You Have to Actually Make"
+        hands_on: ["koan:choose", "koan:complete"]
+        core: true
+        status: planned
+        tags: ["party"]
+      # COVER: the pipeline, which is a state machine that people mistake for a dropdown.
+      # LEAD, OPPORTUNITY, STAGE, and the modelling question that decides how the system ages:
+      # IS A STAGE AN ENUM OR A ROW? An enum needs a migration to add "Awaiting Legal", which
+      # sales will ask for in month two — Data Model Patterns, Series 1 · 20 is the pattern and
+      # this is where it earns its keep.
+      # THE TRANSITION LOG, which is the part every tutorial skips and every sales manager
+      # eventually asks for: you cannot answer "how long do deals sit in Negotiation?" from a
+      # current-stage column. YOU NEED THE HISTORY OF STAGE CHANGES AS ROWS, and adding it later
+      # means you have no history for the deals that matter.
+      # AND THE HONEST PART ABOUT FORECASTING: probability-weighted pipeline value is a number
+      # every CRM shows and almost nobody's is calibrated. Model it, show it, and say plainly
+      # what it is worth.
+      - n: "10"
+        slug: leads-and-pipeline
+        title: "The Pipeline — a State Machine, and the History Column You Cannot Add Later"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: the timeline — calls, emails, notes, meetings, tasks — and THE POLYMORPHIC
+      # PROBLEM, which is the single most argued-about design decision in application schemas
+      # and deserves its own episode rather than a paragraph.
+      # AN ACTIVITY POINTS AT ANYTHING: a contact, an account, an opportunity, later an invoice.
+      # THE THREE WAYS TO DO IT IN A RELATIONAL DATABASE, all three built, all three costed:
+      #   TYPE + ID COLUMNS      one pair of columns, no foreign key possible, no referential
+      #                          integrity. What most frameworks do, and it works until the day
+      #                          you have orphans and no way to have prevented them.
+      #   A NULLABLE FK PER TYPE  integrity kept, one column per target, plus a check constraint
+      #                          that exactly one is set. Ugly, correct, and genuinely fine at
+      #                          five target types.
+      #   A SHARED SUPERTYPE ROW  everything linkable gets a row in one table and the activity
+      #                          points at that. Integrity kept, one join added everywhere, and
+      #                          this is the party model's trick generalised.
+      # Data Model Patterns, Series 2 · 15 states this problem for invoice lines. THIS EPISODE
+      # IS WHERE A READER PICKS ONE AND LIVES WITH IT, and the point is that all three are
+      # defensible and the indefensible thing is not knowing which one you chose.
+      - n: "15"
+        slug: activities-and-polymorphism
+        title: "The Timeline — Three Ways to Point at Anything, and What Each One Costs"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: record-level permissions. EVERY CRM NEEDS THIS AND ALMOST EVERY TUTORIAL SKIPS
+      # IT, which is why a home-made CRM gets replaced the moment a second sales team exists.
+      # THE REQUIREMENT, IN THE WORDS SOMEBODY WILL USE: "Reps see their own accounts. Managers
+      # see their team's. Finance sees everything. Nobody sees the accounts belonging to the
+      # other region."
+      # WHY THIS IS A DATA PROBLEM AND NOT A LOGIN PROBLEM: it is not "can this user open this
+      # page", it is "which rows are in the list" — so it lands in every query, every report and
+      # every export. A permission model bolted on afterwards means auditing every query you
+      # have ever written.
+      # THE DESIGN: an owner on the record, a team hierarchy (Data Model Patterns, Series 3 · 05
+      # is the hierarchy pattern), and a visibility rule expressed once — as a view, a predicate
+      # or row-level security — rather than repeated in forty places. Data Ops, Series 2 · 40 is
+      # the Postgres mechanism; the design decision is here.
+      # AND THE TRAP: a rule that requires walking a hierarchy on every row is a rule that gets
+      # slow at exactly the moment the company grows. Show the cost, and show the materialised
+      # answer.
+      - n: "20"
+        slug: record-level-permissions
+        title: "Who Can See This Row — Ownership, Teams, and Why It Is Not a Login Problem"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: custom fields, because the first request after go-live is always a new field and
+      # the answer you gave decides the next three years.
+      # THE THREE ANSWERS, WITH THEIR REAL PRICES:
+      #   ADD A COLUMN     honest, typed, indexable, fast — and it needs a migration and a
+      #                    developer, which is the whole reason people look for alternatives.
+      #   EAV              a row per value. Infinitely flexible, and every report becomes a
+      #                    pivot; types are gone; constraints are gone. Data Model Patterns,
+      #                    Series 3 · 15 is the warning, and this is where a reader meets the
+      #                    specific version of it.
+      #   A JSON COLUMN    the modern middle. Typed enough, indexable with the right index,
+      #                    queryable, and it keeps the schema honest for everything that is
+      #                    genuinely core. Say which database features this depends on.
+      # THE RULE WORTH TEACHING: CORE ENTITIES GET COLUMNS; CUSTOMER-SPECIFIC ADDITIONS GET
+      # JSON; EAV IS FOR WHEN YOU ARE BUILDING A PLATFORM FOR OTHER PEOPLE, WHICH YOU ARE NOT.
+      # And the corollary that saves a schema: a field that everybody adds is a column you were
+      # missing.
+      - n: "25"
+        slug: custom-fields
+        title: "Custom Fields — a Column, EAV or JSON, and the Question That Decides"
+        hands_on: ["koan:choose", "koan:predict"]
+        status: planned
+      # THE ARTEFACT: a CRM somebody could genuinely use.
+      # BUILD: accounts and contacts on the design chosen in 05; a pipeline with stage history;
+      # a timeline that links to all three entity types; two teams with a manager; and one
+      # custom field added the way 25 recommended.
+      # THEN PROVE IT WITH QUERIES rather than screenshots — this track's signature: how long
+      # does a deal sit in each stage; which rep sees which accounts and does the count match
+      # the rule you wrote down; and can any activity be orphaned. That last one is the check on
+      # the decision made in 15, and if the answer is yes, say so — a known and accepted risk is
+      # engineering; an unknown one is not.
+      - n: "30"
+        slug: project-a-working-crm
+        title: "Project — a CRM With a Pipeline, a Timeline and a Visibility Rule That Holds"
+        hands_on: ["koan:author", "koan:capture"]
+        status: planned
+
+  # SERIES 2 IS WHERE MONEY IS PROMISED BUT NOT YET COUNTED. The document chain is the spine of
+  # every ERP, and the two rules in it — copy what you need, and never edit what is posted — are
+  # the difference between a system an accountant will accept and one they will not.
+  - slug: series2-order-to-cash
+    title: Quote, Order, Delivery, Invoice
+    tagline: the document chain, and the two rules that make it trustworthy
+    level: intermediate
+    episodes:
+      # COVER: the catalogue, which looks trivial and is not.
+      #   PRODUCTS AND VARIANTS: the same shirt in four sizes is one product or four? Data Model
+      #   Patterns, Series 2 · 00 is the pattern; the decision here is driven by stock, because
+      #   you count variants and you sell products.
+      #   UNITS OF MEASURE AND CONVERSIONS: you buy a case of twelve, you sell singles, you
+      #   count both. A conversion factor per product, applied consistently, and the rule that
+      #   EVERY QUANTITY IN THE DATABASE CARRIES ITS UNIT. Quantities without units are how
+      #   people ship twelve times too much.
+      #   PRICE LISTS: a price is not a column on a product. It depends on the customer, the
+      #   currency, the quantity break and the date — which is Data Model Patterns, Series 1 · 15
+      #   and Series 2 · 05 arriving together, and it is the reason the next episode exists.
+      # THE CHECK: ask for the price of one product, for one customer, in one currency, on one
+      # date, and get exactly one answer. A price resolution that can return two rows is a bug
+      # you will find during a demo.
+      - n: "00"
+        slug: products-units-and-prices
+        title: "Products, Units and Price Lists — Why a Price Is Never a Column"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # THE CENTRAL EPISODE OF THE SERIES, and one of the two or three that this whole course
+      # exists to deliver.
+      # COVER: the chain — QUOTE → ORDER → DELIVERY → INVOICE → PAYMENT — as documents that
+      # reference each other rather than as statuses on one row. Why documents: because each has
+      # its own date, its own numbering, its own approver, and its own legal weight, and because
+      # one of them can exist without the others.
+      # AND THEN THE RULE, WHICH IS THE SENTENCE TO PUT ON THE SCREEN:
+      #     A DOCUMENT COPIES WHAT IT NEEDS AT THE MOMENT IT IS CREATED.
+      #     AN INVOICE LINE MUST NEVER JOIN TO THE CURRENT PRODUCT PRICE.
+      # THE FAILURE IT PREVENTS, shown live because it is more persuasive than any argument:
+      # edit a product's price, reload last year's invoice, and watch the total change. That is
+      # a system that has just restated a filed tax return.
+      # SO AN INVOICE LINE STORES the description, the unit price, the quantity, the unit, the
+      # tax rate and the currency AS THEY WERE — and keeps the product reference for reporting
+      # only. Say which columns are the copy and which are the link, and why the link may never
+      # be used for arithmetic.
+      # THE SAME RULE, ONE LEVEL UP: the customer's name and address are copied onto the
+      # document too. When they move, old invoices keep the old address, because that is where
+      # the goods went.
+      - n: "05"
+        slug: the-document-chain
+        title: "The Document Chain — and Why an Invoice Must Never Join to the Price"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: document state, and the moment a record stops being editable.
+      # DRAFT, CONFIRMED, CANCELLED — and the boundary that matters: A DOCUMENT THAT HAS BEEN
+      # POSTED IS IMMUTABLE. Not by convention, by constraint. You reverse it with another
+      # document; you do not UPDATE it.
+      # WHY, IN THE WORDS THAT PERSUADE A DEVELOPER RATHER THAN AN ACCOUNTANT: the invoice has
+      # left the building. It is in somebody's inbox, in their accounts payable system, and in
+      # your tax return. An UPDATE makes your copy disagree with three other people's copies and
+      # leaves no trace that it ever happened.
+      # WHAT THIS MEANS IN PRACTICE, and it is a genuine shift for most application developers:
+      # AN ERP IS APPEND-MOSTLY. DELETE is essentially not available. Corrections are new rows
+      # that point at old rows. Series 2 · 25 is the mechanism.
+      # THE STATE MACHINE, WRITTEN DOWN: which transitions are legal, what each one does as a
+      # side effect (a confirmed delivery moves stock; a confirmed invoice posts to the ledger),
+      # and where those side effects must be atomic with the state change or you get an invoice
+      # that exists with no accounting entry.
+      - n: "10"
+        slug: document-state
+        title: "Posted Is Immutable — Why an ERP Barely Has a DELETE"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: numbering, which is a two-line feature and a genuinely hard problem, and which
+      # every home-made system gets wrong.
+      # THE REQUIREMENT: invoice numbers are usually required to be sequential and unbroken,
+      # often reset per year, often prefixed per series or per company. An auditor may ask about
+      # a gap.
+      # WHY A DATABASE SEQUENCE IS THE WRONG TOOL, and this is the useful insight: SEQUENCES ARE
+      # DESIGNED TO HAVE GAPS. They do not roll back with the transaction — that is a feature,
+      # because it means they never block — and a rolled-back invoice therefore burns a number.
+      # THE ANSWERS AND THEIR COSTS: a counter row locked per series, which is correct and
+      # serialises your invoice creation; assigning the number only at posting rather than at
+      # creation, which shrinks the window to almost nothing; and reserving-then-voiding, which
+      # keeps the sequence unbroken by leaving an explicit void record instead of a hole.
+      # THE RECOMMENDATION: number at posting, from a locked counter, and keep drafts unnumbered
+      # — which is also how the commercial systems do it.
+      - n: "15"
+        slug: document-numbering
+        title: "Invoice Numbers — Why a Sequence Is the Wrong Tool for an Unbroken Series"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        status: planned
+      # COVER: the episode where naive schemas die, and the reason the chain is linked at LINE
+      # level rather than at document level.
+      # THE REALITY: you order ten. Six ship on Tuesday. You invoice those six. The customer
+      # pays part of that invoice. Four ship next month on a second delivery, on one more
+      # invoice, paid with a single payment that also covers an older invoice.
+      # NOTHING ABOUT THAT IS UNUSUAL AND IT BREAKS EVERY ONE-TO-ONE DESIGN.
+      # THE MODEL: quantities are tracked per ORDER LINE — ordered, delivered, invoiced — and
+      # each is derived from the linked lines rather than stored, so it cannot drift. A delivery
+      # line references an order line. An invoice line references a delivery line, or an order
+      # line for services.
+      # ALLOCATION AS ITS OWN CONCEPT: a payment is not "for an invoice", it is an amount that
+      # gets ALLOCATED across invoices, possibly partially, possibly across currencies. That
+      # allocation table is what makes an aged receivables report possible, and its absence is
+      # why most home-made systems cannot produce one.
+      # THE CHECK, and it is the series' hardest: for every order line, ordered ≥ delivered and
+      # delivered ≥ invoiced, and the sum of allocations never exceeds the payment or the
+      # invoice. Write those as assertions and run them.
+      - n: "20"
+        slug: partial-everything
+        title: "Partial Delivery, Partial Invoice, Partial Payment — Where Naive Schemas Die"
+        hands_on: ["koan:reconcile", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: corrections, which is Series 2 · 10's immutability rule cashing its cheque.
+      # THE CREDIT NOTE as a document in its own right, referencing what it corrects, with its
+      # own number, its own date and its own accounting effect — NOT a negative line added to
+      # the original and NOT a deleted invoice.
+      # THE FOUR CASES, WHICH ARE GENUINELY DIFFERENT and get conflated: goods returned; an
+      # invoice that was simply wrong; a discount agreed after the fact; and a bad debt written
+      # off. Each has a different effect on stock and on the ledger, and only the first moves
+      # goods.
+      # WHY A RETURN IS NOT AN UNDO: the stock comes back on a date, in a condition, possibly to
+      # a different location, and possibly not at all. Series 4 · 05 is where that movement
+      # lands.
+      # AND THE REPORTING CONSEQUENCE THAT MAKES IT WORTH THE TROUBLE: with corrections as
+      # documents, you can answer "what did we invoice in March, and what did we later credit
+      # against March?" — a question a negative-line design cannot answer at all.
+      - n: "25"
+        slug: credit-notes
+        title: "Credit Notes and Returns — Four Corrections That Are Not the Same Thing"
+        hands_on: ["koan:choose", "koan:complete"]
+        status: planned
+      # THE ARTEFACT: the chain running, with the awkward cases as the acceptance test.
+      # BUILD: catalogue with a price list; quote → order → two partial deliveries → two
+      # invoices → one payment allocated across both; then a return and a credit note.
+      # THEN THE PROOF, and it is queries, not screens: an aged receivables report; the open
+      # order book (ordered minus delivered); and the assertion set from 20 run as a check that
+      # passes. Then EDIT A PRODUCT PRICE AND SHOW THE OLD INVOICE IS UNCHANGED — the one-line
+      # demonstration that Series 2 · 05's rule was actually implemented and not merely agreed
+      # with.
+      - n: "30"
+        slug: project-the-chain
+        title: "Project — Ten Ordered, Six Shipped, One Payment, and a Report That Agrees"
+        hands_on: ["koan:reconcile", "koan:author"]
+        status: planned
+
+  # SERIES 3 IS THE ONE THAT MAKES IT AN ERP RATHER THAN AN ORDER-TRACKING APP, and it is the
+  # series most developers have never been taught. Double-entry bookkeeping is a data structure
+  # with an invariant, and a programmer who sees it that way learns it in an afternoon.
+  - slug: series3-the-ledger
+    title: The Ledger That Has to Balance
+    tagline: double entry, money, tax and a trial balance you can defend
+    level: intermediate
+    episodes:
+      # COVER: double entry, taught to programmers, in the terms that make it click.
+      # THE PITCH: this is not accountancy, it is a DATA STRUCTURE WITH AN INVARIANT, and it is
+      # the most successful one ever designed — five hundred years old, unchanged, and it
+      # detects your errors for you.
+      #   AN ACCOUNT is a bucket. A JOURNAL ENTRY is a set of lines. EVERY ENTRY SUMS TO ZERO.
+      #   That is the whole mechanism.
+      # DEBIT AND CREDIT, DEMYSTIFIED: they are not "in" and "out" and trying to make them mean
+      # that is why people bounce off this subject. THEY ARE JUST SIGN — one is positive, one is
+      # negative — and what an increase MEANS depends on which side of the accounting equation
+      # the account is on. Say that once, plainly, and the fog clears.
+      # THE EQUATION: assets = liabilities + equity, and income and expense as the temporary
+      # accounts that feed equity. Five account types, and everything in the system is one.
+      # WORK THREE ENTRIES BY HAND ON SCREEN — a sale, a payment received, a purchase — and let
+      # the reader see the zero every time.
+      # THE PAYOFF FOR A DEVELOPER, and it is why this belongs in a data academy: THE INVARIANT
+      # IS A CONSTRAINT YOU CAN ENFORCE, and a system whose entries all sum to zero cannot
+      # silently lose money. Nothing else in application development gives you that.
+      - n: "00"
+        slug: double-entry-for-programmers
+        title: "Double Entry — a Data Structure With an Invariant, Not Accountancy"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+        tags: ["foundational", "accounting"]
+      # COVER: the two tables the whole of finance runs on, and the constraint that guards them.
+      #   THE CHART OF ACCOUNTS: a hierarchy (Data Model Patterns, Series 3 · 05), typed by the
+      #   five account types, with the leaf/parent rule — YOU POST TO LEAVES, YOU REPORT ON
+      #   PARENTS. Getting that wrong is how a trial balance double-counts.
+      #   THE JOURNAL: an entry header with a date, a description, a source document reference
+      #   and a posted flag; and entry LINES with an account, an amount and a side.
+      # THE INVARIANT, ENFORCED RATHER THAN HOPED FOR: the sum of an entry's lines is zero.
+      # Show it as a database constraint — a deferred check, a trigger, or a posting procedure
+      # that is the only writer — and argue for the third, because an invariant defended by
+      # convention is an invariant that will be broken by an import script at 2 a.m.
+      # ALSO: the entry date against the posting date against the document date, which are three
+      # different things and are conflated in every naive design; and why an entry references
+      # the document that caused it, so every number on a report can be traced back to a thing
+      # that happened.
+      - n: "05"
+        slug: chart-of-accounts-and-journal
+        title: "Accounts and Journal Entries — the Constraint That Sums to Zero"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        core: true
+        status: planned
+        tags: ["accounting"]
+      # COVER: posting — the bridge between Series 2's documents and this series' ledger, and
+      # the concept that turns two subsystems into one system.
+      # WHAT A CONFIRMED INVOICE DOES: debit accounts receivable, credit revenue, credit tax
+      # payable. What a payment does. What a delivery does, once Series 4 · 05 exists. Show the
+      # entries, do not describe them.
+      # THE SUBLEDGER AND THE CONTROL ACCOUNT, which is the idea that makes an ERP hang
+      # together and is almost never explained to developers: the invoice table IS the accounts
+      # receivable subledger — the detail, per customer. The general ledger holds ONE account
+      # that must equal the sum of it. Two representations of the same fact, at different
+      # grains, kept in step by the posting rule.
+      # AND THEREFORE THE RECONCILIATION THAT DEFINES THIS TRACK: SUM OF OPEN INVOICES = THE
+      # RECEIVABLES CONTROL ACCOUNT BALANCE. Write the query. Run it. When it disagrees, the
+      # gap is always something that wrote to one side and not the other — which is why posting
+      # and the document state change must be one transaction.
+      # THE DESIGN CHOICE TO ARGUE: post immediately on confirmation, or batch. Immediate is
+      # simpler to reason about and is the recommendation; say what batching buys and who needs
+      # it.
+      - n: "10"
+        slug: posting-and-control-accounts
+        title: "Posting — the Subledger, the Control Account, and the Query That Proves It"
+        hands_on: ["koan:reconcile", "koan:complete"]
+        core: true
+        status: planned
+        tags: ["accounting"]
+      # COVER: money, which is where more home-made systems are quietly wrong than anywhere
+      # else in this course.
+      #   NEVER A FLOAT. Say it once, hard, and show the classic: 0.1 + 0.2 in the reader's own
+      #   language. THE ANSWERS: an integer count of minor units, or an exact decimal type with
+      #   a stated scale. Argue for integers in application code and DECIMAL/NUMERIC in the
+      #   database, and name the trap — a column with too little scale silently rounds.
+      #   AMOUNT AND CURRENCY TRAVEL TOGETHER. A bare number is not money. Every monetary
+      #   column has a currency beside it or a currency on its row's parent.
+      #   ROUNDING: when you split a total across lines, or apply a percentage, the parts do not
+      #   add up. THE RULE: allocate the remainder deliberately — largest-remainder, or onto a
+      #   named line — and NEVER let it vanish. An unallocated cent is an entry that does not
+      #   sum to zero, and Series 3 · 05's constraint will catch it, which is the constraint
+      #   doing its job.
+      # THEN MULTI-CURRENCY, WHICH IS THE PART EVERY HOME-MADE SYSTEM SKIPS:
+      #   TWO AMOUNTS ON EVERY LINE — the transaction currency, and the company's reporting
+      #   currency at the rate on the document date. Store the rate you used, on the row. A rate
+      #   you can only look up again later is a number you cannot reproduce.
+      #   AND THE THING THAT FALLS OUT AND SURPRISES PEOPLE: the customer pays in March at a
+      #   different rate than the invoice was raised at in January. The difference is REAL money
+      #   and it needs its own account — a realised exchange gain or loss. A system that ignores
+      #   it has a receivables balance that will never clear to zero.
+      - n: "15"
+        slug: money-and-currency
+        title: "Money — Integers, Allocated Rounding, and the Exchange Gain Nobody Models"
+        hands_on: ["koan:predict", "koan:reconcile"]
+        core: true
+        status: planned
+        tags: ["money"]
+      # COVER: tax as machinery, with the jurisdiction warning from this file's header stated in
+      # the lesson itself.
+      #   TAX IS PER LINE, NOT PER DOCUMENT. Different products carry different rates, and a
+      #   document total is the sum of line taxes rather than a percentage of the subtotal —
+      #   which are not the same number once rounding exists.
+      #   INCLUSIVE AGAINST EXCLUSIVE PRICING, and the arithmetic in both directions. Retail
+      #   quotes inclusive; business quotes exclusive; the same system has to do both, and
+      #   deriving one from the other is where the cent goes missing.
+      #   THE RATE IS RESOLVED AS OF THE DOCUMENT DATE and then COPIED ONTO THE LINE, per
+      #   Series 2 · 05. When a rate changes, old documents keep the old rate. This is effective
+      #   dating for the third time in the course and by now the reader should see it coming.
+      #   WHAT DECIDES THE RATE: the product's tax category and the customer's tax situation
+      #   together — which is why a tax rule is a small lookup and not a column.
+      #   REVERSE CHARGE AND ZERO-RATED SALES, named as the two cases that break the naive
+      #   "multiply by the rate" model, because the tax moves to the buyer or vanishes while the
+      #   sale still has to be reported.
+      # ⚠ AND THE SENTENCE THE EPISODE MUST CARRY: this teaches the machinery. The rates, the
+      # categories and the filing rules belong to the reader's accountant and to their country,
+      # and they change. Do not write this episode as advice.
+      - n: "20"
+        slug: tax
+        title: "Tax — Per Line, As of the Date, and Copied Onto the Document"
+        hands_on: ["koan:complete", "koan:predict"]
+        status: planned
+      # COVER: the month end, which is the ritual that proves the system works and the thing a
+      # developer building an ERP has usually never seen.
+      #   THE TRIAL BALANCE: every account's balance, debits and credits, and THE TOTAL IS ZERO.
+      #   If it is not, the system is broken, and it is broken in a way you can find — which is
+      #   the entire point of five hundred years of this technique.
+      #   PERIOD LOCKING: after the close, no more entries dated in that period. Enforce it,
+      #   because "just this once" is how a filed number stops matching the system. And model
+      #   the escape hatch honestly — a reopened period is an event with a reason and an
+      #   approver, not a flag somebody flips.
+      #   THE THREE RECONCILIATIONS TO SHIP AS QUERIES, and they are this series' artefact:
+      #     receivables control = sum of open invoices
+      #     payables control    = sum of open bills
+      #     trial balance       = zero
+      #   Run them as tests, on a schedule, and alert. Data Ops, Series 3 · 20 is the freshness
+      #   and volume check; this is the same discipline pointed at correctness.
+      #   AGED RECEIVABLES as the report that turns the data into a phone call, and the fact
+      #   that it can only be produced correctly because Series 2 · 20 modelled allocation.
+      # AND THE HONEST NOTE ON YEAR END: closing income and expense into retained earnings is a
+      # real step, it is one entry, and this course shows it once rather than pretending the
+      # subject is bigger than it is.
+      - n: "25"
+        slug: closing-and-the-trial-balance
+        title: "Closing a Period — Three Reconciliations, and a Trial Balance That Is Zero"
+        hands_on: ["koan:reconcile", "koan:capture"]
+        core: true
+        status: planned
+        tags: ["accounting"]
+      # THE ARTEFACT: a month, posted and closed, that an accountant would accept.
+      # BUILD: a chart of accounts; post everything from Series 2's project; add a purchase and
+      # a bill so payables exist; include one foreign-currency invoice paid at a different rate;
+      # and include a credit note.
+      # THEN: run the three reconciliations and show them at zero. Close the period. Try to post
+      # into it and be refused. Produce a trial balance and an aged receivables report.
+      # AND THEN BREAK IT ON PURPOSE, which is the exercise that teaches the most: write a
+      # single-sided entry directly into the ledger with SQL, watch which reconciliation catches
+      # it, and see how long it takes you to find it. That is what an unenforced invariant feels
+      # like, and no amount of arguing achieves what one afternoon of this does.
+      - n: "30"
+        slug: project-close-a-month
+        title: "Project — Post a Month, Close It, Then Break the Ledger on Purpose"
+        hands_on: ["koan:reconcile", "koan:author"]
+        status: planned
+
+  # SERIES 4 IS WHAT SEPARATES A SYSTEM SOMEBODY TRUSTS FROM A SYSTEM THAT MERELY WORKS — the
+  # history, the stock, the go-live, and the honest gate about what to buy instead.
+  - slug: series4-making-it-trustworthy
+    title: History, Stock and Going Live
+    tagline: the parts that decide whether anyone will rely on it
+    level: intermediate
+    episodes:
+      # COVER: the audit trail, and the distinction that confuses everybody the first time.
+      #   EFFECTIVE DATING answers "what was TRUE on this date" — the price in March.
+      #   THE AUDIT TRAIL answers "what did the SYSTEM SAY, and who changed it, and when" — the
+      #   price we had recorded in March, and the fact that Ana corrected it in April.
+      #   THEY ARE DIFFERENT AXES AND A SERIOUS SYSTEM HAS BOTH. Data Model Patterns,
+      #   Series 1 · 15 owns the first. This episode owns the second, and drawing the two axes
+      #   on one diagram is the clearest thirty seconds in the series.
+      # THE MECHANISMS, COSTED: an application-written change log (flexible, and it misses
+      # anything that bypasses the app); database triggers writing history rows (catches
+      # everything including the 2 a.m. import script, at a write cost); and the append-only
+      # design where the current row is a view over the events.
+      # THE RECOMMENDATION: triggers for the tables that matter — documents, ledger, prices,
+      # permissions — and nothing for the rest, because auditing everything means nobody reads
+      # any of it.
+      # AND THE PART PEOPLE FORGET: the audit trail must record WHO, and "the application user"
+      # is not an answer. Carry the acting user into the database session, or the log is a list
+      # of changes made by the connection pool.
+      - n: "00"
+        slug: the-audit-trail
+        title: "History Against Truth — Two Different Time Axes, and Why You Need Both"
+        hands_on: ["koan:choose", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: stock, which is the hardest subsystem in any ERP and is hard for one reason worth
+      # stating plainly: IT IS WHERE THE PHYSICAL WORLD AND THE LEDGER HAVE TO AGREE, and the
+      # physical world does not take instructions.
+      #   THE MODEL: A STOCK LEDGER OF MOVEMENTS — every receipt, issue, transfer and adjustment
+      #   as a row, with a date, a location, a quantity and a reason. ON-HAND IS THE SUM. It is
+      #   NEVER a stored number that gets updated, because an updated counter drifts and a sum
+      #   cannot. This is the same argument as Series 3's ledger, applied to things instead of
+      #   money, and the parallel is worth drawing explicitly.
+      #   LOCATIONS as a hierarchy, and why "available" is not "on hand" — reserved for orders,
+      #   in transit, in quarantine. THREE NUMBERS, three definitions, and every argument in a
+      #   warehouse is two people using different ones.
+      #   THE STOCKTAKE: the count says 47, the system says 49, and neither is edited — YOU POST
+      #   AN ADJUSTMENT, with a reason, which is a movement like any other and which hits the
+      #   ledger as a cost.
+      # AND THEN COSTING, honestly and in one pass: FIFO against weighted average, what each
+      # does to cost of goods sold, and the warning that THIS IS WHERE STOCK AND ACCOUNTING MEET
+      # AND IT IS THE HARDEST PART OF ANY ERP. Say that this course implements one method,
+      # simply, and names what a real implementation adds — landed costs, revaluation, negative
+      # stock — rather than pretending it is finished.
+      # THE CHECK: sum of movements per product per location = on-hand, and the stock valuation
+      # = the inventory account in the general ledger.
+      - n: "05"
+        slug: the-stock-ledger
+        title: "Stock — Movements Are the Truth, On-Hand Is a Sum, and Costing Is the Hard Part"
+        hands_on: ["koan:reconcile", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: go-live, which is the episode nobody writes and everybody needs, because NOBODY
+      # STARTS WITH AN EMPTY DATABASE.
+      #   THE OPENING BALANCE JOURNAL: on day one the ledger must already say what the business
+      #   owns and owes. One entry, dated the day before you start, that puts the balances in —
+      #   and it must sum to zero, which is the first time the invariant does real work for you.
+      #   OPEN ITEMS: unpaid invoices from the old system have to arrive as invoices, not as one
+      #   lump in the receivables account, or you cannot age them or allocate payments to them.
+      #   THIS IS THE DECISION THAT DECIDES HOW PAINFUL MONTH ONE IS.
+      #   MASTER DATA IMPORT: customers, products, prices. Deduplication, and the fact that the
+      #   old system's identifiers should be kept in a column forever — because for two years
+      #   somebody will ask about a record by its old number.
+      #   IDEMPOTENT IMPORTS: run it twice, get the same result. ETL & Data Pipelines owns the
+      #   technique; this is where it matters most, because a doubled import into a ledger is a
+      #   day of your life.
+      # AND THE PARALLEL RUN, said as the practical advice it is: run both systems for one
+      # period and reconcile the two. It is tedious and it is the only thing that actually finds
+      # the errors.
+      - n: "10"
+        slug: opening-balances-and-migration
+        title: "Going Live — the Opening Journal, and Why Open Invoices Cannot Be One Lump"
+        hands_on: ["koan:reconcile", "koan:migration"]
+        core: true
+        status: planned
+      # COVER: the moment reporting starts hurting, and where this track hands over.
+      # THE SYMPTOM, WHICH IS SPECIFIC AND RECOGNISABLE: a sales-by-month-by-region query that
+      # was instant on ten thousand rows takes forty seconds on two million, runs at 9 a.m. when
+      # everyone is entering orders, and the order screen gets slow. The transactional schema is
+      # correct and is the wrong shape for the question.
+      # THE LADDER, IN ORDER, AND STOP AT THE FIRST RUNG THAT WORKS — this is the honest
+      # engineering advice and most teams jump three rungs:
+      #   INDEX IT               most reporting pain at this size is a missing index.
+      #   A READ REPLICA         reports off the primary. Data Ops, Series 2 · 45.
+      #   MATERIALISED SUMMARIES refreshed nightly, and the discipline of knowing how stale
+      #                          each report is and saying so on the report.
+      #   A REAL WAREHOUSE       a separate model, a separate database, a load. Data Warehousing
+      #                          owns this, and this is the point where you should go there.
+      # AND THE MODELLING POINT THAT MATTERS FOR A DATA ACADEMY: your ERP schema is normalised
+      # because it must be correct under concurrent writes. A reporting schema is denormalised
+      # because it must be fast under reads. NEITHER IS A BETTER SCHEMA — they are two designs
+      # for two jobs, and this is the clearest example in the academy of why both exist.
+      - n: "15"
+        slug: reporting-without-hurting
+        title: "When Reports Start Hurting — Four Rungs, and Where This Course Hands Over"
+        hands_on: ["koan:diagnose", "koan:choose"]
+        status: planned
+      # THE CLOSING GATE, and it is the most useful episode in the course for anyone about to
+      # spend a year of their life on this.
+      # WHAT YOU HAVE BUILT is a real system and it is genuinely enough for a small business.
+      # WHAT YOU HAVE NOT, each named with the reason it is a product rather than a feature:
+      #   MANUFACTURING       bills of materials, routings, work orders and capacity. It is a
+      #                       second ERP living inside the first.
+      #   PAYROLL             per-country rules that change every year, with penalties for
+      #                       getting them wrong. NEVER BUILD THIS. It is the clearest "buy" in
+      #                       the whole domain and the course should say so without hedging.
+      #   STATUTORY FILING AND E-INVOICING   country-specific formats and mandates, changing on
+      #                       legislative timetables. A compliance subscription, not a feature.
+      #   MULTI-COMPANY CONSOLIDATION   intercompany elimination and currency translation.
+      #   BANK FEEDS AND RECONCILIATION   integrations you rent.
+      # THE DECISION RULE WORTH DEFENDING IN A MEETING: BUILD WHAT IS SPECIFIC TO YOUR BUSINESS
+      # AND BUY WHAT IS SPECIFIC TO YOUR JURISDICTION. Your quoting rules are yours and nobody
+      # sells them; your VAT return is not and everybody does.
+      # AND THE COMMONEST GOOD ANSWER, which most write-ups are too proud to give: BUILD THE
+      # CRM AND THE OPERATIONS, BUY THE ACCOUNTING, and integrate the two at the invoice. You
+      # keep the part that is your business and you rent the part that is regulated.
+      # THEN THE SMALLEST HONEST RUNG: for a business under a certain size, a spreadsheet and an
+      # off-the-shelf accounting subscription genuinely win, and a reader who realises that here
+      # has got full value from this course.
+      - n: "20"
+        slug: what-to-buy-instead
+        title: "What You Left Out — and the Rule for Deciding What to Buy Instead"
+        hands_on: ["koan:choose", "eyes"]
+        core: true
+        status: planned
+      # THE CAPSTONE: the whole system, and the exercise that proves it rather than demonstrates
+      # it.
+      # BUILD: everything from the three previous projects, plus stock, plus the audit trail,
+      # plus opening balances loaded as though migrating from a previous system.
+      # THEN RUN A FULL CYCLE: quote, order, partial delivery, invoice, part payment, a return, a
+      # credit note, a stocktake adjustment, and a foreign-currency sale paid at a different rate.
+      # Close the month.
+      # THE HAND-IN IS THE RECONCILIATION PACK, not a screenshot: trial balance at zero;
+      # receivables control equal to open invoices; stock valuation equal to the inventory
+      # account; on-hand equal to the sum of movements; and the audit trail showing who did each
+      # posting. Every one of those is a query in the repository, and together they are the
+      # evidence that this is an ERP rather than a set of screens.
+      # AND ONE PARAGRAPH OF HONESTY TO CLOSE: what would break first if this went live at a
+      # real company on Monday. Everyone who builds one of these has an answer; the professional
+      # difference is being able to say it before somebody else finds it.
+      - n: "25"
+        slug: project-the-whole-system
+        title: "Project — a Full Cycle, a Closed Month, and a Reconciliation Pack That Passes"
+        hands_on: ["koan:reconcile", "koan:author"]
+        status: planned

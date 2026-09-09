@@ -1,0 +1,83 @@
+---
+title: "Tax — Per Line, As of the Date, and Copied Onto the Document"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-erp-crm"
+tags: []
+level: "intermediate"
+module: "series3-the-ledger"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/erpcrm/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/erpcrm/series3/_20/TaxKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — the three sources are the REAL SCHEMAS (ERPNext, Odoo, Dolibarr are open source: go and look when a decision is hard), THE ACCOUNTING (double entry is five hundred years old, has no owner, and must be correct rather than approximate), and Data Model Patterns for the patterns this track applies but does not re-teach.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Model Patterns owns the patterns, Schema Teardowns owns reading what others shipped, Data Modeling owns deciding the tables, Data Warehousing owns reporting, Data Ops owns keeping it up),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    THE HARD PART IS NOT THE SCHEMA, IT IS THAT THE NUMBERS MUST AGREE — so an episode is not finished until something reconciles. POSTED IS IMMUTABLE. A DOCUMENT COPIES WHAT IT NEEDS. MONEY IS NEVER A FLOAT. ⚠ TAX RULES DIFFER BY COUNTRY: teach the machinery, never write advice.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: tax as machinery, with the jurisdiction warning from this file's header stated in
+     the lesson itself.
+       TAX IS PER LINE, NOT PER DOCUMENT. Different products carry different rates, and a
+       document total is the sum of line taxes rather than a percentage of the subtotal —
+       which are not the same number once rounding exists.
+       INCLUSIVE AGAINST EXCLUSIVE PRICING, and the arithmetic in both directions. Retail
+       quotes inclusive; business quotes exclusive; the same system has to do both, and
+       deriving one from the other is where the cent goes missing.
+       THE RATE IS RESOLVED AS OF THE DOCUMENT DATE and then COPIED ONTO THE LINE, per
+       Series 2 · 05. When a rate changes, old documents keep the old rate. This is effective
+       dating for the third time in the course and by now the reader should see it coming.
+       WHAT DECIDES THE RATE: the product's tax category and the customer's tax situation
+       together — which is why a tax rule is a small lookup and not a column.
+       REVERSE CHARGE AND ZERO-RATED SALES, named as the two cases that break the naive
+       "multiply by the rate" model, because the tax moves to the buyer or vanishes while the
+       sale still has to be reported.
+     ⚠ AND THE SENTENCE THE EPISODE MUST CARRY: this teaches the machinery. The rates, the
+     categories and the filing rules belong to the reader's accountant and to their country,
+     and they change. Do not write this episode as advice.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:complete
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/erpcrm/series3/_20/TaxKoans.groovy
+   ========================================================================== */}
+
+## The moment this lesson prepares you for
+
+{/* BEAT 1 — the concrete thing the business needed and the naive design could not do. 'The customer paid half.' 'Last year's invoice changed when we edited the product.' Never a definition. */}
+
+TODO
+
+## The design, and the option you would have picked
+
+{/* BEAT 2 — the tables and the rule that holds them together, WITH the rejected alternatives and why. In this domain the rejected option is usually the one the reader would have chosen, so arguing it is the lesson. */}
+
+TODO
+
+## The build
+
+{/* BEAT 3 — NON-NEGOTIABLE. It standing up and running in DataPallas. The proof. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — THIS TRACK'S SIGNATURE. The query that proves it is still true: a reconciliation, or an invariant asserted. An ERP episode is not finished without one. */}
+
+TODO

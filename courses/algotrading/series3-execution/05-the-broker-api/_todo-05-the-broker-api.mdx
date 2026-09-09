@@ -1,0 +1,83 @@
+---
+title: "The Request That Timed Out — Client Order IDs and Writing It Down First"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-algotrading"
+tags: []
+level: "intermediate"
+module: "series3-execution"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/algotrading/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/algotrading/series3/_05/TheBrokerApiKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — research from THE BROKER AND EXCHANGE DOCS (name which broker and which date), THE EXCHANGE CALENDARS AND CORPORATE-ACTION RULES (facts, checkable), and for Series 2 · 25 the credited literature on backtest overfitting. ⚠ Everything else in this subject is confident people with nothing to show: prefer a claim you can demonstrate in code, and where nobody knows, write that.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (ETL & Data Pipelines owns the ingestion technique, Python for Data owns the language, AI & Data owns the model, the engine tracks own the storage engines, Data Ops owns running the jobs),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    ⚠ WE TEACH THE SYSTEM, NOT A STRATEGY, AND NO EPISODE MAY IMPLY OTHERWISE. Most backtested edges are noise. An episode that would read well in a trading-course advertisement has gone wrong: no return figures, no approving equity curves, no use of the word profitable outside a warning. THE PROMISE IS THAT A READER CAN LOOK AT ANY BACKTEST AND SAY WHAT IS WRONG WITH IT.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE MOST IMPORTANT ENGINEERING EPISODE IN THE COURSE, and it is a distributed-systems
+     episode that happens to be about trading.
+     THE SCENARIO, WHICH WILL HAPPEN TO EVERY READER: you send an order. The connection times
+     out. YOU DO NOT KNOW WHETHER IT WAS PLACED. Retry and you may have two positions; do not
+     retry and you may have none. There is no local answer to this question.
+       THE FIX: A CLIENT-GENERATED ORDER ID ON EVERY REQUEST, so a retry is recognised as the
+       same order rather than a new one, and so you can ASK the broker what happened to it.
+       IDEMPOTENCY IS THE ENTIRE ANSWER and it must be designed in from the first request, not
+       added after the first incident.
+       AND THE PROTOCOL RULE: WRITE THE ORDER TO YOUR OWN STORE BEFORE YOU SEND IT. An order
+       that exists at the broker and not in your database is an unrecoverable position.
+     THE TWO CHANNELS THAT DISAGREE: a REST endpoint for placing and querying, a stream for
+     fills — arriving out of order, duplicated, or not at all while you were reconnecting.
+     TREAT THE STREAM AS A HINT AND THE QUERY AS THE TRUTH, and reconcile on every reconnect.
+     RATE LIMITS, backoff, and the fact that being throttled during a fast market is a
+     scenario to design for rather than a surprise.
+     ⚠ AND THE SANDBOX WARNING: broker test environments fill perfectly, instantly, at the
+     price you asked. They are for testing your CODE PATHS and they teach you nothing about
+     execution. Series 3 · 15 is where that gap gets measured.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/algotrading/series3/_05/TheBrokerApiKoans.groovy
+   ========================================================================== */}
+
+## The failure this lesson prevents
+
+{/* BEAT 1 — the specific way this gets somebody. 'The split made it look like a 50% loss.' 'The order timed out but had been placed.' Always concrete, never a definition. */}
+
+TODO
+
+## The mechanism
+
+{/* BEAT 2 — why it happens, at the level of the data or the protocol. The general idea first, then the code. */}
+
+TODO
+
+## The build that makes it impossible
+
+{/* BEAT 3 — NON-NEGOTIABLE, and note the wording: STRUCTURAL, not disciplinary. A convention a tired person has to remember is not a fix. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — the assertion, reconciliation or report that proves it is still true next month. */}
+
+TODO

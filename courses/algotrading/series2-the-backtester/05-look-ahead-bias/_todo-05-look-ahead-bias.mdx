@@ -1,0 +1,84 @@
+---
+title: "Look-Ahead — Four Ways the Future Gets In, and the Object That Prevents It"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-algotrading"
+tags: []
+level: "intermediate"
+module: "series2-the-backtester"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/algotrading/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/algotrading/series2/_05/LookAheadBiasKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — research from THE BROKER AND EXCHANGE DOCS (name which broker and which date), THE EXCHANGE CALENDARS AND CORPORATE-ACTION RULES (facts, checkable), and for Series 2 · 25 the credited literature on backtest overfitting. ⚠ Everything else in this subject is confident people with nothing to show: prefer a claim you can demonstrate in code, and where nobody knows, write that.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (ETL & Data Pipelines owns the ingestion technique, Python for Data owns the language, AI & Data owns the model, the engine tracks own the storage engines, Data Ops owns running the jobs),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    ⚠ WE TEACH THE SYSTEM, NOT A STRATEGY, AND NO EPISODE MAY IMPLY OTHERWISE. Most backtested edges are noise. An episode that would read well in a trading-course advertisement has gone wrong: no return figures, no approving equity curves, no use of the word profitable outside a warning. THE PROMISE IS THAT A READER CAN LOOK AT ANY BACKTEST AND SAY WHAT IS WRONG WITH IT.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE MOST IMPORTANT ENGINEERING EPISODE IN THE SERIES.
+     COVER: every way the future leaks into a backtest, each one concrete, each one shown as
+     code that looks completely reasonable:
+       DECIDING AT THE CLOSE ON THE CLOSE. You cannot know the closing price until the close
+       has happened. Signal on today's close, fill on tomorrow's open — and if a strategy dies
+       from that one change, it never existed.
+       COMPUTING AN INDICATOR OVER THE WHOLE SERIES AND THEN SLICING IT. Normalising by the
+       full-period mean, a z-score against statistics that include the future, a "fill
+       forward" that fills backward.
+       RESTATED FUNDAMENTALS AND LATE-ARRIVING DATA — Series 1 · 15's problem, arriving inside
+       the strategy.
+       THE UNIVERSE FILTER APPLIED WITH HINDSIGHT — "liquid names", chosen using volume the
+       test has not reached yet.
+     AND THEN THE FIX, WHICH IS STRUCTURAL AND NOT DISCIPLINARY: MAKE IT IMPOSSIBLE. The
+     strategy receives an object that only exposes data up to the current timestamp. It cannot
+     index the future because the future is not in the thing it holds. A rule you have to
+     remember at midnight is not a rule.
+     THE SMELL TEST TO LEAVE THEM WITH, and it is worth more than any checklist: A RESULT THAT
+     IS TOO GOOD IS A BUG UNTIL PROVEN OTHERWISE, and the first place to look is always the
+     timestamp.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/algotrading/series2/_05/LookAheadBiasKoans.groovy
+   ========================================================================== */}
+
+## The failure this lesson prevents
+
+{/* BEAT 1 — the specific way this gets somebody. 'The split made it look like a 50% loss.' 'The order timed out but had been placed.' Always concrete, never a definition. */}
+
+TODO
+
+## The mechanism
+
+{/* BEAT 2 — why it happens, at the level of the data or the protocol. The general idea first, then the code. */}
+
+TODO
+
+## The build that makes it impossible
+
+{/* BEAT 3 — NON-NEGOTIABLE, and note the wording: STRUCTURAL, not disciplinary. A convention a tired person has to remember is not a fix. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — the assertion, reconciliation or report that proves it is still true next month. */}
+
+TODO

@@ -1,0 +1,827 @@
+# The ordered episode list for Build Your Own: Algotrading System. Field docs live in
+# courses/learnsql/curriculum.yaml. `short` is omitted until an episode has a video.
+#
+# The job this track teaches: build the four systems that sit under any automated trading
+# operation — a market-data store you can trust, a backtester that cannot cheat, an execution
+# layer that survives a broker disagreeing with it, and the monitoring that tells you when to
+# stop — and, above all, learn to tell whether a result is real.
+#
+# ============================================================================
+# ⚠ THE HONESTY REQUIREMENT — READ THIS BEFORE WRITING ANY EPISODE
+# ============================================================================
+# THIS COURSE DOES NOT TEACH ANYONE TO MAKE MONEY, AND EVERY PIECE OF COPY WE WRITE ABOUT IT
+# MUST SAY SO PLAINLY. It teaches the ENGINEERING. Not one episode may imply that following it
+# produces a profitable strategy, and no example strategy in this track may be presented as one
+# a reader should trade.
+#
+# THE THREE SENTENCES THAT MUST SURVIVE INTO THE STUDENT-FACING TEXT, in Series 1 · 00 and in
+# the course description:
+#   1. WE TEACH THE SYSTEM, NOT A STRATEGY. The strategies used here are well known, simple, and
+#      chosen because they are easy to reason about — never because they work.
+#   2. MOST BACKTESTED EDGES ARE NOISE, and Series 2 · 25 is the episode that shows you why and
+#      hands you the tools to catch your own. That skill is the most valuable thing here.
+#   3. TRADING RISKS REAL MONEY. Nothing in this track is financial advice, none of it is a
+#      recommendation, and the reader is responsible for their own decisions and for the rules
+#      of their own jurisdiction.
+# AN EPISODE THAT WOULD READ WELL IN A TRADING-COURSE ADVERTISEMENT IS AN EPISODE THAT HAS GONE
+# WRONG. If a draft contains a return figure, an equity curve presented approvingly, or the word
+# "profitable" outside a warning, delete it and start again.
+#
+# AND THE POSITIVE VERSION, because this is not a disclaimer track — it is a genuinely excellent
+# engineering course: A READER WHO FINISHES CAN LOOK AT ANY BACKTEST, THEIR OWN OR SOMEBODY
+# ELSE'S, AND SAY WHAT IS WRONG WITH IT. That is a rare and portable skill, it is worth more than
+# any strategy, and it is the promise this track actually makes.
+#
+# ============================================================================
+# WHY THIS BELONGS IN A DATA ACADEMY AT ALL
+# ============================================================================
+# BECAUSE IT IS THE MOST DEMANDING DATA SYSTEM A SINGLE PERSON CAN BUILD ALONE, and every
+# discipline this academy teaches shows up in it with a price attached:
+#   POINT-IN-TIME CORRECTNESS   effective dating, except that getting it wrong does not produce
+#                               a wrong report — it produces a strategy that looks brilliant and
+#                               loses money.
+#   IDEMPOTENT INGESTION        the pipeline discipline, against a vendor who restates yesterday.
+#   A SIMULATION THAT MUST NOT SEE THE FUTURE   a constraint with no equivalent anywhere else in
+#                               the academy, and the one that makes this course worth building.
+#   RECONCILIATION              against an external system that holds actual money, every
+#                               morning, exactly as an ERP reconciles a ledger.
+#   MONITORING WHERE SILENCE COSTS   Data Ops teaches alerting on a pipeline. Here the pipeline
+#                               spends money while it is broken.
+# A READER WHO NEVER TRADES A PENNY STILL FINISHES THIS TRACK A BETTER DATA ENGINEER, and that
+# is a legitimate reason to take it. Say so.
+#
+# ============================================================================
+# THE FOUR SUBSYSTEMS, WHICH ARE THE FOUR SERIES
+# ============================================================================
+#   1. DATA        the store, and everything that makes historical prices lie to you.
+#   2. RESEARCH    the backtester, and every way it cheats without being asked to.
+#   3. EXECUTION   orders, fills, reconciliation, and the kill switch.
+#   4. OPERATIONS  monitoring, reproducibility, and deciding to turn your own thing off.
+# THEY ARE IN THIS ORDER BECAUSE EACH ONE IS WORTHLESS WITHOUT THE ONE BEFORE IT. A backtest on
+# unadjusted prices is fiction; an execution layer for a strategy you have not validated is an
+# expensive way to be wrong quickly.
+#
+# ============================================================================
+# THIS TRACK HAS NO OFFICIAL MANUAL EITHER — WHAT TO RESEARCH FROM
+# ============================================================================
+#   THE BROKER AND EXCHANGE DOCS   for Series 3. These are real, specific and versioned, and
+#                                  order semantics differ between venues. Name which broker's
+#                                  API an example is written against and state the date.
+#   THE ACADEMIC LITERATURE ON BACKTEST OVERFITTING   for Series 2 · 25, and it is credited in
+#                                  that episode's `credits` block rather than paraphrased
+#                                  anonymously. This is the one place in the track where a named
+#                                  person's named contribution is being taught.
+#   THE EXCHANGE CALENDARS AND CORPORATE-ACTION RULES   for Series 1. These are facts, not
+#                                  opinions, and they are checkable.
+# ⚠ EVERYTHING ELSE IN THIS SUBJECT IS FULL OF CONFIDENT PEOPLE WITH NOTHING TO SHOW. Prefer a
+# claim you can demonstrate in code over a claim you read on a forum, and where the honest answer
+# is "nobody knows", write that.
+#
+# ============================================================================
+# THE SHAPE OF AN EPISODE — four beats, every time
+# ============================================================================
+#   1. THE FAILURE   the specific way this gets somebody. "The split made it look like a 50%
+#                    loss." "The order timed out but had been placed." Always concrete.
+#   2. THE MECHANISM why it happens, at the level of the data or the protocol.
+#   3. THE BUILD     the code or the schema that makes it impossible rather than unlikely. A
+#                    convention a tired person must remember is not a fix.
+#   4. THE CHECK     the assertion, the reconciliation or the report that proves it is still
+#                    true next month.
+#
+# ============================================================================
+# THE RULES THIS DOMAIN ENFORCES, COLLECTED SO NO EPISODE FORGETS ONE
+# ============================================================================
+#   A BAR IS NOT A PRICE. It is a lossy summary of a window. Series 1 · 05.
+#   ADJUSTED PRICES ARE A DERIVED VIEW, NEVER THE STORED TRUTH. Series 1 · 10.
+#   THE UNIVERSE IS A THING WITH A DATE. Series 1 · 15.
+#   COSTS BEFORE RETURNS. Model the fees first, or you will fall in love with a number that does
+#   not exist. Series 2 · 10.
+#   A SIGNAL USES ONLY WHAT WAS KNOWN AT THAT INSTANT — enforced structurally. Series 2 · 05.
+#   YOUR POSITION IS WHAT THE BROKER SAYS IT IS. Series 3 · 10.
+#   IF THE DATA IS STALE, DO NOT TRADE. Fail closed. Series 3 · 20.
+# ANY EPISODE THAT APPEARS TO BREAK ONE OF THESE IS DELIBERATELY SHOWING THE NAIVE VERSION
+# BEFORE FIXING IT, AND MUST SAY SO IN THE SAME BREATH.
+
+course: learn-build-algotrading
+track: algotrading
+title: "Build Your Own: Algotrading System"
+
+prerequisites:
+  - course: learn-etl-pipelines
+    needs: "Series 1"
+    why: >-
+      The market-data layer in Series 1 of this course is an ETL pipeline with unusually
+      unforgiving requirements — idempotent loads, gap detection and a vendor who restates
+      yesterday's data — and this track applies those ideas rather than teaching them.
+  - course: learn-python
+    needs: "Series 1"
+    why: >-
+      Every build in this track is code, and the ecosystem a reader will meet — dataframes,
+      numerical libraries, notebooks — is Python's. The engineering transfers to any language;
+      the examples do not.
+
+excludes:
+  - topic: "What to trade, which strategies work, and any claim about returns"
+    where: "not covered, deliberately and permanently. In this course, Series 2 · 25 teaches you to judge a strategy's evidence, which is the opposite service and the only honest one"
+  - topic: "Financial, investment or tax advice"
+    where: "not covered. In this course, Series 4 · 15 says plainly that the rules differ by jurisdiction and that record-keeping and compliance are the reader's own responsibility"
+  - topic: "Machine learning models, feature engineering and training loops"
+    where: "covered in AI & Data. In this course, the modelling step is deliberately a black box with a signal coming out of it, because every failure this track teaches happens on either side of that box and not inside it"
+  - topic: "Time-series storage engines in depth"
+    where: "covered in the engine tracks — ClickHouse and DuckDB have their own courses. In this course, Series 1 · 20 chooses between them for this workload and explains the criteria, then stops"
+  - topic: "Running the jobs, alerting and on-call"
+    where: "covered in Data Ops, Series 3. In this course, Series 3 · 25 and Series 4 · 00 cover only what is specific to a system that spends money while it is broken"
+  - topic: "Low-latency and high-frequency engineering — colocation, kernel bypass, microseconds"
+    where: "not covered. That is a hardware and networking discipline for funded teams, and a course that gestured at it would teach nobody anything. This track builds systems that hold positions for minutes or longer, and says so"
+  - topic: "Order book microstructure and market making"
+    where: "not covered as a subject. In this course, Series 1 · 05 explains bid, ask and spread because a reader cannot model costs without them, and goes no further"
+
+series:
+  # SERIES 1 IS THE LONGEST AND THE LEAST GLAMOROUS, AND IT IS FIRST BECAUSE EVERY EXCITING
+  # RESULT IN THIS FIELD THAT TURNS OUT TO BE WRONG WAS WRONG HERE. A reader who wants to skip
+  # to the backtester is exactly the reader this series is for.
+  - slug: series1-market-data
+    title: Market Data Is the Whole Problem
+    tagline: everything that makes historical prices quietly lie to you
+    level: intermediate
+    episodes:
+      # THE HONEST OPENER, and the most important episode in the course to get right.
+      # COVER: what you are building — the four subsystems from the header, drawn as one diagram
+      # a reader can keep. Then the scope: positions held for minutes to months, not
+      # microseconds, and why that decision changes everything downstream.
+      # AND THEN THE THREE SENTENCES FROM THIS FILE'S HEADER, SAID TO THE READER'S FACE:
+      #   we teach the system, not a strategy;
+      #   most backtested edges are noise, and you will learn to catch your own;
+      #   this risks real money, it is not advice, and the jurisdiction is yours.
+      # DO NOT SOFTEN THESE and do not bury them at the bottom. A reader who leaves after this
+      # episode because they wanted a money machine has been served correctly.
+      # THEN THE POSITIVE PROMISE, which is real: you will be able to look at any backtest and
+      # say what is wrong with it, and the engineering — point-in-time data, a simulation that
+      # cannot cheat, reconciliation against an external system — is the same engineering that
+      # makes someone good at data work generally.
+      # AND THE HONEST NOTE ON THE ALTERNATIVE, once, without sarcasm: for most people an index
+      # fund is the better financial decision, and building this is a decision about what you
+      # want to learn. Saying that at the start is what makes the rest of the course credible.
+      - n: "00"
+        slug: what-you-are-building
+        title: "Four Subsystems — and What This Course Will Not Give You"
+        hands_on: ["koan:choose", "eyes"]
+        core: true
+        status: planned
+        tags: ["foundational"]
+      # COVER: what a "price" actually is, because the word hides four different numbers and
+      # every cost model depends on knowing which one you have.
+      #   BID, ASK, SPREAD, LAST. You buy at the ask and sell at the bid. A backtest that fills
+      #   at "the price" has already given itself half the spread, on every trade, for free —
+      #   and Series 2 · 10 is where that becomes an actual number.
+      #   A BAR IS A LOSSY SUMMARY: open, high, low, close and volume over a window. The high
+      #   and the low happened at unknown times, in unknown order, so ANY RULE THAT TOUCHES BOTH
+      #   IN ONE BAR IS UNTESTABLE — the classic being a stop and a target both hit in the same
+      #   bar, where the bar cannot tell you which came first. Name this now; it kills more
+      #   backtests than any other single thing.
+      #   SESSIONS AND CALENDARS: opens, closes, half days, holidays, and auctions. A calendar is
+      #   data with a source, not an assumption.
+      #   TIME: store UTC, and store the EXCHANGE'S local date as well, because "which trading
+      #   day is this" is a question UTC alone cannot answer and daylight saving moves the
+      #   session in UTC twice a year.
+      - n: "05"
+        slug: ticks-bars-and-what-a-price-is
+        title: "Bid and Ask — the Bar That Cannot Tell You What Happened First"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # THE EPISODE THAT SAVES A BACKTEST, and it is worth putting early because it is
+      # spectacular: an unhandled 2-for-1 split looks exactly like a 50% overnight loss, and a
+      # strategy that buys drops will "discover" a wonderful edge that is entirely an artefact.
+      # COVER: splits, reverse splits, dividends, spin-offs, symbol changes and mergers, and
+      # what each does to a naive price series.
+      #   THE ADJUSTMENT: back-adjusting the history so returns are continuous, and the choice
+      #   between price-only and total-return adjustment — which for a dividend-paying universe
+      #   changes long-horizon results substantially.
+      #   THE DESIGN RULE, AND IT IS THE POINT: STORE UNADJUSTED PRICES AND THE CORPORATE-ACTION
+      #   EVENTS SEPARATELY, AND DERIVE THE ADJUSTED SERIES. Adjusted prices are a VIEW. If you
+      #   store them as your truth, then every new dividend silently rewrites your entire
+      #   history, your saved research no longer reproduces, and you can never explain a number
+      #   you produced last month. This is the same "keep the events, derive the state" argument
+      #   as a ledger, and the parallel is worth naming.
+      #   SYMBOL CHANGES AND REUSE, which is the nastiest one: tickers get reassigned to
+      #   completely different companies. THE INTERNAL IDENTIFIER IS NOT THE TICKER. Ever.
+      - n: "10"
+        slug: corporate-actions
+        title: "Splits and Dividends — the 50% Loss That Never Happened"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: the two biases that flatter a backtest most, and both are properties of the DATA
+      # rather than of the strategy — which is why no amount of careful strategy code fixes them.
+      #   SURVIVORSHIP BIAS: your data vendor has the companies that still exist. The ones that
+      #   went to zero are missing. Every strategy tested on that universe is being tested on a
+      #   population selected for having survived, and the effect is large rather than academic.
+      #   LOOK-AHEAD IN THE UNIVERSE: testing "the index constituents" using TODAY'S membership
+      #   list means you were buying the companies that were about to be ADDED to the index —
+      #   which is a strategy with perfect foresight and it will look magnificent.
+      #   THE FIX, AND IT IS A SCHEMA: THE UNIVERSE IS A THING WITH A DATE. Membership rows with
+      #   valid-from and valid-to, delisted instruments kept forever with their final price and
+      #   the reason, and every query for "the universe" taking an as-of date. This is Data Model
+      #   Patterns' effective dating, arriving in a place where getting it wrong costs money
+      #   rather than embarrassment.
+      #   AND THE SAME PROBLEM IN FUNDAMENTAL DATA: reported figures are RESTATED afterwards.
+      #   You must know what was known ON THE DAY, not what is known now — which means storing
+      #   the publication timestamp beside every value and never taking the vendor's current
+      #   table at face value.
+      # THE CHECK: pick a date three years ago and reconstruct the universe as it was. If your
+      # schema cannot answer that query, nothing built on it can be trusted.
+      - n: "15"
+        slug: survivorship-and-point-in-time
+        title: "The Universe Has a Date — Survivorship, Restatements and Buying the Future"
+        hands_on: ["koan:predict", "koan:reconcile"]
+        core: true
+        status: planned
+      # COVER: the storage decision, made on this workload's actual access pattern rather than
+      # on benchmarks from somebody else's.
+      # WHAT THE ACCESS PATTERN IS, and it decides everything: WRITE ONCE IN BATCHES, READ
+      # ENORMOUS COLUMNAR SLICES — one column, thousands of symbols, ten years — over and over
+      # during research. That is an analytical workload, not a transactional one, and it is why
+      # the instinct to reach for a row-store is wrong here.
+      # THE REAL OPTIONS, WITH THE HONEST CRITERION FOR EACH:
+      #   PARQUET FILES, PARTITIONED   by symbol or by date — and the partition choice is the
+      #                                whole decision, because it is what makes a query either a
+      #                                file read or a full scan. Free, portable, no server.
+      #   DUCKDB OVER THOSE FILES      SQL on top of the same files, nothing to operate. For a
+      #                                one-person system this is usually the right answer and
+      #                                the course should say so plainly.
+      #   CLICKHOUSE                   when the data outgrows one machine or many people query
+      #                                it at once.
+      #   POSTGRES, WITH OR WITHOUT A TIME-SERIES EXTENSION   the right answer when the same
+      #                                database also holds your orders and positions and you
+      #                                value having one system over having a fast one.
+      # THE PARTITIONING AND FILE-SIZE TRAP, worth a worked example: a file per symbol per day
+      # is a directory of two million tiny files and every query pays the open cost. Partition
+      # coarser than feels natural.
+      # SEAM: this episode chooses; the engine tracks teach the engines.
+      - n: "20"
+        slug: storing-market-data
+        title: "Parquet, DuckDB or ClickHouse — Choosing on the Access Pattern You Actually Have"
+        hands_on: ["koan:choose", "koan:predict"]
+        status: planned
+      # COVER: the ingestion pipeline, which is where the data discipline becomes daily practice.
+      #   IDEMPOTENT LOADS: re-running yesterday must produce the same result, not duplicate
+      #   rows. The natural key is instrument plus timestamp plus source, and the load is an
+      #   upsert against it.
+      #   GAP DETECTION AGAINST THE CALENDAR: a missing day is invisible unless you check against
+      #   the exchange calendar from Series 1 · 05. THE REPORT THAT MUST EXIST: expected bars
+      #   against received bars, per instrument, per day, every morning. This is the single
+      #   highest-value habit in the whole data series.
+      #   VENDORS RESTATE. Yesterday's close changes. So the load must be able to CORRECT rather
+      #   than only append, and — because it corrects — you want to know it happened. Log
+      #   corrections; a silent restatement is a result you can no longer reproduce.
+      #   SANITY CHECKS AT LOAD TIME: a price that moved 400% in a bar, a zero volume on a
+      #   trading day, an ask below a bid, a timestamp in the future. Quarantine rather than
+      #   reject, and look at the quarantine — bad data that is silently dropped is bad data you
+      #   will rediscover in a backtest.
+      #   TWO SOURCES WHERE IT MATTERS, and reconcile them. Disagreement is information.
+      # SEAM: ETL & Data Pipelines owns the technique; Data Ops owns making it run. This episode
+      # owns only what is specific to a source that restates and a consumer that cannot tolerate
+      # a silent hole.
+      - n: "25"
+        slug: the-ingestion-pipeline
+        title: "Loading It — Idempotent, Gap-Checked, and Loud About Corrections"
+        hands_on: ["koan:reconcile", "koan:complete"]
+        core: true
+        status: planned
+      # THE ARTEFACT: a data layer somebody could build research on, with its own evidence.
+      # BUILD: ingest several years for a few hundred instruments, unadjusted, with corporate
+      # actions stored separately and adjusted series derived; an exchange calendar; a universe
+      # table with membership dates including at least one delisting.
+      # THEN PROVE IT, and these are the deliverables rather than the code:
+      #   THE GAP REPORT, clean, against the calendar.
+      #   THE AS-OF UNIVERSE QUERY for a date three years back, including the company that no
+      #   longer exists.
+      #   THE ADJUSTMENT DEMONSTRATION: the raw series across a split, and the derived one, side
+      #   by side, with the 50% cliff visible in one and absent in the other.
+      #   AND THE REPRODUCIBILITY CHECK: re-run the whole load and show the outputs are
+      #   identical.
+      - n: "30"
+        slug: project-a-data-layer
+        title: "Project — a Gap Report, an As-Of Universe, and a Split That Does Not Lie"
+        hands_on: ["koan:reconcile", "koan:author"]
+        status: planned
+
+  # SERIES 2 IS THE INTELLECTUAL CORE OF THE TRACK. A backtester is easy to write and almost
+  # impossible to write honestly, and the difference between those two is the entire content of
+  # this series.
+  - slug: series2-the-backtester
+    title: The Backtester, and Why Most Are Wrong
+    tagline: a simulation that cannot see the future, and a result you can defend
+    level: intermediate
+    episodes:
+      # COVER: the two architectures, and the choice a reader has to make before writing a line.
+      #   VECTORISED: the whole history as arrays, signals computed in one pass. Seconds to run,
+      #   wonderful for exploration — and it CANNOT naturally express anything path-dependent:
+      #   a stop that depends on where you got in, a position size that depends on current
+      #   equity, an order that did not fill. It also makes look-ahead almost effortless, which
+      #   is the real objection.
+      #   EVENT-DRIVEN: a loop over time, one bar or tick at a time, with a strategy that can
+      #   only see what has arrived. Slower, more code — and it is THE SAME SHAPE AS THE LIVE
+      #   SYSTEM, which is the argument that decides it.
+      # THE RECOMMENDATION AND THE REASON: vectorised for the first look, event-driven for
+      # anything you would put money behind, AND THE SAME STRATEGY CODE RUNNING IN BOTH THE
+      # BACKTEST AND LIVE. If those are two implementations, they will diverge, and the
+      # divergence will be discovered with real orders.
+      # THE ARCHITECTURE TO BUILD: a clock, an event feed, a strategy that receives events, a
+      # portfolio, and a simulated broker — with the strategy having NO ACCESS to anything but
+      # what the feed has delivered. Series 2 · 05 is why that boundary is an object and not a
+      # promise.
+      - n: "00"
+        slug: vectorised-or-event-driven
+        title: "Two Backtester Designs — and Why the Slow One Is the One You Trade"
+        hands_on: ["koan:choose", "koan:complete"]
+        core: true
+        status: planned
+      # THE MOST IMPORTANT ENGINEERING EPISODE IN THE SERIES.
+      # COVER: every way the future leaks into a backtest, each one concrete, each one shown as
+      # code that looks completely reasonable:
+      #   DECIDING AT THE CLOSE ON THE CLOSE. You cannot know the closing price until the close
+      #   has happened. Signal on today's close, fill on tomorrow's open — and if a strategy dies
+      #   from that one change, it never existed.
+      #   COMPUTING AN INDICATOR OVER THE WHOLE SERIES AND THEN SLICING IT. Normalising by the
+      #   full-period mean, a z-score against statistics that include the future, a "fill
+      #   forward" that fills backward.
+      #   RESTATED FUNDAMENTALS AND LATE-ARRIVING DATA — Series 1 · 15's problem, arriving inside
+      #   the strategy.
+      #   THE UNIVERSE FILTER APPLIED WITH HINDSIGHT — "liquid names", chosen using volume the
+      #   test has not reached yet.
+      # AND THEN THE FIX, WHICH IS STRUCTURAL AND NOT DISCIPLINARY: MAKE IT IMPOSSIBLE. The
+      # strategy receives an object that only exposes data up to the current timestamp. It cannot
+      # index the future because the future is not in the thing it holds. A rule you have to
+      # remember at midnight is not a rule.
+      # THE SMELL TEST TO LEAVE THEM WITH, and it is worth more than any checklist: A RESULT THAT
+      # IS TOO GOOD IS A BUG UNTIL PROVEN OTHERWISE, and the first place to look is always the
+      # timestamp.
+      - n: "05"
+        slug: look-ahead-bias
+        title: "Look-Ahead — Four Ways the Future Gets In, and the Object That Prevents It"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: costs, and the ordering rule that makes this episode land: MODEL THE COSTS BEFORE
+      # YOU LOOK AT THE RETURNS. Otherwise you have already decided the strategy is good and you
+      # will negotiate with the fee model.
+      # WHAT TO MODEL, from most to least certain:
+      #   COMMISSION AND FEES        known, published, easy, and usually the smallest component.
+      #   THE SPREAD                 you buy at the ask and sell at the bid. This is Series 1 · 05
+      #                              becoming a number, it applies to every trade, and it is the
+      #                              cost most amateur backtests omit entirely.
+      #   SLIPPAGE                   the difference between the price you decided on and the price
+      #                              you got. Model it as a function of spread and of your size
+      #                              against typical volume, and be pessimistic.
+      #   MARKET IMPACT              your own order moving the price. Ignorable at small size,
+      #                              which is a real reason a small account has an advantage —
+      #                              say so, and say where it stops being true.
+      #   BORROW AND FINANCING       for short positions and anything held on margin.
+      # THE ARITHMETIC THAT ENDS MOST STRATEGIES, and it should be done on screen: cost per round
+      # trip multiplied by turnover. A strategy trading daily needs to clear costs daily, and a
+      # small edge multiplied by high turnover is a reliable way to pay a broker.
+      # THE RULE: A STRATEGY THAT ONLY WORKS AT ZERO COST DOES NOT WORK. Run every result at
+      # double your cost estimate and see what survives; if the conclusion changes, you did not
+      # have a conclusion.
+      - n: "10"
+        slug: costs-and-slippage
+        title: "Costs First — Spread, Slippage, and the Turnover Arithmetic That Ends Strategies"
+        hands_on: ["koan:predict", "koan:reconcile"]
+        core: true
+        status: planned
+      # COVER: the step between a signal and an order, which beginners treat as trivial and which
+      # determines most of the outcome.
+      #   THE SAME SIGNAL AT TWO SIZES IS TWO DIFFERENT STRATEGIES, and this is the sentence the
+      #   episode exists for. Sizing decides the drawdown, and drawdown decides whether a human
+      #   is still running the system in month eight.
+      #   THE METHODS, PLAINLY: fixed cash, fixed fraction of equity, volatility-targeted (size
+      #   inversely to recent volatility, so each position contributes comparable risk), and
+      #   risk-per-trade against a stop distance.
+      #   THE PORTFOLIO, WHICH IS WHERE SINGLE-INSTRUMENT THINKING BREAKS: twenty positions in
+      #   one sector is one position. Correlation, gross and net exposure, and per-position and
+      #   total caps.
+      #   REBALANCING AND ITS COST — the drift band, and the fact that rebalancing more often
+      #   buys precision and pays Series 2 · 10's costs for it.
+      # ⚠ AND THE ONE PLACE TO BE CAREFUL: leverage and formulas that promise optimal growth are
+      # correct given assumptions that never hold and are catastrophically sensitive to the
+      # estimates you feed them. Name the idea, show the sensitivity, and DO NOT PRESENT ANY
+      # SIZING RULE AS A RECOMMENDATION.
+      - n: "15"
+        slug: position-sizing
+        title: "From Signal to Quantity — Why the Same Signal at Two Sizes Is Two Strategies"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: measurement, which is where a reader learns to be unimpressed.
+      #   THE NUMBERS AND WHAT EACH ACTUALLY SAYS: CAGR, volatility, Sharpe, maximum drawdown,
+      #   TIME UNDER WATER (how long until a new high — the number that predicts whether a human
+      #   keeps going, and almost nobody quotes it), turnover, hit rate, and the average win
+      #   against the average loss.
+      #   HOW EACH ONE LIES: Sharpe assumes a distribution that returns do not have and is
+      #   flattered by anything that sells insurance — a strategy that makes a little constantly
+      #   and loses enormously rarely has a beautiful Sharpe until the day it does not. A hit
+      #   rate says nothing without the size of the losses. CAGR over a period chosen after the
+      #   fact says nothing at all.
+      #   THE BENCHMARK QUESTION, ASKED PROPERLY: against buying and holding the same universe,
+      #   at the same risk, over the same period, after the same costs. Most strategies stop
+      #   being interesting at this line and the course must draw it.
+      #   READING AN EQUITY CURVE HONESTLY: where the returns came from. If three days out of two
+      #   thousand produced everything, you do not have a strategy, you have three days.
+      # THE HABIT: NEVER REPORT ONE NUMBER. A result is a set — return, drawdown, turnover, cost
+      # sensitivity and the period — and any one of them alone is marketing.
+      - n: "20"
+        slug: measuring-a-strategy
+        title: "The Metrics, and How Each One Lies — Including Time Under Water"
+        hands_on: ["koan:diagnose", "koan:capture"]
+        core: true
+        status: planned
+      # THE EPISODE THIS ENTIRE COURSE IS BUILT AROUND. If a reader takes one thing away, this is
+      # it, and it is the skill that transfers to every other part of data work.
+      # THE PROBLEM, STATED SO IT CANNOT BE MISUNDERSTOOD: try enough strategies on one dataset
+      # and one of them will look excellent BY CHANCE. This is not a warning about carelessness,
+      # it is arithmetic — it happens to careful people, and it happens in proportion to how hard
+      # they worked. The more parameters you tried, the more certain it is.
+      #   THE SUBTLE FORM THAT CATCHES EVERYBODY: you did not run a thousand backtests, you ran
+      #   forty and looked at the results and adjusted. YOU ARE THE SEARCH ALGORITHM. Every
+      #   decision you made after seeing a result spent some of your out-of-sample data.
+      # WHAT ACTUALLY HELPS, in decreasing order of usefulness:
+      #   A REASON THE EDGE SHOULD EXIST, stated BEFORE testing — a structural argument about who
+      #   is on the other side and why they accept the loss. A strategy with no story is a
+      #   pattern in noise until proven otherwise.
+      #   FEWER PARAMETERS, and a result that is FLAT across nearby parameter values. A peak that
+      #   collapses when a window moves from 20 to 22 is a peak in noise.
+      #   WALK-FORWARD, honestly done: fit on a window, test on the next, roll — and count every
+      #   variant you ever tried, including the ones you abandoned.
+      #   HELD-OUT DATA YOU TOUCH ONCE. Once. Looking twice makes it training data.
+      #   ADJUSTING FOR THE NUMBER OF TRIALS — the deflated-Sharpe idea, which is the formal
+      #   version of "you tried a hundred things, so a Sharpe of 1 means less than it looks".
+      # THE CONCLUSION THE EPISODE MUST REACH AND NOT SOFTEN: MOST BACKTESTED EDGES ARE NOISE,
+      # including yours, and the correct default posture towards a good-looking result is
+      # suspicion. A reader who leaves with that instinct has received the value of this course
+      # whether or not they ever trade.
+      - n: "25"
+        slug: overfitting
+        title: "You Are the Search Algorithm — Why Most Backtested Edges Are Noise"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+        tags: ["lopez-de-prado", "foundational"]
+        credits:
+          - source: lopez-de-prado
+            concept: "Backtest overfitting as a multiple-testing problem, and adjusting a Sharpe ratio for the number of trials that produced it"
+      # THE ARTEFACT: a backtest, and then the demolition of it, which is the actual exercise.
+      # BUILD: an event-driven backtester with the point-in-time boundary from Series 2 · 05,
+      # costs from Series 2 · 10 and sizing from Series 2 · 15, running a simple and well-known
+      # strategy — chosen because it is easy to reason about and NOT because it works.
+      # THEN ATTACK YOUR OWN RESULT, and this is the hand-in:
+      #   introduce a one-bar look-ahead deliberately and record how much better it looks. That
+      #   number is your bug's future disguise.
+      #   double the cost assumption and report what survives.
+      #   run the parameter surface and show whether the chosen point is a plateau or a spike.
+      #   run it on a universe with the delisted names removed and quantify the survivorship
+      #   flattery.
+      #   count and state every variant you tried, including abandoned ones.
+      # THE WRITE-UP IS THE DELIVERABLE, not the equity curve: what this test does and does not
+      # establish, in your own words. If the honest conclusion is "this is indistinguishable from
+      # noise", THAT IS A PASS — and the course must say so explicitly, because a reader who
+      # thinks a negative result is a failed project has learnt the opposite of this series.
+      - n: "30"
+        slug: project-break-your-own-backtest
+        title: "Project — Backtest It, Then Attack It Until You Know What It Proves"
+        hands_on: ["koan:diagnose", "koan:author"]
+        status: planned
+
+  # SERIES 3 IS WHERE IT STOPS BEING A SIMULATION. Every problem here is a distributed-systems
+  # problem with money attached, and the discipline is the same one an ERP uses on its ledger:
+  # an external system holds the truth, and you reconcile against it.
+  - slug: series3-execution
+    title: Execution — Where It Becomes Real
+    tagline: orders, fills, reconciliation, and a switch a human can throw
+    level: intermediate
+    episodes:
+      # COVER: the order as a state machine, which is Build Your Own: ERP & CRM, Series 2 · 10's
+      # document discipline in a place where the states change without you.
+      # THE STATES: created, sent, acknowledged, partially filled, filled, cancelled, rejected,
+      # expired — and the transitions that are legal. THE DIFFERENCE FROM AN ERP DOCUMENT, and it
+      # is the whole difficulty: THE VENUE CHANGES THE STATE, NOT YOU. Your record is a belief
+      # about somebody else's system.
+      # THE ORDER TYPES A READER ACTUALLY NEEDS, and no more: market, limit, and stop — with the
+      # honest account of what each costs. A market order guarantees the fill and not the price;
+      # a limit order guarantees the price and not the fill, and an unfilled limit is a position
+      # you do not have and think you do.
+      # TIME IN FORCE, and the one that surprises people: an order that survives the session and
+      # fills tomorrow morning into a market that gapped.
+      # THE SCHEMA: orders, and FILLS AS SEPARATE ROWS — because one order becomes many fills at
+      # different prices, and the average price you got is derived from them. An order table with
+      # a single price column is a table you will rewrite.
+      # THE POSITION IS DERIVED FROM FILLS, exactly as on-hand is derived from stock movements
+      # and a balance from journal lines. The academy's third instance of the same rule, and it
+      # is worth naming out loud.
+      - n: "00"
+        slug: the-order-lifecycle
+        title: "The Order State Machine — Where the Venue Changes the State, Not You"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # THE MOST IMPORTANT ENGINEERING EPISODE IN THE COURSE, and it is a distributed-systems
+      # episode that happens to be about trading.
+      # THE SCENARIO, WHICH WILL HAPPEN TO EVERY READER: you send an order. The connection times
+      # out. YOU DO NOT KNOW WHETHER IT WAS PLACED. Retry and you may have two positions; do not
+      # retry and you may have none. There is no local answer to this question.
+      #   THE FIX: A CLIENT-GENERATED ORDER ID ON EVERY REQUEST, so a retry is recognised as the
+      #   same order rather than a new one, and so you can ASK the broker what happened to it.
+      #   IDEMPOTENCY IS THE ENTIRE ANSWER and it must be designed in from the first request, not
+      #   added after the first incident.
+      #   AND THE PROTOCOL RULE: WRITE THE ORDER TO YOUR OWN STORE BEFORE YOU SEND IT. An order
+      #   that exists at the broker and not in your database is an unrecoverable position.
+      # THE TWO CHANNELS THAT DISAGREE: a REST endpoint for placing and querying, a stream for
+      # fills — arriving out of order, duplicated, or not at all while you were reconnecting.
+      # TREAT THE STREAM AS A HINT AND THE QUERY AS THE TRUTH, and reconcile on every reconnect.
+      # RATE LIMITS, backoff, and the fact that being throttled during a fast market is a
+      # scenario to design for rather than a surprise.
+      # ⚠ AND THE SANDBOX WARNING: broker test environments fill perfectly, instantly, at the
+      # price you asked. They are for testing your CODE PATHS and they teach you nothing about
+      # execution. Series 3 · 15 is where that gap gets measured.
+      - n: "05"
+        slug: the-broker-api
+        title: "The Request That Timed Out — Client Order IDs and Writing It Down First"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: reconciliation, which is this course's answer to the ERP's trial balance, and
+      # which is non-negotiable.
+      # THE RULE: YOUR POSITION IS WHAT THE BROKER SAYS IT IS. Your database holds a belief. When
+      # they differ, the broker is right about the position and your system is wrong about
+      # something — and the interesting question is what.
+      # THE DAILY JOB, run before the market opens, every day, with no exceptions:
+      #   positions, per instrument, yours against theirs;
+      #   cash balance, yours against theirs;
+      #   open orders, yours against theirs — the one people forget, and the one that leaves a
+      #   stale order sitting at the venue waiting to fill into a position you did not want.
+      # WHAT DIFFERENCES MEAN, because each has a different cause: a missed fill message; a
+      # partial fill you recorded as complete; a corporate action applied to your holding
+      # overnight (Series 1 · 10, arriving in the live system); a fee, an interest charge or a
+      # dividend you never modelled; or an order placed by a human in the broker's own app, which
+      # happens and is nobody's bug.
+      # THE PROCEDURE WHEN THEY DISAGREE, decided in advance and written down: STOP TRADING
+      # FIRST, then investigate. Never let an automated system trade its way out of a state it
+      # does not understand.
+      # AND THE HABIT WORTH THE WHOLE EPISODE: RECONCILE BEFORE YOU TRADE, NOT AFTER. A break
+      # found at 09:00 is a question; the same break found at 16:00 is a loss.
+      - n: "10"
+        slug: reconciliation
+        title: "Reconcile Before You Trade — the Broker Is Right and You Are Wrong"
+        hands_on: ["koan:reconcile", "koan:diagnose"]
+        core: true
+        status: planned
+      # COVER: the gap between a backtest, paper trading and real money, and the graduated path
+      # across it.
+      # WHY PAPER RESULTS STILL FLATTER, specifically: paper fills at the quoted price, gets a
+      # fill for any size, is never rejected, never queues behind other orders, and never moves
+      # the market. It validates YOUR PLUMBING and it does not validate your execution
+      # assumptions.
+      # WHAT PAPER TRADING IS ACTUALLY FOR, which is a great deal: does the daily cycle run
+      # unattended; does reconciliation stay clean for a month; do the alerts fire; what happens
+      # when the data feed is late; does anything break at a month boundary or a holiday. Those
+      # are the failures that end real systems, and they are all findable without money.
+      # THE PATH, WITH A GATE AT EACH STEP AND THE GATE WRITTEN DOWN BEFOREHAND:
+      #   BACKTEST → PAPER, for long enough to cross a month end and a holiday
+      #   → REAL MONEY AT A SIZE THAT DOES NOT MATTER, which is the only step that tests
+      #     execution honestly and is where slippage becomes a measured number rather than an
+      #     assumed one
+      #   → SIZE UP SLOWLY, only against evidence.
+      # AND THE MEASUREMENT THAT CLOSES THE LOOP AND IS THE POINT OF THE EPISODE: RUN THE
+      # BACKTEST OVER THE SAME PERIOD YOU JUST TRADED AND COMPARE, trade by trade. The difference
+      # between simulated and actual fills IS your true slippage, and feeding it back into
+      # Series 2 · 10's cost model is what makes every future backtest honest.
+      - n: "15"
+        slug: paper-to-live
+        title: "Paper, Then Small — and Feeding Real Slippage Back Into the Backtest"
+        hands_on: ["koan:reconcile", "koan:capture"]
+        core: true
+        status: planned
+      # COVER: risk limits as code that is independent of the strategy, and the switch.
+      # THE PRINCIPLE: THE STRATEGY IS NOT TRUSTED. Limits live OUTSIDE it, in a layer every
+      # order passes through, so that a bug in the strategy cannot disable its own brakes.
+      # THE LIMITS WORTH HAVING, all of them boring and all of them earned by somebody:
+      #   maximum position per instrument, and gross across the portfolio
+      #   maximum order size, and a sanity check against typical volume — the fat-finger catch
+      #   maximum orders per minute, which is what stops a loop from becoming an incident
+      #   maximum loss per day, after which the system flattens or stops
+      #   a hard cap on total capital deployed.
+      # FAIL CLOSED, WHICH IS THE SENTENCE OF THE EPISODE: IF THE DATA IS STALE, DO NOT TRADE. If
+      # reconciliation did not pass this morning, do not trade. If the calendar says the market
+      # should be open and no ticks have arrived for ten minutes, do not trade. THE DEFAULT
+      # BEHAVIOUR OF AN UNCERTAIN SYSTEM IS INACTION — and this is the exact inverse of most
+      # software, where the default is to carry on.
+      # THE KILL SWITCH, and it must be all of these: reachable from a phone, effective within
+      # seconds, requiring no code deployment, and it must also CANCEL RESTING ORDERS rather than
+      # merely stopping new ones. TEST IT ON A SCHEDULE. An untested kill switch is a comforting
+      # belief.
+      # AND THE HUMAN PART, said plainly: decide the daily loss limit when you are calm, because
+      # you will not be calm on the day it triggers.
+      - n: "20"
+        slug: risk-limits-and-the-kill-switch
+        title: "Fail Closed — Limits Outside the Strategy, and a Switch That Cancels Everything"
+        hands_on: ["koan:complete", "koan:predict"]
+        core: true
+        status: planned
+      # COVER: the daily cycle as an operational schedule, which is Data Ops applied to a system
+      # with a deadline that does not move.
+      # THE TIMELINE, WRITTEN DOWN AS A RUNBOOK: overnight data load; the gap report; morning
+      # reconciliation; signal generation; order submission at the intended time; intraday
+      # monitoring; end-of-day capture of fills, positions and cash; and the journal entry that
+      # records what the system believed and did.
+      # THE QUESTION THAT MAKES IT REAL: WHAT HAPPENS IF THE LOAD FAILS AT 09:29? The answer must
+      # be decided in advance and encoded — and it is Series 3 · 20's rule: do not trade today.
+      # NOT "trade on yesterday's data", which is the tempting option and is how a stale signal
+      # becomes a position.
+      # DEPENDENCIES AND ORDERING: this is a small DAG with a hard deadline, and the seam is
+      # exact — ETL & Data Pipelines owns dependency modelling, Data Ops, Series 3 · 00 owns
+      # choosing the scheduler. THE ONLY THING SPECIFIC TO THIS DOMAIN is that a late job must
+      # SKIP rather than CATCH UP, because a trading signal has an expiry and a retry at 11:00 of
+      # a 09:30 decision is a new and unvalidated strategy.
+      # AND WHERE IT RUNS: a machine that is up when the market is, with a clock you trust, and
+      # the honest note that a laptop that sleeps is not that machine.
+      - n: "25"
+        slug: the-daily-cycle
+        title: "What Runs When — and Why a Late Job Must Skip Rather Than Catch Up"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        status: planned
+      # THE ARTEFACT: the whole live path, running unattended, against paper money.
+      # BUILD: the strategy from Series 2's project, wired to a broker's paper environment, with
+      # client order IDs, orders written down before sending, fills captured from both channels,
+      # positions derived from fills, the risk layer in front, and the kill switch.
+      # RUN IT UNATTENDED FOR A PERIOD THAT CROSSES A MONTH END AND A HOLIDAY. That duration is
+      # the requirement, because the bugs this catches are calendar bugs.
+      # THEN THE HAND-IN, which is evidence rather than a result:
+      #   the reconciliation log, every day, and an explanation of every break;
+      #   a deliberately triggered kill switch, with resting orders confirmed cancelled;
+      #   a deliberately staled data feed, with the system confirmed to have refused to trade;
+      #   and the slippage comparison from Series 3 · 15 — simulated fills against paper fills,
+      #   with the difference quantified and fed back into the cost model.
+      - n: "30"
+        slug: project-paper-trade-it
+        title: "Project — Run It Unattended, Break It on Purpose, and Explain Every Difference"
+        hands_on: ["koan:reconcile", "koan:author"]
+        status: planned
+
+  # SERIES 4 IS ABOUT THE THING NOBODY BUILDS UNTIL IT IS TOO LATE: knowing what the system is
+  # doing, being able to reproduce what it did, and having decided in advance how it ends.
+  - slug: series4-living-with-it
+    title: Living With It
+    tagline: monitoring, reproducibility, and deciding in advance how it ends
+    level: intermediate
+    episodes:
+      # COVER: monitoring for a system that spends money while it is broken, which changes what
+      # is worth alerting on.
+      # THE ALERTS THAT EARN THEIR PLACE, and each one is a specific failure somebody has had:
+      #   DATA STALENESS — no ticks during a session the calendar says is open. The most valuable
+      #   alert in the system, because Series 3 · 20's fail-closed rule depends on noticing.
+      #   AN UNEXPECTED POSITION — anything the system did not intend to hold, which is the
+      #   reconciliation break from Series 3 · 10 arriving as a page instead of a discovery.
+      #   ORDER REJECTIONS, especially a run of them, which usually means an assumption about the
+      #   venue has stopped being true.
+      #   DRAWDOWN THRESHOLDS, as information rather than as an instruction — the decision was
+      #   made in Series 3 · 20 and the alert only tells you it fired.
+      #   A JOB THAT DID NOT RUN. The absence of an event is the hardest thing to alert on and the
+      #   one that hurts most: a heartbeat, and an alert on its silence.
+      # THE PRINCIPLE, WHICH IS THIS ACADEMY'S AND APPLIES WITH FORCE HERE: SILENCE IS NOT
+      # SUCCESS. A system that has not alerted in three months is a system whose alerting you
+      # should test today. Data Ops, Series 3 · 15 owns paging a human; what is specific here is
+      # that the failure mode with the highest cost is the QUIET one — a system that keeps
+      # trading on data that stopped updating.
+      # AND THE DASHBOARD THAT IS ACTUALLY USEFUL: intended position against actual, cash,
+      # today's orders and their states, data freshness per feed, and the time of the last
+      # successful reconciliation. Five things. Not an equity curve — an equity curve is for
+      # review, and watching it is how people interfere with their own system.
+      - n: "00"
+        slug: monitoring
+        title: "Alert on the Silence — Stale Data, a Position You Did Not Intend, a Job That Never Ran"
+        hands_on: ["koan:diagnose", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: reproducibility, and the specific way research rots.
+      # THE PROBLEM: a result from four months ago that you cannot reproduce is not a result, and
+      # the usual cause is a notebook run out of order against data that has since been restated
+      # (Series 1 · 25) with a parameter nobody wrote down.
+      # WHAT HAS TO BE PINNED TOGETHER for a result to survive: the code version, the DATA
+      # VERSION — which is why the corrections log from Series 1 · 25 exists — the parameters,
+      # the universe as of the run, the cost assumptions, and the random seed.
+      # THE PRACTICE THAT ACTUALLY WORKS FOR ONE PERSON, and it is deliberately modest: every
+      # research run writes a directory with its inputs, its config, its outputs and a summary —
+      # and the RESEARCH LOG records what you were testing, WHAT YOU EXPECTED BEFORE RUNNING IT,
+      # and what you concluded. The middle one is the discipline: writing the prediction down
+      # first is what stops a result being reinterpreted into a success afterwards.
+      # AND THE CONNECTION BACK TO Series 2 · 25 THAT MAKES THIS MORE THAN HYGIENE: THE LOG IS
+      # HOW YOU COUNT YOUR TRIALS. You cannot adjust for the number of things you tried if you
+      # did not keep a record of trying them, and memory reliably undercounts.
+      # SEAM: notebooks against pipelines is Python for Data's argument; what is specific here is
+      # that the data underneath is mutable and that the count of experiments is itself a result.
+      - n: "05"
+        slug: reproducible-research
+        title: "The Research Log — Write Down What You Expect, and Count Every Trial"
+        hands_on: ["koan:capture", "koan:complete"]
+        core: true
+        status: planned
+      # COVER: decay, which is the outcome the reader should expect rather than fear.
+      # THE FACT: strategies stop working. An edge that is real gets crowded out, the market
+      # structure changes, the fee schedule changes, or it was never there and you are only now
+      # collecting enough evidence to see that.
+      # THE HARD PART, AND IT IS STATISTICAL RATHER THAN EMOTIONAL: A LOSING RUN IS EXPECTED. If
+      # your backtest showed drawdowns of a given depth, you will experience them, and the
+      # question "is this normal variation or is it broken?" cannot be answered from the losses
+      # alone — the sample is far too small. Say that clearly, because it is the point at which
+      # most people either abandon something that was fine or persist with something that is not.
+      #   WHAT HELPS: THE EXIT RULE DECIDED IN ADVANCE, in the same document as the strategy, and
+      #   written when you had nothing at stake. Drawdown beyond the backtested maximum; a live
+      #   result inconsistent with the simulated one over enough trades; the structural reason
+      #   for the edge no longer being true — that last one is the best signal and it requires
+      #   having written the reason down in the first place, per Series 2 · 25.
+      #   WHAT DOES NOT HELP: re-fitting parameters after a bad month, which is Series 2 · 25's
+      #   overfitting arriving with real money and a deadline.
+      # AND THE PROFESSIONAL SKILL THIS EPISODE IS REALLY ABOUT: TURNING YOUR OWN THING OFF.
+      # Being able to do that, on a rule you wrote when you were calm, is the difference between
+      # running a system and being run by one.
+      - n: "10"
+        slug: when-it-stops-working
+        title: "Decay — Deciding the Exit Rule While You Still Have Nothing at Stake"
+        hands_on: ["koan:predict", "koan:choose"]
+        core: true
+        status: planned
+      # COVER: the obligations, briefly, accurately, and without pretending to be an authority.
+      # WHAT IS UNIVERSALLY TRUE AND WORTH SAYING:
+      #   YOU ARE RESPONSIBLE FOR WHAT YOUR CODE DOES. "The bot did it" is not a defence to your
+      #   broker, your tax authority or anybody else.
+      #   RECORDS MATTER. Every trade, with its timestamp, price, fees and rationale. The system
+      #   already produces this if Series 4 · 05 was built; the point is to keep it and to be
+      #   able to export it.
+      #   THE BROKER'S TERMS ARE A REAL CONSTRAINT: automated access, rate limits, market-data
+      #   redistribution rights and what you may do with the data you paid for. READ THEM. A
+      #   market-data licence for personal research is not a licence to publish.
+      #   TAX TREATMENT OF TRADING DIFFERS BY COUNTRY AND BY ACTIVITY LEVEL, and it can be
+      #   materially different from long-term investing. Find out before you start, not in April.
+      # ⚠ AND THE BOUNDARY THIS EPISODE MUST NOT CROSS: name the categories of obligation and
+      # send the reader to a professional in their own jurisdiction. Do not state any country's
+      # rules, do not give thresholds, and do not let this read as advice. The value here is
+      # knowing which questions to ask, which is genuinely useful and is all we can honestly give.
+      - n: "15"
+        slug: obligations-and-records
+        title: "Your Code, Your Responsibility — the Questions to Ask Before You Start"
+        hands_on: ["koan:choose", "eyes"]
+        status: planned
+      # THE CLOSING GATE, and this course's version of it has to be more honest than most,
+      # because the subject attracts people who have been sold something.
+      # THE LADDER, DOWNWARDS, AND MAKE THE READER NAME THEIR RUNG:
+      #   YOU WANT THE MONEY                   an index fund almost certainly beats what you will
+      #                                        build, after costs and after your time. This is the
+      #                                        honest answer for most readers and it must be the
+      #                                        first rung rather than a footnote.
+      #   YOU WANT THE SKILLS                  excellent reason, and they are real and portable:
+      #                                        point-in-time data, a simulation that cannot cheat,
+      #                                        idempotent integration with an external system,
+      #                                        reconciliation, and fail-closed operations. Every
+      #                                        one of those is employable outside finance.
+      #   YOU HAVE A STRUCTURAL REASON AN EDGE EXISTS AND CAN SAY WHO IS ON THE OTHER SIDE —
+      #                                        then the system you have just built is what turns
+      #                                        that into something testable, and it is the right
+      #                                        tool.
+      #   YOU WANT TO AUTOMATE A DECISION YOU ALREADY MAKE BY HAND — a rebalance, a rule you
+      #                                        already follow — which is a modest, achievable and
+      #                                        genuinely useful use of everything here.
+      #   SOMEBODY SOLD YOU A STRATEGY         you now have the tools to evaluate their claim.
+      #                                        Series 2 · 25 is the episode. Use it on them.
+      # AND THE CLOSING SENTENCE OF THE COURSE, which should be the opposite of a sales pitch:
+      # THE MOST VALUABLE THING YOU BUILT IS THE ABILITY TO KNOW WHETHER SOMETHING IS TRUE. Keep
+      # that; the strategy is optional.
+      - n: "20"
+        slug: do-you-need-to-build-this
+        title: "Do You Need to Build This — and the Skill That Is Worth More Than a Strategy"
+        hands_on: ["koan:choose", "koan:capture"]
+        core: true
+        status: planned
+      # THE CAPSTONE: not a strategy, a SYSTEM — and the deliverable is a document, which is
+      # deliberate and is what the whole course has been building towards.
+      # BUILD: everything, end to end, running unattended on paper money — data with a gap report,
+      # a point-in-time universe, an event-driven backtester sharing its strategy code with the
+      # live path, costs calibrated from measured slippage, a risk layer, a kill switch,
+      # monitoring, and a research log.
+      # AND THEN WRITE THE DOCUMENT, WHICH IS THE ACTUAL HAND-IN:
+      #   what the strategy is, and the structural reason you believe the edge could exist — or
+      #   the plain statement that you do not believe it and are testing the machinery;
+      #   what the backtest establishes and what it does not, including how many variants you
+      #   tried;
+      #   the difference between simulated and actual fills, measured;
+      #   the risk limits and the exit rule, written while calm;
+      #   every reconciliation break and its explanation;
+      #   and the failure you would expect first if this ran with real money on Monday.
+      # A READER WHOSE HONEST CONCLUSION IS "THE ENGINEERING WORKS AND THE STRATEGY IS
+      # INDISTINGUISHABLE FROM NOISE" HAS COMPLETED THIS COURSE PERFECTLY, and the episode must
+      # say that in those words. It is the result this track was designed to make possible.
+      - n: "25"
+        slug: project-the-whole-system
+        title: "Project — the System, and an Honest Document Saying What It Proves"
+        hands_on: ["koan:author", "koan:capture"]
+        status: planned

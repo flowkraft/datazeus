@@ -1,0 +1,81 @@
+---
+title: "Double Entry — a Data Structure With an Invariant, Not Accountancy"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-erp-crm"
+tags: []
+level: "intermediate"
+module: "series3-the-ledger"
+order: 0
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/erpcrm/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/erpcrm/series3/_00/DoubleEntryForProgrammersKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — the three sources are the REAL SCHEMAS (ERPNext, Odoo, Dolibarr are open source: go and look when a decision is hard), THE ACCOUNTING (double entry is five hundred years old, has no owner, and must be correct rather than approximate), and Data Model Patterns for the patterns this track applies but does not re-teach.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Model Patterns owns the patterns, Schema Teardowns owns reading what others shipped, Data Modeling owns deciding the tables, Data Warehousing owns reporting, Data Ops owns keeping it up),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    THE HARD PART IS NOT THE SCHEMA, IT IS THAT THE NUMBERS MUST AGREE — so an episode is not finished until something reconciles. POSTED IS IMMUTABLE. A DOCUMENT COPIES WHAT IT NEEDS. MONEY IS NEVER A FLOAT. ⚠ TAX RULES DIFFER BY COUNTRY: teach the machinery, never write advice.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: double entry, taught to programmers, in the terms that make it click.
+     THE PITCH: this is not accountancy, it is a DATA STRUCTURE WITH AN INVARIANT, and it is
+     the most successful one ever designed — five hundred years old, unchanged, and it
+     detects your errors for you.
+       AN ACCOUNT is a bucket. A JOURNAL ENTRY is a set of lines. EVERY ENTRY SUMS TO ZERO.
+       That is the whole mechanism.
+     DEBIT AND CREDIT, DEMYSTIFIED: they are not "in" and "out" and trying to make them mean
+     that is why people bounce off this subject. THEY ARE JUST SIGN — one is positive, one is
+     negative — and what an increase MEANS depends on which side of the accounting equation
+     the account is on. Say that once, plainly, and the fog clears.
+     THE EQUATION: assets = liabilities + equity, and income and expense as the temporary
+     accounts that feed equity. Five account types, and everything in the system is one.
+     WORK THREE ENTRIES BY HAND ON SCREEN — a sale, a payment received, a purchase — and let
+     the reader see the zero every time.
+     THE PAYOFF FOR A DEVELOPER, and it is why this belongs in a data academy: THE INVARIANT
+     IS A CONSTRAINT YOU CAN ENFORCE, and a system whose entries all sum to zero cannot
+     silently lose money. Nothing else in application development gives you that.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/erpcrm/series3/_00/DoubleEntryForProgrammersKoans.groovy
+   ========================================================================== */}
+
+## The moment this lesson prepares you for
+
+{/* BEAT 1 — the concrete thing the business needed and the naive design could not do. 'The customer paid half.' 'Last year's invoice changed when we edited the product.' Never a definition. */}
+
+TODO
+
+## The design, and the option you would have picked
+
+{/* BEAT 2 — the tables and the rule that holds them together, WITH the rejected alternatives and why. In this domain the rejected option is usually the one the reader would have chosen, so arguing it is the lesson. */}
+
+TODO
+
+## The build
+
+{/* BEAT 3 — NON-NEGOTIABLE. It standing up and running in DataPallas. The proof. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — THIS TRACK'S SIGNATURE. The query that proves it is still true: a reconciliation, or an invariant asserted. An ERP episode is not finished without one. */}
+
+TODO

@@ -1,0 +1,82 @@
+---
+title: "The Order State Machine — Where the Venue Changes the State, Not You"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-algotrading"
+tags: []
+level: "intermediate"
+module: "series3-execution"
+order: 0
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/algotrading/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/algotrading/series3/_00/TheOrderLifecycleKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — research from THE BROKER AND EXCHANGE DOCS (name which broker and which date), THE EXCHANGE CALENDARS AND CORPORATE-ACTION RULES (facts, checkable), and for Series 2 · 25 the credited literature on backtest overfitting. ⚠ Everything else in this subject is confident people with nothing to show: prefer a claim you can demonstrate in code, and where nobody knows, write that.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (ETL & Data Pipelines owns the ingestion technique, Python for Data owns the language, AI & Data owns the model, the engine tracks own the storage engines, Data Ops owns running the jobs),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    ⚠ WE TEACH THE SYSTEM, NOT A STRATEGY, AND NO EPISODE MAY IMPLY OTHERWISE. Most backtested edges are noise. An episode that would read well in a trading-course advertisement has gone wrong: no return figures, no approving equity curves, no use of the word profitable outside a warning. THE PROMISE IS THAT A READER CAN LOOK AT ANY BACKTEST AND SAY WHAT IS WRONG WITH IT.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the order as a state machine, which is Build Your Own: ERP & CRM, Series 2 · 10's
+     document discipline in a place where the states change without you.
+     THE STATES: created, sent, acknowledged, partially filled, filled, cancelled, rejected,
+     expired — and the transitions that are legal. THE DIFFERENCE FROM AN ERP DOCUMENT, and it
+     is the whole difficulty: THE VENUE CHANGES THE STATE, NOT YOU. Your record is a belief
+     about somebody else's system.
+     THE ORDER TYPES A READER ACTUALLY NEEDS, and no more: market, limit, and stop — with the
+     honest account of what each costs. A market order guarantees the fill and not the price;
+     a limit order guarantees the price and not the fill, and an unfilled limit is a position
+     you do not have and think you do.
+     TIME IN FORCE, and the one that surprises people: an order that survives the session and
+     fills tomorrow morning into a market that gapped.
+     THE SCHEMA: orders, and FILLS AS SEPARATE ROWS — because one order becomes many fills at
+     different prices, and the average price you got is derived from them. An order table with
+     a single price column is a table you will rewrite.
+     THE POSITION IS DERIVED FROM FILLS, exactly as on-hand is derived from stock movements
+     and a balance from journal lines. The academy's third instance of the same rule, and it
+     is worth naming out loud.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:complete
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/algotrading/series3/_00/TheOrderLifecycleKoans.groovy
+   ========================================================================== */}
+
+## The failure this lesson prevents
+
+{/* BEAT 1 — the specific way this gets somebody. 'The split made it look like a 50% loss.' 'The order timed out but had been placed.' Always concrete, never a definition. */}
+
+TODO
+
+## The mechanism
+
+{/* BEAT 2 — why it happens, at the level of the data or the protocol. The general idea first, then the code. */}
+
+TODO
+
+## The build that makes it impossible
+
+{/* BEAT 3 — NON-NEGOTIABLE, and note the wording: STRUCTURAL, not disciplinary. A convention a tired person has to remember is not a fix. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — the assertion, reconciliation or report that proves it is still true next month. */}
+
+TODO

@@ -1,0 +1,83 @@
+---
+title: "The Document Chain — and Why an Invoice Must Never Join to the Price"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-erp-crm"
+tags: []
+level: "intermediate"
+module: "series2-order-to-cash"
+order: 5
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/erpcrm/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/erpcrm/series2/_05/TheDocumentChainKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — the three sources are the REAL SCHEMAS (ERPNext, Odoo, Dolibarr are open source: go and look when a decision is hard), THE ACCOUNTING (double entry is five hundred years old, has no owner, and must be correct rather than approximate), and Data Model Patterns for the patterns this track applies but does not re-teach.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Model Patterns owns the patterns, Schema Teardowns owns reading what others shipped, Data Modeling owns deciding the tables, Data Warehousing owns reporting, Data Ops owns keeping it up),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    THE HARD PART IS NOT THE SCHEMA, IT IS THAT THE NUMBERS MUST AGREE — so an episode is not finished until something reconciles. POSTED IS IMMUTABLE. A DOCUMENT COPIES WHAT IT NEEDS. MONEY IS NEVER A FLOAT. ⚠ TAX RULES DIFFER BY COUNTRY: teach the machinery, never write advice.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     THE CENTRAL EPISODE OF THE SERIES, and one of the two or three that this whole course
+     exists to deliver.
+     COVER: the chain — QUOTE → ORDER → DELIVERY → INVOICE → PAYMENT — as documents that
+     reference each other rather than as statuses on one row. Why documents: because each has
+     its own date, its own numbering, its own approver, and its own legal weight, and because
+     one of them can exist without the others.
+     AND THEN THE RULE, WHICH IS THE SENTENCE TO PUT ON THE SCREEN:
+         A DOCUMENT COPIES WHAT IT NEEDS AT THE MOMENT IT IS CREATED.
+         AN INVOICE LINE MUST NEVER JOIN TO THE CURRENT PRODUCT PRICE.
+     THE FAILURE IT PREVENTS, shown live because it is more persuasive than any argument:
+     edit a product's price, reload last year's invoice, and watch the total change. That is
+     a system that has just restated a filed tax return.
+     SO AN INVOICE LINE STORES the description, the unit price, the quantity, the unit, the
+     tax rate and the currency AS THEY WERE — and keeps the product reference for reporting
+     only. Say which columns are the copy and which are the link, and why the link may never
+     be used for arithmetic.
+     THE SAME RULE, ONE LEVEL UP: the customer's name and address are copied onto the
+     document too. When they move, old invoices keep the old address, because that is where
+     the goods went.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/erpcrm/series2/_05/TheDocumentChainKoans.groovy
+   ========================================================================== */}
+
+## The moment this lesson prepares you for
+
+{/* BEAT 1 — the concrete thing the business needed and the naive design could not do. 'The customer paid half.' 'Last year's invoice changed when we edited the product.' Never a definition. */}
+
+TODO
+
+## The design, and the option you would have picked
+
+{/* BEAT 2 — the tables and the rule that holds them together, WITH the rejected alternatives and why. In this domain the rejected option is usually the one the reader would have chosen, so arguing it is the lesson. */}
+
+TODO
+
+## The build
+
+{/* BEAT 3 — NON-NEGOTIABLE. It standing up and running in DataPallas. The proof. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — THIS TRACK'S SIGNATURE. The query that proves it is still true: a reconciliation, or an invariant asserted. An ERP episode is not finished without one. */}
+
+TODO

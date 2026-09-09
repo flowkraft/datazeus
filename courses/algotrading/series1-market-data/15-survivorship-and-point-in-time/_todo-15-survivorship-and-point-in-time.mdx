@@ -1,0 +1,83 @@
+---
+title: "The Universe Has a Date — Survivorship, Restatements and Buying the Future"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-algotrading"
+tags: []
+level: "intermediate"
+module: "series1-market-data"
+order: 15
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/algotrading/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/algotrading/series1/_15/SurvivorshipAndPointInTimeKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — research from THE BROKER AND EXCHANGE DOCS (name which broker and which date), THE EXCHANGE CALENDARS AND CORPORATE-ACTION RULES (facts, checkable), and for Series 2 · 25 the credited literature on backtest overfitting. ⚠ Everything else in this subject is confident people with nothing to show: prefer a claim you can demonstrate in code, and where nobody knows, write that.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (ETL & Data Pipelines owns the ingestion technique, Python for Data owns the language, AI & Data owns the model, the engine tracks own the storage engines, Data Ops owns running the jobs),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    ⚠ WE TEACH THE SYSTEM, NOT A STRATEGY, AND NO EPISODE MAY IMPLY OTHERWISE. Most backtested edges are noise. An episode that would read well in a trading-course advertisement has gone wrong: no return figures, no approving equity curves, no use of the word profitable outside a warning. THE PROMISE IS THAT A READER CAN LOOK AT ANY BACKTEST AND SAY WHAT IS WRONG WITH IT.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the two biases that flatter a backtest most, and both are properties of the DATA
+     rather than of the strategy — which is why no amount of careful strategy code fixes them.
+       SURVIVORSHIP BIAS: your data vendor has the companies that still exist. The ones that
+       went to zero are missing. Every strategy tested on that universe is being tested on a
+       population selected for having survived, and the effect is large rather than academic.
+       LOOK-AHEAD IN THE UNIVERSE: testing "the index constituents" using TODAY'S membership
+       list means you were buying the companies that were about to be ADDED to the index —
+       which is a strategy with perfect foresight and it will look magnificent.
+       THE FIX, AND IT IS A SCHEMA: THE UNIVERSE IS A THING WITH A DATE. Membership rows with
+       valid-from and valid-to, delisted instruments kept forever with their final price and
+       the reason, and every query for "the universe" taking an as-of date. This is Data Model
+       Patterns' effective dating, arriving in a place where getting it wrong costs money
+       rather than embarrassment.
+       AND THE SAME PROBLEM IN FUNDAMENTAL DATA: reported figures are RESTATED afterwards.
+       You must know what was known ON THE DAY, not what is known now — which means storing
+       the publication timestamp beside every value and never taking the vendor's current
+       table at face value.
+     THE CHECK: pick a date three years ago and reconstruct the universe as it was. If your
+     schema cannot answer that query, nothing built on it can be trusted.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:reconcile
+      koan file: tests/src/koans/groovy/datazeus/algotrading/series1/_15/SurvivorshipAndPointInTimeKoans.groovy
+   ========================================================================== */}
+
+## The failure this lesson prevents
+
+{/* BEAT 1 — the specific way this gets somebody. 'The split made it look like a 50% loss.' 'The order timed out but had been placed.' Always concrete, never a definition. */}
+
+TODO
+
+## The mechanism
+
+{/* BEAT 2 — why it happens, at the level of the data or the protocol. The general idea first, then the code. */}
+
+TODO
+
+## The build that makes it impossible
+
+{/* BEAT 3 — NON-NEGOTIABLE, and note the wording: STRUCTURAL, not disciplinary. A convention a tired person has to remember is not a fix. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — the assertion, reconciliation or report that proves it is still true next month. */}
+
+TODO

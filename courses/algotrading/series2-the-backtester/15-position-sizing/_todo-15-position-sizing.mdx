@@ -1,0 +1,81 @@
+---
+title: "From Signal to Quantity — Why the Same Signal at Two Sizes Is Two Strategies"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-algotrading"
+tags: []
+level: "intermediate"
+module: "series2-the-backtester"
+order: 15
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/algotrading/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/algotrading/series2/_15/PositionSizingKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — research from THE BROKER AND EXCHANGE DOCS (name which broker and which date), THE EXCHANGE CALENDARS AND CORPORATE-ACTION RULES (facts, checkable), and for Series 2 · 25 the credited literature on backtest overfitting. ⚠ Everything else in this subject is confident people with nothing to show: prefer a claim you can demonstrate in code, and where nobody knows, write that.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (ETL & Data Pipelines owns the ingestion technique, Python for Data owns the language, AI & Data owns the model, the engine tracks own the storage engines, Data Ops owns running the jobs),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    ⚠ WE TEACH THE SYSTEM, NOT A STRATEGY, AND NO EPISODE MAY IMPLY OTHERWISE. Most backtested edges are noise. An episode that would read well in a trading-course advertisement has gone wrong: no return figures, no approving equity curves, no use of the word profitable outside a warning. THE PROMISE IS THAT A READER CAN LOOK AT ANY BACKTEST AND SAY WHAT IS WRONG WITH IT.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the step between a signal and an order, which beginners treat as trivial and which
+     determines most of the outcome.
+       THE SAME SIGNAL AT TWO SIZES IS TWO DIFFERENT STRATEGIES, and this is the sentence the
+       episode exists for. Sizing decides the drawdown, and drawdown decides whether a human
+       is still running the system in month eight.
+       THE METHODS, PLAINLY: fixed cash, fixed fraction of equity, volatility-targeted (size
+       inversely to recent volatility, so each position contributes comparable risk), and
+       risk-per-trade against a stop distance.
+       THE PORTFOLIO, WHICH IS WHERE SINGLE-INSTRUMENT THINKING BREAKS: twenty positions in
+       one sector is one position. Correlation, gross and net exposure, and per-position and
+       total caps.
+       REBALANCING AND ITS COST — the drift band, and the fact that rebalancing more often
+       buys precision and pays Series 2 · 10's costs for it.
+     ⚠ AND THE ONE PLACE TO BE CAREFUL: leverage and formulas that promise optimal growth are
+     correct given assumptions that never hold and are catastrophically sensitive to the
+     estimates you feed them. Name the idea, show the sensitivity, and DO NOT PRESENT ANY
+     SIZING RULE AS A RECOMMENDATION.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:choose
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/algotrading/series2/_15/PositionSizingKoans.groovy
+   ========================================================================== */}
+
+## The failure this lesson prevents
+
+{/* BEAT 1 — the specific way this gets somebody. 'The split made it look like a 50% loss.' 'The order timed out but had been placed.' Always concrete, never a definition. */}
+
+TODO
+
+## The mechanism
+
+{/* BEAT 2 — why it happens, at the level of the data or the protocol. The general idea first, then the code. */}
+
+TODO
+
+## The build that makes it impossible
+
+{/* BEAT 3 — NON-NEGOTIABLE, and note the wording: STRUCTURAL, not disciplinary. A convention a tired person has to remember is not a fix. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — the assertion, reconciliation or report that proves it is still true next month. */}
+
+TODO

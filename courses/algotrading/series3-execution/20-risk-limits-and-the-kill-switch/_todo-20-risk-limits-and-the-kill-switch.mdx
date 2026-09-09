@@ -1,0 +1,84 @@
+---
+title: "Fail Closed — Limits Outside the Strategy, and a Switch That Cancels Everything"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-algotrading"
+tags: []
+level: "intermediate"
+module: "series3-execution"
+order: 20
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/algotrading/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/algotrading/series3/_20/RiskLimitsAndTheKillSwitchKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — research from THE BROKER AND EXCHANGE DOCS (name which broker and which date), THE EXCHANGE CALENDARS AND CORPORATE-ACTION RULES (facts, checkable), and for Series 2 · 25 the credited literature on backtest overfitting. ⚠ Everything else in this subject is confident people with nothing to show: prefer a claim you can demonstrate in code, and where nobody knows, write that.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (ETL & Data Pipelines owns the ingestion technique, Python for Data owns the language, AI & Data owns the model, the engine tracks own the storage engines, Data Ops owns running the jobs),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    ⚠ WE TEACH THE SYSTEM, NOT A STRATEGY, AND NO EPISODE MAY IMPLY OTHERWISE. Most backtested edges are noise. An episode that would read well in a trading-course advertisement has gone wrong: no return figures, no approving equity curves, no use of the word profitable outside a warning. THE PROMISE IS THAT A READER CAN LOOK AT ANY BACKTEST AND SAY WHAT IS WRONG WITH IT.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: risk limits as code that is independent of the strategy, and the switch.
+     THE PRINCIPLE: THE STRATEGY IS NOT TRUSTED. Limits live OUTSIDE it, in a layer every
+     order passes through, so that a bug in the strategy cannot disable its own brakes.
+     THE LIMITS WORTH HAVING, all of them boring and all of them earned by somebody:
+       maximum position per instrument, and gross across the portfolio
+       maximum order size, and a sanity check against typical volume — the fat-finger catch
+       maximum orders per minute, which is what stops a loop from becoming an incident
+       maximum loss per day, after which the system flattens or stops
+       a hard cap on total capital deployed.
+     FAIL CLOSED, WHICH IS THE SENTENCE OF THE EPISODE: IF THE DATA IS STALE, DO NOT TRADE. If
+     reconciliation did not pass this morning, do not trade. If the calendar says the market
+     should be open and no ticks have arrived for ten minutes, do not trade. THE DEFAULT
+     BEHAVIOUR OF AN UNCERTAIN SYSTEM IS INACTION — and this is the exact inverse of most
+     software, where the default is to carry on.
+     THE KILL SWITCH, and it must be all of these: reachable from a phone, effective within
+     seconds, requiring no code deployment, and it must also CANCEL RESTING ORDERS rather than
+     merely stopping new ones. TEST IT ON A SCHEDULE. An untested kill switch is a comforting
+     belief.
+     AND THE HUMAN PART, said plainly: decide the daily loss limit when you are calm, because
+     you will not be calm on the day it triggers.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:complete
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/algotrading/series3/_20/RiskLimitsAndTheKillSwitchKoans.groovy
+   ========================================================================== */}
+
+## The failure this lesson prevents
+
+{/* BEAT 1 — the specific way this gets somebody. 'The split made it look like a 50% loss.' 'The order timed out but had been placed.' Always concrete, never a definition. */}
+
+TODO
+
+## The mechanism
+
+{/* BEAT 2 — why it happens, at the level of the data or the protocol. The general idea first, then the code. */}
+
+TODO
+
+## The build that makes it impossible
+
+{/* BEAT 3 — NON-NEGOTIABLE, and note the wording: STRUCTURAL, not disciplinary. A convention a tired person has to remember is not a fix. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — the assertion, reconciliation or report that proves it is still true next month. */}
+
+TODO

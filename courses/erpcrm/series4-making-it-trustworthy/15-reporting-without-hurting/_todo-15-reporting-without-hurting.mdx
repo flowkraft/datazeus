@@ -1,0 +1,81 @@
+---
+title: "When Reports Start Hurting — Four Rungs, and Where This Course Hands Over"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-erp-crm"
+tags: []
+level: "intermediate"
+module: "series4-making-it-trustworthy"
+order: 15
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/erpcrm/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/erpcrm/series4/_15/ReportingWithoutHurtingKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — the three sources are the REAL SCHEMAS (ERPNext, Odoo, Dolibarr are open source: go and look when a decision is hard), THE ACCOUNTING (double entry is five hundred years old, has no owner, and must be correct rather than approximate), and Data Model Patterns for the patterns this track applies but does not re-teach.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (Data Model Patterns owns the patterns, Schema Teardowns owns reading what others shipped, Data Modeling owns deciding the tables, Data Warehousing owns reporting, Data Ops owns keeping it up),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    THE HARD PART IS NOT THE SCHEMA, IT IS THAT THE NUMBERS MUST AGREE — so an episode is not finished until something reconciles. POSTED IS IMMUTABLE. A DOCUMENT COPIES WHAT IT NEEDS. MONEY IS NEVER A FLOAT. ⚠ TAX RULES DIFFER BY COUNTRY: teach the machinery, never write advice.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: the moment reporting starts hurting, and where this track hands over.
+     THE SYMPTOM, WHICH IS SPECIFIC AND RECOGNISABLE: a sales-by-month-by-region query that
+     was instant on ten thousand rows takes forty seconds on two million, runs at 9 a.m. when
+     everyone is entering orders, and the order screen gets slow. The transactional schema is
+     correct and is the wrong shape for the question.
+     THE LADDER, IN ORDER, AND STOP AT THE FIRST RUNG THAT WORKS — this is the honest
+     engineering advice and most teams jump three rungs:
+       INDEX IT               most reporting pain at this size is a missing index.
+       A READ REPLICA         reports off the primary. Data Ops, Series 2 · 45.
+       MATERIALISED SUMMARIES refreshed nightly, and the discipline of knowing how stale
+                              each report is and saying so on the report.
+       A REAL WAREHOUSE       a separate model, a separate database, a load. Data Warehousing
+                              owns this, and this is the point where you should go there.
+     AND THE MODELLING POINT THAT MATTERS FOR A DATA ACADEMY: your ERP schema is normalised
+     because it must be correct under concurrent writes. A reporting schema is denormalised
+     because it must be fast under reads. NEITHER IS A BETTER SCHEMA — they are two designs
+     for two jobs, and this is the clearest example in the academy of why both exist.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/erpcrm/series4/_15/ReportingWithoutHurtingKoans.groovy
+   ========================================================================== */}
+
+## The moment this lesson prepares you for
+
+{/* BEAT 1 — the concrete thing the business needed and the naive design could not do. 'The customer paid half.' 'Last year's invoice changed when we edited the product.' Never a definition. */}
+
+TODO
+
+## The design, and the option you would have picked
+
+{/* BEAT 2 — the tables and the rule that holds them together, WITH the rejected alternatives and why. In this domain the rejected option is usually the one the reader would have chosen, so arguing it is the lesson. */}
+
+TODO
+
+## The build
+
+{/* BEAT 3 — NON-NEGOTIABLE. It standing up and running in DataPallas. The proof. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — THIS TRACK'S SIGNATURE. The query that proves it is still true: a reconciliation, or an invariant asserted. An ERP episode is not finished without one. */}
+
+TODO

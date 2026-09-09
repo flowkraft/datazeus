@@ -1,0 +1,86 @@
+---
+title: "Alert on the Silence — Stale Data, a Position You Did Not Intend, a Job That Never Ran"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-algotrading"
+tags: []
+level: "intermediate"
+module: "series4-living-with-it"
+order: 0
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/algotrading/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/algotrading/series4/_00/MonitoringKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — research from THE BROKER AND EXCHANGE DOCS (name which broker and which date), THE EXCHANGE CALENDARS AND CORPORATE-ACTION RULES (facts, checkable), and for Series 2 · 25 the credited literature on backtest overfitting. ⚠ Everything else in this subject is confident people with nothing to show: prefer a claim you can demonstrate in code, and where nobody knows, write that.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (ETL & Data Pipelines owns the ingestion technique, Python for Data owns the language, AI & Data owns the model, the engine tracks own the storage engines, Data Ops owns running the jobs),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    ⚠ WE TEACH THE SYSTEM, NOT A STRATEGY, AND NO EPISODE MAY IMPLY OTHERWISE. Most backtested edges are noise. An episode that would read well in a trading-course advertisement has gone wrong: no return figures, no approving equity curves, no use of the word profitable outside a warning. THE PROMISE IS THAT A READER CAN LOOK AT ANY BACKTEST AND SAY WHAT IS WRONG WITH IT.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: monitoring for a system that spends money while it is broken, which changes what
+     is worth alerting on.
+     THE ALERTS THAT EARN THEIR PLACE, and each one is a specific failure somebody has had:
+       DATA STALENESS — no ticks during a session the calendar says is open. The most valuable
+       alert in the system, because Series 3 · 20's fail-closed rule depends on noticing.
+       AN UNEXPECTED POSITION — anything the system did not intend to hold, which is the
+       reconciliation break from Series 3 · 10 arriving as a page instead of a discovery.
+       ORDER REJECTIONS, especially a run of them, which usually means an assumption about the
+       venue has stopped being true.
+       DRAWDOWN THRESHOLDS, as information rather than as an instruction — the decision was
+       made in Series 3 · 20 and the alert only tells you it fired.
+       A JOB THAT DID NOT RUN. The absence of an event is the hardest thing to alert on and the
+       one that hurts most: a heartbeat, and an alert on its silence.
+     THE PRINCIPLE, WHICH IS THIS ACADEMY'S AND APPLIES WITH FORCE HERE: SILENCE IS NOT
+     SUCCESS. A system that has not alerted in three months is a system whose alerting you
+     should test today. Data Ops, Series 3 · 15 owns paging a human; what is specific here is
+     that the failure mode with the highest cost is the QUIET one — a system that keeps
+     trading on data that stopped updating.
+     AND THE DASHBOARD THAT IS ACTUALLY USEFUL: intended position against actual, cash,
+     today's orders and their states, data freshness per feed, and the time of the last
+     successful reconciliation. Five things. Not an equity curve — an equity curve is for
+     review, and watching it is how people interfere with their own system.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:diagnose
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/algotrading/series4/_00/MonitoringKoans.groovy
+   ========================================================================== */}
+
+## The failure this lesson prevents
+
+{/* BEAT 1 — the specific way this gets somebody. 'The split made it look like a 50% loss.' 'The order timed out but had been placed.' Always concrete, never a definition. */}
+
+TODO
+
+## The mechanism
+
+{/* BEAT 2 — why it happens, at the level of the data or the protocol. The general idea first, then the code. */}
+
+TODO
+
+## The build that makes it impossible
+
+{/* BEAT 3 — NON-NEGOTIABLE, and note the wording: STRUCTURAL, not disciplinary. A convention a tired person has to remember is not a fix. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — the assertion, reconciliation or report that proves it is still true next month. */}
+
+TODO

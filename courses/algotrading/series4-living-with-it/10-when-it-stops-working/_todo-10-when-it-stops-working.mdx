@@ -1,0 +1,83 @@
+---
+title: "Decay — Deciding the Exit Rule While You Still Have Nothing at Stake"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-build-algotrading"
+tags: []
+level: "intermediate"
+module: "series4-living-with-it"
+order: 10
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/algotrading/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/algotrading/series4/_10/WhenItStopsWorkingKoans.groovy
+
+    ── FOLLOW THE OFFICIAL DOCUMENTATION ───────────────────────────────────
+    THE COVERAGE, THE TOPICS AND THE ORDER OF THIS INDIVIDUAL LESSON — not only
+    the series order — SHOULD FOLLOW
+    NO VENDOR MANUAL EXISTS — research from THE BROKER AND EXCHANGE DOCS (name which broker and which date), THE EXCHANGE CALENDARS AND CORPORATE-ACTION RULES (facts, checkable), and for Series 2 · 25 the credited literature on backtest overfitting. ⚠ Everything else in this subject is confident people with nothing to show: prefer a claim you can demonstrate in code, and where nobody knows, write that.
+    Open its own section for this topic BEFORE writing, use it as the COVERAGE
+    CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
+    left out because an academy rule says so (ETL & Data Pipelines owns the ingestion technique, Python for Data owns the language, AI & Data owns the model, the engine tracks own the storage engines, Data Ops owns running the jobs),
+    and NEVER because it was missed.
+
+    ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
+    A track teaches a SKILL and DEMONSTRATES it in a tool, never the reverse.
+    ⚠ WE TEACH THE SYSTEM, NOT A STRATEGY, AND NO EPISODE MAY IMPLY OTHERWISE. Most backtested edges are noise. An episode that would read well in a trading-course advertisement has gone wrong: no return figures, no approving equity curves, no use of the word profitable outside a warning. THE PROMISE IS THAT A READER CAN LOOK AT ANY BACKTEST AND SAY WHAT IS WRONG WITH IT.
+
+    ── WHAT THIS LESSON SHOULD COVER (from curriculum.yaml) ────────────────
+     COVER: decay, which is the outcome the reader should expect rather than fear.
+     THE FACT: strategies stop working. An edge that is real gets crowded out, the market
+     structure changes, the fee schedule changes, or it was never there and you are only now
+     collecting enough evidence to see that.
+     THE HARD PART, AND IT IS STATISTICAL RATHER THAN EMOTIONAL: A LOSING RUN IS EXPECTED. If
+     your backtest showed drawdowns of a given depth, you will experience them, and the
+     question "is this normal variation or is it broken?" cannot be answered from the losses
+     alone — the sample is far too small. Say that clearly, because it is the point at which
+     most people either abandon something that was fine or persist with something that is not.
+       WHAT HELPS: THE EXIT RULE DECIDED IN ADVANCE, in the same document as the strategy, and
+       written when you had nothing at stake. Drawdown beyond the backtested maximum; a live
+       result inconsistent with the simulated one over enough trades; the structural reason
+       for the edge no longer being true — that last one is the best signal and it requires
+       having written the reason down in the first place, per Series 2 · 25.
+       WHAT DOES NOT HELP: re-fitting parameters after a bad month, which is Series 2 · 25's
+       overfitting arriving with real money and a deadline.
+     AND THE PROFESSIONAL SKILL THIS EPISODE IS REALLY ABOUT: TURNING YOUR OWN THING OFF.
+     Being able to do that, on a rule you wrote when you were calm, is the difference between
+     running a system and being run by one.
+
+    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────
+      koan:predict
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/algotrading/series4/_10/WhenItStopsWorkingKoans.groovy
+   ========================================================================== */}
+
+## The failure this lesson prevents
+
+{/* BEAT 1 — the specific way this gets somebody. 'The split made it look like a 50% loss.' 'The order timed out but had been placed.' Always concrete, never a definition. */}
+
+TODO
+
+## The mechanism
+
+{/* BEAT 2 — why it happens, at the level of the data or the protocol. The general idea first, then the code. */}
+
+TODO
+
+## The build that makes it impossible
+
+{/* BEAT 3 — NON-NEGOTIABLE, and note the wording: STRUCTURAL, not disciplinary. A convention a tired person has to remember is not a fix. */}
+
+TODO
+
+## The check
+
+{/* BEAT 4 — the assertion, reconciliation or report that proves it is still true next month. */}
+
+TODO
