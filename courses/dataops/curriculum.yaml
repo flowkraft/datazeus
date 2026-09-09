@@ -284,8 +284,9 @@ series:
       # you cannot install software. And the work survives the browser closing, because the
       # process was never on your side of the connection.
       #   1. CODE-SERVER    VS Code running as a service on the server, reached at a URL. Set it
-      #                     up with the docker run of 37, put it behind a reverse proxy with
-      #                     TLS, and never expose it on plain HTTP with the default password —
+      #                     up with the docker run of 37, put it behind the reverse proxy of 48
+      #                     with the certificate of 49, and never expose it on plain HTTP with
+      #                     the default password —
       #                     it is a shell on your data, published to the internet.
       #   2. SSH FS, by Kelvin Schoofs (Kelvin.vscode-sshfs)
       #                     THE REASON IT IS IN THIS EPISODE: code-server installs extensions
@@ -515,6 +516,106 @@ series:
         slug: s3-object-storage
         title: "S3 Object Storage — Backblaze, R2, rclone, and the Offsite Copy"
         hands_on: ["koan:process:tool", "koan:choose"]
+        core: true
+        status: planned
+      # ADDED 2026-09-09, after an audit found the academy's clearest instance of a pattern this
+      # repo has now been burned by three times: RECOMMENDING SOMETHING WE NEVER TEACH.
+      # NGINX APPEARS ZERO TIMES IN ALL FORTY-SEVEN CURRICULA. So do Let's Encrypt, certbot,
+      # Caddy and Traefik. Meanwhile Series 1 - 39 tells the reader to "put it behind a reverse
+      # proxy with TLS", Next.js, Series 4 - 10 hands hosting over with "covered in Data Ops",
+      # and Kubernetes for Data Workloads excludes ingress because it is not for the person
+      # building the cluster. Three pointers into a hole.
+      #
+      # WHY HERE AND NOT BESIDE 39, WHERE THE NEED FIRST APPEARS: this is a hard dependency, not
+      # a preference. 46 is where the reader gets a public box and a domain name, and 49 cannot
+      # run without one. Placing these earlier would teach a procedure nobody could execute.
+      # THE SERIES NOW CLOSES ON AN ARC: get a box (46), give it storage (47), serve something
+      # from it (48), make it HTTPS (49), then build the thing (50).
+      #
+      # COVER: the concept first, because a reader who has only ever run `docker run -p 8080`
+      # has never met it. A REVERSE PROXY IS ONE PROCESS THAT LISTENS ON 80 AND 443 AND HANDS
+      # EACH REQUEST TO WHICHEVER LOCAL SERVICE SHOULD ANSWER IT - by hostname, or by path.
+      # WHY A DATA PERSON NEEDS ONE, and the answer is already sitting on their machine by now:
+      # code-server from 39, a MinIO console, a notebook, a scheduler UI, a dashboard. EVERY ONE
+      # OF THEM BINDS TO ITS OWN PORT ON localhost. Without a proxy you either expose five ports
+      # to the internet - five things to secure, five certificates, five firewall rules - or you
+      # publish nothing. With one you get one door, one certificate, one place to put a password.
+      #   THE HABIT THAT MAKES IT SAFE, and it belongs in this episode rather than the next:
+      #   BIND THE SERVICES TO 127.0.0.1, NOT 0.0.0.0. A service reachable only through the
+      #   proxy cannot be reached around it. Most people leave everything on 0.0.0.0 and believe
+      #   the proxy is protecting them.
+      # THEN NGINX AS THE TOOL, as a runbook on Debian: the package, where the config actually
+      # lives (sites-available and the symlink, which trips up everyone once), a server block
+      # per hostname, proxy_pass, and the three headers you must forward or the application will
+      # generate wrong links and see every visitor as coming from the proxy - Host,
+      # X-Forwarded-For and X-Forwarded-Proto.
+      #   WEBSOCKETS, because two of the tools above need them: the Upgrade and Connection
+      #   headers, and the symptom when they are missing - a page that loads and then does
+      #   nothing, which reads as a broken application rather than as a proxy problem.
+      #   TIMEOUTS AND BODY SIZE, which is where a data reader gets bitten specifically: the
+      #   default upload limit is small, so a file upload fails at exactly the size that starts
+      #   to matter, and a long-running query behind a proxy hits a read timeout and returns 504
+      #   while the query is still running happily on the server.
+      #   `nginx -t` BEFORE EVERY RELOAD. It is one command and it is the difference between a
+      #   reload and an outage.
+      # AND THE HONEST CLOSE, which this course owes the reader: CADDY DOES THIS IN ABOUT THREE
+      # LINES AND OBTAINS ITS CERTIFICATES AUTOMATICALLY, and for a new personal box it is
+      # genuinely the better choice. Traefik is the same idea for containers. NGINX IS TAUGHT
+      # HERE BECAUSE IT IS WHAT YOU WILL INHERIT - it is already on the server somebody handed
+      # you - and because reading its config is a more portable skill than any one tool. Name
+      # the alternative, mean it, and move on.
+      - n: "48"
+        slug: reverse-proxy-nginx
+        title: "NGINX — One Public Door for Everything Listening on localhost"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
+        core: true
+        status: planned
+      # ADDED with 48 and deliberately kept separate from it: 48 is a ROUTING skill and this is a
+      # LIFECYCLE skill, and the lifecycle is the half that fails.
+      # COVER: the ten easy minutes first, so the reader has HTTPS before the warnings start -
+      # certbot with the nginx plugin on Debian, which obtains the certificate AND edits the
+      # server block from 48 for you. What the HTTP-01 challenge actually does, in two sentences,
+      # because a reader who understands it can debug it: Let's Encrypt asks your domain for a
+      # file over port 80, so THE NAME MUST RESOLVE TO THIS BOX AND PORT 80 MUST BE OPEN. That is
+      # the whole of it, and it is why this episode cannot come before Series 1 - 46.
+      #   NAME THE DNS-01 ALTERNATIVE in one paragraph, for the two cases where the first cannot
+      #   work: a wildcard certificate, and a box with no inbound port 80 - which is common for
+      #   an internal data tool.
+      #
+      # AND THEN THE ACTUAL SUBJECT, WHICH IS THE TITLE: THE RENEWAL. Certificates last ninety
+      # days by design, the renewal runs on a systemd timer, and WHEN IT BREAKS IT BREAKS
+      # QUIETLY. The port 80 rule somebody tightened last month, the DNS record that moved, the
+      # plugin that changed - none of them produce an error anybody reads. You find out when the
+      # certificate expires, and that will be at an inconvenient hour, because the expiry date
+      # was not chosen to suit you.
+      #   SO THE EPISODE'S DELIVERABLE IS A TESTED RENEWAL, not a working certificate:
+      #   `certbot renew --dry-run`, the timer verified with the commands from Series 1 - 40,
+      #   and AN ALERT ON DAYS-UNTIL-EXPIRY rather than on the renewal job's exit code - because
+      #   the failure mode is a job that stopped running at all, and a job that is not running
+      #   cannot report that it failed. That is Series 3 - 15's rule about alerting on absence,
+      #   arriving early and concretely.
+      #
+      # THE OTHER HALF, AND IT IS WHY THIS BELONGS IN A DATA COURSE RATHER THAN A WEB ONE: WHAT
+      # AN EXPIRED OR MISCONFIGURED CERTIFICATE DOES TO EVERYTHING DOWNSTREAM. A browser shows a
+      # friendly warning and a human clicks through. Nothing else does. `rclone` to the bucket
+      # from 47, a Python job, `psql`, a scheduled extract - they all fail, with errors that say
+      # nothing about expiry.
+      #   THE INCOMPLETE-CHAIN TRAP, which is the nastiest version because it is invisible: serve
+      #   only the leaf certificate and the site works perfectly in your browser, which already
+      #   had the intermediate cached, while every automated client rejects it. "It works for me"
+      #   is the signature. Send the full chain.
+      #   AND THE SEAM THAT CLOSES A LOOP: Series 1 - 32 taught reading a TLS failure as the
+      #   CLIENT. This is the same error from the other end, and a reader who has now stood on
+      #   both sides of it will never lose an afternoon to one again.
+      #
+      # WARNING - SAY THE RATE LIMITS OUT LOUD, because the commonest beginner disaster here is
+      # self-inflicted: Let's Encrypt limits certificates per domain per week, and a reader
+      # debugging a failure by re-running certbot twenty times will lock themselves out of their
+      # own domain for days. USE --dry-run WHILE DEBUGGING. Always. Say it before they need it.
+      - n: "49"
+        slug: tls-and-lets-encrypt
+        title: "Let's Encrypt — HTTPS in Ten Minutes, and the Renewal That Fails Silently"
+        hands_on: ["koan:process:tool", "koan:diagnose"]
         core: true
         status: planned
       # SERIES 1 PROJECT, added 2026-08-24. The series had none: the core path

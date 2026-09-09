@@ -1,0 +1,139 @@
+---
+title: "NGINX — One Public Door for Everything Listening on localhost"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-ops"
+tags: []
+level: "beginner"
+module: "series1-linux-for-data"
+order: 48
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/dataops/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/dataops/series1/_48/ReverseProxyNginxKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    THE SKILL IS "PUT ONE PUBLIC ENTRY POINT IN FRONT OF SEVERAL PRIVATE
+    SERVICES". NGINX is the demonstration. A reader who moves to Caddy, Traefik,
+    HAProxy or a cloud load balancer must find that everything they learnt here
+    still applies — only the config syntax changed.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Ops · Linux for Data (beginner) — "do real data work from the terminal, with shell tools alone"
+      before:  S3 Object Storage — Backblaze, R2, rclone, and the Offsite Copy
+      THIS:    NGINX — One Public Door for Everything Listening on localhost
+      after:   Let's Encrypt — HTTPS in Ten Minutes, and the Renewal That Fails Silently
+    CORE — on the shortest path to being productive. Someone will read only
+    the core episodes, so this one has to stand alone.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: take the four or five tools the reader has installed on their box, each listening
+    on its own port, and publish them safely at one address.
+    DECISION: added 2026-09-09 after an audit found the academy's clearest case of
+    RECOMMENDING SOMETHING WE NEVER TEACH. NGINX appeared zero times in all forty-seven
+    curricula — so did Let's Encrypt, certbot, Caddy and Traefik — while three courses
+    already pointed here for it: 1 · 39 tells the reader to put code-server "behind a
+    reverse proxy with TLS", Next.js Series 4 · 10 hands hosting over with "covered in Data
+    Ops", and Kubernetes for Data Workloads excludes ingress as not being for the person
+    building the cluster. Three pointers into a hole.
+    PLACED AT 48 AND NOT BESIDE 39, where the need first appears, because the next episode
+    has a hard dependency on 46: you cannot obtain a certificate without a public name
+    pointing at a reachable box. The series now closes on an arc — get a box (46), give it
+    storage (47), serve something from it (48), make it HTTPS (49), then build (50).
+
+    ── THE SENTENCE THE EPISODE IS BUILT ON ────────────────────────────────
+    A REVERSE PROXY IS ONE PROCESS THAT LISTENS ON 80 AND 443 AND HANDS EACH REQUEST TO
+    WHICHEVER LOCAL SERVICE SHOULD ANSWER IT — chosen by hostname, or by path. Everything
+    else in this episode is a consequence of that one sentence.
+
+    ── WHY A DATA PERSON NEEDS ONE, and the answer is already on their box ──
+    By this point in the series they have code-server from 39, probably a MinIO console, a
+    notebook, a scheduler UI, a dashboard. EVERY ONE OF THEM BINDS TO ITS OWN PORT ON
+    localhost. Without a proxy the choice is to expose five ports to the internet — five
+    things to secure, five certificates, five firewall rules — or to publish nothing. With
+    one you get ONE DOOR, ONE CERTIFICATE, ONE PLACE TO PUT A PASSWORD.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      BIND TO 127.0.0.1, NOT 0.0.0.0   the habit that makes the rest safe, and it belongs
+                                 here rather than in 49. A service reachable only through
+                                 the proxy cannot be reached around it. Most people leave
+                                 everything on 0.0.0.0 and believe the proxy is protecting
+                                 them. Show the difference with `ss -tlnp`.
+      THE CONFIG, AS A RUNBOOK   the Debian package; where the config actually lives —
+                                 sites-available and the symlink into sites-enabled, which
+                                 trips up everyone exactly once; one server block per
+                                 hostname; proxy_pass.
+      THE THREE HEADERS          Host, X-Forwarded-For, X-Forwarded-Proto. Forget them and
+                                 the application generates wrong links and logs every
+                                 visitor as coming from the proxy.
+      WEBSOCKETS                 the Upgrade and Connection headers, because two of the
+                                 tools above need them. THE SYMPTOM WHEN THEY ARE MISSING
+                                 is the useful part: a page that loads and then does
+                                 nothing, which reads as a broken application rather than
+                                 as a proxy problem.
+      TIMEOUTS AND BODY SIZE     where a data reader gets bitten specifically. The default
+                                 upload limit is small, so a file upload fails at exactly
+                                 the size that starts to matter; and a long-running query
+                                 behind a proxy hits a read timeout and returns 504 while
+                                 the query is still running happily on the server.
+      `nginx -t` BEFORE EVERY RELOAD   one command, and the difference between a reload and
+                                 an outage.
+      THE HONEST CLOSE           CADDY DOES THIS IN ABOUT THREE LINES AND GETS ITS
+                                 CERTIFICATES AUTOMATICALLY, and for a new personal box it
+                                 is genuinely the better choice. Traefik is the same idea
+                                 for containers. NGINX IS TAUGHT HERE BECAUSE IT IS WHAT
+                                 YOU WILL INHERIT — it is already on the server somebody
+                                 handed you — and reading its config is a more portable
+                                 skill than any one tool. Name the alternative, mean it,
+                                 and move on.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:process:tool
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/dataops/series1/_48/ReverseProxyNginxKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition.
+    The one to write: you have four useful things running on the box and you can reach
+    none of them from your laptop without an ssh tunnel per tool, which nobody else on the
+    team is going to do. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. One public entry point in front of several private
+    services, chosen by hostname — then nginx's spelling of it. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: the reader adds the proxy, is pleased, and leaves every service on
+    0.0.0.0. The proxy is now a convenience and not a boundary — every tool is still
+    reachable on its own port by anyone who scans it, password or no password. The check is
+    `ss -tlnp` on the box and a port scan from outside, and the fix is one bind address. */}
+
+TODO

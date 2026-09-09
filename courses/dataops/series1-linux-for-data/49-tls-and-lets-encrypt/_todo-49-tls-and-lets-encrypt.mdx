@@ -1,0 +1,141 @@
+---
+title: "Let's Encrypt — HTTPS in Ten Minutes, and the Renewal That Fails Silently"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-data-ops"
+tags: []
+level: "beginner"
+module: "series1-linux-for-data"
+order: 49
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/dataops/curriculum.yaml   the track's decisions, in its header
+      tests/src/koans/groovy/datazeus/dataops/series1/_49/TlsAndLetsEncryptKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    THE SKILL IS "RUN A CREDENTIAL THAT EXPIRES, ON A SCHEDULE YOU HAVE TESTED".
+    certbot is the demonstration. The same shape applies to every rotating
+    secret the reader will ever own, which is why the episode is worth more than
+    the certificate it produces.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    Data Ops · Linux for Data (beginner) — "do real data work from the terminal, with shell tools alone"
+      before:  NGINX — One Public Door for Everything Listening on localhost
+      THIS:    Let's Encrypt — HTTPS in Ten Minutes, and the Renewal That Fails Silently
+      after:   Project — A Nightly Job Written Only With Shell Tools
+    CORE — on the shortest path to being productive. Someone will read only
+    the core episodes, so this one has to stand alone.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: a real certificate on the proxy from 48, and — the actual deliverable — a renewal
+    the reader has PROVEN works rather than assumed does.
+    DECISION: kept separate from 48 deliberately. 48 is a ROUTING skill; this is a
+    LIFECYCLE skill, and the lifecycle is the half that fails. Merging them would bury the
+    subject of this episode inside the setup of the other.
+    IT CANNOT COME BEFORE 46, and that is what fixes its position: obtaining a certificate
+    requires a public name resolving to a reachable box, which is what 46 hands the reader.
+
+    ── THE SENTENCE THE EPISODE IS BUILT ON ────────────────────────────────
+    GETTING THE CERTIFICATE IS THE EASY HALF AND IT IS NOT THE SUBJECT. Certificates last
+    ninety days by design. The renewal runs on a timer, and WHEN IT BREAKS IT BREAKS
+    QUIETLY — so the episode's output is a tested renewal and an alert, not a padlock.
+
+    ── COVER (the full argument lives in curriculum.yaml, above this episode) ─
+      THE TEN EASY MINUTES FIRST   certbot with the nginx plugin on Debian, which obtains
+                                 the certificate AND edits the server block from 48. Let
+                                 the reader have HTTPS before the warnings start.
+      WHAT HTTP-01 ACTUALLY DOES   two sentences, because a reader who understands it can
+                                 debug it: Let's Encrypt asks your domain for a file over
+                                 port 80. THE NAME MUST RESOLVE TO THIS BOX AND PORT 80
+                                 MUST BE OPEN. That is the whole of it — and it is why this
+                                 episode sits after 46.
+      DNS-01, IN ONE PARAGRAPH   for the two cases the first cannot serve: a wildcard
+                                 certificate, and a box with no inbound port 80, which is
+                                 common for an internal data tool.
+      THE RENEWAL — THE REAL SUBJECT   the systemd timer, and the ways it dies without
+                                 telling anyone: the port 80 rule somebody tightened last
+                                 month, the DNS record that moved, the plugin that changed.
+                                 None of them produce an error a human reads. You find out
+                                 at expiry, at an inconvenient hour, because the expiry
+                                 date was not chosen to suit you.
+      THE DELIVERABLE            `certbot renew --dry-run`; the timer verified with the
+                                 commands from 1 · 40; and AN ALERT ON DAYS-UNTIL-EXPIRY
+                                 RATHER THAN ON THE JOB'S EXIT CODE — because the failure
+                                 mode is a job that stopped running at all, and a job that
+                                 is not running cannot report that it failed. That is
+                                 Series 3 · 15's rule about alerting on absence, arriving
+                                 early and concretely.
+      WHAT IT DOES DOWNSTREAM    why this belongs in a DATA course rather than a web one. A
+                                 browser shows a friendly warning and a human clicks
+                                 through. NOTHING ELSE DOES. rclone to the bucket from 47,
+                                 a Python job, psql, a scheduled extract — all fail, with
+                                 errors that say nothing about expiry.
+      THE INCOMPLETE-CHAIN TRAP  the nastiest version, because it is invisible: serve only
+                                 the leaf certificate and the site is perfect in your
+                                 browser, which already had the intermediate cached, while
+                                 every automated client rejects it. "It works for me" is
+                                 the signature. Send the full chain.
+      THE SEAM THAT CLOSES A LOOP   1 · 32 taught reading a TLS failure as the CLIENT. This
+                                 is the same error from the other end, and a reader who has
+                                 stood on both sides of it will never lose an afternoon to
+                                 one again.
+
+    ── ⚠ SAY THE RATE LIMITS OUT LOUD, BEFORE THEY NEED THEM ───────────────
+    The commonest beginner disaster here is self-inflicted. Let's Encrypt limits
+    certificates per domain per week, and a reader debugging a failure by re-running
+    certbot twenty times will lock themselves out of their own domain for days.
+    USE --dry-run WHILE DEBUGGING. Always. This warning is worthless after the fact, so it
+    goes early in the lesson and not in a footnote.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:process:tool
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/dataops/series1/_49/TlsAndLetsEncryptKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition.
+    The one to write: the dashboard everyone uses has been fine for three months, and this
+    morning every scheduled job that talks to it is failing and the browser is showing a
+    warning nobody can explain. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. A certificate is a credential with an expiry date,
+    and anything with an expiry date needs a renewal you have tested — then certbot's
+    spelling of it. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: the renewal timer stopped running in July and nothing said so,
+    because the monitoring watched the job's exit code and a job that never runs has no
+    exit code. The certificate expired in October. ALERT ON DAYS-UNTIL-EXPIRY — a fact
+    about the world — rather than on the success of the thing that is supposed to maintain
+    it. */}
+
+TODO
