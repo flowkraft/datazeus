@@ -25,17 +25,26 @@ import spock.lang.Stepwise
  * across from the video will not work — which is the point. You learn the idea by
  * applying it somewhere new, not by retyping an answer you just watched.
  *
- * TEN KOANS, EASIEST FIRST, IN THE ORDER THE LESSON BUILDS THEM:
+ * THIRTEEN KOANS, EASIEST FIRST, IN THE ORDER THE LESSON BUILDS THEM. They are grouped by
+ * the FOUR PLACES a missing value changes an answer, which is the shape the lesson ends on:
+ *
+ *   COMPARING IT
  *   1    the test for an empty cell is two words, and it is not an equals sign
  *   2    PREDICT: what an equals sign against NULL actually returns
  *   3    the other half of the pair — the rows that DO have a value
- *   4    THE TRAP: a not-equals filter silently leaves the empty rows out
- *   5    PREDICT: NOT does not rescue you either
- *   6    COALESCE — give the empty cell something to stand in for it
- *   7    one missing piece empties the whole line
- *   8    count(*) counts ROWS; count(column) counts VALUES
- *   9    NULLIF — COALESCE backwards
- *  10    the whole query, written from scratch
+ *   4    PREDICT: an empty string is a VALUE, and a missing one is not
+ *   FILTERING ON IT
+ *   5    THE TRAP: a not-equals filter silently leaves the empty rows out
+ *   6    PREDICT: NOT does not rescue you either
+ *   JOINING OR SORTING ON IT
+ *   7    an ON is a comparison too, so a join drops them the same way
+ *   8    a sort keeps every row — but you must say WHERE the empties go
+ *   PRINTING AND COUNTING IT
+ *   9    COALESCE — give the empty cell something to stand in for it
+ *  10    one missing piece empties the whole line
+ *  11    count(*) counts ROWS; count(column) counts VALUES
+ *  12    NULLIF — COALESCE backwards
+ *  13    the whole query, written from scratch
  *
  * These run on DuckDB. Every one is written so it returns the SAME answer against the
  * PostgreSQL in CloudBeaver.
@@ -76,7 +85,7 @@ import spock.lang.Stepwise
  *
  *   "Products" — 20 rows, 10 columns. "UnitsInStock" is how many we have on the shelf
  *   right now. It is never empty — but it IS zero on exactly two lines, which is a
- *   different thing, and koan 9 is about turning one into the other.
+ *   different thing, and koan 12 is about turning one into the other.
  *     "ProductID"       INTEGER        "ProductName"     VARCHAR
  *     "SupplierID"      INTEGER        "CategoryID"      INTEGER
  *     "QuantityPerUnit" VARCHAR        "UnitPrice"       DECIMAL(19,4)
@@ -141,7 +150,39 @@ class NullAndThreeValuedLogicKoans extends KoanBase {
         ''')
     }
 
-    // 4) THE ONE THIS LESSON EXISTS FOR, and it is the mistake that ships in real reports.
+    // 4) PREDICT — a different bug wearing the same clothes.
+    //    Koan 2 showed that `= NULL` finds nothing because the comparison is UNKNOWN. Now try
+    //    the OTHER thing people reach for when they go hunting for missing text: `= ''`. It
+    //    also finds nothing — for the opposite reason. An empty string is a VALUE: somebody
+    //    wrote nothing down, deliberately, and the database stored that. A NULL is no value at
+    //    all, because nobody wrote anything. So `"Region" = ''` is an ordinary comparison that
+    //    simply comes back FALSE, and both mistakes look identical from the outside.
+    //    (Six suppliers, three of them with a region. Not one holds an empty string. The third
+    //     query is the nasty one: ask for every region that is NOT an empty string and you
+    //     might reasonably expect all six back, since none of them is.)
+    def "predict: an empty string is a value, and a missing one is not"() {
+        given: "the way people go looking for blank text"
+        int equalsEmptyString = rows('''
+            SELECT s."CompanyName" FROM "Suppliers" s WHERE s."Region" = ''
+        ''').size()
+
+        and: "the test that actually finds them"
+        int isNull = rows('''
+            SELECT s."CompanyName" FROM "Suppliers" s WHERE s."Region" IS NULL
+        ''').size()
+
+        and: "and the opposite of the first one, which looks perfectly safe"
+        int notEmptyString = rows('''
+            SELECT s."CompanyName" FROM "Suppliers" s WHERE s."Region" <> ''
+        ''').size()
+
+        expect:
+        equalsEmptyString == ___
+        isNull == ___
+        notEmptyString == ___
+    }
+
+    // 5) THE ONE THIS LESSON EXISTS FOR, and it is the mistake that ships in real reports.
     //
     //    THE JOB: every supplier who is NOT in Victoria. There are six suppliers and exactly
     //    one of them is in Victoria, so the answer is obviously five.
@@ -168,12 +209,12 @@ class NullAndThreeValuedLogicKoans extends KoanBase {
         ''')
     }
 
-    // 5) PREDICT — and this is the one people get wrong even after koan 4.
+    // 6) PREDICT — and this is the one people get wrong even after koan 5.
     //    The natural next thought is "fine, I'll wrap the whole thing in NOT". Below, the
     //    first query does exactly that. Say what each one returns before you run it.
     //    (NOT flips TRUE to FALSE and FALSE to TRUE. It does NOT flip UNKNOWN — the opposite
     //     of "I don't know" is still "I don't know" — so the empty rows stay dropped. The
-    //     second query is the same test with the rescue from koan 4 added.)
+    //     second query is the same test with the rescue from koan 5 added.)
     def "predict: NOT does not rescue you either"() {
         given: "the whole condition wrapped in NOT, which changes nothing that matters"
         int wrappedInNot = rows('''
@@ -192,7 +233,52 @@ class NullAndThreeValuedLogicKoans extends KoanBase {
         andSayingWhatToDo == ___
     }
 
-    // 6) Filtering is one problem; PRINTING is another. A report with three blank cells in it
+    // 7) EVERYTHING SO FAR HAS BEEN ABOUT `WHERE`. A join's `ON` is the same kind of test — a
+    //    condition that has to come back TRUE — so it has the same hole in it. This is where it
+    //    costs you a row inside a report that otherwise looks complete.
+    //
+    //    THE JOB: every employee beside their manager's name. "ReportsTo" holds the
+    //    "EmployeeID" of that person's manager. Fill in the column on the MANAGER side that ON
+    //    should match it against.
+    //
+    //    (Predict the COUNT before the names. There are three employees; one is the boss and
+    //     reports to nobody, so his "ReportsTo" is empty. NULL = anything is UNKNOWN, the ON is
+    //     not TRUE, and that row is gone — two rows back out of three, no error, no warning.
+    //     A LEFT JOIN is what keeps him, and that was last lesson.)
+    def "an ON is a comparison too, so a join drops the empty ones"() {
+        expect:
+        shouldReturn([["Janet", "Andrew"],
+                      ["Nancy", "Andrew"]], '''
+            SELECT e."FirstName", m."FirstName" AS "Manager"
+            FROM "Employees" e
+            JOIN "Employees" m ON e."ReportsTo" = m.___
+            ORDER BY e."FirstName"
+        ''')
+    }
+
+    // 8) AND THE ONE PLACE NOTHING IS LOST. A sort keeps every row — all six suppliers come
+    //    back, blanks included. What it does not do is agree with itself across engines: write
+    //    `ORDER BY s."Region" DESC` on its own and DuckDB puts the three empties LAST, while
+    //    the PostgreSQL behind CloudBeaver puts them FIRST. Both are correct — the standard
+    //    never said which. So say it yourself: fill in the two words that pin the empties to
+    //    the bottom, and the query then means the same thing everywhere.
+    //    (Predict first: six rows — Victoria, MI, LA, then the three with no region at all,
+    //     alphabetically. This is the only koan today where nothing disappears.)
+    def "a sort keeps every row, but you must say where the empties go"() {
+        expect:
+        shouldReturn([["Pavlova Ltd", "Victoria"],
+                      ["Grandma Kellys Homestead", "MI"],
+                      ["New Orleans Cajun Delights", "LA"],
+                      ["Exotic Liquids", null],
+                      ["Pasta Buttini s.r.l.", null],
+                      ["Tokyo Traders", null]], '''
+            SELECT s."CompanyName", s."Region"
+            FROM "Suppliers" s
+            ORDER BY s."Region" DESC ___, s."CompanyName"
+        ''')
+    }
+
+    // 9) Filtering is one problem; PRINTING is another. A report with three blank cells in it
     //    looks broken even when it is correct. Fill in the function that hands back the first
     //    of its arguments that is not empty — so an empty region is printed as words instead
     //    of as nothing.
@@ -212,7 +298,7 @@ class NullAndThreeValuedLogicKoans extends KoanBase {
         ''')
     }
 
-    // 7) NOW THE ONE THAT BITES HARDEST, because the damage is not where you are looking.
+    // 10) NOW THE ONE THAT BITES HARDEST, because the damage is not where you are looking.
     //    Glue a city and a region together into one address line and the three suppliers with
     //    no region do not lose their region — THEY LOSE THE WHOLE LINE. City included.
     //    Anything combined with nothing is nothing, so one empty piece empties the result.
@@ -236,7 +322,7 @@ class NullAndThreeValuedLogicKoans extends KoanBase {
         ''')
     }
 
-    // 8) THE ONE THAT QUIETLY CHANGES A NUMBER IN A REPORT. count(*) counts ROWS. count of a
+    // 11) THE ONE THAT QUIETLY CHANGES A NUMBER IN A REPORT. count(*) counts ROWS. count of a
     //    COLUMN counts the values in it, and skips every empty cell — so the two disagree by
     //    exactly the number of blanks.
     //    Here: how many people work here, and how many of them have a manager? Fill in the
@@ -253,7 +339,7 @@ class NullAndThreeValuedLogicKoans extends KoanBase {
         ''')
     }
 
-    // 9) COALESCE BACKWARDS. That one swapped an empty cell for a value; this one swaps a
+    // 12) COALESCE BACKWARDS. That one swapped an empty cell for a value; this one swaps a
     //    value for an empty cell — it returns NULL when its two arguments are equal, and the
     //    original value otherwise.
     //    Two lines in the catalogue are at zero stock. Turn that zero into a genuine "nothing
@@ -273,7 +359,7 @@ class NullAndThreeValuedLogicKoans extends KoanBase {
         ''')
     }
 
-    // 10) The whole query — no scaffolding, and everything above it in one go.
+    // 13) The whole query — no scaffolding, and everything above it in one go.
     //     THE QUESTION: which of our suppliers are NOT in Victoria, and where are they?
     //       · not in Victoria                     -> and the ones with no region count too,
     //                                                because we do not know that they ARE

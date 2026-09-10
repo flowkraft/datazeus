@@ -132,11 +132,63 @@ LIMIT 5;
 
 Note where the `IS NULL` sits: in the `WHERE`, about the LEFT-hand table. That is the safe placement lesson 40 taught, and it is unaffected by everything on this page.
 
+## An empty string is not a blank
+
+`IS NULL` answers. But there is a second thing people reach for when they go hunting for missing
+text, and it fails in a way that looks exactly like the query you just fixed.
+
+Somebody wants the customers with no region, and writes this:
+
+```sql file=./scripts/region-empty-string.sql
+SELECT count(*) AS "= ''"
+FROM "Customers"
+WHERE "Region" = '';
+```
+
+| = '' |
+| ---- |
+| 0    |
+
+Zero — and there are 21 customers with no region sitting in that table.
+
+**This is not the same bug as `= NULL`, even though it has the same shape.** `= NULL` is UNKNOWN,
+so the `WHERE` discards the row. `= ''` is a perfectly ordinary comparison that comes back
+**FALSE**. An empty string is a *value*: somebody wrote nothing down, deliberately, and the
+database stored that. A `NULL` is *no value at all* — nobody wrote anything. The database will
+say so if you ask it directly:
+
+| test         | answer                                       |
+| ------------ | -------------------------------------------- |
+| `'' IS NULL` | `FALSE` — an empty string is not missing      |
+| `NULL = ''`  | `UNKNOWN` — there is nothing there to compare |
+
+And the opposite test is the worse one, because it looks safe:
+
+| WHERE clause      | rows |
+| ----------------- | ---- |
+| `"Region" = ''`   | 0    |
+| `"Region" <> ''`  | 4    |
+| `"Region" IS NULL`| 21   |
+
+Ask for every region that is **not** an empty string and you would expect all 25 customers back —
+not one of them is an empty string. You get **4**. The 21 blanks cannot answer that comparison
+either, so the `WHERE` throws them away exactly as before.
+
+<Callout>
+**If a column can hold both, you have to say so.** `WHERE "Region" IS NULL OR "Region" = ''` is the
+honest test when a column is allowed to hold either — and it is worth finding out which you
+actually have before writing the filter, because `GROUP BY` will tell you in one query. Northwind
+stores a missing region as `NULL` and never as `''`, which is why the first query returns nothing
+at all.
+</Callout>
+
 ## The expensive version: two reports that do not add up
 
 The query above was the cheap mistake, because an empty result at least *looks* wrong. Here is the one that does not.
 
-Your manager wants two numbers for the year-end review: how many orders shipped in 2024, and how many shipped before it.
+Your manager wants two numbers for the year-end review: how many orders shipped **on or after the first of January**, and how many went out **before that**.
+
+Those two conditions cover every date there is. Anything is either on one side of the first of January or the other — there is no third option. Hold on to that, because it is about to turn out to be false.
 
 ```sql file=./scripts/shipped-in-2024.sql
 SELECT count(*) AS "Orders"
@@ -217,6 +269,53 @@ WHERE "ShippedDate" < DATE '2024-01-01'
 
 Note what you do *not* get if you forget: not an error. A total that is short.
 
+## An `ON` is a comparison, so a join drops them too
+
+Everything so far has been about `WHERE`. A join's `ON` is the same kind of test — a condition
+that has to come back TRUE — so it has the same hole in it. This one is harder to spot, because
+the query does not look empty. It looks finished.
+
+Every customer has a region. Every order has a ship region. So: each customer, beside the orders
+that shipped to their own region.
+
+```sql file=./scripts/join-on-blank-regions.sql
+SELECT count(*) AS "Rows"
+FROM "Customers" c
+JOIN "Orders" o ON c."Region" = o."ShipRegion";
+```
+
+| Rows |
+| ---- |
+| 0    |
+
+Not one row. No error, no warning — and a `count(*)` of zero is a number, so it goes into a report
+looking like an answer.
+
+The reason is the sentence from the top of this page, met in a new clause. 21 of the 25 customers
+have no region and **all 79** orders have no ship region, so almost every pair the join tries is
+`NULL = NULL` — UNKNOWN — and the `ON` discards it exactly as a `WHERE` would. **Not one blank
+recognises another.**
+
+You can prove that is what happened, rather than "there are genuinely no matches", with the
+operator from further down this page:
+
+```sql
+SELECT count(*)
+FROM "Customers" c
+JOIN "Orders" o ON c."Region" IS NOT DISTINCT FROM o."ShipRegion";
+```
+
+`IS NOT DISTINCT FROM` *does* treat blank as equal to blank, and it returns 21 x 79 = **1659**
+rows. Those pairs were always in the data. The plain join was dropping them, not failing to find
+them.
+
+<Callout>
+**The version you will actually meet is a nullable foreign key.** Join on a column that is allowed
+to be empty and every row with an empty key vanishes from the result — quietly, in the middle of a
+query that returns plenty of other rows, so the total simply looks a little low. Before you join on
+a column, ask the same question you ask before you filter on one: *can this be empty?*
+</Callout>
+
 ## It spreads into your output too
 
 So far a missing value has been removing rows. Now it removes something you did not know was at risk.
@@ -227,7 +326,7 @@ Back in lesson 20 you glued columns together with `||` and were warned about one
 SELECT "City", "Region", "City" || ', ' || "Region" AS "Label"
 FROM "Customers"
 ORDER BY "CustomerID"
-LIMIT 4;
+LIMIT 3;
 ```
 
 | City        | Region | Label |
@@ -235,7 +334,6 @@ LIMIT 4;
 | Berlin      | `[NULL]` | `[NULL]` |
 | México D.F. | `[NULL]` | `[NULL]` |
 | México D.F. | `[NULL]` | `[NULL]` |
-| London      | `[NULL]` | `[NULL]` |
 
 The city is right there on every row. The label is gone — not the region part of it, **the whole line**.
 
@@ -247,7 +345,7 @@ The city is right there on every row. The label is gone — not the region part 
 SELECT "City" || ', ' || COALESCE("Region", 'no region') AS "Label"
 FROM "Customers"
 ORDER BY "CustomerID"
-LIMIT 4;
+LIMIT 3;
 ```
 
 | Label                  |
@@ -255,7 +353,6 @@ LIMIT 4;
 | Berlin, no region      |
 | México D.F., no region |
 | México D.F., no region |
-| London, no region      |
 
 `COALESCE` hands back the first of its arguments that is not `NULL`. Give it as many as you like — `COALESCE("Mobile", "HomePhone", 'no number')` works through them in order.
 
@@ -416,6 +513,40 @@ SELECT count(DISTINCT "Region") FROM "Customers";   -- 4, not 5
 
 `count(<column>)` never counts empties, `DISTINCT` or not. So `DISTINCT "Region"` returns five rows and `count(DISTINCT "Region")` says four. Both are right; they are answering "which values appear" and "how many values appear".
 
+## The one place nothing is lost — and it still catches people
+
+Every bug on this page has *removed* rows. Sorting does not, which is exactly why it is missed.
+
+```sql file=./scripts/shipped-date-sorted.sql
+SELECT "OrderID", "ShippedDate"
+FROM "Orders"
+ORDER BY "ShippedDate" DESC NULLS LAST;
+```
+
+All 79 orders come back. Nothing is dropped, nothing is skipped, the 27 blanks are still in the
+result. They are simply *somewhere* in the list — and that word is the catch.
+
+Leave the `NULLS LAST` off, run plain `ORDER BY "ShippedDate" DESC`, and the two engines this
+course puts you on disagree:
+
+| engine                   | where the 27 blanks land |
+| ------------------------ | ------------------------ |
+| DuckDB — your koans      | last                     |
+| PostgreSQL — CloudBeaver | first                    |
+
+**Both are correct.** The standard leaves it implementation-defined, so neither engine has a bug —
+and because this course has you running koans on DuckDB and CloudBeaver on PostgreSQL, it is not a
+theoretical portability worry. You can see it today. Ascending, the two agree: blanks go last on
+both, which is worse in its way, because it means the problem only appears the day somebody adds
+`DESC`.
+
+So say it yourself. `NULLS LAST` (or `NULLS FIRST`) is standard, portable, four characters, and it
+makes the sort the same everywhere:
+
+```sql
+ORDER BY "ShippedDate" DESC NULLS LAST
+```
+
 ## Things you will read but rarely write
 
 **`IS NOT DISTINCT FROM`.** The comparison that treats two `NULL`s as equal: `a IS NOT DISTINCT FROM b` is `TRUE` when both are `NULL`, where `a = b` would be `UNKNOWN`. Portable across PostgreSQL and DuckDB, genuinely useful when comparing two nullable columns, and rare enough that you should write a comment when you use it.
@@ -426,9 +557,7 @@ SELECT count(DISTINCT "Region") FROM "Customers";   -- 4, not 5
 
 ## Where NULL is *not* this lesson's problem
 
-Two boundaries worth naming, because they use the same word for different questions.
-
-**Where a `NULL` sorts** is lesson 15, which covers `NULLS FIRST` and `NULLS LAST` — and shows that DuckDB and PostgreSQL genuinely disagree about `DESC` unless you say. If you are sorting a column that can be empty, go back to that one.
+One boundary worth naming, because it uses the same word for a different question.
 
 **Whether a column should allow `NULL` at all** is a design decision, and it belongs to Data Modeling Series 1 · 37. This lesson is about querying data that is already missing. That one is about whether the missing value should ever have been permitted — a `NOT NULL` constraint, a default, a separate table. Same word, different job, and the answer to a query problem is almost never "change the schema".
 
@@ -436,11 +565,14 @@ Two boundaries worth naming, because they use the same word for different questi
 
 For any column that is allowed to be empty — and most of them are:
 
-1. **Test for it with `IS NULL` or `IS NOT NULL`**, never with `=` or `<>`. Those two run and match nothing.
-2. **Ask whether the column can be empty before you filter on it.** If it can, your condition and its opposite do not cover the table, and neither does wrapping one in `NOT`.
-3. **Say which side the empty rows belong on** — usually `OR <column> IS NULL` — and the totals add up again.
-4. **Wrap the piece that can be missing** with `COALESCE` before you concatenate it or do arithmetic with it, or the whole expression comes back empty.
-5. **Print the row count beside any average or `COUNT(column)`**, because both quietly work on a smaller set than you think.
+There are **four places** to look, and they are the four clauses a column can appear in:
+
+1. **Comparing it** — `IS NULL` or `IS NOT NULL`, never `=` or `<>`, and never `= ''` either. All three of those run and match nothing.
+2. **Filtering on it** — say out loud what should happen to the empty rows, usually `OR <column> IS NULL`. A condition and its opposite do not cover the table, and wrapping one in `NOT` does not fix it.
+3. **Joining or sorting on it** — a join's `ON` drops them exactly as a `WHERE` does; a sort keeps every row but moves them, and where it moves them is not portable unless you write `NULLS LAST`.
+4. **Counting or averaging it** — check the denominator. `count(<column>)` and `AVG` both quietly work on a smaller set than you think, so print the row count beside the number.
+
+And whatever the clause: **wrap the piece that can be missing** with `COALESCE` before you concatenate it or do arithmetic with it, or the whole expression comes back empty.
 
 And one question to ask out loud whenever somebody hands you a filter: *what should happen to the rows where we do not know?* SQL will not choose for you — it will just leave them out and say nothing.
 
@@ -467,7 +599,14 @@ c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_45\N
 
 Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
 
-The ten of them deliberately use **different tables** from everything above — the supplier list, the staff list and the shelf. You cannot answer them by copying a query off this page, which is the point. They walk the same path this lesson did: test for an empty cell, predict what an equals sign against `NULL` really returns, find the rows that do have a value, meet the not-equals trap head on, predict how little `NOT` helps, stand a word in with `COALESCE`, watch one missing piece empty a whole line, count rows against values, turn a value into a `NULL` on purpose, and finish by writing a whole query from scratch — one that needs both the filter fix *and* the output fix, which is the real exam.
+The thirteen of them deliberately use **different tables** from everything above — the supplier list, the staff list and the shelf. You cannot answer them by copying a query off this page, which is the point. They are grouped by the same four places this lesson ends on:
+
+- **Comparing it** — test for an empty cell, predict what `= NULL` really returns, find the rows that *do* have a value, and predict what `= ''` returns, which is nothing for a completely different reason.
+- **Filtering on it** — meet the not-equals trap head on, then predict how little `NOT` helps.
+- **Joining or sorting on it** — watch a join's `ON` drop the one employee whose manager column is empty, then pin the empties to the bottom of a sort with `NULLS LAST` so the answer means the same thing on both engines.
+- **Printing and counting it** — stand a word in with `COALESCE`, watch one missing piece empty a whole line, count rows against values, and turn a value into a `NULL` on purpose with `NULLIF`.
+
+The last one is the real exam: a whole query from scratch, needing both the filter fix *and* the output fix at once.
 
 ## What is next
 

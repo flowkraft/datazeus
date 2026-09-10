@@ -35,9 +35,12 @@
 # aggregates, and last the query you write yourself.
 #
 # WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
-#   - Lesson 15 owns WHERE A NULL SORTS — NULLS FIRST / NULLS LAST, and the fact that the
-#     two engines disagree on DESC. Not one card here is about sorting. If you want to add
-#     one, add it to 15's deck.
+#   - Lesson 15 owns THE MECHANICS OF SORTING — ORDER BY itself, ASC/DESC, and the NULLS
+#     FIRST / NULLS LAST syntax. THAT BOUNDARY MOVED ON 2026-09-09, when the video gained a
+#     beat on it: one card here now covers sorting, and it is deliberately about the ONE
+#     THING THIS LESSON OWNS — that a sort is the only clause on this page which loses
+#     nothing, and that where the blanks land is not portable unless you say. The keyword
+#     mechanics stay 15's. Do not add a second sorting card here.
 #   - Lesson 25 owns the AGGREGATE BEHAVIOUR — that count(column) skips empties and AVG
 #     moves the denominator. Its deck states the behaviour; the two cards here ask WHY,
 #     and connect it to the same rule met in a WHERE. That is the division: 25 says what
@@ -50,7 +53,12 @@
 #     below names that boundary on purpose, because "just make it NOT NULL" is the wrong
 #     answer to a query problem and somebody will reach for it.
 #
-# TWENTY-TWO CARDS, WHICH IS LONGER THAN ANY OTHER DECK IN THE SERIES, AND DELIBERATE.
+# TWENTY-EIGHT CARDS, WHICH IS LONGER THAN ANY OTHER DECK IN THE SERIES, AND DELIBERATE.
+# (COUNTED, not estimated: the header said twenty-two for a deck that already held twenty-
+# three. If you add a card, re-count rather than incrementing the sentence.)
+# Five were added on 2026-09-09 with the video's three new beats: the empty string that is
+# not a blank (three cards, because it is a DISCRIMINATION and those need both directions),
+# the join that drops a nullable key, and the sort that keeps every row but moves them.
 # The house guidance is that much over twenty usually means trivia has crept in, so this
 # was checked card by card rather than waved through. The reason it runs long is that this
 # topic is unusually RULE-DENSE: NULL behaves differently in a comparison, in NOT, in AND,
@@ -59,11 +67,12 @@
 # a reason or a discrimination; not one asks for a token or a figure on its own. If a card
 # ever stops earning that, cut it rather than keeping the count tidy.
 #
-# THE BASIC-TO-CLOZE RATIO IS 19:3, against roughly 3:1 elsewhere, and it follows from the
+# THE BASIC-TO-CLOZE RATIO IS 24:4, against roughly 3:1 elsewhere, and it follows from the
 # same fact. Cloze is for short mechanical rules; almost everything here is "why does this
 # happen" or "which of these two is it", which is what basic is for. The three clozes are
 # the three genuinely mechanical bits: the truth value a comparison produces, the two
-# spellings of the test, and the two cells of the AND/OR table that matter.
+# spellings of the test, the two cells of the AND/OR table that matter, and the pair of
+# truth values that separate an empty string from a missing value.
 
 deck: "DataZeus::Learn SQL::Series 1::45 NULL & Three-Valued Logic"
 guid: "datazeus-learn-sql-series1-45-null-and-three-valued-logic"
@@ -97,6 +106,16 @@ cards:
 
   - cloze: "The only correct tests for a missing value are {{c1::IS NULL}} and {{c2::IS NOT NULL}}; writing <code>= NULL</code> or <code>&lt;&gt; NULL</code> runs without error and matches {{c3::nothing}}."
 
+  # ── 3b. THE OTHER THING THAT LOOKS LIKE A BLANK ──
+  - basic:
+      front: "A text column is allowed to be empty. Somebody looks for the blank rows with <code>WHERE col = ''</code> and gets nothing back, so they conclude there are no blanks. What are the two different things that query could be missing, and why does it return nothing in each case?"
+      back: "There are two separate ways a cell can look blank, and that query finds neither reliably.<br><br>If the cells are NULL, <code>col = ''</code> is a comparison against a missing value — UNKNOWN, so the WHERE discards the row. If the cells really are empty strings, the query WOULD find them, so getting nothing means there are none.<br><br>The trap is that both cases look identical from the outside: an empty result. An empty string is a VALUE somebody wrote down deliberately; NULL means nobody wrote anything. To catch both, ask for both: <code>WHERE col IS NULL OR col = ''</code>."
+  - cloze:
+      text: "<code>'' IS NULL</code> evaluates to {{c1::FALSE}} — an empty string is a value, not a missing one — while <code>NULL = ''</code> evaluates to {{c2::UNKNOWN}}, because there is nothing there to compare."
+  - basic:
+      front: "A column has 21 rows that are NULL and no empty strings at all, out of 25 rows. Somebody writes <code>WHERE col &lt;&gt; ''</code> expecting all 25 back, since not one row holds an empty string. How many rows come back, and why?"
+      back: "Four — the rows that actually have a value. The 21 NULL rows cannot answer <code>&lt;&gt; ''</code> any more than they could answer <code>= ''</code>: comparing a missing value to anything gives UNKNOWN, and the WHERE keeps only TRUE. This is the same shape as the <code>&lt;&gt; 'Something'</code> trap — the negative filter feels like it should be the safe, inclusive one, and it silently drops every row where the column is empty."
+
   # ── 4. THE FILTER TRAP — the hardest idea in the lesson, and the one worth the most ──
   # Phrased as a report somebody hands you, because that is how it is met in the wild.
   # Everything the reviewer needs is on the front; no schema, no data, no query to run.
@@ -117,6 +136,14 @@ cards:
   - basic:
       front: "State the one habit that prevents every filtering bug caused by missing values."
       back: "Before you filter a column, ask whether it can be empty. If it can, your condition and its opposite do not add up to the whole table — so decide which side the empty rows belong on and write it into the query. Note what you get if you forget: not an error. A total that is quietly short."
+
+  # ── 4b. THE TWO CLAUSES BEYOND WHERE — a join drops them, a sort only moves them ──
+  - basic:
+      front: "A table of employees has 3 rows. One is the boss, whose <code>manager_id</code> is NULL. You join the table to itself with <code>JOIN employees m ON e.manager_id = m.id</code> to print each person beside their manager. How many rows come back, and what happened?"
+      back: "Two. A join's <code>ON</code> is a comparison exactly like a WHERE: for the boss it evaluates <code>NULL = m.id</code>, which is UNKNOWN, so no pairing is TRUE and that row is dropped — with no error and no warning.<br><br>This is what a nullable foreign key does to every join over it: the rows with an empty key vanish from a result that otherwise looks complete, so the total just looks a little low. <code>LEFT JOIN</code> is what keeps them."
+  - basic:
+      front: "Of everything NULL does to a query — filtering, joining, counting, concatenating — sorting is the odd one out. What makes it different, and what is the catch that still bites?"
+      back: "Sorting is the one place NOTHING IS LOST: <code>ORDER BY</code> on a column full of NULLs returns every row, blanks included. Nothing is dropped and no total changes.<br><br>The catch is WHERE they land. The SQL standard leaves it implementation-defined, so engines differ — the same <code>ORDER BY col DESC</code> can put the blanks first on one database and last on another, and both are correct. A report written against one silently reorders on the other. The fix is to say it yourself: <code>ORDER BY col DESC NULLS LAST</code> (or <code>NULLS FIRST</code>) is standard, portable, and means the same thing everywhere."
 
   # ── 5. IT SPREADS INTO EXPRESSIONS ──
   - basic:

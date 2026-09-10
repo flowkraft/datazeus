@@ -23,7 +23,7 @@ import spock.lang.Unroll
  *   12. nullif-in-stock              — NULLIF, COALESCE backwards
  *   13. unshipped-with-customer-names— the hands-on: last lesson's JOIN, this lesson's IS NULL
  *   14. regions-distinct             — article only: DISTINCT keeps ONE null
- *   15. regions-grouped              — article only: GROUP BY makes ONE group of them
+ *   15. regions-grouped              — the census behind "21 of the 25": ONE group of empties
  *
  * THIS EPISODE IS A CONTRACT WITH EPISODE 40, and the contract is specific. 40 signs off
  * with "those blanks you made today — now find out what they do to a WHERE, because they do
@@ -213,6 +213,44 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     }
 
     @Unroll
+    def "[#engine] the two rows the not-a-value slide draws, cell for cell"() {
+        // THE SLIDE'S TABLE IS NOT backlog-oldest-first.sql, and that is worth stating because
+        // the first version of this assertion assumed it was and went red. That script selects
+        // three columns — "OrderID", "CustomerID", "OrderDate" — and mentions "ShippedDate"
+        // only in its WHERE, so there is no shipped-date cell in its output to be empty.
+        //
+        // The slide needs a FOURTH column, because its whole argument is that two rows are
+        // indistinguishable in the column that matters: Leo says "look at those two, both
+        // shipped dates are empty — they look identical", and that sentence needs the empty
+        // cells visible. So the slide draws the same two orders with the shipped date brought
+        // into the SELECT, and this is that query.
+        //
+        // NO .sql FILE FOR IT, deliberately: the slide shows no code card, so there is nothing
+        // for a learner to type and nothing for the article to include. What must be true is
+        // only that the four cells on screen are the four cells the database returns.
+        given:
+        def rows = sqlFor(engine).rows('''SELECT "OrderID", "CustomerID", "OrderDate", "ShippedDate"
+                                          FROM "Orders"
+                                          WHERE "ShippedDate" IS NULL
+                                          ORDER BY "OrderDate"
+                                          LIMIT 2''')
+
+        expect: "the two oldest unshipped orders, exactly as the slide prints them"
+        rows*.OrderID == [8, 11]
+        rows*.CustomerID == ["ALFKI", "AROUT"]
+        (rows[0].OrderDate as String).startsWith("2022-12-05")
+        (rows[1].OrderDate as String).startsWith("2022-12-26")
+
+        and: "AND BOTH SHIPPED DATES ARE EMPTY, which is the only reason the slide exists —"
+        and: "two rows that are identical in that column and still not equal to each other"
+        rows[0].ShippedDate == null
+        rows[1].ShippedDate == null
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
     def "[#engine] the hands-on query: last lesson's JOIN, this lesson's IS NULL"() {
         given:
         def rows = sqlFor(engine).rows(script("unshipped-with-customer-names"))
@@ -245,6 +283,25 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
         and: "and the 27 missing from both are exactly the orders that never shipped"
         79 - (inYear + before) == 27
         sqlFor(engine).firstRow(script("backlog-is-null")).Unshipped == 27
+
+        and: "THE TWO CONDITIONS REALLY DO PARTITION EVERY DATE, which is what makes the"
+        and: "slide's claim a fact about logic rather than about this month's data. The pair is"
+        and: "`>= X` and `< X` on the SAME X, so no row that has a date can fall between them"
+        and: "and none can fall outside — the only way out is to have no date at all."
+        and: "THIS IS WHY THE SLIDE ASKS 'shipped in 2024 OR LATER' AND NOT 'shipped in 2024'."
+        and: "It used to ask the second while running the first, and it was right only because"
+        and: "nothing in this database shipped after 2024-06-13. Asking for a bounded year —"
+        and: "EXTRACT(YEAR ...) = 2024 — would have moved that assumption rather than removed"
+        and: "it, because 'in 2024' plus 'before 2024' covers everything only while no order"
+        and: "ships later. The unbounded pair needs no such promise, and this proves it."
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
+                                   WHERE "ShippedDate" IS NOT NULL
+                                     AND NOT ( ("ShippedDate" >= DATE '2024-01-01')
+                                            OR ("ShippedDate" <  DATE '2024-01-01') )''').n == 0
+
+        and: "so the two reports together are exactly the orders that HAVE a shipped date"
+        inYear + before == sqlFor(engine).firstRow(
+                'SELECT count("ShippedDate") AS n FROM "Orders"').n
 
         where:
         engine << ENGINES
@@ -293,8 +350,8 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
         given:
         def rows = sqlFor(engine).rows(script("label-broken"))
 
-        expect: "the four rows the article prints — every City present, every Label missing"
-        rows*.City == ["Berlin", "México D.F.", "México D.F.", "London"]
+        expect: "the three rows the article and the slide print — City present, Label missing"
+        rows*.City == ["Berlin", "México D.F.", "México D.F."]
         rows.every { it.Region == null }
         rows.every { it.Label == null }
 
@@ -311,8 +368,7 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     def "[#engine] COALESCE puts the line back"() {
         expect:
         sqlFor(engine).rows(script("label-coalesce"))*.Label ==
-                ["Berlin, no region", "México D.F., no region",
-                 "México D.F., no region", "London, no region"]
+                ["Berlin, no region", "México D.F., no region", "México D.F., no region"]
 
         and: "and every one of the 25 labels survives now, which is the whole fix"
         sqlFor(engine).firstRow('''SELECT count("City" || ', ' || COALESCE("Region", 'no region'))
@@ -509,6 +565,11 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
 
     @Unroll
     def "[#engine] GROUP BY gathers all 21 empty regions into ONE group"() {
+        // NOT ARTICLE-ONLY ANY MORE. The video prints this result whole on `label-question`,
+        // as the stake before the mailing labels break — so the ROW ORDER is on screen too,
+        // and it is pinned below rather than left to the tie-break. The ordering is
+        // deterministic on both engines by construction: the empty group is alone on 21 so
+        // "Customers" DESC settles it first, and the four singletons have distinct names.
         given:
         def rows = sqlFor(engine).rows(script("regions-grouped"))
 
@@ -517,6 +578,9 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
         rows[0].Region == null
         rows[0].Customers == 21
         rows.drop(1)*.Customers == [1, 1, 1, 1]
+
+        and: "in the order the video's card prints them, top to bottom"
+        rows*.Region == [null, "Isle of Wight", "Lara", "OR", "Táchira"]
 
         and: "which totals the whole table — no customer is lost, unlike every WHERE above"
         rows.sum { it.Customers as int } == 25
@@ -557,7 +621,8 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     //
     // THE KOANS DO NOT REUSE THE LESSON'S QUERIES. The lesson works on ORDERS that never
     // shipped and CUSTOMERS with no region; the koans work on the SUPPLIER list (3 of 6 with
-    // no region), the staff list (1 of 3 with no manager) and the shelf. That is the house
+    // no region), the staff list (1 of 3 with no manager) and the shelf. THIRTEEN of them from
+    // 2026-09-09, grouped by the four places the lesson ends on. That is the house
     // convention — pom.xml states it as "the koans are related practice, not a blanked copy
     // of the gate" — and it exists so a learner applies the idea somewhere new instead of
     // retyping a query they just watched.
@@ -609,7 +674,25 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 4: the OR rescue returns five, and the koan's stated numbers are true"() {
+    def "[#engine] koan 4: on the supplier list = '' finds 0, IS NULL finds 3, and <> '' finds 3"() {
+        expect: "not one supplier holds an empty string, so the query people write finds none"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Suppliers"
+                                   WHERE "Region" = '' ''').n == 0
+
+        and: "while the test that answers finds all three"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Suppliers"
+                                   WHERE "Region" IS NULL''').n == 3
+
+        and: "AND THE THIRD PREDICTION, which is the one that catches people: 3, not 6"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Suppliers"
+                                   WHERE "Region" <> '' ''').n == 3
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koan 5: the OR rescue returns five, and the koan's stated numbers are true"() {
         expect: "the solved koan"
         sqlFor(engine).rows('''SELECT s."CompanyName"
                                FROM "Suppliers" s
@@ -637,7 +720,7 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 5: NOT gives 2, and NOT with the rescue gives 5"() {
+    def "[#engine] koan 6: NOT gives 2, and NOT with the rescue gives 5"() {
         expect:
         sqlFor(engine).rows('''SELECT s."CompanyName" FROM "Suppliers" s
                                WHERE NOT (s."Region" = 'Victoria')''').size() == 2
@@ -650,7 +733,53 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 6: COALESCE fills the three empty regions and touches nothing else"() {
+    def "[#engine] koan 7: the self-join on ReportsTo returns two of the three employees"() {
+        // THE NULLABLE FOREIGN KEY, which is the shape a practitioner actually meets. The boss
+        // reports to nobody, so his "ReportsTo" is empty, so his ON is UNKNOWN, so he is gone.
+        expect: "the plain join loses the one whose manager column is empty"
+        sqlFor(engine).rows('''SELECT e."FirstName" AS e, m."FirstName" AS m
+                               FROM "Employees" e
+                               JOIN "Employees" m ON e."ReportsTo" = m."EmployeeID"
+                               ORDER BY e."FirstName"''').collect { [it.e, it.m] } ==
+                [["Janet", "Andrew"], ["Nancy", "Andrew"]]
+
+        and: "there were three employees going in, and a LEFT JOIN is what keeps all three"
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Employees"').n == 3
+        sqlFor(engine).rows('''SELECT e."FirstName" AS e
+                               FROM "Employees" e
+                               LEFT JOIN "Employees" m ON e."ReportsTo" = m."EmployeeID"''').size() == 3
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koan 8: NULLS LAST pins the sort, and it is the same on both engines"() {
+        // THE KOAN TEACHES THE EXPLICIT FORM ON PURPOSE. A bare ORDER BY ... DESC puts the
+        // blanks last on DuckDB and first on PostgreSQL, so a koan asserting the default would
+        // go green for the student and be wrong in CloudBeaver. This asserts on BOTH engines,
+        // which is the proof that the koan's answer is portable.
+        expect:
+        sqlFor(engine).rows('''SELECT "CompanyName" AS c, "Region" AS r
+                               FROM "Suppliers"
+                               ORDER BY "Region" DESC NULLS LAST, "CompanyName"''')
+                .collect { [it.c, it.r] } ==
+                [["Pavlova Ltd", "Victoria"],
+                 ["Grandma Kellys Homestead", "MI"],
+                 ["New Orleans Cajun Delights", "LA"],
+                 ["Exotic Liquids", null],
+                 ["Pasta Buttini s.r.l.", null],
+                 ["Tokyo Traders", null]]
+
+        and: "and nothing was lost on the way — all six are still there"
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Suppliers"').n == 6
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koan 9: COALESCE fills the three empty regions and touches nothing else"() {
         expect:
         sqlFor(engine).rows('''SELECT s."CompanyName", COALESCE(s."Region", 'no region') AS r
                                FROM "Suppliers" s
@@ -668,7 +797,7 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 7: the address line, and the three that vanish without the fix"() {
+    def "[#engine] koan 10: the address line, and the three that vanish without the fix"() {
         expect: "the solved koan"
         sqlFor(engine).rows('''SELECT s."CompanyName",
                                       s."City" || ', ' || COALESCE(s."Region", 'no region') AS w
@@ -691,7 +820,7 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 8: three employees, two with a manager"() {
+    def "[#engine] koan 11: three employees, two with a manager"() {
         given:
         def row = sqlFor(engine).firstRow('''SELECT count(*) AS "Employees",
                                                     count(e."ReportsTo") AS "WithAManager"
@@ -711,7 +840,7 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 9: NULLIF blanks the two zeros and leaves the six alone"() {
+    def "[#engine] koan 12: NULLIF blanks the two zeros and leaves the six alone"() {
         expect:
         sqlFor(engine).rows('''SELECT p."ProductName", NULLIF(p."UnitsInStock", 0) AS "InStock"
                                FROM "Products" p
@@ -727,7 +856,7 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 10: the whole query — the suppliers outside Victoria"() {
+    def "[#engine] koan 13: the whole query — the suppliers outside Victoria"() {
         given: "the query the student writes from scratch: both of today's ideas, in one go"
         def rows = sqlFor(engine).rows('''SELECT s."CompanyName",
                                                  COALESCE(s."Region", 'no region') AS r
@@ -753,6 +882,118 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
         sqlFor(engine).rows('''SELECT s."Region" AS r FROM "Suppliers" s
                                WHERE s."Region" <> 'Victoria'
                                   OR s."Region" IS NULL''').count { it.r == null } == 3
+
+        where:
+        engine << ENGINES
+    }
+
+    // --- 8. THE THREE THINGS PEOPLE ACTUALLY HIT AT WORK ------------------------------------
+    // Added 2026-09-09 with three new slides. Each one is a bug a practitioner meets in a real
+    // project rather than a corner case: looking for blanks with = '', joining on a column that
+    // has blanks in it, and sorting a column that has blanks in it.
+
+    @Unroll
+    def "[#engine] an empty string is NOT a null, and looking for blanks with = '' finds none"() {
+        // THE BUG: somebody wants the customers with no region and writes = ''. It runs, it
+        // returns nothing, and it looks like there are no blanks — the same silent shape as the
+        // episode's opening `= NULL`, but for a completely different reason. `= NULL` is UNKNOWN;
+        // `= ''` is a perfectly ordinary comparison that is FALSE, because a null is not an
+        // empty string. Both come back empty and neither complains.
+        expect: "the dataset has 21 blank regions and NOT ONE empty string"
+        nulls(engine, "Customers", "Region") == 21
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Customers" WHERE "Region" = '' ''').n == 0
+
+        and: "so the query a person actually writes finds none of them"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Customers" WHERE "Region" IS NULL''').n == 21
+
+        and: "AND ITS OPPOSITE IS WORSE — <> '' drops the blanks too, silently: 4, not 25"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Customers" WHERE "Region" <> '' ''').n == 4
+
+        and: "the two are different things to the database, and it will say so"
+        truth(engine, "'' IS NULL") == false
+        truth(engine, "CAST(NULL AS VARCHAR) = ''") == null   // UNKNOWN, not false
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] a join ON a column with blanks in it matches NOTHING, not even blank to blank"() {
+        // THE BUG, AND WHY IT IS THIS PAIR OF COLUMNS. The bundled Northwind has NO nullable
+        // foreign key that is actually null — EmployeeID, ShipVia and CustomerID are 79/79
+        // populated — so there is no honest way to show a broken FK join on this data. What the
+        // data DOES have is two region columns that are mostly empty, and "show me each customer
+        // beside the orders shipped in their own region" is a real question somebody asks.
+        // It comes back with nothing at all, and no warning.
+        given:
+        def customerRegionNulls = nulls(engine, "Customers", "Region")
+        def shipRegionNulls = nulls(engine, "Orders", "ShipRegion")
+
+        expect: "21 of 25 customers and ALL 79 orders have no region"
+        customerRegionNulls == 21
+        shipRegionNulls == 79
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Orders"').n == 79
+
+        and: "so the join returns zero rows — the blanks do not find each other"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n
+                                   FROM "Customers" c
+                                   JOIN "Orders" o ON c."Region" = o."ShipRegion"''').n == 0
+
+        // IS NOT DISTINCT FROM is the operator that DOES treat blank as equal to blank, so the
+        // count it returns is what the plain join would have found if nulls matched. That it is
+        // 21 x 79 rather than 0 is the proof that the join is DROPPING them, not finding none.
+        and: "and if blank did match blank it would be 21 x 79"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n
+                                   FROM "Customers" c
+                                   JOIN "Orders" o
+                                     ON c."Region" IS NOT DISTINCT FROM o."ShipRegion"''').n ==
+                customerRegionNulls * shipRegionNulls
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] ORDER BY does not lose the blanks, and where it puts them is NOT portable"() {
+        // THE BUG: a report sorted by a nullable column looks fine on the machine it was written
+        // on and puts 27 rows somewhere else in production. Unlike everything else in this
+        // lesson nothing is LOST here — which is exactly why it is missed.
+        given:
+        def asc = sqlFor(engine).rows('''SELECT "ShippedDate" AS d FROM "Orders" ORDER BY "ShippedDate"''')
+        def desc = sqlFor(engine).rows('''SELECT "ShippedDate" AS d FROM "Orders" ORDER BY "ShippedDate" DESC''')
+
+        expect: "every row survives the sort — all 79, blanks included"
+        asc.size() == 79
+        desc.size() == 79
+        asc.count { it.d == null } == 27
+
+        and: "ASC agrees on both engines: the 27 blanks go LAST"
+        asc.take(52).every { it.d != null }
+        asc.drop(52).every { it.d == null }
+
+        // DESC IS WHERE THEY PART, AND THIS IS THE WHOLE POINT OF THE SLIDE. Measured
+        // 2026-09-09 on both engines, not taken from either manual:
+        //     DuckDB      ORDER BY … DESC  ->  the 27 blanks come LAST
+        //     PostgreSQL  ORDER BY … DESC  ->  the 27 blanks come FIRST
+        // The SQL standard leaves it implementation-defined, so both are correct and a report
+        // written against one silently reorders on the other. This course has the learner on
+        // BOTH — the koans run on DuckDB, CloudBeaver talks to PostgreSQL — so it is not a
+        // theoretical portability worry, it is something they can see today.
+        // IF THIS ASSERTION EVER FAILS, an engine changed its default: fix the SLIDE, not this.
+        and: "DESC: DuckDB puts the blanks last, PostgreSQL puts them first"
+        if (engine == "duckdb") {
+            assert desc.take(52).every { it.d != null }
+            assert desc.drop(52).every { it.d == null }
+        } else {
+            assert desc.take(27).every { it.d == null }
+            assert desc.drop(27).every { it.d != null }
+        }
+
+        and: "SAYING IT EXPLICITLY IS PORTABLE, and that is the lesson"
+        def explicitLast = sqlFor(engine).rows(
+                '''SELECT "ShippedDate" AS d FROM "Orders" ORDER BY "ShippedDate" DESC NULLS LAST''')
+        explicitLast.take(52).every { it.d != null }
+        explicitLast.drop(52).every { it.d == null }
 
         where:
         engine << ENGINES
