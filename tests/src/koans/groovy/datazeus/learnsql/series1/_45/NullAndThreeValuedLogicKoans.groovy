@@ -359,7 +359,55 @@ class NullAndThreeValuedLogicKoans extends KoanBase {
         ''')
     }
 
-    // 13) The whole query — no scaffolding, and everything above it in one go.
+    // 13) THE AVERAGE HAS A DENOMINATOR, AND IT IS NOT THE ROW COUNT. Koan 11 showed that
+    //     count(*) and count(column) answer different questions. An average is that same
+    //     difference wearing a disguise: it divides by the values it FOUND, and it tells you
+    //     nothing about how many rows it skipped to find them.
+    //     Germany has thirty-two orders on the book. Ten of them have never shipped, so the
+    //     average time to ship is divided by the other twenty-two — and the ten that are
+    //     missing are not counted as zero days, they are not in the sum at all. They are also
+    //     the ten that have taken longest, because they have not arrived.
+    //     Fill in the column, twice: once to count the values, once to average over them.
+    //     (The CAST pair is how a date difference is written so it runs on both engines —
+    //      the same form the lesson's own avg-days-to-ship.sql uses.)
+    //     (Predict first: 32, 22, and a shade under six days.)
+    def "an average divides by the values it found, not the rows"() {
+        expect:
+        shouldReturn([["Germany", 32, 22, 5.95]], '''
+            SELECT o."ShipCountry",
+                   count(*)      AS "Orders",
+                   count(o.___)  AS "Shipped",
+                   round(avg(CAST(o.___ AS DATE) - CAST(o."OrderDate" AS DATE)), 2) AS "AvgDays"
+            FROM "Orders" o
+            WHERE o."ShipCountry" = 'Germany'
+            GROUP BY o."ShipCountry"
+        ''')
+    }
+
+    // 14) THE TWO-SECOND HABIT, and the one to keep from this whole lesson. Every trap above
+    //     started the same way: a column had empty cells and nobody had looked. GROUP BY on
+    //     the column itself answers that before you write a single filter — one pile per
+    //     value, and the empties get a pile of their own with the count printed beside it.
+    //     Twenty-five customers, and you are about to filter them by region. Ask first.
+    //     Fill in the column being grouped.
+    //     (Predict first: FIVE piles, not four — and the biggest one by a long way is the
+    //      pile with nothing in its name. That is the answer to "can this column be empty?",
+    //      and it took one query.)
+    def "ask the column before you filter it"() {
+        expect:
+        shouldReturn([[null, 21],
+                      ["Isle of Wight", 1],
+                      ["Lara", 1],
+                      ["OR", 1],
+                      ["Táchira", 1]], '''
+            SELECT c."Region", count(*) AS "Customers"
+            FROM "Customers" c
+            GROUP BY c.___
+            ORDER BY 2 DESC, 1
+        ''')
+    }
+
+    // 15) The whole query — no scaffolding, and everything above it in one go.
     //     THE QUESTION: which of our suppliers are NOT in Victoria, and where are they?
     //       · not in Victoria                     -> and the ones with no region count too,
     //                                                because we do not know that they ARE

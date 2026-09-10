@@ -17,7 +17,7 @@ Last lesson you made your first empty cells. A `LEFT JOIN` went looking for a ma
 
 Today somebody asks you something that sounds much easier: **which of our orders have not shipped yet?**
 
-You have been writing `WHERE` since lesson 4. The shipped date is the empty one. So you test the shipped date against nothing, run it, and get back **zero rows** — while 27 orders sit in that table unshipped, one of them since December 2022.
+You have been writing `WHERE` since the <a href="/data-academy/learn-sql/where-filtering" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">WHERE, AND/OR/NOT, IN, BETWEEN</a> lesson. The shipped date is the empty one. So you test the shipped date against nothing, run it, and get back **zero rows** — while 27 orders sit in that table unshipped, one of them since December 2022.
 
 Nothing errors. Nothing warns you. The query is not broken; it is answering a different question from the one you think you asked.
 
@@ -52,9 +52,9 @@ If you sent that upstairs you would have reported "we are all caught up", and th
 
 **An empty cell does not hold anything.** Not a zero, not blank text, not a special marker you can compare against. `NULL` is the database recording that *nobody ever wrote a value there*.
 
-So `"ShippedDate" = NULL` is asking whether a value that is not there equals a value that is not there. And the honest answer is not yes, and it is not no.
+So `"ShippedDate" = NULL` puts an equals sign between two things, and neither of them is a value. The honest answer is not yes, and it is not no.
 
-The objection everyone has at this point is a fair one: *both cells are empty, so surely they match.* They do not, and the reason is worth saying carefully. Take two orders with no shipped date. Did they ship on the same day? **You cannot say.** Nobody recorded either one. Two unknowns are not the same thing as each other — they are two things you do not know.
+The objection everyone has at this point is a fair one: *both cells are empty, so surely they match.* They do not, and the reason is worth saying carefully. **An equals sign compares two values**, and neither cell has one — there is nothing in either of them to put side by side. Two empty cells are not a match; they are two cells with nothing in them. So the test cannot come back `TRUE`, and it cannot come back `FALSE` either.
 
 > A `NULL` is not equal to another `NULL`. It is not *unequal* to it either.
 
@@ -90,7 +90,7 @@ WHERE "ShippedDate" IS NULL;
 
 Its partner is `IS NOT NULL`, for the rows that do have a value. Those two are the only correct way to test for a missing value. **Never write `= NULL` or `<> NULL`**: both run, both match nothing, and neither will ever tell you.
 
-You were handed those two words on trust back in lesson 4, and again in lesson 15 and lesson 25. This is the lesson that owed you the reason.
+You have used `IS NULL` a few times already without being told why. The <a href="/data-academy/learn-sql/where-filtering" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">WHERE, AND/OR/NOT, IN, BETWEEN</a> lesson asked you to *park the two words for now*; the <a href="/data-academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">COUNT, SUM, AVG, MIN, MAX</a> lesson asked you to use them and trust them. Now you know what they are for — and why an equals sign was never going to work.
 
 And here is the backlog itself:
 
@@ -130,7 +130,7 @@ LIMIT 5;
 | Du monde entier     | 17      | 2023-02-12 |
 | Frankenversand      | 20      | 2023-03-05 |
 
-Note where the `IS NULL` sits: in the `WHERE`, about the LEFT-hand table. That is the safe placement lesson 40 taught, and it is unaffected by everything on this page.
+Note where the `IS NULL` sits: in the `WHERE`, about the LEFT-hand table. That is the safe placement taught in the <a href="/data-academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">JOINs: INNER, LEFT, RIGHT</a> lesson, and it is unaffected by everything on this page.
 
 ## An empty string is not a blank
 
@@ -240,12 +240,32 @@ The same 34. Not one of the 27 came back.
 
 `AND` and `OR` do have an escape hatch. If one side already settles the answer, the missing value cannot change it, and the database says so:
 
+{/* THE MARKDOWN TABLE IS UNTOUCHED — only the wrapper is new, and that is the whole point.
+    Rewriting this as a JSX table to get a class onto one row LOOKED equivalent and was not:
+    the overrides in components/mdx-components.tsx apply to nodes MARKDOWN produces, not to
+    literal JSX tags, so the JSX version rendered with no borders and no cell padding at all.
+    A wrapper leaves the table as markdown and reaches into it with a descendant selector.
+    EVERY ROW IS ADDRESSED, not just the one that is coloured. The `tr` override stripes the
+    table with `even:bg-muted`, so rows 2 and 4 arrive grey by ACCIDENT of their position. With
+    exactly one row marked, any other shading is noise competing with it — so 2, 3 and 4 are all
+    set back to transparent and the blue is the only colour in the table.
+    nth-child AND NOT first-child, and the selectors are deliberately longer than they need to
+    be: `even:bg-muted` weighs one class plus one pseudo-class, so a plain `[&_tbody_tr]` rule
+    loses to it. Naming tbody AND tr AND the position outweighs the stripe.
+    BLUE, NOT THE BRAND CORAL. --brand is hue 18, and both the video and this article spend
+    that colour on the thing that is WRONG. This row is the one that rescues you, so it takes
+    the "look here" blue the video uses for exactly that job. */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-sky-500/15 [&_tbody_tr:nth-child(1)_td]:font-semibold [&_tbody_tr:nth-child(2)]:bg-transparent [&_tbody_tr:nth-child(3)]:bg-transparent [&_tbody_tr:nth-child(4)]:bg-transparent">
+
 | Expression | Result | Why |
 | ---------- | ------ | --- |
 | `TRUE OR unknown` | **`TRUE`** | one yes is enough |
 | `FALSE AND unknown` | **`FALSE`** | one no is enough |
 | `FALSE OR unknown` | `UNKNOWN` | nothing has decided it |
 | `TRUE AND unknown` | `UNKNOWN` | nothing has decided it |
+
+</div>
 
 That first row is the fix. Bolt an `OR` onto the filter and the empty rows have a way back in:
 
@@ -302,7 +322,8 @@ operator from further down this page:
 ```sql
 SELECT count(*)
 FROM "Customers" c
-JOIN "Orders" o ON c."Region" IS NOT DISTINCT FROM o."ShipRegion";
+JOIN "Orders" o
+  ON c."Region" IS NOT DISTINCT FROM o."ShipRegion";
 ```
 
 `IS NOT DISTINCT FROM` *does* treat blank as equal to blank, and it returns 21 x 79 = **1659**
@@ -320,7 +341,7 @@ a column, ask the same question you ask before you filter on one: *can this be e
 
 So far a missing value has been removing rows. Now it removes something you did not know was at risk.
 
-Back in lesson 20 you glued columns together with `||` and were warned about one thing for later. This is later. Mailing labels — city and region on one line:
+Back in the <a href="/data-academy/learn-sql/distinct-aliases-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Aliases, Expressions &amp; DISTINCT</a> lesson you glued columns together with `||` and were warned about one thing for later. This is later. Mailing labels — city and region on one line:
 
 ```sql file=./scripts/label-broken.sql
 SELECT "City", "Region", "City" || ', ' || "Region" AS "Label"
@@ -391,7 +412,7 @@ But notice what `NULLIF` is really doing: **a zero and a blank are not the same 
 
 ## The numbers you already saw, and now the reason
 
-You met these two counts in lesson 25 and were told they were both correct:
+You met these two counts in the <a href="/data-academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">COUNT, SUM, AVG, MIN, MAX</a> lesson and were told they were both correct:
 
 ```sql file=./scripts/count-star-vs-column.sql
 SELECT count(*) AS "Orders",
@@ -433,7 +454,7 @@ The habit that follows is cheap: **when an average matters, print the count besi
 
 ### And now you can fix the blank tile
 
-Lesson 25 left you with one more empty answer and no cure for it. We have never shipped an order to Japan, so `WHERE` throws away all 79 rows — and the query still comes back with a row:
+The <a href="/data-academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">COUNT, SUM, AVG, MIN, MAX</a> lesson left you with one more empty answer and no cure for it. We have never shipped an order to Japan, so `WHERE` throws away all 79 rows — and the query still comes back with a row:
 
 ```sql file=./scripts/japan-freight-filled.sql
 SELECT count(*) AS "Orders",
@@ -453,7 +474,7 @@ Now you know the word for it. `COALESCE(sum(...), 0)` says *"if there was nothin
 
 **Where you put it decides what it means**, and this is the same rule as the label above, one level up:
 
-```sql
+```sql fragment
 sum(COALESCE("Freight", 0))   -- fills the HOLES IN THE COLUMN. Pointless:
                               -- sum already skips empty cells, so the answer
                               -- is identical either way.
@@ -464,7 +485,7 @@ COALESCE(sum("Freight"), 0)   -- fills the EMPTY ANSWER. This is the one you
 
 Wrap the hole, not the wall around it. Here the hole is the *result*, not the column.
 
-And keep the honesty check from lesson 25 beside it: a `0` you wrote with `COALESCE` and a `0` the data really contained look identical on a slide. If the difference matters — and for "revenue in Japan" it does — the `count(*)` in that same query is what tells the two apart.
+And keep the honesty check from the <a href="/data-academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">COUNT, SUM, AVG, MIN, MAX</a> lesson beside it: a `0` you wrote with `COALESCE` and a `0` the data really contained look identical on a slide. If the difference matters — and for "revenue in Japan" it does — the `count(*)` in that same query is what tells the two apart.
 
 ## The one place NULLs *are* treated as equal
 
@@ -482,9 +503,9 @@ ORDER BY "Region";
 | Lara          |
 | OR            |
 | Táchira       |
-|               |
+| `[NULL]` |
 
-Five rows: four real regions, and **one** row standing for all twenty-one empties. `DISTINCT` did not keep twenty-one of them.
+Five rows: four real regions, and **one** row standing for all twenty-one empties. `DISTINCT` did not keep twenty-one of them. CloudBeaver prints that last row as `[NULL]` — the same marker you will see in the `GROUP BY` below, and the same one it uses everywhere a cell is empty rather than blank.
 
 ```sql file=./scripts/regions-grouped.sql
 SELECT "Region", count(*) AS "Customers"
@@ -508,7 +529,8 @@ The rule underneath both is that `DISTINCT`, `GROUP BY`, `UNION` and `ORDER BY` 
 Then one more twist in the same paragraph, so you are not caught by it:
 
 ```sql
-SELECT count(DISTINCT "Region") FROM "Customers";   -- 4, not 5
+SELECT count(DISTINCT "Region")
+FROM "Customers";   -- 4, not 5
 ```
 
 `count(<column>)` never counts empties, `DISTINCT` or not. So `DISTINCT "Region"` returns five rows and `count(DISTINCT "Region")` says four. Both are right; they are answering "which values appear" and "how many values appear".
@@ -540,11 +562,12 @@ theoretical portability worry. You can see it today. Ascending, the two agree: b
 both, which is worse in its way, because it means the problem only appears the day somebody adds
 `DESC`.
 
-So say it yourself. `NULLS LAST` (or `NULLS FIRST`) is standard, portable, four characters, and it
-makes the sort the same everywhere:
+So say it yourself. `NULLS LAST` (or `NULLS FIRST`) is standard, portable, two extra words, and it
+makes the sort the same everywhere. The query above pinned the blanks to the bottom; say the other
+half of the pair and they go on top instead — on both engines, which is the whole point:
 
-```sql
-ORDER BY "ShippedDate" DESC NULLS LAST
+```sql fragment
+ORDER BY "ShippedDate" DESC NULLS FIRST
 ```
 
 ## Things you will read but rarely write
@@ -559,7 +582,7 @@ ORDER BY "ShippedDate" DESC NULLS LAST
 
 One boundary worth naming, because it uses the same word for a different question.
 
-**Whether a column should allow `NULL` at all** is a design decision, and it belongs to Data Modeling Series 1 · 37. This lesson is about querying data that is already missing. That one is about whether the missing value should ever have been permitted — a `NOT NULL` constraint, a default, a separate table. Same word, different job, and the answer to a query problem is almost never "change the schema".
+**Whether a column should allow `NULL` at all** is a design decision, and it belongs to the <a href="/data-academy/learn-data-modeling" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Data Modeling</a> course — *Nullable, Missing Row or Separate Table*, in its Series 1 · Modeling Fundamentals. This lesson is about querying data that is already missing. That one is about whether the missing value should ever have been permitted — a `NOT NULL` constraint, a default, a separate table. Same word, different job, and the answer to a query problem is almost never "change the schema".
 
 ## What you can do now
 
@@ -574,9 +597,9 @@ There are **four places** to look, and they are the four clauses a column can ap
 
 And whatever the clause: **wrap the piece that can be missing** with `COALESCE` before you concatenate it or do arithmetic with it, or the whole expression comes back empty.
 
-And one question to ask out loud whenever somebody hands you a filter: *what should happen to the rows where we do not know?* SQL will not choose for you — it will just leave them out and say nothing.
+And one question to ask out loud whenever somebody hands you a filter: *what should happen to the rows where this column is empty?* SQL will not choose for you — it will just leave them out and say nothing.
 
-Next lesson: **`SELECT` + `JOIN` + `GROUP BY`** — the last of this series, and the one where every clause you have met turns up in the same query.
+Next lesson: **`SELECT` + `JOIN` + `GROUP BY`** — the last of Series 1 · SQL Fundamentals, and the one where every clause you have met turns up in the same query.
 
 ## The koans: now you write the queries
 
@@ -599,15 +622,15 @@ c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_45\N
 
 Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
 
-The thirteen of them deliberately use **different tables** from everything above — the supplier list, the staff list and the shelf. You cannot answer them by copying a query off this page, which is the point. They are grouped by the same four places this lesson ends on:
+The fifteen of them deliberately use **different tables** from everything above — the supplier list, the staff list and the shelf. You cannot answer them by copying a query off this page, which is the point. They are grouped by the same four places this lesson ends on:
 
 - **Comparing it** — test for an empty cell, predict what `= NULL` really returns, find the rows that *do* have a value, and predict what `= ''` returns, which is nothing for a completely different reason.
-- **Filtering on it** — meet the not-equals trap head on, then predict how little `NOT` helps.
+- **Filtering on it** — meet the not-equals trap head on, predict how little `NOT` helps, then ask a column how many of its cells are empty *before* you write a filter against it.
 - **Joining or sorting on it** — watch a join's `ON` drop the one employee whose manager column is empty, then pin the empties to the bottom of a sort with `NULLS LAST` so the answer means the same thing on both engines.
-- **Printing and counting it** — stand a word in with `COALESCE`, watch one missing piece empty a whole line, count rows against values, and turn a value into a `NULL` on purpose with `NULLIF`.
+- **Printing and counting it** — stand a word in with `COALESCE`, watch one missing piece empty a whole line, count rows against values, see which denominator an average actually divides by, and turn a value into a `NULL` on purpose with `NULLIF`.
 
 The last one is the real exam: a whole query from scratch, needing both the filter fix *and* the output fix at once.
 
 ## What is next
 
-That is the last of the traps. The next lesson is the last of this series, and it is the one everything has been building to: a single question from your manager, answered with one query that filters, joins, groups and adds up all at once — `SELECT` + `JOIN` + `GROUP BY`, and every habit you have picked up on the way.
+That is the last of the traps. The next lesson closes Series 1 · SQL Fundamentals, and it is the one everything has been building to: a single question from your manager, answered with one query that filters, joins, groups and adds up all at once — `SELECT` + `JOIN` + `GROUP BY`, and every habit you have picked up on the way.

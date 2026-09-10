@@ -86,7 +86,7 @@ cards:
 
   - basic:
       front: "Two rows both have an empty <code>ship_date</code>. Is one row's empty date equal to the other's?"
-      back: "No — and it is not unequal either. You do not know what either value is, so you cannot say whether they match. Two unknowns are not the same thing as each other; they are two things you do not know. A NULL is never equal to another NULL."
+      back: "No — and it is not unequal either. An equals sign compares two VALUES, and neither cell has one: there is nothing in either of them to put side by side. Two empty cells are not a match; they are two cells with nothing in them. So the comparison comes back neither TRUE nor FALSE, but UNKNOWN. A NULL is never equal to another NULL."
 
   # ── 2. THE THIRD TRUTH VALUE — the card the rest of the deck rests on ──
   - basic:

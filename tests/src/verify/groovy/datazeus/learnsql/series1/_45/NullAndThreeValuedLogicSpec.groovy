@@ -856,7 +856,63 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 13: the whole query — the suppliers outside Victoria"() {
+    def "[#engine] koan 13: Germany averages over 22 of its 32 orders"() {
+        given: "the koan's own query, in the portable date form both engines share"
+        def row = sqlFor(engine).firstRow('''SELECT o."ShipCountry",
+                                                    count(*)                AS "Orders",
+                                                    count(o."ShippedDate")  AS "Shipped",
+                                                    avg(CAST(o."ShippedDate" AS DATE)
+                                                      - CAST(o."OrderDate"   AS DATE)) AS "AvgDays"
+                                             FROM "Orders" o
+                                             WHERE o."ShipCountry" = 'Germany'
+                                             GROUP BY o."ShipCountry"''')
+
+        expect: "the two numbers the koan asks the student to predict"
+        row.Orders == 32
+        row.Shipped == 22
+
+        and: "5.95 BY VALUE — DuckDB answers with a double, PostgreSQL with a numeric"
+        dec(row.AvgDays).setScale(2, java.math.RoundingMode.HALF_UP) == dec("5.95")
+
+        and: "THE POINT OF THE KOAN: the denominator is the VALUES, never the rows"
+        dec(row.AvgDays).setScale(2, java.math.RoundingMode.HALF_UP) !=
+                dec(row.Orders).setScale(2, java.math.RoundingMode.HALF_UP)
+
+        and: "ten German orders have no shipped date, and they are absent, not zero"
+        row.Orders - row.Shipped == 10
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koan 14: GROUP BY the region gives FIVE piles, and the empties are the biggest"() {
+        given: "the two-second habit the lesson ends on, asked of the customer list"
+        def rows = sqlFor(engine).rows('''SELECT c."Region" AS r, count(*) AS n
+                                          FROM "Customers" c
+                                          GROUP BY c."Region"
+                                          ORDER BY 2 DESC, 1''')
+
+        expect: "FIVE, not four — the empties get a pile of their own"
+        rows.size() == 5
+
+        and: "and it is much the biggest, which is the answer to can-this-column-be-empty"
+        rows[0].r == null
+        rows[0].n == 21
+
+        and: "the four that do carry a region, one customer each"
+        rows.drop(1).collect { [it.r, it.n as int] } ==
+                [["Isle of Wight", 1], ["Lara", 1], ["OR", 1], ["Táchira", 1]]
+
+        and: "the pile total is the whole table — GROUP BY loses nothing"
+        rows.sum { it.n as int } == 25
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] koan 15: the whole query — the suppliers outside Victoria"() {
         given: "the query the student writes from scratch: both of today's ideas, in one go"
         def rows = sqlFor(engine).rows('''SELECT s."CompanyName",
                                                  COALESCE(s."Region", 'no region') AS r
