@@ -840,16 +840,46 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 12: NULLIF blanks the two zeros and leaves the six alone"() {
-        expect:
-        sqlFor(engine).rows('''SELECT p."ProductName", NULLIF(p."UnitsInStock", 0) AS "InStock"
-                               FROM "Products" p
-                               ORDER BY p."UnitsInStock", p."ProductName"
-                               LIMIT 3''')
-                .collect { [it.ProductName, it.InStock == null ? null : it.InStock as int] } ==
-                [["Gorgonzola Telino", null],
-                 ["Thuringer Rostbratwurst", null],
-                 ["Scottish Longbreads", 6]]
+    def "[#engine] koan 12: NULLIF gives the division nothing to divide by, instead of a zero"() {
+        given: "how far ahead each line is sold — units on order over units on the shelf"
+        // WHY THE KOAN DIVIDES RATHER THAN JUST PRINTING NULLIF's OUTPUT. Printing it shows
+        // WHAT the function returns; dividing shows WHY anyone would want it. Gorgonzola
+        // Telino has 70 on order and 0 in stock, and "70 divided by nothing" has no answer —
+        // so the honest result is an empty cell, which is exactly what NULLIF arranges.
+        //
+        // `* 1.0` IS LOAD-BEARING AND MUST NOT BE TIDIED AWAY. Both columns are SMALLINT, and
+        // PostgreSQL's `/` on two integers is INTEGER division — 10/6 would come back 1, not
+        // 1.67, and the koan would teach a wrong number on one engine and the right one on the
+        // other. Multiplying by 1.0 makes it numeric on PostgreSQL and double on DuckDB, and
+        // round(...,2) then agrees. This is also why the comparison below is BY VALUE.
+        def rows = sqlFor(engine).rows('''SELECT p."ProductName" AS n,
+                                                 p."UnitsOnOrder" AS o,
+                                                 p."UnitsInStock" AS s,
+                                                 round(p."UnitsOnOrder" * 1.0
+                                                       / NULLIF(p."UnitsInStock", 0), 2) AS t
+                                          FROM "Products" p
+                                          WHERE p."UnitsOnOrder" > 0
+                                          ORDER BY p."ProductName"''')
+
+        expect: "six lines are on order"
+        rows.size() == 6
+
+        and: "the one with nothing on the shelf comes back with NO answer, and is still a row"
+        def g = rows.find { it.n == "Gorgonzola Telino" }
+        g.o as int == 70
+        g.s as int == 0
+        g.t == null
+
+        and: "EMPTY IS NOT ZERO: a zero here would claim the line is not sold ahead at all"
+        g.t != 0
+
+        and: "every other line divides normally"
+        rows.findAll { it.t != null }.collect { [it.n, dec(it.t).setScale(2, java.math.RoundingMode.HALF_UP)] } ==
+                [["Aniseed Syrup", dec("5.38")],
+                 ["Chang", dec("2.35")],
+                 ["Gnocchi di nonna Alice", dec("0.48")],
+                 ["Queso Cabrales", dec("1.36")],
+                 ["Scottish Longbreads", dec("1.67")]]
 
         where:
         engine << ENGINES
@@ -886,26 +916,35 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 14: GROUP BY the region gives FIVE piles, and the empties are the biggest"() {
-        given: "the two-second habit the lesson ends on, asked of the customer list"
-        def rows = sqlFor(engine).rows('''SELECT c."Region" AS r, count(*) AS n
-                                          FROM "Customers" c
-                                          GROUP BY c."Region"
-                                          ORDER BY 2 DESC, 1''')
+    def "[#engine] koan 14: the missing postcodes are not spread out, they are two whole markets"() {
+        given: "the two-second habit, asked of the column a mailing would join on"
+        // THIS USED TO BE `GROUP BY "Customers"."Region"`, WHICH WAS THE ARTICLE'S OWN QUERY
+        // (scripts/regions-grouped.sql) down to the alias — a koan you could answer by
+        // scrolling up the lesson page, which is precisely what koans are not for. The idea
+        // is unchanged: interrogate a column BEFORE you filter or join on it. What changed is
+        // that it now asks a question the lesson never asks, of a column the lesson never
+        // touches — and the answer is more useful than a total, because it says WHICH rows go.
+        def rows = sqlFor(engine).rows('''SELECT s."Country" AS c,
+                                                 count(*) AS n,
+                                                 count(*) - count(s."PostalCode") AS missing
+                                          FROM "Suppliers" s
+                                          GROUP BY s."Country"
+                                          ORDER BY 3 DESC, 1''')
 
-        expect: "FIVE, not four — the empties get a pile of their own"
-        rows.size() == 5
+        expect: "five countries supply us"
+        rows.collect { [it.c, it.n as int, it.missing as int] } ==
+                [["USA", 2, 2], ["UK", 1, 1], ["Australia", 1, 0], ["Italy", 1, 0], ["Japan", 1, 0]]
 
-        and: "and it is much the biggest, which is the answer to can-this-column-be-empty"
-        rows[0].r == null
-        rows[0].n == 21
+        and: "THE POINT: the three gaps are not one-per-country, they are ALL of two countries"
+        rows.findAll { (it.missing as int) > 0 }.every { (it.missing as int) == (it.n as int) }
 
-        and: "the four that do carry a region, one customer each"
-        rows.drop(1).collect { [it.r, it.n as int] } ==
-                [["Isle of Wight", 1], ["Lara", 1], ["OR", 1], ["Táchira", 1]]
+        and: "so a join on the postcode keeps four suppliers and silently drops three"
+        rows.sum { it.missing as int } == 3
+        rows.sum { it.n as int } == 6
 
-        and: "the pile total is the whole table — GROUP BY loses nothing"
-        rows.sum { it.n as int } == 25
+        and: "the count(*) - count(column) arithmetic is the same three the direct test finds"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Suppliers"
+                                   WHERE "PostalCode" IS NULL''').n == 3
 
         where:
         engine << ENGINES
@@ -969,6 +1008,12 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
         truth(engine, "'' IS NULL") == false
         truth(engine, "CAST(NULL AS VARCHAR) = ''") == null   // UNKNOWN, not false
 
+        and: "AND THE ARTICLE'S OWN SCRIPT, RUN AS WRITTEN, agrees — see the note on script()"
+        // Read off disk rather than re-typed. The assertions above prove the CLAIM; this one
+        // proves the FILE the reader copies still makes it. Its column is aliased `= ''`,
+        // which is not a legal accessor, so take it positionally.
+        sqlFor(engine).firstRow(script("region-empty-string")).getAt(0) == 0
+
         where:
         engine << ENGINES
     }
@@ -1004,6 +1049,9 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
                                    JOIN "Orders" o
                                      ON c."Region" IS NOT DISTINCT FROM o."ShipRegion"''').n ==
                 customerRegionNulls * shipRegionNulls
+
+        and: "AND THE ARTICLE'S OWN SCRIPT, RUN AS WRITTEN, returns the same nothing"
+        sqlFor(engine).firstRow(script("join-on-blank-regions")).Rows == 0
 
         where:
         engine << ENGINES
@@ -1051,12 +1099,156 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
         explicitLast.take(52).every { it.d != null }
         explicitLast.drop(52).every { it.d == null }
 
+        and: "AND THE ARTICLE'S OWN SCRIPT, RUN AS WRITTEN, sorts the same way on both engines"
+        // The script carries the explicit NULLS LAST, which is precisely why it is portable
+        // and why it is safe to assert one ordering here for both engines.
+        def fromScript = sqlFor(engine).rows(script("shipped-date-sorted"))
+        fromScript.size() == 79
+        fromScript.take(52).every { it.ShippedDate != null }
+        fromScript.drop(52).every { it.ShippedDate == null }
+
+        where:
+        engine << ENGINES
+    }
+
+    // --- 9. THE KOAN FILE ITSELF, RUN AS WRITTEN --------------------------------------------
+    //
+    // WHY THIS EXISTS, AND THE DAY IT WOULD HAVE PAID FOR ITSELF. Every `koan N:` feature above
+    // asserts the ANSWER a koan should produce — but each of them RE-TYPES the koan's query,
+    // with its own aliases. So the spec proved the answer was right while never checking that
+    // the koan file still asked that question. On 2026-09-11 two koans were found to be the
+    // lesson's own queries with one word blanked (koan 12 was scripts/nullif-in-stock.sql, koan
+    // 14 was scripts/regions-grouped.sql), were rewritten, and NOTHING IN THIS SPEC NOTICED —
+    // it went green against queries that no longer existed in the koans file.
+    //
+    // WHAT THIS DOES INSTEAD. It reads NullAndThreeValuedLogicKoans.groovy off disk, pulls out
+    // each koan's own SQL and its own declared expected rows, substitutes the intended answer
+    // for the `___`, runs it, and compares. The koan file becomes the source of truth the way
+    // scripts/*.sql already is via script(), so a koan whose query changes must either still
+    // return what it claims or fail here, loudly, on BOTH engines.
+    //
+    // THE ANSWER TABLE IS THE ONLY THING WRITTEN DOWN TWICE, and it has to be: the blank is by
+    // definition not in the file. Keep it in koan order; a missing entry fails the feature
+    // rather than silently skipping, which is the point.
+
+    @Unroll
+    def "[#engine] koan file, as written: '#title' runs and returns exactly what it claims"() {
+        given: "the koan's own text, with the intended answer where the learner's blank is"
+        def sql = koanSql(title)
+
+        expect:
+        rowsOf(engine, sql) == koanExpected(title)
+
+        where:
+        [engine, title] << [ENGINES, ANSWERS.keySet() as List].combinations()
+    }
+
+    @Unroll
+    def "[#engine] koan file, as written: the three PREDICT koans' queries still run"() {
+        // These three blank a predicted NUMBER rather than a piece of SQL, so their queries are
+        // already complete in the file. Nothing to substitute — but they still have to run, and
+        // the counts they ask the learner to predict are asserted in their own features above.
+        expect:
+        PREDICT_KOANS.every { t -> koanQueries(t).every { q -> rowsOf(engine, q) != null } }
+
+        and: "and there really are three of them, so a fourth cannot appear unnoticed"
+        PREDICT_KOANS.size() == 3
+
         where:
         engine << ENGINES
     }
 
     // --- helpers ---------------------------------------------------------------
     // Paths are relative to the tests/ module dir (where `mvn` runs).
+
+    /** The koans file, read the same way script() reads the lesson's SQL. */
+    private static String koansSource() {
+        new File("src/koans/groovy/datazeus/learnsql/series1/_45/NullAndThreeValuedLogicKoans.groovy").text
+    }
+
+    /** One koan's source, from `def "title"()` to the end of its body. */
+    private static String koanBody(String title) {
+        def src = koansSource()
+        int at = src.indexOf('def "' + title + '"()')
+        assert at >= 0: "no koan titled '${title}' in the koans file — it was renamed or removed"
+        int next = src.indexOf('\n    def "', at + 1)
+        next < 0 ? src.substring(at) : src.substring(at, next)
+    }
+
+    /** Every ''' … ''' SQL literal inside one koan. */
+    private static List<String> koanQueries(String title) {
+        (koanBody(title) =~ /(?s)'''(.*?)'''/).collect { it[1] }
+    }
+
+    /**
+     * THE INTENDED ANSWER FOR EACH BLANK, in the order the blanks appear in that koan's SQL.
+     * A koan with two blanks needs two entries (koan 13 asks for the same column twice).
+     */
+    private static final Map<String, List<String>> ANSWERS = [
+            "the test for an empty cell is two words, not an equals sign": ["IS NULL"],
+            "the other half of the pair: the rows that do have a value"  : ["IS NOT NULL"],
+            "the trap: a not-equals filter leaves the empty rows out"    : ["OR"],
+            "an ON is a comparison too, so a join drops the empty ones"  : ['"EmployeeID"'],
+            "a sort keeps every row, but you must say where the empties go": ["NULLS LAST"],
+            "give the empty cell something to stand in for it"           : ["COALESCE"],
+            // The koan says "write the whole middle of that expression" — so the answer is the
+            // FIXED expression, not the bare column. A bare s."Region" is what the learner is
+            // being shown to avoid, and it empties three of the six lines end to end.
+            "one missing piece empties the whole line"                   : ['''COALESCE(s."Region", 'no region')'''],
+            "count(*) counts rows, count(column) counts values"          : ['"ReportsTo"'],
+            "NULLIF is COALESCE backwards"                               : ["NULLIF"],
+            "an average divides by the values it found, not the rows"    : ['"ShippedDate"', '"ShippedDate"'],
+            "ask the column before you filter it"                        : ['"PostalCode"'],
+            "write the whole query: the suppliers outside Victoria"      : ['''
+                SELECT s."CompanyName", COALESCE(s."Region", 'no region')
+                FROM "Suppliers" s
+                WHERE s."Region" <> 'Victoria' OR s."Region" IS NULL
+                ORDER BY s."CompanyName"
+            '''],
+    ]
+
+    /** The koans whose blank is a predicted value rather than a piece of SQL. */
+    private static final List<String> PREDICT_KOANS = [
+            "predict: what an equals sign against NULL really returns",
+            "predict: an empty string is a value, and a missing one is not",
+            "predict: NOT does not rescue you either",
+    ]
+
+    /** One koan's SQL with its blanks filled in, ready to run. */
+    private static String koanSql(String title) {
+        def qs = koanQueries(title)
+        assert qs.size() == 1: "koan '${title}' has ${qs.size()} queries; this helper expects one"
+        def sql = qs[0]
+        def answers = ANSWERS[title]
+        int found = sql.count("___")
+        assert found == answers.size():
+                "koan '${title}' has ${found} blank(s) but the answer table has ${answers.size()}"
+        answers.each { a -> sql = sql.replaceFirst(/___/, java.util.regex.Matcher.quoteReplacement(a)) }
+        sql
+    }
+
+    /** The rows the koan file itself declares, parsed out of its own shouldReturn(...) call. */
+    private static List koanExpected(String title) {
+        def m = (koanBody(title) =~ /(?s)shouldReturn\(\s*(\[.*?\])\s*,\s*'''/)
+        assert m.find(): "koan '${title}' does not declare its expected rows with shouldReturn"
+        // Through the SAME normaliser as the live rows, or 5.38 would not equal 5.3800.
+        (Eval.me(m.group(1)) as List).collect { row -> (row as List).collect { plain(it) } }
+    }
+
+    /** Run a query and reduce it to plain positional values, comparable across both engines. */
+    private List rowsOf(String engine, String sql) {
+        sqlFor(engine).rows(sql).collect { r -> (0..<r.size()).collect { i -> plain(r.getAt(i)) } }
+    }
+
+    /**
+     * ONE SHAPE FOR BOTH ENGINES. DuckDB and PostgreSQL disagree about the Java type behind the
+     * same value — Integer vs Long vs BigDecimal, and different scales for the same decimal — so
+     * every number becomes a scale-stripped BigDecimal before anything is compared. Without this
+     * the feature would fail on 5.38 vs 5.3800 and teach nothing.
+     */
+    private static Object plain(Object v) {
+        v == null ? null : (v instanceof Number ? dec(v) : v)
+    }
 
     private static String script(String name) {
         new File("../courses/learnsql/series1-fundamentals/45-null-and-three-valued-logic/scripts/${name}.sql").text

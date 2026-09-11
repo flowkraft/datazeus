@@ -19,13 +19,19 @@ import spock.lang.Stepwise
  *
  * ── THESE ARE NOT THE LESSON'S QUERIES ──────────────────────────────────────
  *
- * Same ten ideas, in the same order, asked about a different part of the business.
+ * Same ideas, in the same order, asked about a different part of the business.
  * The lesson works on ORDERS that have not shipped and CUSTOMERS with no region;
- * here you work on the SUPPLIER list, the staff list and the shelf. Copying a query
- * across from the video will not work — which is the point. You learn the idea by
- * applying it somewhere new, not by retyping an answer you just watched.
+ * here you mostly work on the SUPPLIER list, the staff list and the shelf. Copying a
+ * query across from the video will not work — which is the point. You learn the idea
+ * by applying it somewhere new, not by retyping an answer you just watched.
  *
- * THIRTEEN KOANS, EASIEST FIRST, IN THE ORDER THE LESSON BUILDS THEM. They are grouped by
+ * ONE OF THEM DOES USE "Orders" (koan 13), because the question it asks — what an average
+ * actually divided by — needs a column with enough missing values for the gap between the
+ * row count and the value count to be worth seeing. It is not a query from the lesson: the
+ * lesson averages every order, this one groups one country and prints the two counts beside
+ * the average so you can watch the denominator.
+ *
+ * FIFTEEN KOANS, EASIEST FIRST, IN THE ORDER THE LESSON BUILDS THEM. They are grouped by
  * the FOUR PLACES a missing value changes an answer, which is the shape the lesson ends on:
  *
  *   COMPARING IT
@@ -43,8 +49,10 @@ import spock.lang.Stepwise
  *   9    COALESCE — give the empty cell something to stand in for it
  *  10    one missing piece empties the whole line
  *  11    count(*) counts ROWS; count(column) counts VALUES
- *  12    NULLIF — COALESCE backwards
- *  13    the whole query, written from scratch
+ *  12    NULLIF — COALESCE backwards, and the division it saves
+ *  13    an average divides by the VALUES it found, not the rows it read
+ *  14    ask the column WHERE it is empty before you write a filter against it
+ *  15    the whole query, written from scratch
  *
  * These run on DuckDB. Every one is written so it returns the SAME answer against the
  * PostgreSQL in CloudBeaver.
@@ -60,12 +68,12 @@ import spock.lang.Stepwise
  *
  * ── RELEVANT SCHEMA ─────────────────────────────────────────────────────────
  *
- * The three tables these koans use, in full, so you can write a query without leaving
+ * The four tables these koans use, in full, so you can write a query without leaving
  * this file. The counts of what is MISSING are given because they are the whole point
  * of the lesson — you cannot reason about a filter until you know how many rows have
  * nothing in the column it tests.
  *
- *   "Suppliers" — 6 rows, 13 columns. "Region" is EMPTY on 3 of the 6 and filled on
+ *   "Suppliers" — 6 rows, 12 columns. "Region" is EMPTY on 3 of the 6 and filled on
  *   the other 3 ('LA', 'MI', 'Victoria'). "PostalCode" is empty on 3. "Fax" and
  *   "HomePage" are empty on ALL SIX — not one supplier has given us either.
  *     "SupplierID"      INTEGER        "CompanyName"     VARCHAR
@@ -74,9 +82,8 @@ import spock.lang.Stepwise
  *     "Region"          VARCHAR        "PostalCode"      VARCHAR
  *     "Country"         VARCHAR        "Phone"           VARCHAR
  *     "Fax"             VARCHAR        "HomePage"        VARCHAR
- *     "Email"           VARCHAR
  *
- *   "Employees" — 3 rows, 20 columns. Only the ones you need are listed. "ReportsTo"
+ *   "Employees" — 3 rows, 18 columns. Only the ones you need are listed. "ReportsTo"
  *   holds the "EmployeeID" of that person's manager, and it is EMPTY on exactly one
  *   row — because that person is the boss and reports to nobody.
  *     "EmployeeID"      INTEGER        "FirstName"       VARCHAR
@@ -84,13 +91,26 @@ import spock.lang.Stepwise
  *     "ReportsTo"       INTEGER        "Country"         VARCHAR
  *
  *   "Products" — 20 rows, 10 columns. "UnitsInStock" is how many we have on the shelf
- *   right now. It is never empty — but it IS zero on exactly two lines, which is a
- *   different thing, and koan 12 is about turning one into the other.
+ *   right now and "UnitsOnOrder" is how many are already sold. "UnitsInStock" is never
+ *   empty — but it IS zero on exactly two lines, which is a different thing, and koan 12
+ *   is about turning one into the other so a division has something honest to say.
  *     "ProductID"       INTEGER        "ProductName"     VARCHAR
  *     "SupplierID"      INTEGER        "CategoryID"      INTEGER
  *     "QuantityPerUnit" VARCHAR        "UnitPrice"       DECIMAL(19,4)
  *     "UnitsInStock"    SMALLINT       "UnitsOnOrder"    SMALLINT
  *     "ReorderLevel"    SMALLINT       "Discontinued"    BOOLEAN
+ *
+ *   "Orders" — 79 rows, 14 columns. Used by koan 13. "ShippedDate" is EMPTY on 27 of the
+ *   79 — those orders have not shipped, and that is the column the whole lesson turns on.
+ *   "ShipRegion" is empty on ALL 79. "OrderDate" and "Freight" are never empty, which is
+ *   why koan 13 can divide by one and not the other.
+ *     "OrderID"         INTEGER        "CustomerID"      VARCHAR
+ *     "EmployeeID"      INTEGER        "OrderDate"       TIMESTAMP
+ *     "RequiredDate"    TIMESTAMP      "ShippedDate"     TIMESTAMP
+ *     "ShipVia"         INTEGER        "Freight"         DECIMAL(10,4)
+ *     "ShipName"        VARCHAR        "ShipAddress"     VARCHAR
+ *     "ShipCity"        VARCHAR        "ShipRegion"      VARCHAR
+ *     "ShipPostalCode"  VARCHAR        "ShipCountry"     VARCHAR
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait (the path to enlightenment)
 class NullAndThreeValuedLogicKoans extends KoanBase {
@@ -340,22 +360,34 @@ class NullAndThreeValuedLogicKoans extends KoanBase {
     }
 
     // 12) COALESCE BACKWARDS. That one swapped an empty cell for a value; this one swaps a
-    //    value for an empty cell — it returns NULL when its two arguments are equal, and the
-    //    original value otherwise.
-    //    Two lines in the catalogue are at zero stock. Turn that zero into a genuine "nothing
-    //    here" so a later calculation cannot divide by it. Fill in the function.
-    //    (Predict first: two empty cells and a 6. And be clear about what you are doing —
-    //     zero and empty are NOT the same thing, which is exactly why the swap has to be
-    //     asked for by name rather than happening on its own.)
+    //     value for an empty cell — it returns NULL when its two arguments are equal, and the
+    //     original value otherwise. Written down like that it sounds like a party trick, so
+    //     here is the job it actually does.
+    //     The buyer wants to know how far ahead we have sold: units ON ORDER divided by units
+    //     IN STOCK. "Gorgonzola Telino" has seventy on order and NOTHING on the shelf — and
+    //     dividing by zero is not a large number, it is not a number at all.
+    //     WITHOUT THE GUARD THE TWO ENGINES FAIL DIFFERENTLY, AND BOTH FAILURES ARE WORSE THAN
+    //     AN EMPTY CELL. CloudBeaver's PostgreSQL stops the whole query with "division by
+    //     zero" — no report at all. DuckDB does not stop: it hands back `inf`, a value that
+    //     will sail into a spreadsheet looking like data. Blank the zero out instead and both
+    //     engines agree on the honest answer: the row still comes back, with nothing in that
+    //     cell, because the question genuinely has no answer. Fill in the function.
+    //     (Predict first: five real ratios and one empty cell. Note WHICH row goes empty —
+    //      it is the one you would most want to ask about, which is the point. An empty cell
+    //      here means "this question has no answer", not "we have none left".)
     def "NULLIF is COALESCE backwards"() {
         expect:
-        shouldReturn([["Gorgonzola Telino", null],
-                      ["Thuringer Rostbratwurst", null],
-                      ["Scottish Longbreads", 6]], '''
-            SELECT p."ProductName", ___(p."UnitsInStock", 0) AS "InStock"
+        shouldReturn([["Aniseed Syrup", 70, 13, 5.38],
+                      ["Chang", 40, 17, 2.35],
+                      ["Gnocchi di nonna Alice", 10, 21, 0.48],
+                      ["Gorgonzola Telino", 70, 0, null],
+                      ["Queso Cabrales", 30, 22, 1.36],
+                      ["Scottish Longbreads", 10, 6, 1.67]], '''
+            SELECT p."ProductName", p."UnitsOnOrder", p."UnitsInStock",
+                   round(p."UnitsOnOrder" * 1.0 / ___(p."UnitsInStock", 0), 2) AS "TimesOver"
             FROM "Products" p
-            ORDER BY p."UnitsInStock", p."ProductName"
-            LIMIT 3
+            WHERE p."UnitsOnOrder" > 0
+            ORDER BY p."ProductName"
         ''')
     }
 
@@ -385,25 +417,31 @@ class NullAndThreeValuedLogicKoans extends KoanBase {
     }
 
     // 14) THE TWO-SECOND HABIT, and the one to keep from this whole lesson. Every trap above
-    //     started the same way: a column had empty cells and nobody had looked. GROUP BY on
-    //     the column itself answers that before you write a single filter — one pile per
-    //     value, and the empties get a pile of their own with the count printed beside it.
-    //     Twenty-five customers, and you are about to filter them by region. Ask first.
-    //     Fill in the column being grouped.
-    //     (Predict first: FIVE piles, not four — and the biggest one by a long way is the
-    //      pile with nothing in its name. That is the answer to "can this column be empty?",
-    //      and it took one query.)
+    //     started the same way: a column had empty cells and nobody had looked.
+    //     You are about to post the suppliers a form, which means joining on "PostalCode" —
+    //     and koan 7 showed you what a join does to a row whose key is empty. So ask the
+    //     column first, and ask it PER COUNTRY, because the answer you need is not "how many
+    //     are missing" but WHICH SUPPLIERS YOU WOULD LOSE. Subtract the values from the rows:
+    //     count(*) counts every row, count(column) counts only the ones with something in it,
+    //     so the difference is exactly what a filter or a join would drop. Fill in the column
+    //     you are about to trust.
+    //     (Predict first: the gaps are NOT spread evenly. Two of the five countries account
+    //      for every missing postcode, and in both of them it is missing for EVERY supplier
+    //      we have there — so the mailing would quietly skip two whole markets and still
+    //      look like it worked.)
     def "ask the column before you filter it"() {
         expect:
-        shouldReturn([[null, 21],
-                      ["Isle of Wight", 1],
-                      ["Lara", 1],
-                      ["OR", 1],
-                      ["Táchira", 1]], '''
-            SELECT c."Region", count(*) AS "Customers"
-            FROM "Customers" c
-            GROUP BY c.___
-            ORDER BY 2 DESC, 1
+        shouldReturn([["USA", 2, 2],
+                      ["UK", 1, 1],
+                      ["Australia", 1, 0],
+                      ["Italy", 1, 0],
+                      ["Japan", 1, 0]], '''
+            SELECT s."Country",
+                   count(*)                 AS "Suppliers",
+                   count(*) - count(s.___)  AS "NoPostcode"
+            FROM "Suppliers" s
+            GROUP BY s."Country"
+            ORDER BY 3 DESC, 1
         ''')
     }
 

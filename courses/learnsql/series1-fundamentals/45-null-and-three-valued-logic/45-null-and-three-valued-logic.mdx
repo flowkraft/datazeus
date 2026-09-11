@@ -622,10 +622,10 @@ c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_45\N
 
 Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
 
-The fifteen of them deliberately use **different tables** from everything above — the supplier list, the staff list and the shelf. You cannot answer them by copying a query off this page, which is the point. They are grouped by the same four places this lesson ends on:
+The fifteen of them deliberately use **different tables** from everything above — mostly the supplier list, the staff list and the shelf, with one that comes back to the order book to watch what an average divided by. You cannot answer them by copying a query off this page, which is the point. They are grouped by the same four places this lesson ends on:
 
 - **Comparing it** — test for an empty cell, predict what `= NULL` really returns, find the rows that *do* have a value, and predict what `= ''` returns, which is nothing for a completely different reason.
-- **Filtering on it** — meet the not-equals trap head on, predict how little `NOT` helps, then ask a column how many of its cells are empty *before* you write a filter against it.
+- **Filtering on it** — meet the not-equals trap head on, predict how little `NOT` helps, then ask a column *where* it is empty before you write a filter against it — and find that the gaps are not spread evenly at all.
 - **Joining or sorting on it** — watch a join's `ON` drop the one employee whose manager column is empty, then pin the empties to the bottom of a sort with `NULLS LAST` so the answer means the same thing on both engines.
 - **Printing and counting it** — stand a word in with `COALESCE`, watch one missing piece empty a whole line, count rows against values, see which denominator an average actually divides by, and turn a value into a `NULL` on purpose with `NULLIF`.
 
