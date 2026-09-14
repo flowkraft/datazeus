@@ -1,0 +1,3 @@
+# The image copies nothing from the build context (the repository is mounted at run time),
+# so send none of it — tests/target/ alone can be large.
+*

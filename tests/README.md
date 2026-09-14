@@ -57,3 +57,19 @@ SQL is authored once under `courses/learnsql/.../scripts/` and verified here —
 
 > After **moving/renaming** koan packages, run `mvn clean` once — stale `.class` files
 > from the old location would otherwise still be picked up.
+
+## Run with only Docker installed (no Java)
+`tests/Dockerfile` carries the toolchain this module pins (JDK 17, Maven 3.9.9, Groovy 4.0.22).
+From the repository root:
+
+```bash
+docker build -t datazeus-tests tests
+docker run --rm -v "$PWD":/datazeus -v datazeus-m2:/root/.m2 \
+  -v /var/run/docker.sock:/var/run/docker.sock --network host \
+  datazeus-tests -B test                 # the gate: DuckDB + a throwaway PostgreSQL
+```
+Mount the whole repository, because the specs read `courses/**/scripts/*.sql`. The Docker socket lets
+Testcontainers start the PostgreSQL half, seeded from the DuckDB file. Add `-e PGHOST=localhost` to
+check against a Northwind PostgreSQL that is already running instead, or `-Pkoans` to run the koans.
+More in the Dockerfile header.
+
