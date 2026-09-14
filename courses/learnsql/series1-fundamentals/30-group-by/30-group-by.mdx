@@ -23,14 +23,7 @@ Every one of those is the same shape — *one number per something* — and one 
 
 By the end of this lesson you will be able to produce a report with one row per customer, per country, per month or per anything you can compute — and you will be able to spot the two ways such a report quietly starts answering a different question than the one on its heading.
 
-Every query below runs on the Northwind sample database that ships with DataPallas.
-
-**Open the koans before you read on.** There is a koan for every idea here — a query with a blank for you to fill in. They ask about a *different table* on purpose, so you cannot copy an answer off the page.
-
-```powershell
-cd c:/DataPallas/db/datazeus
-.\zeus.bat koans learnsql series1 _30
-```
+Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
 ## The hard way, and why it runs out
 
@@ -54,7 +47,7 @@ Stop and look at what that actually is. Ten queries that differ by a single word
 
 ## GROUP BY: say what a group is
 
-```sql file=./scripts/orders-per-country.sql
+```sql file=./scripts/orders-per-country.sql {3-4}
 SELECT "ShipCountry", count(*) AS "OrderCount"
 FROM "Orders"
 GROUP BY "ShipCountry"
@@ -125,7 +118,7 @@ Read down the first column and Germany dominates. Read across the last one and s
 
 The result of a `GROUP BY` is a table like any other, so everything from the sorting lesson still applies to it — including sorting by a number that did not exist until you invented it.
 
-```sql file=./scripts/orders-per-country-ranked.sql
+```sql file=./scripts/orders-per-country-ranked.sql {4}
 SELECT "ShipCountry", count(*) AS "OrderCount"
 FROM "Orders"
 GROUP BY "ShipCountry"
@@ -151,7 +144,7 @@ Somebody reads that report and asks a perfectly fair question: **which cities ar
 
 Before you read on, decide what happens. `"ShipCity"` is a real column, in the same table as the others, and nothing else was touched. Does asking for one more column break anything?
 
-```sql file=./scripts/country-with-city.sql
+```sql file=./scripts/country-with-city.sql {3}
 SELECT "ShipCountry", "ShipCity", count(*) AS "OrderCount"
 FROM "Orders"
 GROUP BY "ShipCountry";
@@ -243,7 +236,7 @@ Ask it before you add the column, not after. Ten rows and twenty-four rows are b
 
 Start with one column. That forces the right question — *what do I really want this report grouped by?* — and most reports are finished there. A second key is for when you genuinely want the extra detail. So here is the same idea with two:
 
-```sql file=./scripts/cities-per-country.sql
+```sql file=./scripts/cities-per-country.sql {3}
 SELECT "ShipCountry", "ShipCity", count(*) AS "OrderCount"
 FROM "Orders"
 GROUP BY "ShipCountry", "ShipCity"
@@ -316,7 +309,7 @@ One more thing, and it decides whether a report is right.
 
 `WHERE` runs **before** the grouping. It walks the 79 orders one at a time, before any pile exists, and throws some of them away. Only the survivors are ever grouped.
 
-```sql file=./scripts/heavy-orders-per-country.sql
+```sql file=./scripts/heavy-orders-per-country.sql {3}
 SELECT "ShipCountry", count(*) AS "OrderCount"
 FROM "Orders"
 WHERE "Freight" > 50
@@ -364,13 +357,18 @@ Which follows from the running order you now know. At the moment `WHERE` looks a
 
 We have been carrying that question for four lessons, and we now have the tools to take a proper look at it. One pile per customer, count the orders inside each pile, sort by that count:
 
-```sql file=./scripts/orders-per-customer.sql
+```sql file=./scripts/orders-per-customer.sql {3-4}
 SELECT "CustomerID", count(*) AS "OrderCount"
 FROM "Orders"
 GROUP BY "CustomerID"
 ORDER BY "OrderCount" DESC, "CustomerID"
 LIMIT 5;
 ```
+
+{/* The same highlight as the video: the three customers tied on five orders, in blue — number-one-result
+    lights all three, because a "number one" here is a three-way tie */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))] [&_tbody_tr:nth-child(2)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(2)_td]:font-bold [&_tbody_tr:nth-child(2)_td]:text-[rgb(var(--hl-pick-ink))] [&_tbody_tr:nth-child(3)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(3)_td]:font-bold [&_tbody_tr:nth-child(3)_td]:text-[rgb(var(--hl-pick-ink))]">
 
 | CustomerID | OrderCount |
 | ---------- | ---------: |
@@ -379,6 +377,8 @@ LIMIT 5;
 | BERGS | 5 |
 | AROUT | 4 |
 | ANTON | 3 |
+
+</div>
 
 **Three of them, five orders each.** By this measure there is no number one — there are three, and the query is being honest about it.
 
