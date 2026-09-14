@@ -23,14 +23,7 @@ Get either half wrong and you send back a table that is the right shape, full of
 
 By the end of this lesson you will be able to put rows in any order you want, keep only the top few, and recognise the two ways a "top five" quietly stops being one.
 
-Every query below runs on the Northwind sample database that ships with DataPallas.
-
-**Open the koans before you read on.** There is a koan for every idea in this lesson — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
-
-```powershell
-cd c:/DataPallas/db/datazeus
-.\zeus.bat koans learnsql series1 _15
-```
+Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
 ## First, the thing nobody tells you
 
@@ -53,7 +46,7 @@ On DuckDB it comes back Nancy, Andrew, Janet. On the PostgreSQL that ships with 
 
 ## ORDER BY: say what "in order" means
 
-```sql file=./scripts/products-by-price.sql
+```sql file=./scripts/products-by-price.sql {3}
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 ORDER BY "UnitPrice";
@@ -78,7 +71,7 @@ You will see the bare form far more often, and there is nothing wrong with it. B
 
 ## DESC: biggest first, which is usually what was meant
 
-```sql file=./scripts/products-by-price-desc.sql
+```sql file=./scripts/products-by-price-desc.sql {3}
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 ORDER BY "UnitPrice" DESC;
@@ -112,13 +105,20 @@ WHERE "City" IN (
 ORDER BY "PostalCode";
 ```
 
+{/* The same highlight as the video: the fourth row in blue with a ring on 8010 — the postal-result
+    slide's LOOK tone, because the query did its job; the column is text */}
+
+<div className="[&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(4)_td]:font-bold [&_tbody_tr:nth-child(4)_td]:text-[rgb(var(--hl-pick-ink))]">
+
 | CompanyName | City | PostalCode |
 | ----------- | ---- | ---------- |
 | Morgenstern Gesundkost | Leipzig | 04179 |
 | Alfreds Futterkiste | Berlin | 12209 |
 | Die Wandernde Kuh | Stuttgart | 70563 |
-| **Ernst Handel** | **Graz** | **8010** |
+| Ernst Handel | Graz | <span className="rounded-md border-2 border-[rgb(var(--hl-pick)/var(--hl-ring))] bg-[rgb(var(--hl-pick)/var(--hl-head))] px-2.5 py-0.5">8010</span> |
 | Frankenversand | München | 80805 |
+
+</div>
 
 Look at the fourth row. **8010 is the smallest number of the last three, and it is filed in the middle.**
 
@@ -134,7 +134,7 @@ When a sort surprises you, check the **type** of the column you sorted on, befor
 
 You have met `LIMIT` before — in the <a href="/data-academy/learn-sql/select-fetch-your-data" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">SELECT &amp; Column Lists</a> lesson it meant "show me a few rows so I can get an idea of what kind of data this table holds". Here it does a different job, and the difference is entirely the `ORDER BY` in front of it.
 
-```sql file=./scripts/top-5-expensive.sql
+```sql file=./scripts/top-5-expensive.sql {3-4}
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 ORDER BY "UnitPrice" DESC
@@ -153,7 +153,7 @@ LIMIT 5;
 
 ### The other spelling: FETCH FIRST
 
-```sql file=./scripts/top-5-expensive-fetch-first.sql
+```sql file=./scripts/top-5-expensive-fetch-first.sql {4}
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 ORDER BY "UnitPrice" DESC
@@ -176,13 +176,20 @@ FROM "Products"
 LIMIT 5;
 ```
 
+{/* The same highlight as the video: Aniseed Syrup in terracotta with a ring on 10 — trap-result's
+    ALARM tone, a cheap product in a report headed most expensive */}
+
+<div className="[&_tbody_tr:nth-child(3)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(3)_td]:font-bold [&_tbody_tr:nth-child(3)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | ProductName | UnitPrice |
 | ----------- | --------: |
 | Chai | 18 |
 | Chang | 19 |
-| **Aniseed Syrup** | **10** |
+| Aniseed Syrup | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">10</span> |
 | Chef Antons Cajun Seasoning | 22 |
 | Scottish Longbreads | 12.5 |
+
+</div>
 
 Five rows. Five real products. Five real prices. No error, no warning, nothing to notice.
 
@@ -207,13 +214,20 @@ ORDER BY "UnitPrice"
 LIMIT 5;
 ```
 
+{/* The same highlight as the video: the fifth row in terracotta — ties-result's ALARM on the disputed
+    fifth place, which the query does not decide */}
+
+<div className="[&_tbody_tr:nth-child(5)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(5)_td]:font-bold [&_tbody_tr:nth-child(5)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | ProductName | UnitPrice |
 | ----------- | --------: |
 | Guarana Fantastica | 4.5 |
 | Filo Mix | 7 |
 | Aniseed Syrup | 10 |
-| **Scottish Longbreads** | **12.5** |
-| **Gorgonzola Telino** | **12.5** |
+| Scottish Longbreads | 12.5 |
+| Gorgonzola Telino | 12.5 |
+
+</div>
 
 Two products cost **exactly** 12.5. Only one of them can be fifth, and **nothing in that query decides which.** The database picks; it is entitled to; and it may pick differently tomorrow.
 
@@ -221,12 +235,17 @@ So the promotion list you send on Monday and the one you send on Tuesday can dif
 
 ### The fix is a second sort key
 
-```sql file=./scripts/cheapest-5-tiebreak.sql
+```sql file=./scripts/cheapest-5-tiebreak.sql {3}#good
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 ORDER BY "UnitPrice", "ProductName"
 LIMIT 5;
 ```
+
+{/* The same highlight as the video: the two rows the second key put in order, in blue — tiebreak-result's
+    LOOK tone, G before S */}
+
+<div className="[&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(4)_td]:font-bold [&_tbody_tr:nth-child(4)_td]:text-[rgb(var(--hl-pick-ink))] [&_tbody_tr:nth-child(5)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(5)_td]:font-bold [&_tbody_tr:nth-child(5)_td]:text-[rgb(var(--hl-pick-ink))]">
 
 | ProductName | UnitPrice |
 | ----------- | --------: |
@@ -236,6 +255,8 @@ LIMIT 5;
 | Gorgonzola Telino | 12.5 |
 | Scottish Longbreads | 12.5 |
 
+</div>
+
 Read it left to right: **sort by price; where two prices are equal, sort those rows by name.** G before S, every run, on every engine.
 
 > **If a sort can tie, break it.** A second key costs six characters and makes the query deterministic — the same rows, in the same order, every time it runs.
@@ -244,7 +265,7 @@ Read it left to right: **sort by price; where two prices are equal, sort those r
 
 Tie-breaking is the defensive use. Here is the everyday one — a list a human is actually going to read.
 
-```sql file=./scripts/customers-by-country-then-name.sql
+```sql file=./scripts/customers-by-country-then-name.sql {3}
 SELECT "CompanyName", "Country"
 FROM "Customers"
 ORDER BY "Country", "CompanyName"
@@ -285,13 +306,20 @@ LIMIT 5;
 
 **On PostgreSQL** you get five orders that have never shipped at all. PostgreSQL treats `NULL` as larger than any date, so `DESC` puts them first.
 
+{/* The same highlight as the video: all five rows in terracotta with a ring on every missing ShippedDate —
+    nulls-pg-result's ALARM, a shipping report that came back as a backlog */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(2)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(2)_td]:font-bold [&_tbody_tr:nth-child(2)_td]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(3)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(3)_td]:font-bold [&_tbody_tr:nth-child(3)_td]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(4)_td]:font-bold [&_tbody_tr:nth-child(4)_td]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(5)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(5)_td]:font-bold [&_tbody_tr:nth-child(5)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | OrderID | CustomerID | ShippedDate |
 | ------: | ---------- | ----------- |
-| 7 | BERGS | *NULL* |
-| 8 | ALFKI | *NULL* |
-| 2 | ANATR | *NULL* |
-| 5 | ANATR | *NULL* |
-| 11 | AROUT | *NULL* |
+| 7 | BERGS | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">*NULL*</span> |
+| 8 | ALFKI | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">*NULL*</span> |
+| 2 | ANATR | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">*NULL*</span> |
+| 5 | ANATR | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">*NULL*</span> |
+| 11 | AROUT | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">*NULL*</span> |
+
+</div>
 
 That is what a column of nothing looks like: five real orders, and not one of them has a shipping date. CloudBeaver runs against PostgreSQL, so this — not DuckDB's five real shipments — is what you will get when you type the query yourself.
 
@@ -299,7 +327,7 @@ Same query. Same data. One of those answers is a shipping report and the other i
 
 Neither engine is wrong — the SQL standard leaves the choice to the implementation. **The query never said where missing values belong.** So say it:
 
-```sql file=./scripts/recent-shipments-nulls-last.sql
+```sql file=./scripts/recent-shipments-nulls-last.sql {3}#good
 SELECT "OrderID", "CustomerID", "ShippedDate"
 FROM "Orders"
 ORDER BY "ShippedDate" DESC NULLS LAST
@@ -322,7 +350,7 @@ Two words, and the answer stops depending on which database you happened to run 
 
 Put this lesson together with the last one and you can write something your company wants and probably does not have:
 
-```sql file=./scripts/unshipped-backlog.sql
+```sql file=./scripts/unshipped-backlog.sql {3-4}
 SELECT "OrderID", "CustomerID", "OrderDate"
 FROM "Orders"
 WHERE "ShippedDate" IS NULL
@@ -330,9 +358,16 @@ ORDER BY "OrderDate"
 LIMIT 5;
 ```
 
+{/* The same highlight as the video: the oldest unshipped order in blue — backlog-result's LOOK tone,
+    bad news the query was right to put first */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
 | OrderID | CustomerID | OrderDate |
 | ------: | ---------- | --------- |
-| **8** | **ALFKI** | **2022-12-05** |
+| 8 | ALFKI | 2022-12-05 00:00:00.000 |
+
+</div>
 | 11 | AROUT | 2022-12-26 00:00:00.000 |
 | 14 | BONAP | 2023-01-19 00:00:00.000 |
 | 17 | DUMON | 2023-02-12 00:00:00.000 |
@@ -344,7 +379,7 @@ Note the `IS NULL`. **That is the correct way to test whether a value is missing
 
 ## OFFSET: page two
 
-```sql file=./scripts/products-page-2.sql
+```sql file=./scripts/products-page-2.sql {4}
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 ORDER BY "UnitPrice" DESC
