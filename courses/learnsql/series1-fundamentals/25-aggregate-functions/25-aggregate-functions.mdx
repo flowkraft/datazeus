@@ -23,18 +23,11 @@ The five functions that do it are `COUNT`, `SUM`, `AVG`, `MIN` and `MAX`. They a
 
 They are also the first thing in this course that can hand you a **confidently wrong number**. Not an error — a number, correctly calculated, about a set of rows that is not the set you had in mind. By the end of this lesson you will know the two ways that happens and how to check for both.
 
-Every query below runs on the Northwind sample database that ships with DataPallas.
-
-**Open the koans before you read on.** There is a koan for every idea in this lesson — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
-
-```powershell
-cd c:/DataPallas/db/datazeus
-.\zeus.bat koans learnsql series1 _25
-```
+Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
 ## Many rows in, one number out
 
-```sql file=./scripts/count-orders.sql
+```sql file=./scripts/count-orders.sql {1}
 SELECT count(*) AS "Orders"
 FROM "Orders";
 ```
@@ -53,7 +46,7 @@ And note the alias. Without `AS "Orders"` your database picks a heading of its o
 
 ## MIN and MAX: the two ends of a column
 
-```sql file=./scripts/price-range.sql
+```sql file=./scripts/price-range.sql {1-2}
 SELECT min("UnitPrice") AS "Cheapest",
        max("UnitPrice") AS "Dearest"
 FROM "Products";
@@ -67,7 +60,7 @@ Two aggregates in one `SELECT`, and both describe **the same 20 rows**. You can 
 
 `MIN` and `MAX` are not only for numbers. They work on **anything the database knows how to order** — which, after the sorting lesson, you already have a feel for:
 
-```sql file=./scripts/first-and-last-order.sql
+```sql file=./scripts/first-and-last-order.sql {1-2}
 SELECT min("OrderDate") AS "First order",
        max("OrderDate") AS "Latest order"
 FROM "Orders";
@@ -81,7 +74,7 @@ On a date column, `MIN` is *earliest* and `MAX` is *latest*. On a text column th
 
 ## SUM: adding a column up
 
-```sql file=./scripts/total-freight.sql
+```sql file=./scripts/total-freight.sql {1}
 SELECT sum("Freight") AS "Total freight"
 FROM "Orders";
 ```
@@ -110,7 +103,7 @@ Price times units in stock, multiplied out on every row and then added up. That 
 
 ## AVG: the total over the count
 
-```sql file=./scripts/average-freight.sql
+```sql file=./scripts/average-freight.sql {1}
 SELECT avg("Freight") AS "Average freight"
 FROM "Orders";
 ```
@@ -133,7 +126,7 @@ Run this on DuckDB and you will see `50.48759493670886` — a slightly shorter t
 
 And you already know how to fix it for a reader, because you met `ROUND` last lesson. The same rule applies here as applied there: **you round the answer, not what went into it** — so `ROUND` wraps the whole `avg(...)` call rather than sitting inside it.
 
-```sql file=./scripts/average-freight-rounded.sql
+```sql file=./scripts/average-freight-rounded.sql {1}#good
 SELECT ROUND(avg("Freight"), 2)
          AS "Average freight"
 FROM "Orders";
@@ -178,16 +171,23 @@ ORDER BY "UnitPrice" DESC
 LIMIT 2;
 ```
 
+{/* The same highlight as the video: the dearest row in terracotta with a ring on true — dearest-reveal's
+    point: nobody can buy it */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | ProductName | UnitPrice | Discontinued |
 | ----------- | --------: | ------------ |
-| Thuringer Rostbratwurst | 123.79 | true |
+| Thuringer Rostbratwurst | 123.79 | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">true</span> |
+
+</div>
 | Mishi Kobe Niku | 97 | true |
 
 **Both of them.** `Thuringer Rostbratwurst` costs 123.79 and we do not sell it any more; neither do we sell `Mishi Kobe Niku` at 97.00. So the "most expensive product" is a sausage no customer can order, and it has been sitting at the top of that price list all along.
 
 The `"Products"` table has a `"Discontinued"` column. Use it:
 
-```sql file=./scripts/dearest-on-sale.sql
+```sql file=./scripts/dearest-on-sale.sql {3}#good
 SELECT max("UnitPrice") AS "Dearest"
 FROM "Products"
 WHERE "Discontinued" = false;
@@ -232,9 +232,16 @@ SELECT count(*) AS "Orders",
 FROM "Orders";
 ```
 
+{/* The same highlight as the video: a ring on 52 — two-counts' point: count of a column skips the
+    empty values */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | Orders | Shipped |
 | -----: | ------: |
-| 79 | 52 |
+| 79 | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">52</span> |
+
+</div>
 
 Two counts. One table. No `WHERE` anywhere. **Twenty-seven apart.**
 
@@ -289,9 +296,15 @@ FROM "Orders"
 WHERE "ShipCountry" = 'Japan';
 ```
 
+{/* The same highlight as the video: a ring on [NULL] — empty-set's point: COUNT says 0, SUM says nothing */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | Orders | Total freight |
 | -----: | ------------- |
-| 0 | `[NULL]` |
+| 0 | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">`[NULL]`</span> |
+
+</div>
 
 `WHERE` threw away all 79 rows, and the query **still returned one row.**
 
@@ -312,7 +325,7 @@ That second cell is worth looking at properly, because CloudBeaver labels it for
 
 `count("ShipCountry")` will not answer that. It counts values, and Germany appears on 32 separate rows — so it would tell you 79, which is the number of orders.
 
-```sql file=./scripts/countries-we-ship-to.sql
+```sql file=./scripts/countries-we-ship-to.sql {1}
 SELECT count(DISTINCT "ShipCountry") AS "Countries",
        count("ShipCountry") AS "Orders"
 FROM "Orders";
@@ -330,7 +343,7 @@ You met `DISTINCT` last lesson as a thing that goes after `SELECT` and removes d
 
 Sooner or later everybody writes this. "The most expensive product is 123.79 — fine, tell me which one it is":
 
-```sql file=./scripts/column-with-aggregate.sql
+```sql file=./scripts/column-with-aggregate.sql {1}#err
 SELECT "ProductName",
        max("UnitPrice") AS "Dearest"
 FROM "Products";
@@ -350,7 +363,7 @@ There are two ways forward, and you already have one of them:
 
 **To name a single row, sort it and take one.** This is the sorting lesson, and it is the right tool whenever you want the row rather than the number:
 
-```sql file=./scripts/dearest-product-name.sql
+```sql file=./scripts/dearest-product-name.sql {3-4}#good
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 ORDER BY "UnitPrice" DESC
