@@ -27,14 +27,7 @@ The database should do that scanning, not you. That is what `WHERE` is: a test, 
 this lesson — `=`, `<>`, `AND`, `OR`, `NOT`, `IN`, `BETWEEN`, `LIKE` — is just a different
 kind of test.
 
-Every query below runs on the Northwind sample database that ships with DataPallas.
-
-**Open the koans before you read on.** Thirteen of them, following this lesson's ideas in the same order — each one a query with something missing for you to supply. Keep them open in a second window and do the next one as each idea lands; you remember what you type, and you forget what you read.
-
-```powershell
-cd c:/DataPallas/db/datazeus
-.\zeus.bat koans learnsql series1 _10
-```
+Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
 ## Keep only the rows that pass a test
 
@@ -149,7 +142,7 @@ lesson has the whole story.
 Chain two tests with `AND` and a row must pass **both**. Cheap beverages — category 1 is
 Beverages, straight from the Categories table you printed two lessons ago:
 
-```sql file=./scripts/products-cheap-beverages.sql
+```sql file=./scripts/products-cheap-beverages.sql {3-4}
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 WHERE "CategoryID" = 1
@@ -178,12 +171,19 @@ FROM "Products"
 WHERE "CategoryID" = 1 OR "CategoryID" = 2 AND "UnitPrice" < 15;
 ```
 
+{/* The same highlight as the video: Chai and Chang tinted in terracotta as the trap-result slide
+    lights them, with a ring on each price — the two over the cap the query was meant to set. */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(2)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(2)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(2)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | ProductName | UnitPrice |
 | ----------- | --------: |
-| Chai | 18 |
-| Chang | 19 |
+| Chai | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">18</span> |
+| Chang | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">19</span> |
 | Aniseed Syrup | 10 |
 | Guarana Fantastica | 4.5 |
+
+</div>
 
 Four rows — and look at the prices: **Chai at 18 and Chang at 19 are over the cap you asked
 for.** Nothing failed, no error was raised, the query is perfectly legal. It simply answers a
@@ -199,7 +199,7 @@ read your test as:
 Your `OR` ended up owning only the condiments half, and every beverage walked in free at any
 price. Parentheses say what you actually meant:
 
-```sql file=./scripts/products-parens-fix.sql
+```sql file=./scripts/products-parens-fix.sql {3}#good
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 WHERE ("CategoryID" = 1 OR "CategoryID" = 2)
@@ -284,11 +284,16 @@ FROM "Products"
 WHERE "UnitPrice" BETWEEN 10 AND 20;
 ```
 
+{/* The same highlight as the video: the third row, Aniseed Syrup, tinted in terracotta as the
+    between-result slide lights it, with a ring on its price — exactly 10, the end that is IN. */}
+
+<div className="[&_tbody_tr:nth-child(3)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(3)_td]:font-bold [&_tbody_tr:nth-child(3)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | ProductName | UnitPrice |
 | ----------- | --------: |
 | Chai | 18 |
 | Chang | 19 |
-| Aniseed Syrup | 10 |
+| Aniseed Syrup | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">10</span> |
 | Scottish Longbreads | 12.5 |
 | Boston Crab Meat | 18.4 |
 | Gorgonzola Telino | 12.5 |
@@ -296,11 +301,13 @@ WHERE "UnitPrice" BETWEEN 10 AND 20;
 | Pavlova | 17.45 |
 | Ravioli Angelo | 19.5 |
 
+</div>
+
 Nine rows, and **Aniseed Syrup is in.** `BETWEEN 10 AND 20` means `>= 10 AND <= 20`; both ends
 are included, always, on every database you will meet. If you want the ends *out*, say so with
 strict comparisons:
 
-```sql file=./scripts/products-strict-range.sql
+```sql file=./scripts/products-strict-range.sql {3-4}
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 WHERE "UnitPrice" > 10
@@ -316,7 +323,7 @@ ever spot the difference.
 
 Back in episode 00 you ran a query on faith. Now you can read every character of it:
 
-```sql file=./scripts/orders-june-2024.sql
+```sql file=./scripts/orders-june-2024.sql {3-4}
 SELECT count(*)
 FROM "Orders"
 WHERE "OrderDate" >= DATE '2024-06-01'
