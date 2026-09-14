@@ -23,14 +23,7 @@ Nothing is broken. **The query is finished and the output is not.** This lesson 
 
 By the end you will be able to name any column you like, build columns your table does not contain, turn a calculation back into money, and ask for one row per *value* instead of one row per *record*. You will also have met the one way that last trick quietly goes wrong.
 
-Every query below runs on the Northwind sample database that ships with DataPallas.
-
-**Open the koans before you read on.** There is a koan for every idea here — a query with a blank for you to fill in. Keep them in a second window and solve each one as you reach it; watching somebody name a column teaches you nothing, and naming one yourself is the whole lesson.
-
-```powershell
-cd c:/DataPallas/db/datazeus
-.\zeus.bat koans learnsql series1 _20
-```
+Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
 ## The query that was right, and unusable
 
@@ -62,7 +55,7 @@ The second: the database had to call it something, and it had nothing to go on. 
 
 Start with the easy half: **the same query, with one column renamed.** `AS` gives any column the heading you choose:
 
-```sql file=./scripts/stock-value-first-named.sql
+```sql file=./scripts/stock-value-first-named.sql {1}
 SELECT "ProductName" AS "Product",
        "UnitPrice" * "UnitsInStock"
 FROM "Products"
@@ -98,7 +91,7 @@ That is a difference you will trip over exactly once and then never forget. **Qu
 
 Back to the query that started this. The fix is the one you just learned:
 
-```sql file=./scripts/stock-value.sql
+```sql file=./scripts/stock-value.sql {2}
 SELECT "ProductName" AS "Product",
        "UnitPrice" * "UnitsInStock" AS "Stock value"
 FROM "Products"
@@ -106,13 +99,20 @@ ORDER BY "Stock value" DESC
 LIMIT 5;
 ```
 
+{/* The same highlight as the video: Mishi Kobe Niku in blue — name-it-result's LOOK tone, the line
+    carrying a third of the value */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
 | Product | Stock value |
 | ------- | ----------: |
-| **Mishi Kobe Niku** | **2813** |
+| Mishi Kobe Niku | 2813 |
 | Boston Crab Meat | 2263.2 |
 | Chef Antons Cajun Seasoning | 1166 |
 | Ikura | 961 |
 | Tofu | 813.75 |
+
+</div>
 
 Now look at the last-but-one line. It says `ORDER BY "Stock value" DESC` — **the sort is using the name you invented**, instead of repeating the multiplication. That is not just tidier. The calculation now exists in exactly one place in the query, so when somebody decides stock value should be based on a different column, there is one line to change instead of two that must be kept in step.
 
@@ -122,7 +122,7 @@ And now read the *data* rather than the syntax. **One product is carrying more t
 
 `ORDER BY` could use the name. The obvious next question is whether `WHERE` can, and the obvious answer is yes — it is right there in the query. Try it:
 
-```sql file=./scripts/stock-value-alias-in-where.sql
+```sql file=./scripts/stock-value-alias-in-where.sql {4}#err
 SELECT "ProductName" AS "Product",
        "UnitPrice" * "UnitsInStock" AS "Stock value"
 FROM "Products"
@@ -151,7 +151,7 @@ That is the whole explanation, and it is worth more than the rule it explains: y
 
 ### The fix: say the calculation twice
 
-```sql file=./scripts/stock-value-over-1000.sql
+```sql file=./scripts/stock-value-over-1000.sql {4}#good
 SELECT "ProductName" AS "Product",
        "UnitPrice" * "UnitsInStock" AS "Stock value"
 FROM "Products"
@@ -175,7 +175,7 @@ It looks like repetition because it is. The sort keeps the short name; only the 
 
 The Berlin office wants the same list in euros. Today's rate is `0.9137`, so that is one multiplication.
 
-```sql file=./scripts/eur-price-unrounded.sql
+```sql file=./scripts/eur-price-unrounded.sql {2}
 SELECT "ProductName" AS "Product",
        "UnitPrice" * 0.9137 AS "Price in EUR"
 FROM "Products"
@@ -183,10 +183,17 @@ ORDER BY "UnitPrice" DESC
 LIMIT 5;
 ```
 
+{/* The same highlight as the video: the first row in blue with a ring on 113.106923 — round-raw-result's
+    LOOK tone: the query did its job, the number is just not money yet */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
 | Product | Price in EUR |
 | ------- | -----------: |
-| Thuringer Rostbratwurst | 113.106923 |
+| Thuringer Rostbratwurst | <span className="rounded-md border-2 border-[rgb(var(--hl-pick)/var(--hl-ring))] bg-[rgb(var(--hl-pick)/var(--hl-head))] px-2.5 py-0.5">113.106923</span> |
 | Mishi Kobe Niku | 88.6289 |
+
+</div>
 | Gnocchi di nonna Alice | 34.7206 |
 | Camembert Pierrot | 31.0658 |
 | Ikura | 28.3247 |
@@ -195,7 +202,7 @@ LIMIT 5;
 
 That is worth a moment, because it is where the decimals come from. **Multiplying two exact decimals adds their decimal places together.** A price with two and a rate with four give you six, every time, whether or not you wanted them — and nothing in the query warned you.
 
-```sql file=./scripts/eur-price.sql
+```sql file=./scripts/eur-price.sql {2}#good
 SELECT "ProductName" AS "Product",
        ROUND("UnitPrice" * 0.9137, 2) AS "Price in EUR"
 FROM "Products"
@@ -224,7 +231,7 @@ Two more things worth having:
 
 An expression does not have to be arithmetic. **Two pipe characters glue text end to end**, and that is how two columns become one line somebody can read.
 
-```sql file=./scripts/call-sheet.sql
+```sql file=./scripts/call-sheet.sql {1}
 SELECT "ContactName" || ' at ' || "CompanyName" AS "Who to call"
 FROM "Customers"
 ORDER BY "CompanyName"
@@ -278,11 +285,16 @@ ORDER BY "Country";
 
 Nothing is wrong with the query. You asked for every customer's country, and that is exactly what arrived.
 
-```sql file=./scripts/countries-distinct.sql
+```sql file=./scripts/countries-distinct.sql {1}#good
 SELECT DISTINCT "Country"
 FROM "Customers"
 ORDER BY "Country";
 ```
+
+{/* The same highlight as the video: Germany in blue — distinct-result's LOOK tone, eleven customers,
+    one row */}
+
+<div className="[&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(4)_td]:font-bold [&_tbody_tr:nth-child(4)_td]:text-[rgb(var(--hl-pick-ink))]">
 
 | Country |
 | ------- |
@@ -291,6 +303,8 @@ ORDER BY "Country";
 | France |
 | Germany |
 | Italy |
+
+</div>
 | Mexico |
 | Sweden |
 | UK |
@@ -311,17 +325,24 @@ FROM "Customers"
 ORDER BY "Country", "City";
 ```
 
+{/* The same highlight as the video: every Germany row in terracotta — distinct-trap-result's ALARM,
+    a list of countries that repeats a country */}
+
+<div className="[&_tbody_tr:nth-child(5)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(5)_td]:font-bold [&_tbody_tr:nth-child(5)_td]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(6)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(6)_td]:font-bold [&_tbody_tr:nth-child(6)_td]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(7)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(7)_td]:font-bold [&_tbody_tr:nth-child(7)_td]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(8)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(8)_td]:font-bold [&_tbody_tr:nth-child(8)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | Country | City |
 | ------- | ---- |
 | Argentina | Buenos Aires |
 | Austria | Graz |
 | France | Marseille |
 | France | Nantes |
-| **Germany** | **Aachen** |
+| Germany | Aachen |
 | Germany | Berlin |
 | Germany | Brandenburg |
 | Germany | Cunewalde |
 | … | … |
+
+</div>
 
 **Twenty-four.** Adding one column made a `DISTINCT` list more than twice as long, and Germany is back in it eleven times — under a heading that still says which countries we sell into.
 
@@ -349,7 +370,7 @@ HAVING COUNT(*) > 1;
 
 Run it and you get a single row back. That is your missing twenty-fifth.
 
-That is also why `DISTINCT` is a poor tool for "getting rid of duplicates" in general. When a result has rows in it you did not expect, `DISTINCT` will often make them disappear — and it will have hidden the reason rather than fixed it. **The usual cause is a join.** When one row on one side matches several rows on the other, every match comes back, and the row count multiplies without anything looking wrong. The <a href="/data-academy/learn-sql/join-fan-out" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Join Fan-Out &amp; Grain</a> lesson is about exactly that. Until then: when extra rows surprise you, find out where they came from before you reach for `DISTINCT`.
+That is also why `DISTINCT` is a poor tool for "getting rid of duplicates" in general. When a result has rows in it you did not expect, `DISTINCT` will often make them disappear — and it will have hidden the reason rather than fixed it. **The usual cause is a join.** When one row on one side matches several rows on the other, every match comes back, and the row count multiplies without anything looking wrong. The <a href="/data-academy/learn-sql/multi-table-joins-duplicate-rows" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Multi-Table JOINs &amp; Grain</a> lesson is about exactly that. Until then: when extra rows surprise you, find out where they came from before you reach for `DISTINCT`.
 
 ### When two columns *is* what you meant
 
@@ -373,13 +394,19 @@ ORDER BY "UnitPrice" DESC
 LIMIT 5;
 ```
 
+{/* The same highlight as the video: Tofu in blue with a ring on 21.24 — report-result's LOOK tone */}
+
+<div className="[&_tbody_tr:nth-child(5)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(5)_td]:font-bold [&_tbody_tr:nth-child(5)_td]:text-[rgb(var(--hl-pick-ink))]">
+
 | Product | List price | Price in EUR |
 | ------- | ---------: | -----------: |
 | Gnocchi di nonna Alice | 38 | 34.72 |
 | Camembert Pierrot | 34 | 31.07 |
 | Ikura | 31 | 28.32 |
 | Uncle Bobs Organic Dried Pears | 30 | 27.41 |
-| **Tofu** | **23.25** | **21.24** |
+| Tofu | 23.25 | <span className="rounded-md border-2 border-[rgb(var(--hl-pick)/var(--hl-ring))] bg-[rgb(var(--hl-pick)/var(--hl-head))] px-2.5 py-0.5">21.24</span> |
+
+</div>
 
 Three named headings, a rounded calculation, a filter and a sort. Nothing to explain and nothing to apologise for.
 
