@@ -55,6 +55,9 @@
 #     count(DISTINCT ...) repairs.
 
 deck: "DataZeus::Learn SQL::Series 1::50 Your First Real Report"
+# THE GUID KEEPS THE OLD LESSON NAME, ON PURPOSE. The lesson folder was renamed for its URL on
+# 2026-09-14 (select-sum-join-group-by-order-by-limit-project), but the guid is the deck's identity:
+# change it and every learner who imported the deck gets every card a second time. Never rename it.
 guid: "datazeus-learn-sql-series1-50-your-first-real-report"
 tags: ["datazeus", "learn-sql", "series-1", "sql"]
 

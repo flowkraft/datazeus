@@ -868,7 +868,7 @@ class YourFirstRealReportSpec extends NorthwindGateSpec {
     // Paths are relative to the tests/ module dir (where `mvn` runs).
 
     private static String script(String name) {
-        new File("../courses/learnsql/series1-fundamentals/50-your-first-real-report/scripts/${name}.sql").text
+        new File("../courses/learnsql/series1-fundamentals/50-select-sum-join-group-by-order-by-limit-project/scripts/${name}.sql").text
     }
 
     /** The koans file, read the same way script() reads the lesson's SQL. */

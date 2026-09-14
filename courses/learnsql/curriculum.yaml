@@ -476,7 +476,12 @@ series:
         core: true
         status: published
       - n: "50"
-        slug: your-first-real-report
+        # RENAMED FOR THE URL 2026-09-14 (was your-first-real-report), together with the lesson
+        # folder, with NO redirect: the owner wanted the searched keywords in the address. The
+        # slug and the folder must match or the course page lists this lesson twice. The VIDEO
+        # slug keeps the old name on purpose (learnsql-series1-50-your-first-real-report is the
+        # Remotion id, the masters and the dp-slug tag on YouTube), and so does the Anki guid.
+        slug: select-sum-join-group-by-order-by-limit-project
         title: "SELECT + JOIN + GROUP BY — Building Your First Real Report"
         short: "SELECT + JOIN + GROUP BY — your first real report"
         hands_on: ["koan:author", "cloudbeaver"]

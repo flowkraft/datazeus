@@ -20,7 +20,7 @@ Everything runs on your own machine.
      The URL is https://datapallas.com/data-academy/<course>/<slug> and the title is the
      one in that course's curriculum.yaml — a wrong one here is a dead link in the most
      visible part of the page. -->
-- **2026-09-14** — [SELECT + JOIN + GROUP BY — Building Your First Real Report](https://datapallas.com/data-academy/learn-sql/your-first-real-report)  ·  *SQL Fundamentals*
+- **2026-09-14** — [SELECT + JOIN + GROUP BY — Building Your First Real Report](https://datapallas.com/data-academy/learn-sql/select-sum-join-group-by-order-by-limit-project)  ·  *SQL Fundamentals*
 - **2026-09-09** — [NULL & Three-Valued Logic — How Missing Values Change Your Results](https://datapallas.com/data-academy/learn-sql/null-and-three-valued-logic)  ·  *SQL Fundamentals*
 - **2026-09-08** — [JOINs: INNER, LEFT, RIGHT, FULL — Combining Rows From Two Tables](https://datapallas.com/data-academy/learn-sql/joins)  ·  *SQL Fundamentals*
 - **2026-09-07** — [HAVING vs WHERE — Filtering Groups and Filtering Rows](https://datapallas.com/data-academy/learn-sql/having-vs-where)  ·  *SQL Fundamentals*
