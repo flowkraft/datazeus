@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Top 10 Customers</title>
+  <style type="text/css">
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #111111; }
+    .company { font-weight: bold; font-size: 15px; color: #0b57a4; }
+    .title { font-weight: bold; font-size: 14px; color: #111111; }
+    .meta { font-size: 10px; color: #333333; margin-bottom: 8px; }
+    table { border-collapse: collapse; width: 100%; }
+    thead th {
+      background-color: #0b57a4; color: #ffffff; font-weight: bold;
+      padding: 6px 8px; text-align: left; border: thin solid #cccccc;
+    }
+    tbody td { padding: 6px 8px; border: thin solid #e0e0e0; }
+    tfoot td {
+      padding: 8px; border-top: medium solid #0b57a4;
+      font-weight: bold; background-color: #f2f9ff;
+    }
+    .numeric { text-align: right; }
+  </style>
+</head>
+<body>
+
+  <div class="company">Northwind Traders</div>
+  <div class="title">Top 10 Customers</div>
+  <div class="meta">By total sales &#8212; generated ${now?string("yyyy-MM-dd HH:mm:ss")}</div>
+
+  <#assign grandTotal = 0>
+  <#assign rowCount = 0>
+  <#if reportData??>
+    <#list reportData as r>
+      <#assign grandTotal = grandTotal + (r["Total sales"]!0)>
+      <#assign rowCount = rowCount + 1>
+    </#list>
+  </#if>
+
+  <table data-sheet-name="Top 10 Customers">
+    <thead>
+      <tr>
+        <th data-freeze-pane-cell="true">Company Name</th>
+        <th class="numeric">Orders</th>
+        <th class="numeric">Total Sales</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <#if reportData?? && reportData?size gt 0>
+        <#list reportData as row>
+          <tr>
+            <td data-text-cell="true">${row["CompanyName"]!""}</td>
+            <td class="numeric" data-text-cell="true">${(row["Orders"]!0)?string["#,##0"]}</td>
+            <td class="numeric" data-text-cell="true">${(row["Total sales"]!0)?string["#,##0.00"]}</td>
+          </tr>
+        </#list>
+      <#else>
+        <tr><td data-text-cell="true" colspan="3">No rows returned.</td></tr>
+      </#if>
+    </tbody>
+
+    <tfoot>
+      <tr>
+        <td>Customers shown: ${rowCount?c}</td>
+        <td class="numeric"></td>
+        <td class="numeric" data-text-cell="true">${grandTotal?string["#,##0.00"]}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+</body>
+</html>

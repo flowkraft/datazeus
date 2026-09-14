@@ -1,6 +1,6 @@
 ---
 title: "SELECT + JOIN + GROUP BY — Building Your First Real Report"
-description: "The Series 1 project. Assemble everything you have learned into one report a manager would actually ask for — and learn the two checks that tell you whether the number in it is true before anybody else reads it."
+description: "Build a top 10 customers report with SELECT, JOIN, GROUP BY, SUM, ORDER BY and LIMIT, and learn the two checks that show whether its numbers are right before anybody acts on them."
 topic: "learn-sql"
 tags: ["sql", "fundamentals", "join", "group-by", "reporting", "project"]
 level: "beginner"
@@ -11,51 +11,56 @@ published: true
 videoId: "learnsql-series1-50-your-first-real-report"
 ---
 
-## The situation this lesson prepares you for
+## Who is our biggest customer?
 
-Somebody asks you for the customer sales summary. Top customers, how much each one has spent, and how many orders that was. By Friday.
+Leo asked that question back in the <a href="/data-academy/learn-sql/where-filtering" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">filtering lesson</a>, and the answer has been "be patient" ever since. Every lesson after it gave him one piece of the answer:
 
-It is the most ordinary request in business, and it is the first one in this course you have everything you need to answer.
+- **Sorting** could rank rows, but it could not add anything up.
+- **Adding up** gave one number for the whole business, not one per customer.
+- **Grouping** gave one number per customer, but the customers were codes, and the numbers were order counts and freight, not money spent.
 
-You will not learn a new keyword today. Every piece of what follows already had a lesson of its own: `SELECT`, `WHERE`, `ORDER BY`, aliases, `SUM`, `COUNT`, `GROUP BY`, `HAVING`, `JOIN`. What is new is putting them together, and one habit that goes with it — **checking the number before somebody else acts on it.** That habit is the difference between somebody who writes SQL and somebody you would trust with a report.
+Each piece was correct, and none of them answered the question on its own. The question needs more SQL than any one lesson could teach. This lesson puts the pieces together and answers it.
 
-Every query below runs on the Northwind sample database that ships with DataPallas.
+## Why the answer had to wait
 
-**Open the koans before you read on.** There is a koan for every idea in this lesson — and the last two ask you to write a whole query from nothing, because that is what this lesson is for.
+The answer needs four things, and each one had a lesson of its own:
 
-```powershell
-cd c:/DataPallas/db/datazeus
-.\zeus.bat koans learnsql series1 _50
-```
+| The answer needs | Because | Lesson |
+| ---------------- | ------- | ------ |
+| `JOIN` | the customer's name and the money are in three different tables | <a href="/data-academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Joins</a> |
+| `GROUP BY` | the report needs one total for each customer, not one for the whole business | <a href="/data-academy/learn-sql/group-by" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">GROUP BY</a> |
+| `SUM` | each customer's money is spread over many rows | <a href="/data-academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Aggregate functions</a> |
+| `ORDER BY` and `LIMIT` | the biggest spender goes first, and the list stops after the top few | <a href="/data-academy/learn-sql/order-by-and-top-n" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">ORDER BY and LIMIT</a> |
 
-## The question that comes before the query
+None of them gets there alone. Leave out any one, and the result still looks finished, but it does not answer the question.
 
-Not "which tables do I need". This one:
+## No new keywords today
 
-> **One row of my answer is one what?**
+This lesson teaches no new SQL. Every keyword it uses was taught in an earlier lesson.
 
-For this report, one row is **one customer**. That decides the `GROUP BY` before you have written a line.
+What is new is putting them together in one query, which is a skill of its own, and one habit that has never had a lesson: **checking the number before somebody else acts on it.** That habit is the difference between someone who can write SQL and someone whose reports people trust.
 
-Then the harder half of the same question: **one row of my source is one what?** Because that is what you will be adding up, and it is almost never the same thing as a row of your answer.
+Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
-The money you have been asked for is not in `"Customers"`. It is not in `"Orders"` either — an order knows who placed it and what the delivery cost, not what was in it. It is in `"Order Details"`, one row per thing bought.
+## The question before the query
 
-So the customer's name and the customer's money are **three tables apart**:
+Before writing anything, ask: **one row of my answer represents what?** Here, one row is one customer. That already decides what the query will `GROUP BY`.
 
-```
-"Customers"  →  "Orders"  →  "Order Details"
-   the name      whose order     the money
-```
+Then ask the second half, which people often skip: **one row of the thing I am adding up represents what?** The thing being added up is money, and the money is not in `"Customers"`. It is not in `"Orders"` either: an order records who placed it, not what was in it. The money is in `"Order Details"`, which has one row for each product on each order. This page calls that row an **order line**.
 
-## Two hops, and a join for each
+### The report needs three tables
 
-You already know how to follow one pointer. This is the same thing, written twice — a second `JOIN ... ON` under the first, read top to bottom.
+![Three tables side by side. "Customers", 25 rows, gives the report the customer's name — without it the report is a column of codes. "Orders", 79 rows, joined on "CustomerID", says which orders are whose — without it there are names on one side and money on the other and no way across. "Order Details", 193 rows, joined on "OrderID", holds the money, one row per thing bought — without it orders can be counted but not a penny added up.](/images/data-academy/learnsql-series1-50/three-tables.svg)
 
-Nothing about the syntax is new. What *is* new is what the second hop does to your row count, and that is the whole lesson.
+- `"Customers"` gives the report the customer's name. Without it, the report shows customer codes instead of names.
+- `"Orders"` says which orders belong to which customer, through `"CustomerID"`. Without it, the names are in one table and the money is in another, with nothing that connects them.
+- `"Order Details"` holds the money, one row per order line, linked to its order through `"OrderID"`. Without it, orders can be counted, but no money can be added up.
 
-### Start by counting
+The report needs all three.
 
-Before the report, the habit. Know what you started with:
+## Count first
+
+Before building the report, find out how many orders there are:
 
 ```sql file=./scripts/count-orders.sql
 SELECT count(*) AS "Orders"
@@ -66,11 +71,15 @@ FROM "Orders";
 | ------ |
 | 79     |
 
-Seventy-nine orders. Hold on to that number.
+79 orders. Write that number down.
 
-### One hop: still 79
+Nothing has gone wrong yet, and that is exactly the time to count. The next steps will change the number of rows, and the change is only noticeable if the starting number is known. It is the dullest query in the lesson, and it is the one that gives the warning later, when a join changes the number of rows.
 
-```sql file=./scripts/customers-and-orders.sql
+## One join: still 79 rows
+
+Now join each customer to their orders, and count again:
+
+```sql file=./scripts/customers-and-orders.sql {3-4}
 SELECT count(*) AS "Rows"
 FROM "Customers" c
 JOIN "Orders" o
@@ -81,11 +90,19 @@ JOIN "Orders" o
 | ---- |
 | 79   |
 
-**Unchanged, and that is exactly right.** A customer has many orders — but an order has exactly *one* customer, so looking that customer up adds a column and cannot add a row. One row is still one order.
+The query starts `FROM "Customers"`, and there are only 25 customers. So why did 79 rows come back, and not 25?
 
-### Two hops: 193
+Because an `INNER JOIN` does not place one table next to the other. It **matches** rows. It returns one row for every pair of rows that match on the `ON` condition, and it leaves out any row that matches nothing.
 
-```sql file=./scripts/add-the-order-lines.sql
+Every order was placed by exactly one customer, so each of the 79 orders finds exactly one match. That makes 79 rows. A customer can have many orders, but an order has only one customer, so the orders decide the count, not the customers: 25 customer names, spread over 79 orders.
+
+One row of this result is still one order. The join added the customer's details to each order, and it did not add any rows.
+
+## Two joins: 193 rows
+
+Add a second join, to `"Order Details"`, to reach what each order contains. It is the same keyword and the same shape as the first join. Count again:
+
+```sql file=./scripts/add-the-order-lines.sql {5-6}
 SELECT count(*) AS "Rows"
 FROM "Customers" c
 JOIN "Orders" o
@@ -98,23 +115,29 @@ JOIN "Order Details" d
 | ---- |
 | 193  |
 
-**The number moved.** Seventy-nine became a hundred and ninety-three.
+79 rows went in and 193 came out, more than double. Only a join was added, and nothing asked for extra rows. So did something break?
 
-That is not a bug, and it is not something to fix. An order can hold three different products, and each of them is a row in `"Order Details"`. You asked to go where the money is, and the money is one level finer than an order. So one row is no longer one order — **one row is now one order line.**
+No. It is the same rule as before: one row for every match. This time the matches are order lines. An order can contain several products, and each product on an order is its own row in `"Order Details"`. So now the order lines decide the count, not the orders.
 
-Write that down, because from this moment `count(*)` has quietly stopped counting orders. It counts lines. Nothing will tell you.
+Nothing is broken. The query went where the money is, and the money is recorded one level below the order. But the change in the count says something important: **one row of the result is no longer one order. One row is now one order line.** What one row represents is called the **grain** of the result, and the second join changed it.
 
-> **This is the check.** Count the rows before the join and after it. When the number moves, the grain of your query has changed, and every total built on top of it means something different from what it meant a moment ago.
+From here on, `count(*)` counts order lines, not orders. Nothing in the database says so. The only warning is the number written down at the start.
 
-## The money
+> **When the row count moves, the grain moved with it.** Every total built on top of the result now means something different from what it meant before the join.
 
-What one line is worth is price times quantity, less whatever discount was given on the day:
+## What one line is worth
+
+The value of one order line is its price, times the quantity, minus the discount:
 
 `d."UnitPrice" * d."Quantity" * (1 - d."Discount")`
 
-`SUM` that inside each customer's pile and you have the report's headline column. `ROUND(..., 2)` wraps the *whole* calculation, because what you want rounded is the answer — the rule from the expressions lesson, and it applies unchanged here.
+`"Discount"` is stored as a fraction: `0.05` means 5% off, so `1 - d."Discount"` is the part of the price the customer actually paid.
 
-```sql file=./scripts/sales-by-customer.sql
+`SUM` adds up the line values for each customer. `ROUND(..., 2)` goes around the **whole** calculation, so it rounds the final total, which is the number that needs rounding.
+
+Notice the `d.` in front of `"UnitPrice"`. The `"Products"` table also has a `"UnitPrice"` column, but that one is the price we charge today. `d."UnitPrice"` comes from `"Order Details"` and is the price the line actually sold for. A sales report needs the price it sold for.
+
+```sql file=./scripts/sales-by-customer.sql {2-3}
 SELECT c."CompanyName",
        ROUND(SUM(d."UnitPrice" * d."Quantity"
          * (1 - d."Discount")), 2) AS "Total sales"
@@ -127,24 +150,30 @@ GROUP BY c."CompanyName"
 ORDER BY "Total sales" DESC;
 ```
 
+{/* The same highlight as the video: the top row in blue, the colour for "this is the one".
+    The sentence under the table names that row. */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
 | CompanyName                | Total sales |
 | -------------------------- | ----------- |
-| Cactus Comidas para llevar | 4567.80     |
-| Blauer See Delikatessen    | 4318.80     |
+| Cactus Comidas para llevar | 4567.8      |
+| Blauer See Delikatessen    | 4318.8      |
 | Frankenversand             | 4267.27     |
 | Lehmanns Marktstand        | 4077.12     |
 | Ernst Handel               | 3902.78     |
+| Alfreds Futterkiste        | 3838.43     |
 | …                          | …           |
 
-Twenty-five rows, one per customer. That is a report.
+</div>
 
-Note where the `d.` prefixes are doing real work: `d."UnitPrice"` is what the line **sold for on the day**. `"Products"` has a `"UnitPrice"` too, and it is what the catalogue charges **now**. On a sales report you want the first one. This is the ambiguity the joins lesson made you meet as an error; here it is the difference between a true number and a plausible one.
+25 rows come back, one per customer, with the biggest spender at the top: Cactus Comidas para llevar, 4567.8. The joins produced 193 order lines, and `GROUP BY` put them back together into one row for each customer. That is already a report that could be sent to somebody.
 
-## Now add the order count, and break the report
+## Add the order count
 
-The request asked for "how many orders", so add a count. The obvious way:
+A sales report is more useful with the number of orders next to the money. So add `count(o."OrderID")` to the `SELECT` list. There is nothing careless about this. It is what almost anyone would write:
 
-```sql file=./scripts/orders-counted-wrong.sql
+```sql file=./scripts/orders-counted-wrong.sql {2}
 SELECT c."CompanyName",
        count(o."OrderID") AS "Orders",
        ROUND(SUM(d."UnitPrice" * d."Quantity"
@@ -158,27 +187,47 @@ GROUP BY c."CompanyName"
 ORDER BY "Total sales" DESC;
 ```
 
+{/* The same highlight as the video. "Orders" in terracotta, the colour for wrong, because every
+    count in that column is wrong, with a ring on Alfreds' 11, the example the text starts from.
+    The two columns beside it in green, because they are right. */}
+
+<div className="[&_tbody_tr:nth-child(6)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_th:nth-child(2)]:bg-[rgb(var(--hl-fault)/var(--hl-head))] [&_th:nth-child(2)]:text-[rgb(var(--hl-fault-ink))] [&_td:nth-child(2)]:bg-[rgb(var(--hl-fault)/var(--hl-col))] [&_td:nth-child(2)]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(6)_td:nth-child(2)]:bg-transparent [&_tbody_tr:nth-child(6)_td:nth-child(2)]:font-bold [&_th:nth-child(1)]:bg-[rgb(var(--hl-good)/var(--hl-head))] [&_th:nth-child(1)]:text-[rgb(var(--hl-good-ink))] [&_td:nth-child(1)]:bg-[rgb(var(--hl-good)/var(--hl-col))] [&_td:nth-child(1)]:text-[rgb(var(--hl-good-ink))] [&_th:nth-child(3)]:bg-[rgb(var(--hl-good)/var(--hl-head))] [&_th:nth-child(3)]:text-[rgb(var(--hl-good-ink))] [&_td:nth-child(3)]:bg-[rgb(var(--hl-good)/var(--hl-col))] [&_td:nth-child(3)]:text-[rgb(var(--hl-good-ink))] [&_tbody_tr:nth-child(6)_td:nth-child(1)]:font-bold [&_tbody_tr:nth-child(6)_td:nth-child(3)]:font-bold">
+
 | CompanyName                | Orders | Total sales |
 | -------------------------- | ------ | ----------- |
-| Cactus Comidas para llevar | 8      | 4567.80     |
-| Blauer See Delikatessen    | 8      | 4318.80     |
+| Cactus Comidas para llevar | 8      | 4567.8      |
+| Blauer See Delikatessen    | 8      | 4318.8      |
 | Frankenversand             | 7      | 4267.27     |
 | Lehmanns Marktstand        | 8      | 4077.12     |
 | Ernst Handel               | 7      | 3902.78     |
-| Alfreds Futterkiste        | 11     | 3838.43     |
+| Alfreds Futterkiste        | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">11</span> | 3838.43     |
 | …                          | …      | …           |
 
-Read the sixth row. **Alfreds Futterkiste placed eleven orders.**
+</div>
 
-They placed five.
+Read the sixth row: **Alfreds Futterkiste, 11 orders.** Alfreds placed 5.
 
-Nothing failed. No warning. And look at what makes this one so hard to catch: **the money column is right.** Every figure in it is correct to the penny, the ranking is correct, and the report is the right shape and the right length. One column is more than double what it should be, sitting between two that are perfect.
+The money is still right. 3838.43 is exactly what the previous query returned for Alfreds. One column is wrong, and the columns on either side of it are correct.
 
-`count(o."OrderID")` counts the rows in the pile, and since the second join the rows are **order lines**. Alfreds has five orders holding eleven lines between them, so eleven is what comes back. The query did what you asked. You asked the wrong question — and you asked it seventy-nine lines after the row count told you the grain had changed.
+### Why count returned 11
+
+The number is wrong, and nothing failed: no error, no warning, nothing that looks odd. That is exactly why this mistake is easy to miss.
+
+`count` counts rows, and since the second join, every row is an order line. Alfreds' 5 orders contain 11 order lines between them, so `count` returned 11. The query did exactly what it was asked. And it is not only Alfreds: every number in that column is a count of order lines, not of orders. And that count was added after the row count had already shown that the grain had changed.
+
+What makes this easy to miss is that the query does name a column. `count(o."OrderID")` reads as if it counts orders. But `count` of a column counts **how many values** are in that column, not how many **different** values. After both joins, Alfreds' `"OrderID"` column holds these 11 values:
+
+`1  1  4  4  8  8  33  33  33  58  58`
+
+That is 11 values, but only 5 different order numbers. `count` returned 11, because nothing asked it for the different ones.
+
+> **Naming a column like `count(o."OrderID")` does not change what `count` counts.**
 
 ## The fix is one word
 
-```sql file=./scripts/customer-sales-summary.sql
+Ask `count` for the different values, with `DISTINCT`:
+
+```sql file=./scripts/customer-sales-summary.sql {2}#good
 SELECT c."CompanyName",
        count(DISTINCT o."OrderID") AS "Orders",
        ROUND(SUM(d."UnitPrice" * d."Quantity"
@@ -192,43 +241,36 @@ GROUP BY c."CompanyName"
 ORDER BY "Total sales" DESC;
 ```
 
-| CompanyName                        | Orders | Total sales |
-| ---------------------------------- | ------ | ----------- |
-| Cactus Comidas para llevar         | 3      | 4567.80     |
-| Blauer See Delikatessen            | 3      | 4318.80     |
-| Frankenversand                     | 3      | 4267.27     |
-| Lehmanns Marktstand                | 3      | 4077.12     |
-| Ernst Handel                       | 3      | 3902.78     |
-| Alfreds Futterkiste                | 5      | 3838.43     |
-| Morgenstern Gesundkost             | 3      | 3289.13     |
-| Around the Horn                    | 4      | 2701.58     |
-| Great Lakes Food Market            | 3      | 2683.28     |
-| LILA-Supermercado                  | 3      | 2127.61     |
-| Berglunds snabbköp                 | 5      | 1952.66     |
-| Du monde entier                    | 3      | 1918.93     |
-| Magazzini Alimentari Riuniti       | 3      | 1738.24     |
-| Toms Spezialitäten                 | 2      | 1728.38     |
-| Bon app'                           | 3      | 1728.05     |
-| Island Trading                     | 3      | 1716.15     |
-| HILARION-Abastos                   | 3      | 1596.39     |
-| Folk och fä HB                     | 3      | 1594.23     |
-| Drachenblut Delikatessen           | 3      | 1589.46     |
-| Antonio Moreno Taquería            | 3      | 1377.33     |
-| Königlich Essen                    | 3      | 1345.98     |
-| Ana Trujillo Emparedados y helados | 5      | 1292.10     |
-| Ottilies Käseladen                 | 3      | 1118.60     |
-| Die Wandernde Kuh                  | 2      | 991.76      |
-| QUICK-Stop                         | 2      | 691.28      |
+{/* The same highlight as the video: the same column and the same cell as in the wrong table,
+    now in green, because they now hold the right numbers. */}
 
-`count(DISTINCT o."OrderID")` counts **how many different orders** appear in the pile, not how many rows. Alfreds' eleven lines carry five distinct order numbers, so five is what comes back.
+<div className="[&_tbody_tr:nth-child(6)]:bg-[rgb(var(--hl-good)/var(--hl-row))] [&_th:nth-child(2)]:bg-[rgb(var(--hl-good)/var(--hl-head))] [&_th:nth-child(2)]:text-[rgb(var(--hl-good-ink))] [&_td:nth-child(2)]:bg-[rgb(var(--hl-good)/var(--hl-col))] [&_td:nth-child(2)]:text-[rgb(var(--hl-good-ink))] [&_tbody_tr:nth-child(6)_td:nth-child(2)]:bg-transparent [&_tbody_tr:nth-child(6)_td:nth-child(2)]:font-bold">
 
-**The rule worth carrying:** once a join has multiplied your rows, `count(*)` counts rows and nothing else. To count *things*, name the thing and say `DISTINCT`.
+| CompanyName                | Orders | Total sales |
+| -------------------------- | ------ | ----------- |
+| Cactus Comidas para llevar | 3      | 4567.8      |
+| Blauer See Delikatessen    | 3      | 4318.8      |
+| Frankenversand             | 3      | 4267.27     |
+| Lehmanns Marktstand        | 3      | 4077.12     |
+| Ernst Handel               | 3      | 3902.78     |
+| Alfreds Futterkiste        | <span className="rounded-md border-2 border-[rgb(var(--hl-good)/var(--hl-ring))] bg-[rgb(var(--hl-good)/var(--hl-head))] px-2.5 py-0.5">5</span> | 3838.43     |
+| …                          | …      | …           |
 
-## The second check: get the total a second way
+</div>
 
-The row count told you the grain moved. It did not tell you whether the *money* moved with it — and that is the number somebody is going to act on.
+`count(DISTINCT o."OrderID")` counts how many different order numbers are in each customer's rows, not how many rows there are. Alfreds' 11 order lines carry 5 different order numbers, so the result is 5. One word, in one place, and nothing else in the query changed.
 
-So get it twice, by two different routes. First through all three tables:
+Now look at what did **not** change: every figure in the money column is exactly where it was. `"Order Details"` set the grain, one row per order line, and the money is recorded on that same line. Each line appears exactly once in the joined rows, so adding up the money was correct from the start. Only the count broke, because an order with several lines appears on several rows, and its order number appears once on each of them.
+
+The ranking did not change either: the same customers, in the same order, from top to bottom. Only the middle column is different. If the first version had gone out, nobody reading it would have noticed.
+
+## Check the money a second way
+
+One number is left to double-check, and it is the most important one: the money.
+
+The row count showed that the grain changed. It did not show whether the money changed with it. So calculate the total twice, by two routes that do not look alike, and see whether they agree.
+
+The first route goes through all three tables, the way the report does:
 
 ```sql file=./scripts/report-total.sql
 SELECT ROUND(SUM(d."UnitPrice" * d."Quantity"
@@ -244,7 +286,7 @@ JOIN "Order Details" d
 | -------- |
 | 58153.31 |
 
-Now the short way, with no join at all — every penny on every order line there has ever been:
+The second route reads `"Order Details"` and nothing else, with no join at all:
 
 ```sql file=./scripts/total-a-second-way.sql
 SELECT ROUND(SUM("UnitPrice" * "Quantity"
@@ -256,60 +298,28 @@ FROM "Order Details";
 | -------- |
 | 58153.31 |
 
-**The same number.** And now you know something you could not have known by reading the query: the joins multiplied the *rows* and left the *money* alone. Each line is still counted exactly once.
+The same number, and the second route shares no join with the first.
 
-The order count survives the same treatment. Twenty-five customers, and the `Orders` column of the report adds up to seventy-nine — the number you started with:
+Because both routes agree, they prove something that reading the query could not: the joins multiplied the rows, repeating each `"OrderID"` once for every order line, but left the money alone. Every order line was still counted exactly once.
 
-```sql file=./scripts/orders-a-second-way.sql
-SELECT count(DISTINCT "OrderID") AS "Orders"
-FROM "Order Details";
-```
+### Two checks, every time
 
-| Orders |
-| ------ |
-| 79     |
+1. **Count the rows before a join and after it.** If the count moves, the grain moved.
+2. **Get the total in a second way** that does not look like the first one.
 
-Run that against the broken version and its `Orders` column adds up to **193**. The check catches the bug on its own, without anybody needing to notice that Alfreds looked busy.
+A join can change two different things: how many rows there are, and what those rows add up to. The two checks show which one happened.
 
-### The three pence you will find if you add the column up
+### What the checks cannot prove
 
-One more thing, because you will meet it the first time somebody checks your work with a calculator.
+Be careful here, because this is where people trust their own work too much.
 
-Add up the twenty-five figures in the `Total sales` column above and you get **58153.34**. The database says **58153.31**. Neither is a bug.
+Both routes were written by the same person, with the same idea of what revenue means. So they prove the plumbing: the joins did not duplicate the money, and the grouping did not lose any. They cannot prove that the number means what was asked for. If revenue were defined wrongly, for example by leaving out the discount, both routes would make the same mistake and still agree perfectly.
 
-Each customer's total was rounded to the penny before you saw it, and twenty-five roundings do not cancel each other out — they drift, here by three pence upward. The true total, unrounded, is 58153.3075.
+To check what a number **means**, compare it with a number from somewhere else: last quarter's figure, the total on an invoice, or the figure from the finance team.
 
-Three pence is nothing. On a report with a thousand rows and a currency conversion it is not nothing, and it is the sort of discrepancy that costs an afternoon. The habit that avoids it:
+## What the total doesn't show
 
-> **Round once, at the end.** A column of rounded numbers is not obliged to add up to the rounded total, and if both figures are going in front of the same person, compute the total from the raw values rather than from the column.
-
-This is worth knowing here specifically because the Excel report at the end of this lesson totals its money column in the footer — so the spreadsheet will say 58153.34 while a `SELECT` says 58153.31, and now you know which is which and why.
-
-### What a check proves, and what it does not
-
-Be clear about this, because it is where people over-trust their own arithmetic.
-
-The two checks prove that the **plumbing** did not break your number: the join did not duplicate it, the grouping did not lose it. They cannot prove the number **means** what you were asked for. Define revenue wrong and both routes will make the same mistake and agree with each other perfectly.
-
-So the strongest second way is one that does **not** come from you: last quarter's figure, the finance team's total, the number on the invoice. If your cross-check re-uses your own formula, it is checking your SQL, not your understanding.
-
-## So who is our number one customer?
-
-That question has been open since the filtering lesson, and it has now been answered three different ways:
-
-| Asked as | Answer |
-| -------- | ------ |
-| Who places the most orders? | A three-way tie — Alfreds Futterkiste, Ana Trujillo and Berglunds, five each |
-| Who pays us the most freight? | Frankenversand |
-| **Who spends the most money?** | **Cactus Comidas para llevar — 4567.80, on three orders** |
-
-Cactus is in neither of the other two answers. Alfreds Futterkiste, who orders more often than almost anyone, is **sixth**.
-
-That is not a contradiction and none of the three is wrong. "Number one customer" was never a SQL question — it was a question about what the business means by *number one*, and the useful move when somebody asks it is to ask them back.
-
-### The column that shows why
-
-Divide the money by the orders and the two customers stop looking similar:
+The report can show one more thing, and this one is not a check. Divide each customer's money by their number of orders to get the **average order value**:
 
 ```sql file=./scripts/avg-order-value.sql
 SELECT c."CompanyName",
@@ -328,58 +338,175 @@ GROUP BY c."CompanyName"
 ORDER BY "Total sales" DESC;
 ```
 
+{/* The same highlight as the video: the "Avg order" column in grey, which points without saying
+    right or wrong. The text under the table reads its numbers. */}
+
+<div className="[&_th:nth-child(4)]:bg-[rgb(var(--hl-grey)/var(--hl-head))] [&_td:nth-child(4)]:bg-[rgb(var(--hl-grey)/var(--hl-col))]">
+
 | CompanyName                | Orders | Total sales | Avg order |
 | -------------------------- | ------ | ----------- | --------- |
-| Cactus Comidas para llevar | 3      | 4567.80     | 1522.60   |
-| Blauer See Delikatessen    | 3      | 4318.80     | 1439.60   |
+| Cactus Comidas para llevar | 3      | 4567.8      | 1522.6    |
+| Blauer See Delikatessen    | 3      | 4318.8      | 1439.6    |
 | Frankenversand             | 3      | 4267.27     | 1422.42   |
 | Lehmanns Marktstand        | 3      | 4077.12     | 1359.04   |
 | Ernst Handel               | 3      | 3902.78     | 1300.93   |
 | Alfreds Futterkiste        | 5      | 3838.43     | 767.69    |
 | …                          | …      | …           | …         |
 
-Cactus orders rarely and enormously. Alfreds orders often and small. Those are two completely different customers who want two completely different things from your sales team, and no single "top customers" number would have told them apart.
+</div>
 
-Now go back and look at what the broken count did to *this* column. With eleven orders instead of five, Alfreds' average order value reads **348.95** instead of 767.69 — less than half, in the one number a sales director is most likely to act on.
+Now Cactus Comidas para llevar and Alfreds Futterkiste stop looking alike. Cactus spends 1522.6 per order, over 3 orders. Alfreds spends 767.69 per order, over 5 orders. Cactus buys less often, and each order is about twice as big. The two totals side by side, 4567.8 and 3838.43, never showed that.
 
-> A note if you run this in two places: `ROUND(a / b, 2)` comes back as a floating-point number on DuckDB and as an exact decimal on PostgreSQL, so DuckDB may print `1522.6` where CloudBeaver prints `1522.60`. Same value, different rendering — the same thing the data types lesson warned about.
+The average divides by the order count, so it depends on that count being right. Go back to the wrong count from earlier, where Alfreds had 11 orders instead of 5. The same 3838.43 divided by 11 gives an average of 348.95 instead of 767.69, which is less than half. And the average is the number people make decisions on. Nobody argues about a total, but people act on an average. That is why counting 11 orders instead of 5 was worth catching.
 
-## From a query to a report somebody receives
+## The whole query
 
-Everything above is a result grid in a database client. Nobody outside your team wants a result grid.
+Here is the whole report query, with the last line it needed:
 
-In DataPallas that same SQL is the entire data source of a finished document. Open **Configuration → Reports → Report Generation**, and:
+```sql file=./scripts/top-ten-customers.sql
+SELECT c."CompanyName",
+       count(DISTINCT o."OrderID") AS "Orders",
+       ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")), 2) AS "Total sales"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID"
+GROUP BY c."CompanyName"
+ORDER BY "Total sales" DESC LIMIT 10;
+```
 
-1. **DataSource** — choose *SQL query*, pick your database connection, and paste the query. This is the part that has to be right, and it is the part this whole course has been about.
-2. **Output / Template** — choose *Excel*, and point it at an HTML template that lays out the columns, freezes the header row and totals the money column in a footer.
-3. **Generate Reports** — and you have `CustomerSalesSummary.xlsx`.
+Six clauses, counting both joins, and every one of them was taught in an earlier lesson:
 
-From there it can go on a schedule and be emailed on the first of the month without anybody touching it again.
+| Clause | What it does here | Lesson |
+| ------ | ----------------- | ------ |
+| `SELECT` | the customer name, plus two calculations: the order count and the money | <a href="/data-academy/learn-sql/distinct-aliases-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Aliases, expressions and DISTINCT</a> and <a href="/data-academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Aggregate functions</a> |
+| `JOIN` twice | follows two links: customer to orders, then order to order lines | <a href="/data-academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Joins</a> |
+| `GROUP BY` | returns one row per customer | <a href="/data-academy/learn-sql/group-by" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">GROUP BY</a> |
+| `ORDER BY` … `LIMIT 10` | puts the biggest spender first and keeps the top ten | <a href="/data-academy/learn-sql/order-by-and-top-n" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">ORDER BY and LIMIT</a> |
 
-DataPallas ships this exact report as a ready-to-run sample — **Customer Sales Summary**, under *Samples*. Click *Try It* and it generates. Its query is the one you just wrote, with two additions that are worth reading now that you can:
+The last line comes from the sorting lesson, back when there was nothing worth ranking. Now there is.
 
-- `COUNT(DISTINCT O."OrderID")` — the same fix, for the same reason. It is in the shipped report because the bug is real and somebody hit it.
-- `COALESCE(OD."Discount", 0)` — insurance for a discount column that might be empty. Our Northwind never has one, but a production database is not obliged to be tidy, and multiplying by an empty cell gives you an empty answer rather than an error.
+{/* The same highlight as the video: the top row in blue. It is the answer to the question the
+    lesson opened with. */}
 
-The tool builds the document. **You supply the number, and nothing downstream can repair a wrong one** — a beautifully formatted spreadsheet full of eleven-order customers is worse than no spreadsheet at all, because somebody will believe it.
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
+| CompanyName                | Orders | Total sales |
+| -------------------------- | ------ | ----------- |
+| Cactus Comidas para llevar | 3      | 4567.8      |
+| Blauer See Delikatessen    | 3      | 4318.8      |
+| Frankenversand             | 3      | 4267.27     |
+| Lehmanns Marktstand        | 3      | 4077.12     |
+| Ernst Handel               | 3      | 3902.78     |
+| Alfreds Futterkiste        | 5      | 3838.43     |
+| Morgenstern Gesundkost     | 3      | 3289.13     |
+| Around the Horn            | 4      | 2701.58     |
+| Great Lakes Food Market    | 3      | 2683.28     |
+| LILA-Supermercado          | 3      | 2127.61     |
+
+</div>
+
+That is the top 10 customers, ranked by what they actually spent, from three joined tables.
+
+The answer to "who is our biggest customer?" is simply the top row: **Cactus Comidas para llevar**. Looking up one name would have given that answer once. The report gives the whole ranking, and a fresh answer every time it runs.
+
+### Check on everything, send the top ten
+
+`LIMIT 10` dropped 15 customers. The checks covered all 25, but the report that gets sent shows 10. Is that a problem?
+
+No, as long as the right version is checked. Run the checks on the query **without** `LIMIT`, because a total can only be checked when every row it came from is visible. Then add `LIMIT 10` to the version that gets sent. So there are two versions of the same query: check the longer one, and send the shorter one. The top 10 is for the reader, not for the checks.
+
+Also know what the cut removed. These are rows 10 to 12 of the full result:
+
+{/* The same highlight as the video: row 11 in the neutral tan. Nothing is wrong with it and it
+    is not a winner either; it is the row the cut removed. */}
+
+<div className="[&_tbody_tr:nth-child(2)]:bg-[rgb(var(--hl-neutral)/var(--hl-row))] [&_tbody_tr:nth-child(2)_td]:font-bold">
+
+| CompanyName            | Orders | Total sales |
+| ---------------------- | ------ | ----------- |
+| LILA-Supermercado      | 3      | 2127.61     |
+| Berglunds snabbköp     | 5      | 1952.66     |
+| Du monde entier        | 3      | 1918.93     |
+
+</div>
+
+Berglunds snabbköp is 11th. They placed 5 orders, more than 9 of the 10 customers in the report, and spent 1952.66. Nothing is wrong with that row. It fell below the cut because the report ranks customers by money, not by number of orders. So say so in the title, for example "Top 10 customers by total sales", and know what row 11 is before somebody asks.
+
+## Generate an Excel report
+
+Writing the top 10 query was the hard part, and the hard part was thinking it through in SQL, not typing it.
+
+Now a manager asks who the best customers are. Sending her the SQL and asking her to run it will not work: she does not write SQL, so she would have to pass it to someone who does. She works in Excel, and what she wants is an Excel file with the report already in it.
+
+A reporting tool turns the query into that file. This lesson uses DataPallas, which is already installed: it is where Northwind and CloudBeaver were started for this series. Other reporting tools work in much the same way. Each one needs its own connection to the database.
+
+### 1. Connect DataPallas to the same database
+
+**Configuration → Data Sources → New Database Connection.** Choose PostgreSQL, and point it at the same Northwind database used for every query in this series.
+
+![DataPallas Create Database Connection dialog: connection name Northwind, type PostgreSQL, host localhost, port 5432, database Northwind, user postgres, Use SSL unticked, and a Test Connection and Fetch Database Schema button.](/images/data-academy/learnsql-series1-50/db-connection-northwind-postgres.svg)
+
+> **Use `localhost` as the host.** CloudBeaver runs inside Docker, so it reaches the database at `host.docker.internal`. DataPallas runs directly on the computer, so it reaches the same database at `localhost`. With the host copied from CloudBeaver, DataPallas cannot connect.
+
+Click **Test Connection** before building anything on top of it. It shows whether the connection works before anything depends on it.
+
+### 2. Paste the query as the data source
+
+**Configuration → Reports → Report Generation**, then the **DataSource** tab. This tab says where the report's rows come from. Set the input type to **SQL Query**, choose the Northwind connection from step 1, and paste the query exactly as it is, including `LIMIT 10`.
+
+![The DataPallas DataSource tab with input type SQL Query, the Northwind (PostgreSQL) connection selected, the lesson's eleven-line query in the SQL editor, and a "Hey AI, Help Me With This SQL Query" button under it.](/images/data-academy/learnsql-series1-50/datasource-sql.svg)
+
+Under the editor there is a **Hey AI, Help Me With This SQL Query** button. For someone who does not know SQL, it is the faster way to get a query. But anyone can press it, and pressing it does not show whether the answer is right. An AI could make the same mistake as earlier on this page, 11 orders instead of 5, and give no warning. Someone who knows SQL knows what to ask for, and can tell when an answer is confidently wrong: run the two checks on it, the same as on any other query.
+
+### 3. Describe the Excel layout
+
+The **Output / Template** tab, with the output type set to **Excel**. The layout is an HTML template, but there is no HTML or CSS to write. Describe the layout in words, for example which headings, in which order, and a total under the money column. Then click **Hey AI, Help Me Build This XLSX Template**. The preview next to the template already shows the real data.
+
+![The DataPallas Output / Template tab: output type Microsoft Excel Docs, a "Hey AI, Help Me Build This XLSX Template!" button, the HTML template in a code editor on the left and a live preview on the right showing the ten customers with orders and total sales, and a footer reading "Customers shown: 10" and 35,773.80.](/images/data-academy/learnsql-series1-50/output-xlsx.svg)
+
+Or use this template, which produced the Excel file in the next step. Paste it into the template box and generate:
+
+```html file=./templates/top-ten-customers-excel.html
+```
+
+If the template is edited later, two details matter. It reads each column by its name, as `row["Total sales"]`, with quotes and square brackets because the name contains a space. And it formats the numbers itself, for example `?string["#,##0.00"]` for the money, which gives a comma between thousands and two decimals. The cells are marked `data-text-cell="true"`, so Excel shows each number exactly as written: 4,567.80.
+
+### 4. Generate the Excel file
+
+![Top10Customers.xlsx open in a spreadsheet: a frozen header row, the top ten customers with orders and total sales, and a footer reading "Customers shown: 10" and 35,773.80.](/images/data-academy/learnsql-series1-50/excel-output.svg)
+
+This is the report the manager asked for.
+
+Notice who did what. DataPallas formatted the numbers. The query calculated them. A wrongly calculated number looks just as neat in Excel as a correct one, and nothing after the query can fix it. With the first version of the query, this file would say Alfreds Futterkiste placed 11 orders, every other order count would be wrong too, and nobody reading the file would know. That is why the numbers were checked first.
+
+The footer total, 35,773.80, is the sum of the ten customers in the file. The 58153.31 from the checks is the total for all 25 customers.
 
 <a href="/docs/report-generation" target="_blank">Report Generation in DataPallas (read more)</a>
 
 ## Practice
 
-There are ten koans for this lesson, and they build the **other side of the same business**: not who spends the most with us, but whose goods earn us the most. Different tables — `"Suppliers"`, `"Products"` and `"Order Details"` — so you cannot answer them by copying a query off this page.
+There are ten koans for this lesson. They build the supplier side of the same business: instead of which customers spend the most with us, which suppliers' products earn us the most. They use different tables, `"Suppliers"`, `"Products"` and `"Order Details"`, so copying a query from this page will not answer them.
 
 ```powershell
 cd c:/DataPallas/db/datazeus
 .\zeus.bat koans learnsql series1 _50
 ```
 
-They walk the same path: count the rows before you group, follow the pointer a second time and watch six become twenty and then a hundred and ninety-three, sum the money, count the *things* rather than the rows, get the total a second way, rank it, filter the totals with `HAVING`, and watch a `WHERE` rewrite the whole ranking — one supplier goes from first place to last once you count only what you can still sell.
+On macOS or Linux, run `./zeus.sh koans learnsql series1 _50` from the same folder.
 
-The last two koans hand you nothing but the question. That is the exam, and it is the one that tells you whether this series worked.
+The file to edit is:
+
+```
+c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_50\YourFirstRealReportKoans.groovy
+```
+
+Open it in any editor. Each koan has a `___` where the answer belongs. Replace one, save, run the command again, and watch that koan go green.
+
+The koans follow the steps of this lesson: count the rows after one join and after two, add up the money for each supplier, count the different products instead of the rows, and check that count a second way without any join. Then divide the money by the right count to get an average, rank the products and keep the top six, and look at the product just below the cut. The last two koans give only the question, and the whole query has to be written from scratch.
 
 ## What is next
 
-You have finished Series 1. You can fetch, filter, sort, calculate, aggregate, group, filter the groups, join, and now assemble all of it into a report and check it before you send it.
-
-Series 2 opens where this lesson stopped. You watched a row count move from 79 to 193 and learned to notice it; the next series starts by asking what happens when it moves and you *did not* mean it — when a join multiplies the money instead of the rows, and no amount of `DISTINCT` will put it back.
+Series 2, Intermediate SQL, starts where this lesson ends: joining more tables, and building queries out of other queries, with subqueries, CTEs and window functions.
