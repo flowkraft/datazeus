@@ -28,14 +28,7 @@ It is worth an hour of your time because it is the reason queries return answers
 
 By the end of this lesson you will be able to ask any database what a column holds, and say what that means for the query you are about to write.
 
-Every query below runs on the Northwind sample database that ships with DataPallas.
-
-**Open the koans before you read on.** There is a koan for every idea in this lesson — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
-
-```powershell
-cd c:/DataPallas/db/datazeus
-.\zeus.bat koans learnsql series1 _07
-```
+Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
 ## A column type is a promise
 
@@ -161,6 +154,11 @@ FROM "Customers"
 LIMIT 8;
 ```
 
+{/* The same highlight as the video: the seventh row, Leipzig, tinted in terracotta as the
+    postal-result slide lights it, with a ring on 04179, the leading zero the text is about. */}
+
+<div className="[&_tbody_tr:nth-child(7)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(7)_td]:font-bold [&_tbody_tr:nth-child(7)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | CompanyName | City | PostalCode |
 | ----------- | ---- | ---------- |
 | Alfreds Futterkiste | Berlin | 12209 |
@@ -169,8 +167,10 @@ LIMIT 8;
 | Frankenversand | München | 80805 |
 | Königlich Essen | Brandenburg | 14776 |
 | Lehmanns Marktstand | Frankfurt a.M. | 60528 |
-| **Morgenstern Gesundkost** | **Leipzig** | **04179** |
+| Morgenstern Gesundkost | Leipzig | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">04179</span> |
 | Ottilies Käseladen | Köln | 50739 |
+
+</div>
 
 Every one of those is digits. `"PostalCode"` is still **text**, and the seventh row is why: Leipzig is `04179`. Store that as a number and the leading zero is gone — `4179` is not a postal code in Leipzig or anywhere else.
 
