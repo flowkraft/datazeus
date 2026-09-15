@@ -24,7 +24,7 @@ Every query below runs on the Northwind database on PostgreSQL. Type each one in
 
 ## The nested version
 
-Here is the query from the <a href="/data-academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> that finds the customers who spend more than the average customer:
+Here is the query from the <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> that finds the customers who spend more than the average customer:
 
 {/* The same highlight as the video: the innermost brackets, in grey. */}
 
@@ -122,7 +122,7 @@ The same nine customers as the nested query, and now it reads from top to bottom
 
 ## Steps that read steps
 
-One `WITH` can define several steps, separated by commas, and **each step can read the steps above it**. Here is the June product report from the <a href="/data-academy/learn-sql/multi-table-joins-duplicate-rows" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">multi-table joins lesson</a> as three steps: June's order lines, the units per product, and the report:
+One `WITH` can define several steps, separated by commas, and **each step can read the steps above it**. Here is the June product report from the <a href="/academy/learn-sql/multi-table-joins-duplicate-rows" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">multi-table joins lesson</a> as three steps: June's order lines, the units per product, and the report:
 
 {/* The same highlight as the video: the two step names in green, and june_units reading june_lines. */}
 
@@ -338,7 +338,7 @@ Six June lines from four orders, adding up to 40 units. This step is correct, so
 
 ## Customers who have gone quiet
 
-The <a href="/data-academy/learn-sql/case-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">CASE lesson</a> ended on a label it could not build yet, and the <a href="/data-academy/learn-sql/dates-and-times" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">dates lesson</a> calculated the days since each customer's last order. As named steps: `last_order` finds each customer's last order, `days_quiet` turns it into days, and a `CASE` in the final query adds the label.
+The case this series follows: in Northwind, a third of what was sold, 19169 of 58153.31, is on orders that have no ship date. The <a href="/academy/learn-sql/multi-table-joins-duplicate-rows" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">multi-table joins lesson</a> found where that money sits, by sales rep and by courier: the value of each order added up first, in brackets, and joined to the orders with no ship date. That is a report somebody re-runs every week, so it has to be easy to read.
 
 {/* The same highlight as the video: the two step names in green; the CASE in grey. */}
 

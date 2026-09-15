@@ -94,7 +94,7 @@ class CurriculumSpec extends Specification {
 
     @Unroll
     def "#track: episode slugs are unique across the whole course"() {
-        // The route drops the series (/data-academy/<course>/<slug>), so a duplicate slug is
+        // The route drops the series (/academy/<course>/<slug>), so a duplicate slug is
         // two lessons fighting over one URL — and the loser is silently unreachable.
         given:
         def slugs = episodesOf(load(dir))*.slug

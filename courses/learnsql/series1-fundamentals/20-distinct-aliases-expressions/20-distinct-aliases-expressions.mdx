@@ -255,7 +255,7 @@ Maria AndersatAlfreds Futterkiste
 That is the whole rule for `||`: it joins precisely what you hand it and adds nothing.
 
 <Callout>
-**A warning for later.** If any piece of a `||` is empty — a `NULL` — the *entire* result becomes `NULL`, not just that piece. One missing middle name and the whole line vanishes from your report. `"City"` and `"Country"` are filled in for all twenty-five customers here, so it cannot bite you today; `"Region"` is empty for most of them and would. The <a href="/data-academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL &amp; Three-Valued Logic</a> lesson is where `NULL` gets explained properly.
+**A warning for later.** If any piece of a `||` is empty — a `NULL` — the *entire* result becomes `NULL`, not just that piece. One missing middle name and the whole line vanishes from your report. `"City"` and `"Country"` are filled in for all twenty-five customers here, so it cannot bite you today; `"Region"` is empty for most of them and would. The <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL &amp; Three-Valued Logic</a> lesson is where `NULL` gets explained properly.
 </Callout>
 
 ## DISTINCT: duplicate values
@@ -370,7 +370,7 @@ HAVING COUNT(*) > 1;
 
 Run it and you get a single row back. That is your missing twenty-fifth.
 
-That is also why `DISTINCT` is a poor tool for "getting rid of duplicates" in general. When a result has rows in it you did not expect, `DISTINCT` will often make them disappear — and it will have hidden the reason rather than fixed it. **The usual cause is a join.** When one row on one side matches several rows on the other, every match comes back, and the row count multiplies without anything looking wrong. The <a href="/data-academy/learn-sql/multi-table-joins-duplicate-rows" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Multi-Table JOINs &amp; Grain</a> lesson is about exactly that. Until then: when extra rows surprise you, find out where they came from before you reach for `DISTINCT`.
+That is also why `DISTINCT` is a poor tool for "getting rid of duplicates" in general. When a result has rows in it you did not expect, `DISTINCT` will often make them disappear — and it will have hidden the reason rather than fixed it. **The usual cause is a join.** When one row on one side matches several rows on the other, every match comes back, and the row count multiplies without anything looking wrong. The <a href="/academy/learn-sql/multi-table-joins-duplicate-rows" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Multi-Table JOINs &amp; Grain</a> lesson is about exactly that. Until then: when extra rows surprise you, find out where they came from before you reach for `DISTINCT`.
 
 ### When two columns *is* what you meant
 

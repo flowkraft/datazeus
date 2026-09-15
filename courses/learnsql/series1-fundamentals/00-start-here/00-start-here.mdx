@@ -149,7 +149,7 @@ You may have caught the quotes around the table names: `"Orders"`, `"Customers"`
 
 Northwind's tables were created with quoted, capitalized names, so the table really is called `"Orders"`, capital O and all. The query quotes them to match:
 
-```sql file=./scripts/june-orders.sql
+```sql file=./scripts/june-orders.sql {2-4}#good
 SELECT count(*)
 FROM "Orders"
 WHERE "OrderDate" >= DATE '2024-06-01'
@@ -158,7 +158,7 @@ WHERE "OrderDate" >= DATE '2024-06-01'
 
 Now suppose you drop the quotes, and write `orders` instead of `Orders`:
 
-```sql
+```sql {2-4}
 SELECT count(*)
 FROM orders
 WHERE OrderDate >= DATE '2024-06-01'
@@ -175,4 +175,4 @@ A good default, then: write standard SQL, and when two engines genuinely disagre
 
 ## What's next
 
-Next up is SELECT, where you meet your tables, rows, and columns by actually querying them. (The rest of the series lives on the [Learn SQL](/data-academy/learn-sql) course page.)
+Next up is SELECT, where you meet your tables, rows, and columns by actually querying them. (The rest of the series lives on the [Learn SQL](/academy/learn-sql) course page.)

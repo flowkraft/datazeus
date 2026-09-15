@@ -17,14 +17,14 @@ Everything runs on your own machine.
 ## News (Just Shipped)
 
 <!-- Newest first, five at most. Add a line when you publish an episode; drop the oldest.
-     The URL is https://datapallas.com/data-academy/<course>/<slug> and the title is the
+     The URL is https://datapallas.com/academy/<course>/<slug> and the title is the
      one in that course's curriculum.yaml — a wrong one here is a dead link in the most
      visible part of the page. -->
-- **2026-09-14** — [SELECT + JOIN + GROUP BY — Building Your First Real Report](https://datapallas.com/data-academy/learn-sql/select-sum-join-group-by-order-by-limit-project)  ·  *SQL Fundamentals*
-- **2026-09-09** — [NULL & Three-Valued Logic — How Missing Values Change Your Results](https://datapallas.com/data-academy/learn-sql/null-and-three-valued-logic)  ·  *SQL Fundamentals*
-- **2026-09-08** — [JOINs: INNER, LEFT, RIGHT, FULL — Combining Rows From Two Tables](https://datapallas.com/data-academy/learn-sql/joins)  ·  *SQL Fundamentals*
-- **2026-09-07** — [HAVING vs WHERE — Filtering Groups and Filtering Rows](https://datapallas.com/data-academy/learn-sql/having-vs-where)  ·  *SQL Fundamentals*
-- **2026-09-05** — [GROUP BY — One Number per Customer, per Month, per Anything](https://datapallas.com/data-academy/learn-sql/group-by)  ·  *SQL Fundamentals*
+- **2026-09-14** — [SELECT + JOIN + GROUP BY — Building Your First Real Report](https://datapallas.com/academy/learn-sql/select-sum-join-group-by-order-by-limit-project)  ·  *SQL Fundamentals*
+- **2026-09-09** — [NULL & Three-Valued Logic — How Missing Values Change Your Results](https://datapallas.com/academy/learn-sql/null-and-three-valued-logic)  ·  *SQL Fundamentals*
+- **2026-09-08** — [JOINs: INNER, LEFT, RIGHT, FULL — Combining Rows From Two Tables](https://datapallas.com/academy/learn-sql/joins)  ·  *SQL Fundamentals*
+- **2026-09-07** — [HAVING vs WHERE — Filtering Groups and Filtering Rows](https://datapallas.com/academy/learn-sql/having-vs-where)  ·  *SQL Fundamentals*
+- **2026-09-05** — [GROUP BY — One Number per Customer, per Month, per Anything](https://datapallas.com/academy/learn-sql/group-by)  ·  *SQL Fundamentals*
 
 ⭐ **Star this repo** so you don't miss new lessons.
 
@@ -101,18 +101,18 @@ tells you what it returned versus what it should have — so you debug SQL, not 
 
 | Course | What you learn |
 |---|---|
-| **[Learn SQL](https://datapallas.com/data-academy/learn-sql)** | Query one table, then join two — `SELECT` through window functions, on five different databases |
-| **[Python for Data](https://datapallas.com/data-academy/learn-python)** | The half of the job SQL cannot do — read a file nobody cleaned, call an API, reshape it |
-| **[Java & Groovy for Data](https://datapallas.com/data-academy/learn-java-groovy)** | The data half of the job, in the language your company already runs |
-| **[Data Modeling](https://datapallas.com/data-academy/learn-data-modeling)** | Decide what the tables should be, before anyone writes a query against them |
-| **[Data Model Patterns](https://datapallas.com/data-academy/learn-data-model-patterns)** | The patterns under almost every business schema — Party and roles, effective dating, order to cash |
-| **[Schema Teardowns](https://datapallas.com/data-academy/learn-schema-teardowns)** | Read the schemas real teams actually shipped, and judge them against the patterns |
-| **[ETL & Data Pipelines](https://datapallas.com/data-academy/learn-etl-pipelines)** | Get data from where it is to where it is useful — repeatedly, without losing or duplicating a row |
-| **[Analytics Engineering with dbt](https://datapallas.com/data-academy/learn-dbt)** | Turn a folder of ad-hoc SELECTs into a version-controlled, tested, documented project |
-| **[Data Warehousing](https://datapallas.com/data-academy/learn-data-warehousing)** | Build the place the questions get answered fast — star schemas, columnar engines, cubes |
-| **[Data Ops](https://datapallas.com/data-academy/learn-data-ops)** | Keep it running — the terminal, PostgreSQL in production, and the job that dies at 3 a.m. |
-| **[BI & Data Visualization](https://datapallas.com/data-academy/learn-bi)** | Pick the right chart, agree what a metric means, and build a dashboard people act on |
-| **[AI for Data](https://datapallas.com/data-academy/learn-ai)** | Use AI on data you are responsible for — and be able to prove the answer is right |
+| **[Learn SQL](https://datapallas.com/academy/learn-sql)** | Query one table, then join two — `SELECT` through window functions, on five different databases |
+| **[Python for Data](https://datapallas.com/academy/learn-python)** | The half of the job SQL cannot do — read a file nobody cleaned, call an API, reshape it |
+| **[Java & Groovy for Data](https://datapallas.com/academy/learn-java-groovy)** | The data half of the job, in the language your company already runs |
+| **[Data Modeling](https://datapallas.com/academy/learn-data-modeling)** | Decide what the tables should be, before anyone writes a query against them |
+| **[Data Model Patterns](https://datapallas.com/academy/learn-data-model-patterns)** | The patterns under almost every business schema — Party and roles, effective dating, order to cash |
+| **[Schema Teardowns](https://datapallas.com/academy/learn-schema-teardowns)** | Read the schemas real teams actually shipped, and judge them against the patterns |
+| **[ETL & Data Pipelines](https://datapallas.com/academy/learn-etl-pipelines)** | Get data from where it is to where it is useful — repeatedly, without losing or duplicating a row |
+| **[Analytics Engineering with dbt](https://datapallas.com/academy/learn-dbt)** | Turn a folder of ad-hoc SELECTs into a version-controlled, tested, documented project |
+| **[Data Warehousing](https://datapallas.com/academy/learn-data-warehousing)** | Build the place the questions get answered fast — star schemas, columnar engines, cubes |
+| **[Data Ops](https://datapallas.com/academy/learn-data-ops)** | Keep it running — the terminal, PostgreSQL in production, and the job that dies at 3 a.m. |
+| **[BI & Data Visualization](https://datapallas.com/academy/learn-bi)** | Pick the right chart, agree what a metric means, and build a dashboard people act on |
+| **[AI for Data](https://datapallas.com/academy/learn-ai)** | Use AI on data you are responsible for — and be able to prove the answer is right |
 
 **Hundreds of episodes planned across all courses.** Being straight with you about where
 that stands: **Learn SQL Series 1 is publishing now** — the rest is written as roadmaps and is
@@ -127,7 +127,7 @@ ready to run.
 
 ## Links
 
-- **The courses, written out** — https://datapallas.com/data-academy
+- **The courses, written out** — https://datapallas.com/academy
 - **Setup guide** — https://datapallas.com/learn-data
 - **DataPallas** — everything you need to run the lessons, in one download:
   https://github.com/flowkraft/datapallas

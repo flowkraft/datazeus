@@ -33,7 +33,7 @@ That is worth reading twice, because every spreadsheet you have ever opened has 
 
 So when you run a query with no `ORDER BY`, the database returns the rows in whatever order was cheapest for it. That order is not random — but it is **not promised**, and it can change when the data changes, when the query changes, or when you run it somewhere else.
 
-You have already seen this happen. In the <a href="/data-academy/learn-sql/select-fetch-your-data" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">SELECT &amp; Column Lists</a> lesson you ran:
+You have already seen this happen. In the <a href="/academy/learn-sql/select-fetch-your-data" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">SELECT &amp; Column Lists</a> lesson you ran:
 
 ```sql
 SELECT "FirstName", "LastName", "Title"
@@ -124,7 +124,7 @@ Look at the fourth row. **8010 is the smallest number of the last three, and it 
 
 Nothing is broken. `"PostalCode"` is text, and the leading zero on `04179` is what settles it — a number would have dropped that zero. Text sorts like a dictionary, character by character. `'8'` beats `'7'`, so 8010 lands after 70563. Then `'8010'` and `'80805'` split at the fourth character, where `'1'` comes before `'8'`, so 8010 lands before 80805.
 
-For postal codes that is fine; nobody does arithmetic on them. Now picture a column of **money amounts stored as text**, the same way `"PostalCode"` is. Storing amounts as text is bad practice, and it happens more than you would think: **import a spreadsheet carelessly and every number arrives as text.** Sort that column biggest-first and you do not get the biggest amount — you get whichever one starts with the highest digit. That is the bug the <a href="/data-academy/learn-sql/data-types" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Data Types</a> lesson warned about, and this is what it looks like across a whole column.
+For postal codes that is fine; nobody does arithmetic on them. Now picture a column of **money amounts stored as text**, the same way `"PostalCode"` is. Storing amounts as text is bad practice, and it happens more than you would think: **import a spreadsheet carelessly and every number arrives as text.** Sort that column biggest-first and you do not get the biggest amount — you get whichever one starts with the highest digit. That is the bug the <a href="/academy/learn-sql/data-types" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Data Types</a> lesson warned about, and this is what it looks like across a whole column.
 
 <Callout>
 When a sort surprises you, check the **type** of the column you sorted on, before you check anything else.
@@ -132,7 +132,7 @@ When a sort surprises you, check the **type** of the column you sorted on, befor
 
 ## LIMIT: keep only the top few
 
-You have met `LIMIT` before — in the <a href="/data-academy/learn-sql/select-fetch-your-data" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">SELECT &amp; Column Lists</a> lesson it meant "show me a few rows so I can get an idea of what kind of data this table holds". Here it does a different job, and the difference is entirely the `ORDER BY` in front of it.
+You have met `LIMIT` before — in the <a href="/academy/learn-sql/select-fetch-your-data" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">SELECT &amp; Column Lists</a> lesson it meant "show me a few rows so I can get an idea of what kind of data this table holds". Here it does a different job, and the difference is entirely the `ORDER BY` in front of it.
 
 ```sql file=./scripts/top-5-expensive.sql {3-4}
 SELECT "ProductName", "UnitPrice"

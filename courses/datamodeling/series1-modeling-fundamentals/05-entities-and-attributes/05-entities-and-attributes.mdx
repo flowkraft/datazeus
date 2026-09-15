@@ -182,7 +182,7 @@ Six supplier contacts with four titles between them. One kind of thing lives in 
 
 The fix nearly everyone reaches for first is to add a second pair: `"ContactName2"` and `"ContactTitle2"`.
 
-![The Customers row for Alfreds Futterkiste with CompanyName, ContactName Maria Anders, ContactTitle Sales Representative, then two added columns ContactName2 and ContactTitle2 holding question marks, and a dashed ContactName3 labelled "a third contact?". Beside it, the question "Who handles accounts?" written as WHERE "ContactTitle" = 'Accounting Manager' OR "ContactTitle2" = 'Accounting Manager' OR one more for every copy, with the verdict: one condition per copy, one table change per new contact.](/images/data-academy/datamodeling-series1-05/contact-columns.svg)
+![The Customers row for Alfreds Futterkiste with CompanyName, ContactName Maria Anders, ContactTitle Sales Representative, then two added columns ContactName2 and ContactTitle2 holding question marks, and a dashed ContactName3 labelled "a third contact?". Beside it, the question "Who handles accounts?" written as WHERE "ContactTitle" = 'Accounting Manager' OR "ContactTitle2" = 'Accounting Manager' OR one more for every copy, with the verdict: one condition per copy, one table change per new contact.](/images/academy/datamodeling-series1-05/contact-columns.svg)
 
 Now ask the business's own question: **who handles accounts at each customer?** You would have to check `"ContactTitle"`, or `"ContactTitle2"`. A third contact means a third pair of columns, and a change to the table.
 
@@ -210,7 +210,7 @@ Numbered columns only move that wall. The pattern has a name, a **repeating grou
 
 ## Give the contact a home
 
-![Two boxes joined by a line labelled "has — one or more contacts". Customer holds customer id, company name and country. Contact, one row per person, holds name, role (buyer, accounts…) and which customer. Under them, two example rows: Alfreds Futterkiste, Maria Anders, buyer; Alfreds Futterkiste, to be named, accounts. Beside them: who handles accounts — one condition on role; a third contact — one more row; the table — never changes.](/images/data-academy/datamodeling-series1-05/contact-entity.svg)
+![Two boxes joined by a line labelled "has — one or more contacts". Customer holds customer id, company name and country. Contact, one row per person, holds name, role (buyer, accounts…) and which customer. Under them, two example rows: Alfreds Futterkiste, Maria Anders, buyer; Alfreds Futterkiste, to be named, accounts. Beside them: who handles accounts — one condition on role; a third contact — one more row; the table — never changes.](/images/academy/datamodeling-series1-05/contact-entity.svg)
 
 Give the contact a home of its own: **one row per person**, with a name, a role, and which customer the person belongs to.
 

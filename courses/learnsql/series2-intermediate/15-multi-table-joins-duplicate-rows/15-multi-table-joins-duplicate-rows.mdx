@@ -18,7 +18,7 @@ videoId: "learnsql-series2-15-multi-table-joins-duplicate-rows"
 
 ## Two things a join does without a word
 
-In the <a href="/data-academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">last lesson of Series 1</a>, a join multiplied the rows of a report, and `count(DISTINCT …)` put the count right. This lesson is about the two cases that lesson left out, because they are harder to see:
+In the <a href="/academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">last lesson of Series 1</a>, a join multiplied the rows of a report, and `count(DISTINCT …)` put the count right. This lesson is about the two cases that lesson left out, because they are harder to see:
 
 1. **A join that drops rows** that a `LEFT JOIN` was supposed to keep.
 2. **A join that multiplies money**: a total that is too big, with nothing in the result to show it.
@@ -29,7 +29,7 @@ Every query below runs on the Northwind database on PostgreSQL. Type each one in
 
 ## Every product, and its June units
 
-The first report: **every product, with the units it sold in June 2024**, including the products that sold nothing. "Every product" means a `LEFT JOIN` from `"Products"`, as in the <a href="/data-academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">JOINs lesson</a>, and June is a half-open range, as in the <a href="/data-academy/learn-sql/dates-and-times" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">dates lesson</a>. The June test goes in the `ON`:
+The first report: **every product, with the units it sold in June 2024**, including the products that sold nothing. "Every product" means a `LEFT JOIN` from `"Products"`, as in the <a href="/academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">JOINs lesson</a>, and June is a half-open range, as in the <a href="/academy/learn-sql/dates-and-times" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">dates lesson</a>. The June test goes in the `ON`:
 
 {/* The same highlight as the video: the two joins, in grey. */}
 
@@ -103,7 +103,7 @@ The June test sits in the `ON` of a `LEFT JOIN`, so it only decides whether an o
 
 ## Narrow first, then join
 
-The fix is to answer the June question first, in brackets, and then join the products to the answer. The brackets add up June's lines per product — a table in `FROM`, from the <a href="/data-academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> — and the products are `LEFT JOIN`ed to that table:
+The fix is to answer the June question first, in brackets, and then join the products to the answer. The brackets add up June's lines per product — a table in `FROM`, from the <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> — and the products are `LEFT JOIN`ed to that table:
 
 {/* The same highlight as the video: the June range, in green. */}
 

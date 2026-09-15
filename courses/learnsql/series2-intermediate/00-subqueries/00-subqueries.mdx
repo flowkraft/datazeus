@@ -18,7 +18,7 @@ videoId: "learnsql-series2-00-subqueries"
 
 ## The report came back with a question
 
-The top 10 customers report from the <a href="/data-academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">last lesson of Series 1</a> went to the manager, and it came back with a question: **which customers spend more than the average customer?**
+The top 10 customers report from the <a href="/academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">last lesson of Series 1</a> went to the manager, and it came back with a question: **which customers spend more than the average customer?**
 
 That question contains a second question: what is the average customer? Without SQL beyond Series 1, the only way to answer it is to run one query, write the number down, and paste it into a second query. This lesson shows how to let the database answer the first question inside the second one, with a **subquery**: a query in brackets that runs first, and whose result the outer query uses.
 
@@ -81,7 +81,7 @@ SQL Error [42803]: ERROR: aggregate functions are not allowed in WHERE
   Position: 71
 ```
 
-This is the rule from the <a href="/data-academy/learn-sql/having-vs-where" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">HAVING vs WHERE lesson</a>. `WHERE` looks at one row at a time, before anything has been added up, so when it runs there is no average to compare with. The average exists, but only as the result of a different query.
+This is the rule from the <a href="/academy/learn-sql/having-vs-where" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">HAVING vs WHERE lesson</a>. `WHERE` looks at one row at a time, before anything has been added up, so when it runs there is no average to compare with. The average exists, but only as the result of a different query.
 
 ## A query in brackets
 
@@ -237,7 +237,7 @@ ORDER BY c."CompanyName";
 
 </div>
 
-Ten rows, with Alfreds three times. Both queries are correct SQL, but only the first answers the question: who bought Chai is a list of customers, not a list of order lines. This is the repeated-rows problem from the <a href="/data-academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">report lesson</a>, seen from the other side: there, `count(DISTINCT …)` removed the repeats; here, `IN` never creates them.
+Ten rows, with Alfreds three times. Both queries are correct SQL, but only the first answers the question: who bought Chai is a list of customers, not a list of order lines. This is the repeated-rows problem from the <a href="/academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">report lesson</a>, seen from the other side: there, `count(DISTINCT …)` removed the repeats; here, `IN` never creates them.
 
 ### Your turn
 

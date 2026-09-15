@@ -1,7 +1,7 @@
 # The ordered episode list for Learn SQL — the SINGLE source of truth for the roadmap.
 #
 # Anything that has to know "what are the episodes, in what order, and where are we"
-# reads THIS file: the course page (/data-academy/learn-sql), the "you are here" roadmap
+# reads THIS file: the course page (/academy/learn-sql), the "you are here" roadmap
 # card in each Remotion composition, and the lesson/koan folder names.
 #
 # ── THE ACADEMY-WIDE RULE ABOUT TOOLS ────────────────────────────────────────────────
@@ -128,7 +128,7 @@
 #
 # EPISODE FIELDS
 #   n       gap-numbered (00, 05, 10, …) so a new episode slots in without renumbering.
-#   slug    the lesson folder is <n>-<slug>; the URL is /data-academy/<course>/<slug>.
+#   slug    the lesson folder is <n>-<slug>; the URL is /academy/<course>/<slug>.
 #           MUST be unique across the whole course — the route drops the series.
 #   title   "<SQL topic> — <hook>". The keywords lead, because someone scanning the course
 #           TOC is asking "does this cover the stuff I need?" before anything else; the hook

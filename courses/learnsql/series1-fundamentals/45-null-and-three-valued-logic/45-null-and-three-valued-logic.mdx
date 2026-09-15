@@ -17,7 +17,7 @@ Last lesson you made your first empty cells. A `LEFT JOIN` went looking for a ma
 
 Today somebody asks you something that sounds much easier: **which of our orders have not shipped yet?**
 
-You have been writing `WHERE` since the <a href="/data-academy/learn-sql/where-filtering" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">WHERE, AND/OR/NOT, IN, BETWEEN</a> lesson. The shipped date is the empty one. So you test the shipped date against nothing, run it, and get back **zero rows** — while 27 orders sit in that table unshipped, one of them since December 2022.
+You have been writing `WHERE` since the <a href="/academy/learn-sql/where-filtering" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">WHERE, AND/OR/NOT, IN, BETWEEN</a> lesson. The shipped date is the empty one. So you test the shipped date against nothing, run it, and get back **zero rows** — while 27 orders sit in that table unshipped, one of them since December 2022.
 
 Nothing errors. Nothing warns you. The query is not broken; it is answering a different question from the one you think you asked.
 
@@ -83,7 +83,7 @@ WHERE "ShippedDate" IS NULL;
 
 Its partner is `IS NOT NULL`, for the rows that do have a value. Those two are the only correct way to test for a missing value. **Never write `= NULL` or `<> NULL`**: both run, both match nothing, and neither will ever tell you.
 
-You have used `IS NULL` a few times already without being told why. The <a href="/data-academy/learn-sql/where-filtering" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">WHERE, AND/OR/NOT, IN, BETWEEN</a> lesson asked you to *park the two words for now*; the <a href="/data-academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">COUNT, SUM, AVG, MIN, MAX</a> lesson asked you to use them and trust them. Now you know what they are for — and why an equals sign was never going to work.
+You have used `IS NULL` a few times already without being told why. The <a href="/academy/learn-sql/where-filtering" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">WHERE, AND/OR/NOT, IN, BETWEEN</a> lesson asked you to *park the two words for now*; the <a href="/academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">COUNT, SUM, AVG, MIN, MAX</a> lesson asked you to use them and trust them. Now you know what they are for — and why an equals sign was never going to work.
 
 And here is the backlog itself:
 
@@ -123,7 +123,7 @@ LIMIT 5;
 | Du monde entier     | 17      | 2023-02-12 |
 | Frankenversand      | 20      | 2023-03-05 |
 
-Note where the `IS NULL` sits: in the `WHERE`, about the LEFT-hand table. That is the safe placement taught in the <a href="/data-academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">JOINs: INNER, LEFT, RIGHT</a> lesson, and it is unaffected by everything on this page.
+Note where the `IS NULL` sits: in the `WHERE`, about the LEFT-hand table. That is the safe placement taught in the <a href="/academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">JOINs: INNER, LEFT, RIGHT</a> lesson, and it is unaffected by everything on this page.
 
 ## An empty string is not a blank
 
@@ -341,7 +341,7 @@ a column, ask the same question you ask before you filter on one: *can this be e
 
 So far a missing value has been removing rows. Now it removes something you did not know was at risk.
 
-Back in the <a href="/data-academy/learn-sql/distinct-aliases-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Aliases, Expressions &amp; DISTINCT</a> lesson you glued columns together with `||` and were warned about one thing for later. This is later. Mailing labels — city and region on one line:
+Back in the <a href="/academy/learn-sql/distinct-aliases-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Aliases, Expressions &amp; DISTINCT</a> lesson you glued columns together with `||` and were warned about one thing for later. This is later. Mailing labels — city and region on one line:
 
 ```sql file=./scripts/label-broken.sql
 SELECT "City", "Region", "City" || ', ' || "Region" AS "Label"
@@ -419,7 +419,7 @@ But notice what `NULLIF` is really doing: **a zero and a blank are not the same 
 
 ## The numbers you already saw, and now the reason
 
-You met these two counts in the <a href="/data-academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">COUNT, SUM, AVG, MIN, MAX</a> lesson and were told they were both correct:
+You met these two counts in the <a href="/academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">COUNT, SUM, AVG, MIN, MAX</a> lesson and were told they were both correct:
 
 ```sql file=./scripts/count-star-vs-column.sql
 SELECT count(*) AS "Orders",
@@ -461,7 +461,7 @@ The habit that follows is cheap: **when an average matters, print the count besi
 
 ### And now you can fix the blank tile
 
-The <a href="/data-academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">COUNT, SUM, AVG, MIN, MAX</a> lesson left you with one more empty answer and no cure for it. We have never shipped an order to Japan, so `WHERE` throws away all 79 rows — and the query still comes back with a row:
+The <a href="/academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">COUNT, SUM, AVG, MIN, MAX</a> lesson left you with one more empty answer and no cure for it. We have never shipped an order to Japan, so `WHERE` throws away all 79 rows — and the query still comes back with a row:
 
 ```sql file=./scripts/japan-freight-filled.sql
 SELECT count(*) AS "Orders",
@@ -492,7 +492,7 @@ COALESCE(sum("Freight"), 0)   -- fills the EMPTY ANSWER. This is the one you
 
 Wrap the hole, not the wall around it. Here the hole is the *result*, not the column.
 
-And keep the honesty check from the <a href="/data-academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">COUNT, SUM, AVG, MIN, MAX</a> lesson beside it: a `0` you wrote with `COALESCE` and a `0` the data really contained look identical on a slide. If the difference matters — and for "revenue in Japan" it does — the `count(*)` in that same query is what tells the two apart.
+And keep the honesty check from the <a href="/academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">COUNT, SUM, AVG, MIN, MAX</a> lesson beside it: a `0` you wrote with `COALESCE` and a `0` the data really contained look identical on a slide. If the difference matters — and for "revenue in Japan" it does — the `count(*)` in that same query is what tells the two apart.
 
 ## The one place NULLs *are* treated as equal
 
@@ -602,7 +602,7 @@ ORDER BY "ShippedDate" DESC NULLS FIRST
 
 One boundary worth naming, because it uses the same word for a different question.
 
-**Whether a column should allow `NULL` at all** is a design decision, and it belongs to the <a href="/data-academy/learn-data-modeling" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Data Modeling</a> course — *Nullable, Missing Row or Separate Table*, in its Series 1 · Modeling Fundamentals. This lesson is about querying data that is already missing. That one is about whether the missing value should ever have been permitted — a `NOT NULL` constraint, a default, a separate table. Same word, different job, and the answer to a query problem is almost never "change the schema".
+**Whether a column should allow `NULL` at all** is a design decision, and it belongs to the <a href="/academy/learn-data-modeling" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Data Modeling</a> course — *Nullable, Missing Row or Separate Table*, in its Series 1 · Modeling Fundamentals. This lesson is about querying data that is already missing. That one is about whether the missing value should ever have been permitted — a `NOT NULL` constraint, a default, a separate table. Same word, different job, and the answer to a query problem is almost never "change the schema".
 
 ## What you can do now
 

@@ -42,7 +42,7 @@ LIMIT 6;
 
 For every row, CASE checks each `WHEN` **from the top**. The first test that is true gives the row its value, and CASE stops there. If no test is true, the `ELSE` value is used. `END` closes the CASE, and `AS "Band"` names the new column.
 
-It is an expression, like the calculated columns from the <a href="/data-academy/learn-sql/distinct-aliases-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">aliases and expressions lesson</a>. The difference is that it chooses its value instead of calculating it.
+It is an expression, like the calculated columns from the <a href="/academy/learn-sql/distinct-aliases-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">aliases and expressions lesson</a>. The difference is that it chooses its value instead of calculating it.
 
 {/* The same highlight as the video: order 1 in blue, the row the text reads. */}
 
@@ -153,7 +153,7 @@ ORDER BY "Label" NULLS LAST;
 
 ### How many orders are not heavy?
 
-The label is made in a subquery in `FROM` (the <a href="/data-academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a>), because a `WHERE` cannot see a name given in the same query's `SELECT`. Then the `WHERE` keeps the orders whose label is not 'heavy':
+The label is made in a subquery in `FROM` (the <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a>), because a `WHERE` cannot see a name given in the same query's `SELECT`. Then the `WHERE` keeps the orders whose label is not 'heavy':
 
 {/* The same highlight as the video: the WHERE, in red. */}
 
@@ -171,7 +171,7 @@ WHERE "Label" <> 'heavy';
 | --------- |
 | 0         |
 
-Zero, although 42 orders are not heavy. Every one of them is labelled NULL, and this is the rule from the <a href="/data-academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a>: NULL is not unequal to 'heavy'. The comparison `NULL <> 'heavy'` is **unknown**, and `WHERE` keeps only rows where the test is true. All 42 are dropped.
+Zero, although 42 orders are not heavy. Every one of them is labelled NULL, and this is the rule from the <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a>: NULL is not unequal to 'heavy'. The comparison `NULL <> 'heavy'` is **unknown**, and `WHERE` keeps only rows where the test is true. All 42 are dropped.
 
 ### Write the ELSE
 

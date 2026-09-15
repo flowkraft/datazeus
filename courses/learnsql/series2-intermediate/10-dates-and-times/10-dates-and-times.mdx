@@ -20,7 +20,7 @@ videoId: "learnsql-series2-10-dates-and-times"
 
 The manager wants a chart: **orders per month**, one bar for every month the business has been trading.
 
-It sounds like something Series 1 already covered. The <a href="/data-academy/learn-sql/group-by" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">GROUP BY lesson</a> used `EXTRACT` to pull the month out of a date, and grouping by that gives one row per month. This lesson starts there, because that query returns a chart that looks reasonable and is wrong. The rest of the lesson is about getting the edges of dates right: months, quarters, ranges, "recent", the difference between two dates, and the days that have no rows at all.
+It sounds like something Series 1 already covered. The <a href="/academy/learn-sql/group-by" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">GROUP BY lesson</a> used `EXTRACT` to pull the month out of a date, and grouping by that gives one row per month. This lesson starts there, because that query returns a chart that looks reasonable and is wrong. The rest of the lesson is about getting the edges of dates right: months, quarters, ranges, "recent", the difference between two dates, and the days that have no rows at all. At the end, the same tools take the case from the last two lessons one step further: the orders with no ship date, and since when.
 
 Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
@@ -256,7 +256,7 @@ WHERE "OrderDate" >= CURRENT_DATE
 | ------ |
 | 0      |
 
-The query is correct. `CURRENT_DATE` is today, and this data stops on 12 June 2024, so no order is less than 30 days old. On a live database, `CURRENT_DATE` is exactly what "recent" should mean. On a snapshot like this one, anchor "recent" on the data instead: the last order date, calculated in brackets with a <a href="/data-academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subquery</a>.
+The query is correct. `CURRENT_DATE` is today, and this data stops on 12 June 2024, so no order is less than 30 days old. On a live database, `CURRENT_DATE` is exactly what "recent" should mean. On a snapshot like this one, anchor "recent" on the data instead: the last order date, calculated in brackets with a <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subquery</a>.
 
 {/* The same highlight as the video: the anchor, in green. */}
 
@@ -318,7 +318,7 @@ WHERE CAST("ShippedDate" AS DATE)
 | ----------- |
 | 13          |
 
-This is why the <a href="/data-academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a> cast both sides when it measured days to ship. `"ShippedDate" - "OrderDate" > INTERVAL '7 days'` also works and returns the same 13; the cast is the version that gives you a number you can round, average and show.
+This is why the <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a> cast both sides when it measured days to ship. `"ShippedDate" - "OrderDate" > INTERVAL '7 days'` also works and returns the same 13; the cast is the version that gives you a number you can round, average and show.
 
 The days for the first five orders:
 
@@ -440,7 +440,7 @@ Four rows. Nothing happened on 6 June, so there is no row for it, and a chart dr
 
 ### A date spine
 
-The fix is to generate every day first, then attach the orders to the days. `generate_series` produces one timestamp per day from 1 June to 30 June, and a `LEFT JOIN` from the <a href="/data-academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">JOINs lesson</a> keeps every day, including the days with no matching order:
+The fix is to generate every day first, then attach the orders to the days. `generate_series` produces one timestamp per day from 1 June to 30 June, and a `LEFT JOIN` from the <a href="/academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">JOINs lesson</a> keeps every day, including the days with no matching order:
 
 {/* The same highlight as the video: generate_series, in green. */}
 

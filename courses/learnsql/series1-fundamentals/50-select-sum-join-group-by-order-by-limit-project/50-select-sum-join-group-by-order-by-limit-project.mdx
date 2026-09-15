@@ -13,7 +13,7 @@ videoId: "learnsql-series1-50-your-first-real-report"
 
 ## Who is our biggest customer?
 
-Leo asked that question back in the <a href="/data-academy/learn-sql/where-filtering" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">filtering lesson</a>, and the answer has been "be patient" ever since. Every lesson after it gave him one piece of the answer:
+Leo asked that question back in the <a href="/academy/learn-sql/where-filtering" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">filtering lesson</a>, and the answer has been "be patient" ever since. Every lesson after it gave him one piece of the answer:
 
 - **Sorting** could rank rows, but it could not add anything up.
 - **Adding up** gave one number for the whole business, not one per customer.
@@ -27,10 +27,10 @@ The answer needs four things, and each one had a lesson of its own:
 
 | The answer needs | Because | Lesson |
 | ---------------- | ------- | ------ |
-| `JOIN` | the customer's name and the money are in three different tables | <a href="/data-academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Joins</a> |
-| `GROUP BY` | the report needs one total for each customer, not one for the whole business | <a href="/data-academy/learn-sql/group-by" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">GROUP BY</a> |
-| `SUM` | each customer's money is spread over many rows | <a href="/data-academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Aggregate functions</a> |
-| `ORDER BY` and `LIMIT` | the biggest spender goes first, and the list stops after the top few | <a href="/data-academy/learn-sql/order-by-and-top-n" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">ORDER BY and LIMIT</a> |
+| `JOIN` | the customer's name and the money are in three different tables | <a href="/academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Joins</a> |
+| `GROUP BY` | the report needs one total for each customer, not one for the whole business | <a href="/academy/learn-sql/group-by" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">GROUP BY</a> |
+| `SUM` | each customer's money is spread over many rows | <a href="/academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Aggregate functions</a> |
+| `ORDER BY` and `LIMIT` | the biggest spender goes first, and the list stops after the top few | <a href="/academy/learn-sql/order-by-and-top-n" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">ORDER BY and LIMIT</a> |
 
 None of them gets there alone. Leave out any one, and the result still looks finished, but it does not answer the question.
 
@@ -50,7 +50,7 @@ Then ask the second half, which people often skip: **one row of the thing I am a
 
 ### The report needs three tables
 
-![Three tables side by side. "Customers", 25 rows, gives the report the customer's name — without it the report is a column of codes. "Orders", 79 rows, joined on "CustomerID", says which orders are whose — without it there are names on one side and money on the other and no way across. "Order Details", 193 rows, joined on "OrderID", holds the money, one row per thing bought — without it orders can be counted but not a penny added up.](/images/data-academy/learnsql-series1-50/three-tables.svg)
+![Three tables side by side. "Customers", 25 rows, gives the report the customer's name — without it the report is a column of codes. "Orders", 79 rows, joined on "CustomerID", says which orders are whose — without it there are names on one side and money on the other and no way across. "Order Details", 193 rows, joined on "OrderID", holds the money, one row per thing bought — without it orders can be counted but not a penny added up.](/images/academy/learnsql-series1-50/three-tables.svg)
 
 - `"Customers"` gives the report the customer's name. Without it, the report shows customer codes instead of names.
 - `"Orders"` says which orders belong to which customer, through `"CustomerID"`. Without it, the names are in one table and the money is in another, with nothing that connects them.
@@ -381,10 +381,10 @@ Six clauses, counting both joins, and every one of them was taught in an earlier
 
 | Clause | What it does here | Lesson |
 | ------ | ----------------- | ------ |
-| `SELECT` | the customer name, plus two calculations: the order count and the money | <a href="/data-academy/learn-sql/distinct-aliases-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Aliases, expressions and DISTINCT</a> and <a href="/data-academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Aggregate functions</a> |
-| `JOIN` twice | follows two links: customer to orders, then order to order lines | <a href="/data-academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Joins</a> |
-| `GROUP BY` | returns one row per customer | <a href="/data-academy/learn-sql/group-by" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">GROUP BY</a> |
-| `ORDER BY` … `LIMIT 10` | puts the biggest spender first and keeps the top ten | <a href="/data-academy/learn-sql/order-by-and-top-n" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">ORDER BY and LIMIT</a> |
+| `SELECT` | the customer name, plus two calculations: the order count and the money | <a href="/academy/learn-sql/distinct-aliases-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Aliases, expressions and DISTINCT</a> and <a href="/academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Aggregate functions</a> |
+| `JOIN` twice | follows two links: customer to orders, then order to order lines | <a href="/academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Joins</a> |
+| `GROUP BY` | returns one row per customer | <a href="/academy/learn-sql/group-by" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">GROUP BY</a> |
+| `ORDER BY` … `LIMIT 10` | puts the biggest spender first and keeps the top ten | <a href="/academy/learn-sql/order-by-and-top-n" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">ORDER BY and LIMIT</a> |
 
 The last line comes from the sorting lesson, back when there was nothing worth ranking. Now there is.
 
@@ -447,7 +447,7 @@ A reporting tool turns the query into that file. This lesson uses DataPallas, wh
 
 **Configuration → Data Sources → New Database Connection.** Choose PostgreSQL, and point it at the same Northwind database used for every query in this series.
 
-![DataPallas Create Database Connection dialog: connection name Northwind, type PostgreSQL, host localhost, port 5432, database Northwind, user postgres, Use SSL unticked, and a Test Connection and Fetch Database Schema button.](/images/data-academy/learnsql-series1-50/db-connection-northwind-postgres.svg)
+![DataPallas Create Database Connection dialog: connection name Northwind, type PostgreSQL, host localhost, port 5432, database Northwind, user postgres, Use SSL unticked, and a Test Connection and Fetch Database Schema button.](/images/academy/learnsql-series1-50/db-connection-northwind-postgres.svg)
 
 > **Use `localhost` as the host.** CloudBeaver runs inside Docker, so it reaches the database at `host.docker.internal`. DataPallas runs directly on the computer, so it reaches the same database at `localhost`. With the host copied from CloudBeaver, DataPallas cannot connect.
 
@@ -457,7 +457,7 @@ Click **Test Connection** before building anything on top of it. It shows whethe
 
 **Configuration → Reports → Report Generation**, then the **DataSource** tab. This tab says where the report's rows come from. Set the input type to **SQL Query**, choose the Northwind connection from step 1, and paste the query exactly as it is, including `LIMIT 10`.
 
-![The DataPallas DataSource tab with input type SQL Query, the Northwind (PostgreSQL) connection selected, the lesson's eleven-line query in the SQL editor, and a "Hey AI, Help Me With This SQL Query" button under it.](/images/data-academy/learnsql-series1-50/datasource-sql.svg)
+![The DataPallas DataSource tab with input type SQL Query, the Northwind (PostgreSQL) connection selected, the lesson's eleven-line query in the SQL editor, and a "Hey AI, Help Me With This SQL Query" button under it.](/images/academy/learnsql-series1-50/datasource-sql.svg)
 
 Under the editor there is a **Hey AI, Help Me With This SQL Query** button. For someone who does not know SQL, it is the faster way to get a query. But anyone can press it, and pressing it does not show whether the answer is right. An AI could make the same mistake as earlier on this page, 11 orders instead of 5, and give no warning. Someone who knows SQL knows what to ask for, and can tell when an answer is confidently wrong: run the two checks on it, the same as on any other query.
 
@@ -465,7 +465,7 @@ Under the editor there is a **Hey AI, Help Me With This SQL Query** button. For 
 
 The **Output / Template** tab, with the output type set to **Excel**. The layout is an HTML template, but there is no HTML or CSS to write. Describe the layout in words, for example which headings, in which order, and a total under the money column. Then click **Hey AI, Help Me Build This XLSX Template**. The preview next to the template already shows the real data.
 
-![The DataPallas Output / Template tab: output type Microsoft Excel Docs, a "Hey AI, Help Me Build This XLSX Template!" button, the HTML template in a code editor on the left and a live preview on the right showing the ten customers with orders and total sales, and a footer reading "Customers shown: 10" and 35,773.80.](/images/data-academy/learnsql-series1-50/output-xlsx.svg)
+![The DataPallas Output / Template tab: output type Microsoft Excel Docs, a "Hey AI, Help Me Build This XLSX Template!" button, the HTML template in a code editor on the left and a live preview on the right showing the ten customers with orders and total sales, and a footer reading "Customers shown: 10" and 35,773.80.](/images/academy/learnsql-series1-50/output-xlsx.svg)
 
 Or use this template, which produced the Excel file in the next step. Paste it into the template box and generate:
 
@@ -476,7 +476,7 @@ If the template is edited later, two details matter. It reads each column by its
 
 ### 4. Generate the Excel file
 
-![Top10Customers.xlsx open in a spreadsheet: a frozen header row, the top ten customers with orders and total sales, and a footer reading "Customers shown: 10" and 35,773.80.](/images/data-academy/learnsql-series1-50/excel-output.svg)
+![Top10Customers.xlsx open in a spreadsheet: a frozen header row, the top ten customers with orders and total sales, and a footer reading "Customers shown: 10" and 35,773.80.](/images/academy/learnsql-series1-50/excel-output.svg)
 
 This is the report the manager asked for.
 

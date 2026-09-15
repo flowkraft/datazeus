@@ -25,7 +25,7 @@ videoId: "datamodeling-series1-00-start-here"
 
 ## So what does Northwind actually do?
 
-If you took the <a href="/data-academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Learn SQL</a> course, you have queried Northwind for a whole course. You found its biggest customer in eleven lines.
+If you took the <a href="/academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Learn SQL</a> course, you have queried Northwind for a whole course. You found its biggest customer in eleven lines.
 
 So answer this in plain words: **what does this company do?**
 
@@ -45,7 +45,7 @@ That is already a data model. It is not a finished one, but every table in the l
 
 The same idea can be written down in three ways, and each way has a name:
 
-![Three sheets, left to right, holding one idea. CONCEPTUAL, the business in words: "Every product belongs to exactly one category. A category can hold many products." LOGICAL, the things and how they connect: a Category box and a Product box joined by a line with a single bar at Category (exactly one) and a crow's foot at Product (many). PHYSICAL, what a database builds: CREATE TABLE "Categories" with "CategoryID" INTEGER PRIMARY KEY and "CategoryName" VARCHAR NOT NULL, and CREATE TABLE "Products" with "ProductID" INTEGER PRIMARY KEY and "CategoryID" INTEGER REFERENCES "Categories".](/images/data-academy/datamodeling-series1-00/three-layers.svg)
+![Three sheets, left to right, holding one idea. CONCEPTUAL, the business in words: "Every product belongs to exactly one category. A category can hold many products." LOGICAL, the things and how they connect: a Category box and a Product box joined by a line with a single bar at Category (exactly one) and a crow's foot at Product (many). PHYSICAL, what a database builds: CREATE TABLE "Categories" with "CategoryID" INTEGER PRIMARY KEY and "CategoryName" VARCHAR NOT NULL, and CREATE TABLE "Products" with "ProductID" INTEGER PRIMARY KEY and "CategoryID" INTEGER REFERENCES "Categories".](/images/academy/datamodeling-series1-00/three-layers.svg)
 
 - The sentence is the **conceptual** layer: the business in words. Anyone in the business can check it.
 - The boxes and the line are the **logical** layer: the things and how they connect. There is no database in it yet.
@@ -75,7 +75,7 @@ Notice the two words **exactly one** and **many**. They matter in the next step.
 
 ## Draw: the same sentence
 
-![Two boxes joined by one line. "Categories" lists "CategoryID", "CategoryName" and "Description"; "Products" lists "ProductID", "ProductName" and "CategoryID", with "CategoryID" highlighted in both. A single bar on the line at Categories is labelled "exactly one", a crow's foot at Products is labelled "many", and under the diagram the line is read back: "Each product has exactly one category — and a category has many products."](/images/data-academy/datamodeling-series1-00/categories-products.svg)
+![Two boxes joined by one line. "Categories" lists "CategoryID", "CategoryName" and "Description"; "Products" lists "ProductID", "ProductName" and "CategoryID", with "CategoryID" highlighted in both. A single bar on the line at Categories is labelled "exactly one", a crow's foot at Products is labelled "many", and under the diagram the line is read back: "Each product has exactly one category — and a category has many products."](/images/academy/datamodeling-series1-00/categories-products.svg)
 
 Two boxes and one line. The single bar at `"Categories"` says **exactly one**. The crow's foot at `"Products"` says **many**. The line is drawn in what is called crow's-foot notation, and the lesson on relationships teaches it properly.
 

@@ -33,7 +33,7 @@ file cannot leak into anything:
 
 - **Lesson:** write it, then drop the `_todo-` prefix. **Careful — that publishes it.**
   `published` defaults to `true` in the `Lesson` type, and the course pages filter on it
-  (`app/(marketing)/data-academy/…`), so a renamed file with no `published` line goes live on
+  (`app/(marketing)/academy/…`), so a renamed file with no `published` line goes live on
   the next build. Add `published: false` to the front-matter while it is still a draft, and
   remove that line when the video is up.
 - **Koan:** write the koans, then move the file from `src/koans/_todo/<track>/…` into
