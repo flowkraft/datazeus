@@ -1,0 +1,308 @@
+---
+title: "Start Here: The Modeling Loop — From What a Business Does to Tables That Prove It"
+description: "You can query Northwind, but can you say what the business does? Run the modeling loop once, from one sentence to a table that loads the real rows and refuses the impossible ones."
+topic: "learn-data-modeling"
+tags: ["data-modeling", "fundamentals", "modeling-loop", "primary-key", "not-null", "er-diagram"]
+level: "beginner"
+module: "series1-modeling-fundamentals"
+order: 0
+date: "2026-09-14"
+published: false
+videoId: "datamodeling-series1-00-start-here"
+---
+
+{/* ==========================================================================
+    HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
+      check:fits
+      check:refuses
+      tab:er-diagram
+      build:schema.sql
+      cards
+      dataset: northwind:model
+      check suite: series1/NorthwindModelChecks.groovy — this episode adds its checks there
+      cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson
+   ========================================================================== */}
+
+## So what does Northwind actually do?
+
+If you took the <a href="/data-academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Learn SQL</a> course, you have queried Northwind for a whole course. You found its biggest customer in eleven lines.
+
+So answer this in plain words: **what does this company do?**
+
+Most people answer with a list: Customers, Orders, Order Details, Products, Categories, Suppliers, Shippers, Employees. That is a list of tables. It says what the database holds, not what the business does.
+
+## Say it before you build it
+
+Tables are where a design ends up. A design starts as **sentences about the business**:
+
+> Northwind buys food from suppliers and sells it to customers. A customer places orders, and a shipper delivers them. Every product sits in a category.
+
+That is already a data model. It is not a finished one, but every table in the list above is hiding in those sentences, and so is every rule those tables will have to keep.
+
+> **A model is the business, written down.**
+
+## One idea, three layers
+
+The same idea can be written down in three ways, and each way has a name:
+
+![Three sheets, left to right, holding one idea. CONCEPTUAL, the business in words: "Every product belongs to exactly one category. A category can hold many products." LOGICAL, the things and how they connect: a Category box and a Product box joined by a line with a single bar at Category (exactly one) and a crow's foot at Product (many). PHYSICAL, what a database builds: CREATE TABLE "Categories" with "CategoryID" INTEGER PRIMARY KEY and "CategoryName" VARCHAR NOT NULL, and CREATE TABLE "Products" with "ProductID" INTEGER PRIMARY KEY and "CategoryID" INTEGER REFERENCES "Categories".](/images/data-academy/datamodeling-series1-00/three-layers.svg)
+
+- The sentence is the **conceptual** layer: the business in words. Anyone in the business can check it.
+- The boxes and the line are the **logical** layer: the things and how they connect. There is no database in it yet.
+- The `CREATE TABLE` is the **physical** layer: what a database actually builds.
+
+When two people argue about a design, first ask which layer they are arguing about. Often one of them is talking about the business and the other about a column type.
+
+## The modeling loop
+
+This whole course runs one loop. Every later lesson is one of these five steps, done properly:
+
+1. **LISTEN** — say the business in sentences.
+2. **DRAW** — the things, and the lines between them.
+3. **SHAPE** — one row per what, and what makes it unique.
+4. **BUILD** — `CREATE TABLE`.
+5. **PROVE** — load the real rows, then try to break it.
+
+The first four are design. The fifth is trying to break your own work, on purpose. This lesson goes round the loop once: small, fast, and all the way.
+
+## Listen: one sentence
+
+Start with the smallest true sentence in the business:
+
+> **Every product belongs to exactly one category.** A category can hold many products.
+
+Notice the two words **exactly one** and **many**. They matter in the next step.
+
+## Draw: the same sentence
+
+![Two boxes joined by one line. "Categories" lists "CategoryID", "CategoryName" and "Description"; "Products" lists "ProductID", "ProductName" and "CategoryID", with "CategoryID" highlighted in both. A single bar on the line at Categories is labelled "exactly one", a crow's foot at Products is labelled "many", and under the diagram the line is read back: "Each product has exactly one category — and a category has many products."](/images/data-academy/datamodeling-series1-00/categories-products.svg)
+
+Two boxes and one line. The single bar at `"Categories"` says **exactly one**. The crow's foot at `"Products"` says **many**. The line is drawn in what is called crow's-foot notation, and the lesson on relationships teaches it properly.
+
+Now read the line out loud: *each product has exactly one category, and a category has many products.* You get the sentence back. A diagram is not a picture of the tables. **It is the sentence, drawn.**
+
+In DataPallas, CloudBeaver's **ER Diagram** tab (`er-diagram`) draws the boxes and lines of a real schema for you. Open it on any table to see how a database draws what you just drew by hand.
+
+## Build it where you cannot break anything
+
+You do not build in Northwind itself. You build in a **copy** of it, with a schema of your own called `practice`. One command makes the copy:
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat practice reset
+```
+
+On macOS or Linux, run `./zeus.sh practice reset` from the same folder.
+
+It creates `practice/northwind-practice.duckdb` and your working file `practice/schema.sql`. Northwind's own tables stay untouched beside yours, which is exactly what lets you load their real rows into your design and see whether they fit. Getting the design wrong is the plan: it cannot damage anything.
+
+The queries below run the same on PostgreSQL in CloudBeaver and on the practice DuckDB copy. `FROM "Categories"` reads Northwind's own table; `practice."Categories"` is yours.
+
+## Count first
+
+Before you build, count what your design has to hold:
+
+```sql file=./scripts/count-categories.sql
+SELECT count(*) AS "Categories"
+FROM "Categories";
+```
+
+| Categories |
+| ---------- |
+| 8          |
+
+Eight categories. It is the same habit as in the report lesson: know the number before anything can change it.
+
+## Build: two rules, two words
+
+Now the physical layer. The table comes with two rules, and both of them are sentences:
+
+```sql file=./scripts/create-categories.sql {2-3}
+CREATE TABLE practice."Categories" (
+  "CategoryID"   INTEGER PRIMARY KEY,
+  "CategoryName" VARCHAR NOT NULL,
+  "Description"  VARCHAR
+);
+```
+
+- `PRIMARY KEY` says **no two categories share a number.**
+- `NOT NULL` says **every category has a name.**
+- The description may be empty, so it gets **no rule at all.**
+
+## Prove: do the real rows fit?
+
+Pour the real business into your design, straight from Northwind's table into yours, in one statement:
+
+```sql file=./scripts/load-categories.sql
+INSERT INTO practice."Categories"
+SELECT "CategoryID", "CategoryName",
+       "Description"
+FROM "Categories"
+ORDER BY "CategoryID";
+```
+
+| Updated Rows |
+| ------------ |
+| 8            |
+
+Eight updated rows, the same eight you counted, and nothing was refused. The real data fits the model. Count your own table to be sure:
+
+```sql file=./scripts/count-your-categories.sql
+SELECT count(*) AS "Categories"
+FROM practice."Categories";
+```
+
+| Categories |
+| ---------- |
+| 8          |
+
+That is the first proof: **the model fits.**
+
+## Prove: now try to break it
+
+A table that only ever loads good rows has proved half of what it should. Now try to get a bad row in: a new category called Drinks, with number 1, which Beverages already has.
+
+```sql file=./scripts/insert-a-second-category-1.sql
+INSERT INTO practice."Categories"
+VALUES (1, 'Drinks',
+        'Anything you pour');
+```
+
+```text
+SQL Error [23505]: ERROR: duplicate key value violates unique constraint "Categories_pkey"
+  Detail: Key ("CategoryID")=(1) already exists.
+```
+
+Red, and an error. Did you break something? No: **you proved something.** Read the detail line: *key 1 already exists.* Your rule said no two categories share a number, and the database kept that rule for you.
+
+DuckDB words the same refusal differently: *"Constraint Error: Duplicate key "CategoryID: 1" violates primary key constraint."* Newer DuckDB versions may phrase it differently again. Every version refuses the row.
+
+## And a good row still gets in
+
+A refusal only counts next to a row that still gets in. Try a different category, Frozen Foods, with a number nobody has, 9:
+
+```sql file=./scripts/insert-a-new-category.sql
+INSERT INTO practice."Categories"
+VALUES (9, 'Frozen Foods',
+        'Kept below zero');
+```
+
+| Updated Rows |
+| ------------ |
+| 1            |
+
+One updated row. The table is not saying no to everything. It said no to the one thing the business does not allow.
+
+## Every category has a name
+
+Before you run the next one, predict what happens: a category with no name.
+
+```sql file=./scripts/insert-a-nameless-category.sql
+INSERT INTO practice."Categories"
+VALUES (10, NULL,
+        'A category with no name');
+```
+
+```text
+SQL Error [23502]: ERROR: null value in column "CategoryName" of relation "Categories" violates not-null constraint
+  Detail: Failing row contains (10, null, A category with no name).
+```
+
+Refused, and the message names the column. On DuckDB: *"Constraint Error: NOT NULL constraint failed: Categories.CategoryName"*.
+
+Two rules, two refusals, and your table still holds nine categories:
+
+```sql file=./scripts/list-your-categories.sql
+SELECT "CategoryID", "CategoryName"
+FROM practice."Categories"
+ORDER BY "CategoryID";
+```
+
+| CategoryID | CategoryName   |
+| ---------- | -------------- |
+| 1          | Beverages      |
+| 2          | Condiments     |
+| 3          | Confections    |
+| 4          | Dairy Products |
+| 5          | Grains/Cereals |
+| 6          | Meat/Poultry   |
+| 7          | Produce        |
+| 8          | Seafood        |
+| 9          | Frozen Foods   |
+
+## Why "no" is good news
+
+All through Learn SQL, an error meant you had done something wrong. Here the database said no twice, and that is the good result.
+
+**In a query, an error is your mistake. In a model, a refusal is your rule working.** A table that takes any row at all is not a model. It is a pile.
+
+The other half matters just as much. A model with so many rules that it refuses real business is not a good model either. So a good design says **yes to the business and no to everything else**, and the only way to know it does is to try both.
+
+> **A model is judged by what it refuses — and by what it still lets in.**
+
+## Three ways a model proves itself
+
+1. **FITS** — the business's real rows load.
+2. **REFUSES** — impossible rows bounce, and possible ones still get in.
+3. **ANSWERS** — the business's questions come back right.
+
+You have done the first two already. The third arrives once your tables start answering questions. Later in the course two more proofs join them, surviving a change and totals that agree, but these three carry this whole series. There is no answer key: **the business itself grades the model.**
+
+## How you practise
+
+There are no koans with blanks in this course. A design has more than one right answer, so a single blank would tell you something false. Instead:
+
+- **Your own file:** `practice/schema.sql`. You build your model of Northwind in it, one lesson at a time.
+- **Run it:** `.\zeus.bat practice run` (or `./zeus.sh practice run`).
+- **The checks test your model:** `.\zeus.bat koans datamodeling series1`. They test what your model does, what it holds and what it refuses, never whether it looks like the model in the lesson.
+- **See it drawn:** CloudBeaver's ER Diagram tab.
+- **The cards:** one Anki deck per lesson.
+
+## Your turn: Shippers
+
+The lesson built Categories. You build **Shippers**, with the same two rules: **a number no two shippers share, and a name every shipper has.** Load Northwind's 3 shippers, then try one row that must bounce and one that must get in.
+
+Open your working file in any editor:
+
+```
+c:\DataPallas\db\datazeus\practice\schema.sql
+```
+
+Under the `Episode 00` heading, write the table. The two decisions are yours:
+
+```sql
+CREATE TABLE practice."Shippers" (
+  "ShipperID"   INTEGER ___,
+  "CompanyName" VARCHAR ___,
+  "Phone"       VARCHAR
+);
+```
+
+Then load Northwind's rows into it, the same way the lesson loaded Categories, and run the file and the checks:
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat practice run
+.\zeus.bat koans datamodeling series1
+```
+
+On macOS or Linux, use `./zeus.sh` in place of `.\zeus.bat`.
+
+Four checks look at your Shippers table:
+
+- Northwind's 3 shippers fit your table
+- a second shipper number 1 is refused
+- a shipper with no name is refused
+- a new shipper, number 4, still gets in
+
+The checks copy one of your own real rows and change only the column the rule is about, so extra columns or extra rules of your own do not fool them. If a check says a row got through that should not have, a rule is missing. If it says a good row was refused, a rule is stricter than the business.
+
+## The whole course, in one loop
+
+> **Say it. Draw it. Build it. Load the real rows. Then try to break it.**
+
+A design only counts once it has been through all five, not when it looks right.
+
+## What is next
+
+Next, the lesson slows down on the first two steps: how you find the **things** a business keeps track of, and the **facts** about them. There is a person hiding inside the Customers table you queried all the way through Learn SQL. Go and look at its columns again before the next lesson.

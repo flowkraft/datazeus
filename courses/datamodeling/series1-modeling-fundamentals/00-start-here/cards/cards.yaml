@@ -1,0 +1,92 @@
+# Flashcards for Data Modeling · Series 1 · 00 — Start Here: The Modeling Loop
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki); tools/build-anki.py turns it into a
+# .apkg with genanki. The .apkg is a BUILD ARTIFACT — gitignored, built in CI. Only this
+# YAML is source.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds UPDATE the same deck. Set once, from the slug, never changed.
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# ── WHAT THIS DECK IS FOR ────────────────────────────────────────────────────────────
+# Data Modeling has no koans, so the judgement questions a koan used to ask live HERE. The
+# checks test the learner's model against real rows; this deck is where the reasoning has to
+# hold on a phone, weeks later, with no database open.
+#
+# EVERY CARD IS SELF-CONTAINED. No card asks for a figure from Northwind or a result from an
+# earlier card; where a card needs a table, the FRONT describes it, generically. The only
+# dataset-shaped facts (a category table, a duplicate number, a missing name) are stated
+# premises, and the refusals they describe are asserted in
+# tests/src/verify/groovy/datazeus/datamodeling/series1/_00/StartHereSpec.groovy.
+#
+# FILE ORDER IS THE LESSON'S ORDER: sentences before tables, the three layers, the loop, the
+# line read back as a sentence, the practice copy, the two rules, a refusal as a pass, the
+# pincer, what FITS proves and what it cannot, and last the production card.
+#
+# BALANCE: 12 cards — 2 cloze (the loop's order, the layer names), 9 reasoning, 1 production.
+# Nothing here drills syntax for its own sake: CREATE TABLE syntax belongs to the lesson on
+# turning a diagram into DDL; this deck only needs the two words that carry today's two rules.
+#
+# WHAT THIS DECK LEAVES TO LATER DECKS: crow's-foot notation in full (relationships), grain and
+# composite keys (grain & keys), foreign keys (referential integrity), CHECK / UNIQUE / DEFAULT
+# (constraints). Cards here name those ideas at most; they do not teach them.
+
+deck: "DataZeus::Data Modeling::Series 1::00 Start Here — The Modeling Loop"
+guid: "datazeus-data-modeling-series1-00-start-here"
+tags: ["datazeus", "data-modeling", "series-1"]
+
+cards:
+  # ── 1. SENTENCES BEFORE TABLES ──
+  - basic:
+      front: "Someone asks what a company does, and you answer with the names of the tables in its database. What is missing from that answer?"
+      back: "The business. A list of tables says what the database holds. A data model starts as plain sentences about what the business does, such as \"a customer places orders, and a shipper delivers them\"."
+
+  # ── 2. THE THREE LAYERS ──
+  - cloze: "One design idea has three layers: the sentence is the {{c1::conceptual}} layer, the boxes and lines are the {{c2::logical}} layer, and the CREATE TABLE is the {{c3::physical}} layer."
+
+  - basic:
+      front: "Two people argue about a design. One says \"a customer can have several contacts\", the other says \"that column should be VARCHAR(100)\". What should they settle first?"
+      back: "Which layer they are arguing about. The first is a conceptual point about the business; the second is a physical detail of the table. Agree on the business first, because the column only exists to serve it."
+
+  # ── 3. THE LOOP ──
+  - cloze: "The modeling loop runs in this order: {{c1::LISTEN}} (say the business in sentences), {{c2::DRAW}} (the things and the lines between them), {{c3::SHAPE}} (one row per what, and what makes it unique), {{c4::BUILD}} (CREATE TABLE), {{c5::PROVE}} (load the real rows, then try to break it)."
+
+  # ── 4. A LINE IS A SENTENCE ──
+  - basic:
+      front: "A diagram shows a Category box and a Product box joined by a line, with a single bar at Category and a crow's foot at Product. Read the line out loud as a sentence."
+      back: "Each product has exactly one category, and a category can have many products. The single bar means \"exactly one\", the crow's foot means \"many\"."
+
+  # ── 5. THE PRACTICE COPY ──
+  - basic:
+      front: "Why build your tables in a separate schema inside a COPY of the database, instead of in the original tables?"
+      back: "So a wrong design damages nothing, and so the original tables stay beside yours. Keeping them side by side is what lets you load the real rows into your design in one statement and see whether they fit."
+
+  # ── 6. THE TWO RULES ──
+  - basic:
+      front: "A category table must keep two business rules: no two categories share a number, and every category has a name. Which constraint keeps each rule?"
+      back: "<b>No two share a number:</b> PRIMARY KEY on the number column.<br><b>Every category has a name:</b> NOT NULL on the name column.<br>A column that may be empty, such as a description, gets no rule."
+
+  # ── 7. A REFUSAL IS A PASS ──
+  - basic:
+      front: "Your category table has a primary key on its number. You insert a new category with number 1, which another category already has, and the database answers with an error. Did you break something?"
+      back: "No, the model passed a test. Your rule said no two categories share a number, and the database refused the row that broke it. In a query an error is your mistake; in a model a refusal is your rule working."
+
+  # ── 8. THE PINCER ──
+  - basic:
+      front: "Every row you try to break your table with is refused. Why is that not enough to call the design good?"
+      back: "A table that refuses everything is not a good model either. Next to every row that must be refused, try a row the business allows, such as a new category with an unused number, and check that it still gets in."
+
+  - basic:
+      front: "A rule refuses a real row from the business, for example a real product whose price is lower than your CHECK allows. Is the rule working?"
+      back: "No. The data is not wrong; the rule is stricter than the business. A good model says yes to everything the business really does and no to everything it cannot."
+
+  # ── 9. WHAT FITS PROVES, AND WHAT IT DOES NOT ──
+  - basic:
+      front: "All of a business's real rows load into your new table without an error. What does that prove, and what does it not prove?"
+      back: "<b>It proves</b> the model FITS: nothing real is refused.<br><b>It does not prove</b> the model REFUSES what is impossible. A table with no rules at all would load the same rows. You still have to try the bad rows."
+
+  # ── 10. PRODUCTION — hardest, and last. Everything it needs is ON THE CARD. ──
+  - basic:
+      front: "Write the table. A delivery business keeps shippers. Each shipper has a number that no two shippers share, a company name that every shipper has, and a phone number that may be missing. Create it as <code>practice.shippers</code> with columns <code>shipper_id</code>, <code>company_name</code> and <code>phone</code>."
+      back: "<code>CREATE TABLE practice.shippers (<br>&nbsp;&nbsp;shipper_id&nbsp;&nbsp;&nbsp;INTEGER PRIMARY KEY,<br>&nbsp;&nbsp;company_name VARCHAR NOT NULL,<br>&nbsp;&nbsp;phone&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;VARCHAR<br>);</code><br><br>Then prove it: load the real shippers, try a second shipper with an existing number and one with no name (both must be refused), and one new shipper that must still get in."
