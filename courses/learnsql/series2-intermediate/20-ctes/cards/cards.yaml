@@ -1,0 +1,98 @@
+# Flashcards for Learn SQL · Series 2 · 20 — CTEs (WITH), breaking a long query into named steps
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki); tools/build-anki.py turns it into a .apkg with
+# genanki. The .apkg is a BUILD ARTIFACT — gitignored, built in CI. Only this YAML is source.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds UPDATE the same deck. Set once, from the slug, never changed.
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# ── WHAT ANKI IS FOR ────────────────────────────────────────────────────────────────────────
+# Reviewed on a phone, weeks later, with no database open. EVERY CARD CARRIES ITS OWN PREMISE: where
+# a card needs a number (a report of 20 rows, a total of 40) the FRONT states it, and the card tests
+# the REASONING. No card names a Northwind table as something to remember.
+#
+# FILE ORDER IS THE CURRICULUM, in the lesson's order: what a CTE is and its scope, using a step twice,
+# steps that read steps, checking a rewrite, the moved filter, looking inside a step, readability,
+# and last the production card.
+# 13 basic, 4 cloze — about the 3:1 the existing decks run.
+#
+# WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
+#   - Series 2 · 00 owns subqueries; the cards here are about naming one.
+#   - Series 1 · 40 / Series 2 · 15 own the WHERE-on-a-LEFT-JOIN problem; the card here is the rewrite
+#     that brings it back.
+#   - Recursive CTEs belong to Series 3 · 10, views to Series 2 · 45, performance to Series 3.
+
+deck: "DataZeus::Learn SQL::Series 2::20 CTEs (WITH)"
+guid: "datazeus-learn-sql-series2-20-ctes"
+tags: ["datazeus", "learn-sql", "series-2", "sql"]
+
+cards:
+  # ── 1. WHAT A CTE IS ──
+  - cloze: "<code>{{c1::WITH}} customer_totals {{c2::AS}} (SELECT …)</code> gives a subquery a name before the query that uses it."
+
+  - basic:
+      front: "What is a CTE?"
+      back: "A common table expression: a subquery with a name, written after WITH and before the query that uses it. The query below reads the name as if it were a table."
+
+  - basic:
+      front: "You wrote <code>WITH customer_totals AS (…) SELECT … FROM customer_totals;</code>. Can a query you run tomorrow read from customer_totals?"
+      back: "No. Nothing is stored. The name exists only inside that one statement, up to its semicolon. (A named query that outlives the statement is a view.)"
+
+  - basic:
+      front: "Rewrite this as a CTE: <code>SELECT AVG(t.total) FROM (SELECT customer_id, SUM(amount) AS total FROM sales GROUP BY customer_id) AS t;</code>"
+      back: "<code>WITH totals AS (<br>&nbsp;&nbsp;SELECT customer_id, SUM(amount) AS total<br>&nbsp;&nbsp;FROM sales GROUP BY customer_id<br>)<br>SELECT AVG(total) FROM totals;</code>"
+
+  # ── 2. USING A STEP TWICE ──
+  - basic:
+      front: "A query lists the customers whose total is above the average customer total. Nested, it builds the per-customer totals twice. How does a CTE avoid that?"
+      back: "Define the totals once as a named step, then use the name twice: <code>FROM customer_totals</code> for the list, and <code>(SELECT AVG(total) FROM customer_totals)</code> for the comparison."
+
+  # ── 3. STEPS THAT READ STEPS ──
+  - cloze: "Several CTEs in one WITH are separated by {{c1::commas}}, and each step can read the steps {{c2::above}} it."
+
+  - basic:
+      front: "In <code>WITH a AS (…), b AS (SELECT … FROM a) SELECT … FROM b</code>, which parts can read <code>a</code>?"
+      back: "Step b and the final query. A step can read any step defined above it in the same WITH."
+
+  # ── 4. CHECKING A REWRITE ──
+  - basic:
+      front: "You rewrite a working query with CTEs. What is the quickest check that the rewrite is correct?"
+      back: "Run both and compare the row count and the totals (for example count(*), and the sum of the main measure). A rewrite is only correct if it returns exactly what the original returned."
+
+  - cloze: "Check a rewrite against the original: the same number of {{c1::rows}}, and the same {{c2::totals}}."
+
+  - basic:
+      front: "After a rewrite, the total units still match the original (40), but the row count went from 20 to 6. Is the rewrite correct?"
+      back: "No. A matching total does not prove the same answer: here 14 rows with no units disappeared. Check the rows AND the totals."
+
+  # ── 5. THE MOVED FILTER ──
+  - basic:
+      front: "<code>WITH lines AS (SELECT product_id, quantity, order_date FROM …)<br>SELECT p.name, SUM(l.quantity) FROM products p LEFT JOIN lines l ON … WHERE l.order_date &gt;= '2024-06-01' AND l.order_date &lt; '2024-07-01' GROUP BY p.name</code><br>Why do products with no June sale disappear?"
+      back: "The WHERE tests l.order_date, which is NULL for a product the LEFT JOIN found no line for. The test is not true, so the row is removed. Put the June test inside the lines step instead, before the join."
+
+  - cloze: "Keep a filter inside the {{c1::step}} it narrows; moving it to a WHERE on a {{c2::LEFT JOIN}}ed column can remove rows."
+
+  # ── 6. LOOKING INSIDE A STEP ──
+  - basic:
+      front: "A query with three named steps returns a wrong answer. How do you find the step that is wrong?"
+      back: "Keep the WITH and point the final SELECT at one step at a time: <code>SELECT * FROM first_step</code>, then the next. Check what each step holds."
+
+  # ── 7. READABILITY ──
+  - basic:
+      front: "Does rewriting a subquery as a CTE make the query faster?"
+      back: "Do not count on it. The database may treat the CTE exactly like the subquery it replaced. A CTE is for readability: steps with names, read top to bottom."
+
+  - basic:
+      front: "What does a CTE change about a query: what it returns, or how it reads?"
+      back: "Only how it reads. A correct rewrite returns exactly the same rows as the original — which is why you check the rows and totals after rewriting."
+
+  - basic:
+      front: "When is a query a good candidate for a CTE?"
+      back: "When it nests subqueries inside subqueries, repeats the same subquery, or does several steps (narrow, add up, join) that are hard to follow in one block."
+
+  # ── 8. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  - basic:
+      front: "Write the query with CTEs. <code>orders</code> has <code>order_id</code>, <code>customer_id</code>, <code>ordered_at</code>. Step 1: each customer's last order date. Step 2: days since that date, counted back from the latest ordered_at in the table. Return customer_id and the days, largest first."
+      back: "<code>WITH last_order AS (<br>&nbsp;&nbsp;SELECT customer_id, MAX(ordered_at) AS last_at<br>&nbsp;&nbsp;FROM orders GROUP BY customer_id<br>),<br>days_quiet AS (<br>&nbsp;&nbsp;SELECT customer_id,<br>&nbsp;&nbsp;&nbsp;&nbsp;CAST((SELECT MAX(ordered_at) FROM orders) AS DATE)<br>&nbsp;&nbsp;&nbsp;&nbsp;- CAST(last_at AS DATE) AS days<br>&nbsp;&nbsp;FROM last_order<br>)<br>SELECT customer_id, days<br>FROM days_quiet<br>ORDER BY days DESC;</code><br><br>Step 2 reads step 1; both casts give whole days."

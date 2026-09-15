@@ -1,0 +1,442 @@
+---
+title: "CTEs (WITH) — Breaking a Long Query Into Named Steps"
+description: "Give each step of a long query a name with WITH, use a step more than once, read and debug the steps one at a time, and check that a rewrite returns exactly what the original did."
+topic: "learn-sql"
+tags: ["sql", "intermediate", "cte", "with", "readability", "refactoring"]
+level: "intermediate"
+module: "series2-intermediate"
+order: 20
+date: "2026-09-15"
+published: false
+videoId: "learnsql-series2-20-ctes"
+---
+
+{/* HANDS-ON (from curriculum.yaml): koan:equivalent, koan:complete — the koans in
+    tests/src/koans/groovy/datazeus/learnsql/series2/_20/CtesKoans.groovy.
+    CurriculumSpec requires a PLANNED lesson to name these; this comment can go when the episode is
+    published (curriculum status: published, front matter published: true). Invisible on the page. */}
+
+## Right, and hard to read
+
+The last two lessons ended on queries that return the right answer and are hard to read: brackets inside brackets, a subquery in `FROM` next to a `LEFT JOIN`. This lesson adds one tool that changes how such queries read, without changing what they return: `WITH`, which gives each step of a query a **name**.
+
+Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
+
+## The nested version
+
+Here is the query from the <a href="/data-academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> that finds the customers who spend more than the average customer:
+
+{/* The same highlight as the video: the innermost brackets, in grey. */}
+
+```sql file=./scripts/customers-above-the-average-customer-nested.sql {13-20}
+SELECT c."CompanyName",
+       ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")), 2) AS "Total sales"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID"
+GROUP BY c."CompanyName"
+HAVING SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount"))
+     > (SELECT AVG(t."Total")
+        FROM (SELECT o2."CustomerID",
+                     SUM(d2."UnitPrice"
+                       * d2."Quantity"
+                       * (1 - d2."Discount")) AS "Total"
+              FROM "Orders" o2
+              JOIN "Order Details" d2
+                ON d2."OrderID" = o2."OrderID"
+              GROUP BY o2."CustomerID") AS t)
+ORDER BY "Total sales" DESC;
+```
+
+It has to be read from the inside out. The innermost brackets build one total per customer. The brackets around them average those totals. The outer query compares each customer with that average.
+
+## WITH: give the brackets a name
+
+Take the innermost brackets out, give them a name, and write them first, after the word `WITH`. The query below them reads the name as if it were a table:
+
+{/* The same highlight as the video: WITH and the FROM that uses the name, in green. */}
+
+```sql file=./scripts/average-customer-with.sql {1,11}#good
+WITH customer_totals AS (
+  SELECT o."CustomerID",
+         SUM(d."UnitPrice" * d."Quantity"
+           * (1 - d."Discount")) AS "Total"
+  FROM "Orders" o
+  JOIN "Order Details" d
+    ON d."OrderID" = o."OrderID"
+  GROUP BY o."CustomerID"
+)
+SELECT ROUND(AVG("Total"), 2) AS "Average customer"
+FROM customer_totals;
+```
+
+| Average customer |
+| ---------------- |
+| 2326.13          |
+
+The same average as in the subqueries lesson. The part in brackets after `WITH customer_totals AS` is a **CTE**, a common table expression: a subquery with a name, written before the query that uses it.
+
+A CTE is not stored anywhere. The name exists only inside this one statement, up to its semicolon. Inside the statement, though, it can be used as often as you need.
+
+## Use a step twice
+
+The nested version built the customer totals twice: once for the list of customers and once inside the average. With a name, the same step feeds both:
+
+{/* The same highlight as the video: the two uses of customer_totals, in green. */}
+
+```sql file=./scripts/customers-above-the-average-customer-with.sql {12,15-16}#good
+WITH customer_totals AS (
+  SELECT o."CustomerID",
+         SUM(d."UnitPrice" * d."Quantity"
+           * (1 - d."Discount")) AS "Total"
+  FROM "Orders" o
+  JOIN "Order Details" d
+    ON d."OrderID" = o."OrderID"
+  GROUP BY o."CustomerID"
+)
+SELECT c."CompanyName",
+       ROUND(t."Total", 2) AS "Total sales"
+FROM customer_totals t
+JOIN "Customers" c
+  ON c."CustomerID" = t."CustomerID"
+WHERE t."Total" > (SELECT AVG("Total")
+                   FROM customer_totals)
+ORDER BY "Total sales" DESC;
+```
+
+| CompanyName                | Total sales |
+| -------------------------- | ----------- |
+| Cactus Comidas para llevar | 4567.8      |
+| Blauer See Delikatessen    | 4318.8      |
+| Frankenversand             | 4267.27     |
+| …                          | …           |
+| Morgenstern Gesundkost     | 3289.13     |
+| Around the Horn            | 2701.58     |
+| Great Lakes Food Market    | 2683.28     |
+
+The same nine customers as the nested query, and now it reads from top to bottom: first the customer totals, then the customers whose total is above their average.
+
+## Steps that read steps
+
+One `WITH` can define several steps, separated by commas, and **each step can read the steps above it**. Here is the June product report from the <a href="/data-academy/learn-sql/multi-table-joins-duplicate-rows" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">multi-table joins lesson</a> as three steps: June's order lines, the units per product, and the report:
+
+{/* The same highlight as the video: the two step names in green, and june_units reading june_lines. */}
+
+```sql file=./scripts/june-report-with.sql {1,9,12}
+WITH june_lines AS (
+  SELECT d."ProductID", d."Quantity"
+  FROM "Order Details" d
+  JOIN "Orders" o
+    ON o."OrderID" = d."OrderID"
+  WHERE o."OrderDate" >= '2024-06-01'
+    AND o."OrderDate" <  '2024-07-01'
+),
+june_units AS (
+  SELECT "ProductID",
+         sum("Quantity") AS "June units"
+  FROM june_lines
+  GROUP BY "ProductID"
+)
+SELECT p."ProductName", u."June units"
+FROM "Products" p
+LEFT JOIN june_units u
+  ON u."ProductID" = p."ProductID"
+ORDER BY p."ProductName";
+```
+
+`june_units` reads from `june_lines`, and the final query joins every product to `june_units`.
+
+### Check that the answer did not move
+
+A rewrite is only correct if it returns exactly what the original returned. The quickest check is to count the rows and add up the totals, on the original and on the rewrite, and compare. Add the report as one more step and count it:
+
+```sql file=./scripts/june-report-with-check.sql
+WITH june_lines AS (
+  SELECT d."ProductID", d."Quantity"
+  FROM "Order Details" d
+  JOIN "Orders" o
+    ON o."OrderID" = d."OrderID"
+  WHERE o."OrderDate" >= '2024-06-01'
+    AND o."OrderDate" <  '2024-07-01'
+),
+june_units AS (
+  SELECT "ProductID",
+         sum("Quantity") AS "June units"
+  FROM june_lines
+  GROUP BY "ProductID"
+),
+report AS (
+  SELECT p."ProductName", u."June units"
+  FROM "Products" p
+  LEFT JOIN june_units u
+    ON u."ProductID" = p."ProductID"
+)
+SELECT count(*) AS "Rows",
+       count("June units") AS "Sold",
+       sum("June units") AS "Units"
+FROM report;
+```
+
+{/* The same highlight as the video: the check, in green. */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-good)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-good-ink))]">
+
+| Rows | Sold | Units |
+| ---- | ---- | ----- |
+| 20   | 6    | 40    |
+
+</div>
+
+Twenty products, six with June units, forty units: the same as the version with a subquery in the last lesson.
+
+## The tidy-up that changed the answer
+
+The query still feels long. A tempting tidy-up: one step with every order line and its date, and the June test moved to the final `WHERE`, where filters usually go:
+
+{/* The same highlight as the video: the moved WHERE, in red. */}
+
+```sql file=./scripts/june-report-tidied.sql {13-14}#err
+WITH order_lines AS (
+  SELECT d."ProductID", d."Quantity",
+         o."OrderDate"
+  FROM "Order Details" d
+  JOIN "Orders" o
+    ON o."OrderID" = d."OrderID"
+)
+SELECT p."ProductName",
+       sum(l."Quantity") AS "June units"
+FROM "Products" p
+LEFT JOIN order_lines l
+  ON l."ProductID" = p."ProductID"
+WHERE l."OrderDate" >= '2024-06-01'
+  AND l."OrderDate" <  '2024-07-01'
+GROUP BY p."ProductName"
+ORDER BY p."ProductName";
+```
+
+| ProductName                 | June units |
+| --------------------------- | ---------- |
+| Aniseed Syrup               | 3          |
+| Boston Crab Meat            | 8          |
+| Chai                        | 12         |
+| Chang                       | 10         |
+| Chef Antons Cajun Seasoning | 2          |
+| Scottish Longbreads         | 5          |
+
+Six rows. The units still add up to 40, so a check on the total alone would pass. The row count does not:
+
+```sql file=./scripts/june-report-tidied-check.sql
+WITH order_lines AS (
+  SELECT d."ProductID", d."Quantity",
+         o."OrderDate"
+  FROM "Order Details" d
+  JOIN "Orders" o
+    ON o."OrderID" = d."OrderID"
+),
+report AS (
+  SELECT p."ProductName",
+         sum(l."Quantity") AS "June units"
+  FROM "Products" p
+  LEFT JOIN order_lines l
+    ON l."ProductID" = p."ProductID"
+  WHERE l."OrderDate" >= '2024-06-01'
+    AND l."OrderDate" <  '2024-07-01'
+  GROUP BY p."ProductName"
+)
+SELECT count(*) AS "Rows",
+       count("June units") AS "Sold",
+       sum("June units") AS "Units"
+FROM report;
+```
+
+| Rows | Sold | Units |
+| ---- | ---- | ----- |
+| 6    | 6    | 40    |
+
+The `WHERE` now tests `l."OrderDate"`, a column that comes from the `LEFT JOIN`. For a product with no June line that column is NULL, the test is not true, and the row is removed — the same problem as in the JOINs lessons. The tidy-up changed the answer from 20 products to 6.
+
+The same check on both versions:
+
+| Version                 | Rows | Sold | Units |
+| ----------------------- | ---- | ---- | ----- |
+| june_lines → june_units | 20   | 6    | 40    |
+| the tidy-up             | 6    | 6    | 40    |
+
+**Keep a filter inside the step it narrows.** In the first version the June test runs inside `june_lines`, before any join, where it cannot remove a product.
+
+### Your turn
+
+Rewrite the sales-and-freight report from the last lesson with two named steps, `sales` and `freight`, and check that the answer did not move: Frankenversand should still be first, with freight of 268.33.
+
+```sql file=./scripts/sales-and-freight-with.sql
+WITH sales AS (
+  SELECT o."CustomerID",
+         ROUND(SUM(d."UnitPrice" * d."Quantity"
+           * (1 - d."Discount")), 2) AS "Total sales"
+  FROM "Orders" o
+  JOIN "Order Details" d
+    ON d."OrderID" = o."OrderID"
+  GROUP BY o."CustomerID"
+),
+freight AS (
+  SELECT "CustomerID",
+         SUM("Freight") AS "Freight"
+  FROM "Orders"
+  GROUP BY "CustomerID"
+)
+SELECT c."CompanyName", s."Total sales", f."Freight"
+FROM "Customers" c
+JOIN sales s ON s."CustomerID" = c."CustomerID"
+JOIN freight f ON f."CustomerID" = c."CustomerID"
+ORDER BY f."Freight" DESC
+LIMIT 5;
+```
+
+| CompanyName         | Total sales | Freight |
+| ------------------- | ----------- | ------- |
+| Frankenversand      | 4267.27     | 268.33  |
+| Alfreds Futterkiste | 3838.43     | 253.73  |
+| Folk och fä HB      | 1594.23     | 247.24  |
+| Ernst Handel        | 3902.78     | 226.15  |
+| Du monde entier     | 1918.93     | 205.06  |
+
+## Look inside one step
+
+When a query with steps returns something unexpected, look at one step on its own: keep the `WITH` and point the final `SELECT` at the step you want to see.
+
+{/* The same highlight as the video: the SELECT that reads one step, in green. */}
+
+```sql file=./scripts/june-lines-step.sql {10-11}#good
+WITH june_lines AS (
+  SELECT d."OrderID", d."ProductID",
+         d."Quantity"
+  FROM "Order Details" d
+  JOIN "Orders" o
+    ON o."OrderID" = d."OrderID"
+  WHERE o."OrderDate" >= '2024-06-01'
+    AND o."OrderDate" <  '2024-07-01'
+)
+SELECT *
+FROM june_lines
+ORDER BY "OrderID", "ProductID";
+```
+
+| OrderID | ProductID | Quantity |
+| ------- | --------- | -------- |
+| 4       | 1         | 12       |
+| 4       | 2         | 10       |
+| 5       | 3         | 3        |
+| 6       | 4         | 2        |
+| 6       | 5         | 5        |
+| 7       | 6         | 8        |
+
+Six June lines from four orders, adding up to 40 units. This step is correct, so the problem, if there is one, is in a later step.
+
+## Customers who have gone quiet
+
+The <a href="/data-academy/learn-sql/case-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">CASE lesson</a> ended on a label it could not build yet, and the <a href="/data-academy/learn-sql/dates-and-times" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">dates lesson</a> calculated the days since each customer's last order. As named steps: `last_order` finds each customer's last order, `days_quiet` turns it into days, and a `CASE` in the final query adds the label.
+
+{/* The same highlight as the video: the two step names in green; the CASE in grey. */}
+
+```sql file=./scripts/days-quiet-with.sql {1,7,16-17}
+WITH last_order AS (
+  SELECT "CustomerID",
+         max("OrderDate") AS "Last order"
+  FROM "Orders"
+  GROUP BY "CustomerID"
+),
+days_quiet AS (
+  SELECT "CustomerID",
+         CAST((SELECT max("OrderDate")
+               FROM "Orders") AS DATE)
+         - CAST("Last order" AS DATE)
+           AS "Days"
+  FROM last_order
+)
+SELECT c."CompanyName", q."Days",
+       CASE WHEN q."Days" > 90 THEN 'gone quiet'
+            ELSE 'active' END AS "Status"
+FROM days_quiet q
+JOIN "Customers" c
+  ON c."CustomerID" = q."CustomerID"
+ORDER BY q."Days" DESC
+LIMIT 5;
+```
+
+| CompanyName             | Days | Status     |
+| ----------------------- | ---- | ---------- |
+| QUICK-Stop              | 199  | gone quiet |
+| Toms Spezialitäten      | 190  | gone quiet |
+| Die Wandernde Kuh       | 183  | gone quiet |
+| Antonio Moreno Taquería | 159  | gone quiet |
+| Blauer See Delikatessen | 138  | gone quiet |
+
+The same steps, grouped by the label:
+
+```sql file=./scripts/customers-by-status-with.sql
+WITH last_order AS (
+  SELECT "CustomerID",
+         max("OrderDate") AS "Last order"
+  FROM "Orders"
+  GROUP BY "CustomerID"
+),
+days_quiet AS (
+  SELECT "CustomerID",
+         CAST((SELECT max("OrderDate")
+               FROM "Orders") AS DATE)
+         - CAST("Last order" AS DATE)
+           AS "Days"
+  FROM last_order
+)
+SELECT CASE WHEN "Days" > 90 THEN 'gone quiet'
+            ELSE 'active' END AS "Status",
+       count(*) AS "Customers"
+FROM days_quiet
+GROUP BY "Status"
+ORDER BY "Status";
+```
+
+| Status     | Customers |
+| ---------- | --------- |
+| active     | 14        |
+| gone quiet | 11        |
+
+## For reading, not for speed
+
+Do not expect a CTE to make a query faster. The database is free to treat a CTE the same way as the subquery it replaced. A CTE is for the person reading the query, and query speed is covered in Series 3.
+
+## Four rules for WITH
+
+1. **Name a step, then use the name.**
+2. **A step can read the steps above it**, and a step can be used more than once.
+3. **After any rewrite, compare the rows and the totals with the original.**
+4. **Keep a filter inside the step it narrows.**
+
+## Practice
+
+There are ten koans for this lesson. They use different tables from this page: categories, employees, suppliers, shippers and countries, so copying a query from this page will not answer them. Two of them are **equivalence koans**: they run a correct nested query first, and your rewrite with `WITH` has to return exactly the same rows.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series2 _20
+```
+
+On macOS or Linux, run `./zeus.sh koans learnsql series2 _20` from the same folder.
+
+The file to edit is:
+
+```
+c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series2\_20\CtesKoans.groovy
+```
+
+Each koan has a `___` where the answer belongs. Replace one, save, run the command again, and watch that koan go green.
+
+The koans follow this page: reading a step by its name, using a step twice, a step that reads another step, a total of totals, two rewrites that must match a nested query, a tidy-up that dropped two categories, and looking inside one step. The last two give only the question: the countries above the average country, and products and August 2023 units per supplier.
+
+## What is next
+
+The next lesson is **EXISTS and correlated subqueries**: a subquery that looks at each row in turn, which is what a question like "which customers ordered in the first quarter and never came back?" needs.
