@@ -1,0 +1,100 @@
+# Flashcards for Learn SQL · Series 2 · 10 — Dates & Times, getting ranges and boundaries right
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki); tools/build-anki.py turns it into a .apkg with
+# genanki. The .apkg is a BUILD ARTIFACT — gitignored, built in CI. Only this YAML is source.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds UPDATE the same deck. Set once, from the slug, never changed.
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# ── WHAT ANKI IS FOR ────────────────────────────────────────────────────────────────────────
+# Reviewed on a phone, weeks later, with no database open. EVERY CARD CARRIES ITS OWN PREMISE:
+# where a card needs a date or a count (data from December 2022 to June 2024, an order shipped on
+# 1 August) the FRONT states it, and the card tests the REASONING. No card names a Northwind table as
+# something to remember, and none asks for a figure from the dataset.
+#
+# FILE ORDER IS THE CURRICULUM, in the lesson's order: EXTRACT against date_trunc, partial periods,
+# BETWEEN and the half-open range, the time of day, CURRENT_DATE and anchoring, interval against
+# days, the date spine and count(*), and last the production card.
+# 13 basic, 4 cloze — about the 3:1 the existing decks run.
+#
+# WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
+#   - Series 1 · 10 owns the half-open range as a WHERE pattern; the cards here are about why dates
+#     need it (a boundary counted twice, the evening of the last day).
+#   - Series 1 · 25 owns count(*) against count(column); the card here is the spine, where it costs.
+#   - Series 1 · 40 owns LEFT JOIN; the spine card states it rather than re-teaching it.
+#   - Time zones, AGE() and the per-engine spellings belong to Series 4.
+
+deck: "DataZeus::Learn SQL::Series 2::10 Dates & Times"
+guid: "datazeus-learn-sql-series2-10-dates-and-times"
+tags: ["datazeus", "learn-sql", "series-2", "sql"]
+
+cards:
+  # ── 1. EXTRACT AGAINST date_trunc ──
+  - basic:
+      front: "Orders run from December 2022 to June 2024. You chart orders per month with <code>GROUP BY EXTRACT(MONTH FROM order_date)</code>. January to June are twice as tall as July to November. Is there a summer slump?"
+      back: "No. EXTRACT returns only the month number, so June 2023 and June 2024 land in the same group. January to June and December happened in two years, July to November in one. Every tall bar is two years added together."
+
+  - basic:
+      front: "What does <code>date_trunc('month', order_date)</code> return for an order placed on 5 June 2024, and why is that better for a monthly chart than EXTRACT?"
+      back: "The first of its month with the year kept: 1 June 2024 (at midnight). Grouping by it gives one group per real month, so June 2023 and June 2024 stay apart."
+
+  - cloze: "To group by a period and keep the year, use {{c1::date_trunc}}; {{c2::EXTRACT}} returns just the number of the month or quarter, so the years fold together."
+
+  # ── 2. PARTIAL PERIODS ──
+  - basic:
+      front: "The data ends on 12 June 2024. Grouped by quarter, the last quarter has the most orders of any. Why can't you call it the best quarter yet?"
+      back: "It is partial: it covers only April 1 to June 12. A partial period can look large or small, so its count alone does not show it. Ask for min() and max() of the date in each group, and label partial periods on the report."
+
+  # ── 3. BETWEEN AND THE HALF-OPEN RANGE ──
+  - basic:
+      front: "July's report uses <code>shipped BETWEEN '2023-07-01' AND '2023-08-01'</code>; August's uses <code>BETWEEN '2023-08-01' AND '2023-09-01'</code>. One order shipped on 1 August. What goes wrong?"
+      back: "BETWEEN includes both ends, so the 1 August shipment is in July's report and in August's. The two months add up to one more shipment than there was."
+
+  - cloze: "A half-open date range is {{c1::&gt;=}} the first day AND {{c2::&lt;}} the first day of the next period, so consecutive periods never share a day."
+
+  - basic:
+      front: "Write the WHERE for \"shipped in the first quarter of 2024\" as a half-open range on <code>shipped_date</code>."
+      back: "<code>WHERE shipped_date &gt;= '2024-01-01'<br>&nbsp;&nbsp;AND shipped_date &lt; '2024-04-01'</code><br><br>The right edge is the first day after the quarter, so there is no 31 and no 23:59:59."
+
+  # ── 4. THE TIME OF DAY ──
+  - basic:
+      front: "A delivery happened at <code>2024-06-30 14:00</code>. Is it inside <code>BETWEEN '2024-06-01' AND '2024-06-30'</code>?"
+      back: "No. '2024-06-30' means midnight at the start of 30 June, and 14:00 is later than that. The half-open range <code>&gt;= '2024-06-01' AND &lt; '2024-07-01'</code> includes it."
+
+  - basic:
+      front: "Every timestamp in your table is at midnight, so <code>BETWEEN … AND '2024-06-30'</code> gives the right answer today. Why write the half-open range anyway?"
+      back: "The BETWEEN version is only correct while every time is midnight. The first timestamp with a time of day on the last day is silently dropped. The half-open range is right whatever the time."
+
+  # ── 5. "RECENT" ──
+  - basic:
+      front: "The data is a snapshot that ends in June 2024. <code>WHERE order_date &gt;= CURRENT_DATE - INTERVAL '30 days'</code> returns 0 rows. Is the query wrong?"
+      back: "No, it is correct: CURRENT_DATE is today, and no order is from the last 30 days of today. On a snapshot, anchor on the data instead: <code>(SELECT max(order_date) FROM orders) - INTERVAL '30 days'</code>. On a live database, CURRENT_DATE is right."
+
+  - cloze: "A date or timestamp plus an {{c1::INTERVAL}}, such as <code>order_date + INTERVAL '14 days'</code>, is still a {{c2::date or timestamp}}."
+
+  # ── 6. SUBTRACTING DATES ──
+  - basic:
+      front: "<code>WHERE shipped_at - ordered_at &gt; 7</code> fails with \"operator does not exist: interval &gt; integer\". Both columns are timestamps. Why?"
+      back: "A timestamp minus a timestamp is an INTERVAL, a length of time such as '5 days', not the number 5, and an interval cannot be compared with a plain number."
+
+  - cloze: "To get whole days between two timestamps, {{c1::CAST both to DATE}} first: a date minus a date is {{c2::a whole number of days}}."
+
+  - basic:
+      front: "An order has no shipped date yet. What is <code>CAST(shipped_at AS DATE) - CAST(ordered_at AS DATE)</code> for it, and what does AVG do with it?"
+      back: "NULL, not 0: there is nothing to subtract from. AVG skips NULLs, so unshipped orders do not pull the average days to ship down."
+
+  # ── 7. THE MISSING DAYS ──
+  - basic:
+      front: "Orders per day in June come back as 4 rows, from <code>GROUP BY</code> on the day. You draw a line chart from it. What does the chart hide?"
+      back: "Every day with no orders. GROUP BY can only return days that have rows, so the chart joins the 4 points with straight lines and the 26 empty days never appear. A missing row is not a zero."
+
+  - basic:
+      front: "You LEFT JOIN orders onto a spine of the 30 days of June (built with generate_series). June had 4 orders, on 4 different days. What do <code>count(*)</code> and <code>count(o.order_id)</code> return over the whole join?"
+      back: "count(*) returns 30: every day produces a row, empty or not. count(o.order_id) returns 4, because order_id is NULL on an empty day and count of a column skips NULLs. Count the orders, not the rows."
+
+  # ── 8. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  - basic:
+      front: "Write the query. <code>orders</code> has <code>order_id</code> and <code>ordered_at</code> (a timestamp). Return one row for EVERY day of June 2024, with the number of orders placed that day (0 on a day with none), in date order. Use <code>generate_series</code>."
+      back: "<code>SELECT s.day,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;count(o.order_id) AS orders<br>FROM generate_series(<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TIMESTAMP '2024-06-01',<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;TIMESTAMP '2024-06-30',<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;INTERVAL '1 day') AS s(day)<br>LEFT JOIN orders o<br>&nbsp;&nbsp;ON date_trunc('day', o.ordered_at) = s.day<br>GROUP BY s.day<br>ORDER BY s.day;</code><br><br>The LEFT JOIN keeps the empty days; count(o.order_id), not count(*), gives them 0."
