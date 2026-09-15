@@ -1,21 +1,21 @@
-package datazeus.learnsql.series2._45
+package datazeus.learnsql.series2._30
 
 import datazeus._internal.KoanBase
 import spock.lang.Stepwise
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════╗
- * ║  SQL KOANS — Learn SQL · Series 2 · 45
+ * ║  SQL KOANS — Learn SQL · Series 2 · 30
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
- * VIEWs — Naming a Query So You Can Reuse It
+ * String Functions, LIKE & Regex — Clean Up Messy Real-World Data
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into
- * src/koans/groovy/datazeus/learnsql/series2/_45/ when it is real.
+ * src/koans/groovy/datazeus/learnsql/series2/_30/ when it is real.
  *
- *     zeus.bat koans learnsql series2 _45     (Windows)
- *     ./zeus.sh koans learnsql series2 _45    (macOS/Linux)
+ *     zeus.bat koans learnsql series2 _30     (Windows)
+ *     ./zeus.sh koans learnsql series2 _30    (macOS/Linux)
  *
  * ── READ THESE FIRST ────────────────────────────────────────────────────
  *   KoanBase                                  shouldReturn, the ___ blank, the dataset
@@ -33,18 +33,23 @@ import spock.lang.Stepwise
  *     count is not.
  *
  * ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
- * GOAL: name a query once and reuse it.
- * SQL: CREATE VIEW, querying a view, when a view is a good idea and when it hides a problem.
- * Materialized views are Data Warehousing — say so rather than half-teaching them.
+ * GOAL: work with text that nobody cleaned.
+ * SQL: LIKE, ILIKE, wildcards and escaping, regex matching, TRIM, UPPER/LOWER, SUBSTRING,
+ * SPLIT_PART, CONCAT, STRING_AGG, plus the number side: ROUND, CAST, formatting for a report.
+ * MERGED FROM TWO EPISODES in the 2026-08-24 pass (old "LIKE/ILIKE/Regex" and "String & Number
+ * Functions"). Both were reference material a working person looks up rather than memorises, and
+ * two episodes for one lookup table was not earning its place.
+ * Ships with a cheat sheet — that is the honest format for this content.
+ * TWO SERIES 1 PROMISES LAND HERE: Series 1 · 10 left `_`, ESCAPE and case-insensitive matching to
+ * Series 2, and Series 1 · 25 named STRING_AGG as Series 2's — the aggregate that turns many rows of
+ * text into one. `||` and ROUND are Series 1 · 20's: build on both, re-teach neither.
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
- * LEVEL ●● of ●●●●. AFTER CTEs (Series 2 · 20) ON PURPOSE: a view is a named query that
- * outlives the session. "When it hides a problem" has a concrete answer by now — a view that
- * already joined the order lines, summed again by somebody who cannot see inside it: Series 2 · 15's
- * fan-out, one layer of abstraction away from the person who pays for it.
+ * LEVEL ● of ●●●●. THE BREATHER between the two hardest runs of the series (15–25 and 35–38).
+ * BUILDS ON: Series 1 · 10, 1 · 20, 1 · 25. Was 25 until the 2026-09-14 reorder.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
-class ViewsKoans extends KoanBase {
+class StringFunctionsAndRegexKoans extends KoanBase {
 
     // TODO: koans, one per idea in the lesson, in the same order.
     //

@@ -1,21 +1,21 @@
-package datazeus.learnsql.series2._45
+package datazeus.learnsql.series2._48
 
 import datazeus._internal.KoanBase
 import spock.lang.Stepwise
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════╗
- * ║  SQL KOANS — Learn SQL · Series 2 · 45
+ * ║  SQL KOANS — Learn SQL · Series 2 · 48
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
- * VIEWs — Naming a Query So You Can Reuse It
+ * INSERT, UPDATE, DELETE & Transactions — Change the Data, Safely
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into
- * src/koans/groovy/datazeus/learnsql/series2/_45/ when it is real.
+ * src/koans/groovy/datazeus/learnsql/series2/_48/ when it is real.
  *
- *     zeus.bat koans learnsql series2 _45     (Windows)
- *     ./zeus.sh koans learnsql series2 _45    (macOS/Linux)
+ *     zeus.bat koans learnsql series2 _48     (Windows)
+ *     ./zeus.sh koans learnsql series2 _48    (macOS/Linux)
  *
  * ── READ THESE FIRST ────────────────────────────────────────────────────
  *   KoanBase                                  shouldReturn, the ___ blank, the dataset
@@ -33,18 +33,20 @@ import spock.lang.Stepwise
  *     count is not.
  *
  * ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
- * GOAL: name a query once and reuse it.
- * SQL: CREATE VIEW, querying a view, when a view is a good idea and when it hides a problem.
- * Materialized views are Data Warehousing — say so rather than half-teaching them.
+ * GOAL: change data on purpose, and be able to undo it.
+ * SQL: INSERT (single, multi-row, INSERT … SELECT), UPDATE … WHERE, DELETE … WHERE, BEGIN,
+ * COMMIT, ROLLBACK.
+ * PLACED LATE ON PURPOSE, and this is the reason: the failure mode of teaching UPDATE early is a
+ * learner who runs it without a WHERE. By here, filtering is second nature.
+ * Teach the SELECT-first habit: write the WHERE as a SELECT, look at the rows, then change the
+ * verb. BOUNDARY: isolation levels and locking are Data Ops; COMMIT/ROLLBACK basics are here.
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
- * LEVEL ●● of ●●●●. AFTER CTEs (Series 2 · 20) ON PURPOSE: a view is a named query that
- * outlives the session. "When it hides a problem" has a concrete answer by now — a view that
- * already joined the order lines, summed again by somebody who cannot see inside it: Series 2 · 15's
- * fan-out, one layer of abstraction away from the person who pays for it.
+ * LEVEL ●● of ●●●●. Late on purpose (see above). Renumbered from 40 on 2026-09-14 — Learn Data
+ * Modeling's prerequisites ask for "INSERT from Series 2 · 48".
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
-class ViewsKoans extends KoanBase {
+class InsertUpdateDeleteKoans extends KoanBase {
 
     // TODO: koans, one per idea in the lesson, in the same order.
     //

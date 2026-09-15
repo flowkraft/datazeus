@@ -37,7 +37,7 @@ import spock.lang.Stepwise
  * SQL: AS aliases, arithmetic and string expressions in the SELECT list, DISTINCT, ROUND.
  * DISTINCT is in this episode because it is an OUTPUT concern, not a filtering one — a reader
  * who learns it beside WHERE reaches for it to fix duplicates that a wrong join created, which
- * is the habit Series 2 · 06 has to undo.
+ * is the habit Series 2 · 15 has to undo.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
 class DistinctAliasesExpressionsKoans extends KoanBase {

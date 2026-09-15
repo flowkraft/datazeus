@@ -18,7 +18,7 @@ published: false
     documentation the whole academy points at, and it carries the title, short
     and core conventions this episode has to follow.
 
-    THE HOUSE METHOD, from the three lessons already written:
+    THE HOUSE METHOD, from the Series 1 lessons already written:
       - type the query yourself; copy-paste teaches your eyes only
       - PREDICT the answer before running it, out loud, then run it
       - every query runs on the Northwind that ships with DataPallas
@@ -30,10 +30,15 @@ published: false
     MOVED DOWN FROM SERIES 3 in the 2026-08-24 pass. "Answer real business questions" is not true
     without windows: rank-within-region and latest-row-per-customer ARE business questions, and
     they are table stakes in an analyst screen. They close this series rather than opening it
-    because a window function reads badly without the CTEs from episode 08.
+    because a window function reads badly without the CTEs from episode 20.
     ROW_NUMBER IS NAMED IN THE TITLE ON PURPOSE: "the latest row per customer" is the single most
     searched SQL task there is, and the keywords-lead title convention exists so the person
     searching for it finds this line.
+
+    ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+    LEVEL ●●●● of ●●●●. BUILDS ON: Series 2 · 20 (keeping only ROW_NUMBER = 1 needs a CTE),
+    Series 1 · 30 (PARTITION BY groups the rows without collapsing them).
+    SETS UP: Series 2 · 55, 2 · 58.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:predict

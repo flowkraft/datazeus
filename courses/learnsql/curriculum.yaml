@@ -21,7 +21,7 @@
 # another course, so a reader must never have to work out which course a number belongs to.
 #
 #   OURS      "In this course, Series 3 · 05 loads a star somebody has already designed"
-#   THEIRS    "covered in Data Modeling, Series 3 · 30"
+#   THEIRS    "covered in Data Modeling, Series 3 · 10"
 #   NEVER     "covered in Data Modeling, Series 3 — Series 3 · 05 here LOADS a star"
 #
 # The last one was real, and there were twenty like it. Every one resolved to the correct
@@ -185,7 +185,7 @@ title: Learn SQL
 # Nothing before this: episode 00 assumes a person who has never written a query.
 #
 # What comes AFTER is Learn Data Modeling, which declares this track in its own
-# `prerequisites` block (Series 1 entire, plus INSERT from Series 2 · 40). The two compose in
+# `prerequisites` block (Series 1 entire, plus INSERT from Series 2 · 48). The two compose in
 # that order: you get read access before you get DDL rights, in a career and in this academy.
 prerequisites: []
 
@@ -198,13 +198,13 @@ excludes:
   # pair shares a keyword and is two different questions, which is precisely how a reader
   # concludes we repeated ourselves. Data Modeling's excludes carries the mirror of each.
   - topic: "Whether a column should be nullable at all"
-    where: "covered in Data Modeling, Series 1 · 37, which is the design decision. In this course, Series 1 · 45 is what NULL does to a query"
+    where: "covered in Data Modeling, Series 1 · 52, which is the design decision. In this course, Series 1 · 45 is what NULL does to a query"
   - topic: "Deciding to store JSON in the first place"
     where: "covered in Data Modeling, Series 2 · 42. In this course, Series 3 queries JSON once that decision has been made"
   - topic: "Choosing indexes while designing the schema"
-    where: "covered in Data Modeling, Series 2 · 45. In this course, Series 3 is EXPLAIN and the mechanics, on a query that already exists"
+    where: "covered in Data Modeling, Series 2 · 40. In this course, Series 3 is EXPLAIN and the mechanics, on a query that already exists"
   - topic: "Isolation levels, locking & concurrency"
-    where: "covered in Data Ops, Series 2 — Running PostgreSQL in Production. In this course, Series 2 · 40 covers the COMMIT and ROLLBACK basics"
+    where: "covered in Data Ops, Series 2 — Running PostgreSQL in Production. In this course, Series 2 · 48 covers the COMMIT and ROLLBACK basics"
   # ADDED 2026-09-02. An audit found stored procedures had no episode and NO EXCLUDE anywhere
   # in the academy — the single most conspicuous silence for a reader arriving from an
   # enterprise codebase, where a large share of the business logic is in the database.
@@ -493,92 +493,241 @@ series:
     title: Intermediate SQL
     tagline: CTEs, subqueries and window functions on real questions
     level: intermediate
+    # ── REORDERED 2026-09-14, FOR A FAIR DIFFICULTY RAMP ───────────────────────────────────────
+    # The 2026-08-24 order opened on the two hardest episodes of the series back to back — a
+    # "Subqueries & EXISTS" episode carrying scalar subqueries, IN, EXISTS, correlated subqueries,
+    # the NOT IN / NULL trap and a correlated HAVING, and then a multi-table JOIN episode — and only
+    # afterwards reached CASE, dates and strings, each of which adds ONE tool to a Series 1 skill.
+    # For the first third of the series the difficulty ran downhill. Three changes fix it:
+    #
+    #   1. SUBQUERIES ARE SPLIT IN TWO. 00 is the uncorrelated half only: a query in brackets hands
+    #      back a value, a list or a table. 25 is EXISTS, NOT EXISTS and correlated subqueries,
+    #      placed after CTEs so correlation is met with the tool that makes it readable.
+    #   2. OLD 00 (MULTI-TABLE JOINS) AND OLD 06 (JOIN FAN-OUT) ARE ONE EPISODE, 15. Both briefs
+    #      predate Series 1 · 50 (built 2026-09-12..14), which already teaches the three-table
+    #      chain, counting rows before and after a join, grain and count(DISTINCT). What old 00 had
+    #      left was a fourth hop and join order — and for inner joins the order changes nothing in
+    #      the result — so it could not stand as an episode. What remains of both is ONE idea: a
+    #      join that silently DROPS rows or MULTIPLIES the money, cured in both cases by narrowing
+    #      or aggregating BEFORE the join, which is 00's tool.
+    #   3. THE ONE-TOOL EPISODES MOVED FORWARD, AND BETWEEN THE HARD ONES. CASE (05) and dates (10)
+    #      follow the opener; strings (30) is the breather after 25; self-joins (42) and views (45)
+    #      sit between grouping sets and the window functions.
+    #
+    # THE RAMP — ● easy, ●●●● hard — and the rule behind it: EVERY EPISODE USES ONLY WHAT CAME
+    # BEFORE IT. Each episode's comment below names what it builds on.
+    #   00 Subqueries ●●          05 CASE ●                 10 Dates & Times ●●
+    #   15 JOINs & Grain ●●●      20 CTEs ●●                25 EXISTS & correlated ●●●
+    #   30 Strings & regex ●      35 Set operations ●●      38 Grouping sets ●●●
+    #   42 Self-joins ●●          45 Views ●●               48 INSERT/UPDATE/DELETE ●●
+    #   50 Windows I ●●●●         55 Windows II ●●●●        58 Median ●●●●      60 Project
+    #
+    # WHY SUBQUERIES OPEN IT, AND NOT CASE (the gentlest candidate). Series 1 · 50 closes, in the
+    # video and in the article, on "Series 2 starts where today ended — queries built out of other
+    # queries". The uncorrelated half is ●●, not a wall, and it continues the exact report the
+    # learner has just built, with the next question a manager asks of it.
+    #
+    # OLD → NEW, for anyone holding a pointer from before 2026-09-14:
+    #   00 multi-table-joins + 06 join-fan-out → 15 multi-table-joins-duplicate-rows
+    #   05 subqueries → 00 subqueries (uncorrelated) + 25 exists-and-correlated-subqueries
+    #   08 → 20 · 10 → 42 · 15 → 05 · 20 → 10 · 25 → 30 · 40 → 48
+    #   35, 38, 45, 50, 55, 58 and 60 kept their numbers.
+    #
+    # EVERY NUMBER QUOTED BELOW AND IN THE BRIEFS was run on datasets/northwind/northwind.duckdb on
+    # 2026-09-14. They are DuckDB results; each lesson's spec re-asserts them on BOTH engines before
+    # anything is written on top of them, exactly as Series 1 did.
     episodes:
-      # Opens the series by POSING the question that 05 and 06 answer: count the rows before
-      # the join and after it. When that number moves, every total built on top is already
-      # wrong. Without this beat the episode is just "the same JOIN, with more tables".
+      # OPENS THE SERIES ON SERIES 1 · 50's LAST LINE — "queries built out of other queries" — and
+      # on that report's next question: WHICH CUSTOMERS SPEND MORE THAN THE AVERAGE CUSTOMER?
+      #
+      # THE QUESTION CARRIES A TRAP THAT MAKES THE TOOL NECESSARY, NOT DECORATIVE. avg() over the
+      # joined rows of Series 1 · 50's query is the average ORDER LINE, 301.31, so every one of the
+      # 25 customers is "above average". The average CUSTOMER needs the per-customer totals first —
+      # a subquery in FROM — and it is 2326.13, which 9 customers beat. It is Series 1 · 50's grain
+      # arriving through a WHERE, and it is answered with a query inside a query.
+      #
+      # THE UNCORRELATED HALF ONLY, three shapes by what the brackets hand back:
+      #   a VALUE   scalar subquery      products dearer than the average price (6 of 20; avg 28.72)
+      #   a LIST    IN (SELECT …)        customers who ever bought Chai (8)
+      #   a TABLE   subquery in FROM     the per-customer totals the hook needs
+      # EXISTS, NOT EXISTS and correlated subqueries are 25, after CTEs. Do not preview them here.
+      # BUILDS ON: Series 1 · 25 (aggregates), 1 · 30 (GROUP BY), 1 · 50 (the report and its grain).
       - n: "00"
-        slug: multi-table-joins
-        title: "Multi-Table JOINs — Following the Data Across Three or More Tables"
-        short: "Multi-Table JOINs — three or more tables"
-        hands_on: ["koan:complete", "koan:predict"]
-        core: true
-        status: planned
-      - n: "05"
         slug: subqueries
-        title: "Subqueries & EXISTS — Using One Query's Result Inside Another"
-        short: "Subqueries & EXISTS — one query inside another"
-        hands_on: ["koan:complete", "koan:choose"]
+        title: "Subqueries — Using One Query's Result Inside Another"
+        short: "Subqueries — one query's result inside another"
+        hands_on: ["koan:predict", "koan:complete"]
         core: true
         status: planned
-      # The trap JOINs create, paired with them the way NULL is paired with LEFT JOIN in
-      # Series 1. It lands HERE rather than beside episode 00 because the fix is a
-      # pre-aggregating subquery, and that is episode 05 — teach the bug where the cure is.
+      # THE GENTLEST EPISODE IN THE SERIES, on purpose, straight after the opener: one construct
+      # that extends two Series 1 skills — an expression in the select list (1 · 20) and an
+      # aggregate over a group (1 · 25, 1 · 30).
       #
-      # Frame it as GRAIN ("one row per WHAT?"), not as a join gotcha. Grain is the idea
-      # behind correct numbers everywhere; "watch out for duplicate rows" teaches neither.
+      # CASE INSIDE SUM IS THE TRICK WORTH THE EPISODE: one query, several conditional totals —
+      # every order and the unshipped ones per country, side by side (Germany: 32 orders, 10 of
+      # them unshipped). That is how a report with a column per status gets built.
       #
-      # THREE tracks collect on this later, and it is worth naming all three so nobody thinks
-      # it is a local trick: Data Modeling Series 1 · 10 teaches grain from the DESIGN side
-      # (what should one row be, before the table exists — the mirror of this episode, which
-      # is the QUERY side: what did one row become after you joined). Data Warehousing and
-      # Analytics Engineering with dbt both build on it again for fact tables and model tests.
-      - n: "06"
-        slug: join-fan-out
-        title: "Join Fan-Out & Grain — When a Join Silently Multiplies Your Rows"
-        short: "Join Fan-Out & Grain — when a join multiplies rows"
-        hands_on: ["koan:predict", "koan:diagnose"]
-        core: true
-        status: planned
-      # Moved up from Series 3. A CTE is a READABILITY tool, not an advanced feature, and
-      # holding it back meant every query in this series got written as a nested subquery
-      # the learner would later have to unlearn. From here on, everything uses WITH.
-      #
-      # The motivation is free at this point: the pre-aggregating subquery from 06 works and
-      # is unreadable. "Name it, then use the name" is the whole lesson.
-      - n: "08"
-        slug: ctes
-        title: "CTEs (WITH) — Breaking a Long Query Into Named Steps"
-        short: "CTEs (WITH) — a long query, in named steps"
-        hands_on: ["koan:equivalent", "koan:complete"]
-        core: true
-        status: planned
-      - n: "10"
-        slug: self-joins-and-hierarchies
-        title: "Self-JOINs & Hierarchies — Relating Rows to Other Rows in the Same Table"
-        short: "Self-JOINs & Hierarchies — rows in the same table"
-        hands_on: ["koan:complete"]
-        status: planned
-      - n: "15"
+      # THE TRAP: a CASE with no ELSE hands back NULL for every row it does not name. Label freight
+      # over 50 as 'heavy' and nothing else, and 42 of the 79 orders carry no label at all — which
+      # Series 1 · 45's rules then drop from every comparison and every count(column).
+      # COALESCE is Series 1 · 45's; name it here in one line as the CASE it abbreviates.
+      # SETS UP: 38 (the GROUPING() labelling idiom is a CASE) and Series 3 · 00 (the portable pivot).
+      - n: "05"
         slug: case-expressions
         title: "CASE — SQL's If/Then for Labels & Buckets"
         short: "CASE — SQL's if/then for labels & buckets"
         hands_on: ["koan:complete", "koan:predict"]
         core: true
         status: planned
+      # MOVED UP FROM 20 ON 2026-09-14. It adds one tool to three Series 1 skills — the half-open
+      # range of 1 · 10, EXTRACT from 1 · 30, and the date arithmetic 1 · 45 used on trust — and two
+      # later episodes need it: 15 (the June report needs a clean month boundary) and 55
+      # (month-over-month needs date_trunc).
+      #
       # DATE ARITHMETIC IS PART OF THIS EPISODE, not a footnote — the same competitor audit
       # (2026-09-02) found three of sixty episodes spent on it, which is a fair signal that
-      # beginners get stuck. `date - date` yields an INTERVAL rather than a number, and that
-      # is what makes "days to ship" go wrong; Series 1 · 45 already CASTs both sides to DATE
-      # to dodge it, so this episode owes the explanation that one borrowed. AGE() too, with
-      # the caveat that it is PostgreSQL's own. Details in the episode's _todo scope block.
-      - n: "20"
+      # beginners get stuck. On the shipped data "OrderDate" is a TIMESTAMP: timestamp minus
+      # timestamp is an INTERVAL, and CAST(… AS DATE) minus CAST(… AS DATE) is a whole number of
+      # days. That is what makes "days to ship" go wrong, and it is why Series 1 · 45 cast both
+      # sides — this episode owes the explanation that one borrowed. AGE() too, with the caveat
+      # that it is PostgreSQL's own. Details in the episode's _todo scope block.
+      #
+      # Orders run from 2022-12-05 to 2024-06-12, so date_trunc('quarter') gives seven quarters and
+      # the last one is partial — the "say so on the report" beat Series 1 · 30 made about June.
+      #
+      # THE MISSING DAYS — A REPORT WITH HOLES IN IT. Series 1 · 30 closed a beat on "a zero is a
+      # fact; a missing row is a silence", and nothing has paid it off since. GROUP BY can only report
+      # the days that HAVE rows: orders per day in June 2024 comes back as 4 rows, and a chart drawn from
+      # it joins the 4 points and hides the 26 days with no orders at all. The fix is a DATE SPINE —
+      # every day in the range, generated with generate_series (a calendar table is the same idea,
+      # stored) — with the orders LEFT JOINed onto it (Series 1 · 40).
+      # THE TRAP INSIDE THE FIX (DuckDB, 2026-09-14 — re-assert on both engines): count(*) over that
+      # LEFT JOIN reports 30 orders for June, because every empty day still produces one row and
+      # count(*) counts it. count(o."OrderID") reports the real 4, with 26 zeros — Series 1 · 25's
+      # count(*) against count(column), exactly where it costs the most. Across the first half of 2024,
+      # 37 of the 60 country-months have no order at all.
+      # PORTABILITY, in one line: generate_series is PostgreSQL's and DuckDB's (DuckDB returns TIMESTAMPs
+      # even from DATE arguments); SQL Server and MySQL spell it differently, and a recursive CTE
+      # (Series 3 · 10) builds the same spine anywhere. Series 4 owns the spellings.
+      - n: "10"
         slug: dates-and-times
         title: "Dates & Times — Getting Ranges and Boundaries Right"
         short: "Dates & Times — ranges and boundaries"
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         status: planned
+      # MERGED 2026-09-14 FROM OLD 00 (multi-table-joins) AND OLD 06 (join-fan-out) — see the
+      # series note above. Series 1 · 50 already owns the three-table chain, counting rows before
+      # and after a join, grain and count(DISTINCT). DO NOT RE-TEACH THEM: open on them as known,
+      # and teach the two ways a join is WRONG that Series 1 · 50 deliberately left out.
+      #
+      #   1. A JOIN THAT DROPS ROWS. "Every product, and the units it sold in June": "Products"
+      #      LEFT JOIN "Order Details", then an INNER JOIN to "Orders" narrowed to June. The inner
+      #      join discards every line with no June order, and with it every product the LEFT JOIN
+      #      kept — 6 rows back, 14 of the 20 products gone. Series 1 · 40's ON-versus-WHERE trap,
+      #      one table further along. The obvious repair, LEFT all the way down, brings the 20
+      #      products back and sums EVERY line they ever sold: 2070 units, where June was 40.
+      #   2. A JOIN THAT MULTIPLIES THE MONEY. An order-level column summed after joining to order
+      #      lines: sum("Freight") is 3988.52 over "Orders" and 9871.56 over the joined rows.
+      #      Alfreds' 253.73 becomes 603.21, and "number one by freight" moves from FRANK — the
+      #      answer Series 1 · 30 gave — to FOLKO. Nothing errors.
+      #      THE TEMPTING FIX IS WRONG AND LOOKS RIGHT ON THIS DATA. SUM(DISTINCT "Freight") returns
+      #      3988.52 exactly, because no two Northwind orders happen to share a freight value. It
+      #      sums distinct VALUES, not distinct ORDERS: two orders at the same freight are counted
+      #      once. Series 1 · 50 has just taught DISTINCT as the one-word repair, so the episode must
+      #      show this is luck, and a koan must break it on data with a repeated value.
+      #
+      # ONE CURE FOR BOTH: narrow or aggregate BEFORE the join — a subquery in FROM, from 00.
+      # "Products" LEFT JOIN (June's lines, summed per product) returns all 20 products, 6 of them
+      # with a June quantity, totalling 40. Freight summed per customer over "Orders" alone, then
+      # joined, puts FRANK back on top.
+      #
+      # FRAME IT AS GRAIN — "one row per WHAT?" — never as a join gotcha. Grain is the idea behind
+      # correct numbers everywhere, and three tracks collect on it: Data Modeling Series 1 · 15
+      # teaches it from the DESIGN side (what should one row be, before the table exists — the
+      # mirror of this episode, which is the QUERY side: what did one row become after you
+      # joined). Data Warehousing and Analytics Engineering with dbt build on it again.
+      # Java & Groovy Series 1 · 40 is the SAME bug in memory, where no database warns you.
+      #
+      # DATA NOTES, checked 2026-09-14. Northwind has NO ORPHANS — every customer has orders,
+      # every order has lines, every product has sold — so rows go missing only by narrowing the
+      # match, exactly as in Series 1 · 40. "Order Details" is the many-to-many bridge between
+      # orders and products and is worth one beat (Chai: 10 lines, 8 different customers).
+      # "EmployeeTerritories", "Territories" and "Region" exist and are EMPTY: do not build on them.
+      # A five-table chain (sales per category per country) adds nothing a Series 1 · 50 viewer
+      # needs taught — use it as an exercise, not as the lesson.
+      # BUILDS ON: 00 (the cure), 10 (the June boundary), Series 1 · 40 and 1 · 50.
+      - n: "15"
+        slug: multi-table-joins-duplicate-rows
+        title: "Multi-Table JOINs & Grain — When a Join Silently Drops or Multiplies Your Rows"
+        short: "Multi-Table JOINs & Grain — rows dropped or multiplied"
+        hands_on: ["koan:predict", "koan:diagnose"]
+        core: true
+        status: planned
+      # Moved up from Series 3 (2026-08-24), and moved from 08 to 20 on 2026-09-14. A CTE is a
+      # READABILITY tool, not an advanced feature, and holding it back meant every query in this
+      # series got written as a nested subquery the learner would later have to unlearn. From here
+      # on, everything uses WITH.
+      #
+      # The motivation is free at this point: 15's cures work, and they are subqueries nested in a
+      # FROM. "Name it, then use the name" is the whole lesson — the June product report rewritten
+      # as a WITH reads top to bottom in the order a person thinks it.
+      # SETS UP: 25 (correlated subqueries read far better beside named steps) and 50 (filtering on
+      # ROW_NUMBER needs a CTE or a subquery).
+      - n: "20"
+        slug: ctes
+        title: "CTEs (WITH) — Breaking a Long Query Into Named Steps"
+        short: "CTEs (WITH) — a long query, in named steps"
+        hands_on: ["koan:equivalent", "koan:complete"]
+        core: true
+        status: planned
+      # THE HARD HALF OF SUBQUERIES, split from old 05 on 2026-09-14 and placed after CTEs, so
+      # correlation is met with the tool that makes it readable.
+      #
+      # COVER: EXISTS and NOT EXISTS, a correlated subquery against an uncorrelated one, and why
+      # EXISTS can stop at the first match.
+      #
+      # THE NOT IN TRAP, ON NORTHWIND'S OWN DATA. "Which employees manage nobody?" —
+      # WHERE "EmployeeID" NOT IN (SELECT "ReportsTo" FROM "Employees") returns NO ROWS AT ALL,
+      # because Andrew reports to nobody and his "ReportsTo" is NULL. NOT EXISTS returns Janet and
+      # Nancy. It is Series 1 · 45's three-valued logic detonating inside a construct that looks
+      # nothing like a NULL comparison. Teach the habit: NOT EXISTS, always. Series 3 · 22 comes
+      # back to it as a query plan; this episode owns the correctness.
+      #
+      # A PROMISE MADE IN SERIES 1 · 35: HAVING with no GROUP BY is "genuinely useful inside a
+      # subquery". This episode owes the worked example — orders whose lines add up to more than
+      # 50 units, EXISTS (… HAVING sum("Quantity") > 50) with no GROUP BY: 6 orders. The brief
+      # carries the query.
+      #
+      # A second verified question, which 35 answers again with EXCEPT: customers who ordered in
+      # Q1 2024 and never since — 10 of them.
+      # BUILDS ON: 00, 20, Series 1 · 35 and 1 · 45.
+      - n: "25"
+        slug: exists-and-correlated-subqueries
+        title: "EXISTS & Correlated Subqueries — Questions About Each Row, and the NOT IN Trap"
+        short: "EXISTS & Correlated Subqueries — and the NOT IN trap"
+        hands_on: ["koan:choose", "koan:predict"]
+        core: true
+        status: planned
       # One episode, not two: pattern matching and the string/number helpers are both
       # "functions for data nobody cleaned", and both are reference material a working
       # person looks up rather than memorises. Ships with a cheat sheet and covers the
       # number side too — ROUND, CAST and the formatting a report actually needs.
-      - n: "25"
+      #
+      # MOVED FROM 25 TO 30 ON 2026-09-14: it is the breather between the two hardest runs of the
+      # series (15–25 and 35–38), one tool at a time. It collects two Series 1 promises: LIKE's
+      # `_`, ESCAPE and case-insensitive matching (deferred by 1 · 10), and STRING_AGG — the text
+      # aggregate 1 · 25 named as Series 2's. `||` is 1 · 20's; build on it, do not re-teach it.
+      - n: "30"
         slug: string-functions-and-regex
         title: "String Functions, LIKE & Regex — Clean Up Messy Real-World Data"
         short: "String Functions, LIKE & Regex — clean up messy data"
         hands_on: ["koan:complete"]
         status: planned
+      # TWO CALLBACKS MAKE THIS MORE THAN A SYNTAX TOUR. Series 1 · 40 showed a FULL OUTER JOIN
+      # written as a UNION of a LEFT and a RIGHT join — and why UNION and not UNION ALL — so the
+      # learner has already used the operator once. And EXCEPT answers 25's "ordered in Q1 2024
+      # and never since" a second way (10 customers): prove the two agree, which is the koan.
       - n: "35"
         slug: set-operations
         title: "UNION, INTERSECT, EXCEPT — Combining and Subtracting Result Sets"
@@ -622,10 +771,12 @@ series:
       # indistinguishable from a real NULL in the data. A report over a table where region is
       # sometimes blank will show two rows that look identical and mean completely different
       # things — one is "the rows with no region", the other is "all regions". Nothing warns you.
+      # NORTHWIND HAS THE REAL NULL ALREADY (checked 2026-09-14): "Region" is empty for 21 of the
+      # 25 customers, so the collision can be shown on shipped data without inventing any.
       #   GROUPING(col)  returns 1 for the superaggregate NULL and 0 otherwise. This is the
       #                  distinguisher, and it exists for exactly this problem.
       #   GROUPING_ID()  packs several of them into one number, for ordering and filtering.
-      #   THE LABELLING IDIOM to leave them with:
+      #   THE LABELLING IDIOM to leave them with — a CASE, from 05:
       #     CASE WHEN GROUPING(category) = 1 THEN 'All categories' ELSE category END
       # It is Series 1 · 45's three-valued logic arriving through a door nobody is watching, and
       # that callback should be explicit.
@@ -653,8 +804,35 @@ series:
         short: "GROUPING SETS, ROLLUP & CUBE — subtotals in one pass"
         hands_on: ["koan:equivalent", "koan:predict"]
         status: planned
+      # MOVED FROM 10 TO 42 ON 2026-09-14. It is a different join SHAPE — one table, two roles —
+      # not a third "rows that multiply" episode, so it does not belong beside 15; and placed late
+      # it hands straight to Series 3 · 10, which walks the same hierarchy recursively.
+      # Northwind's "Employees" is thin (3 rows) — say so rather than pretending. What it has is
+      # enough for the one idea (checked 2026-09-14): Nancy and Janet report to Andrew, whose
+      # "ReportsTo" is NULL — so "each employee and their manager" loses Andrew under a plain JOIN
+      # and keeps him under a LEFT one. Series 1 · 40's rule, on a table joined to itself.
+      # Recursive walking is Series 3 · 10.
+      - n: "42"
+        slug: self-joins-and-hierarchies
+        title: "Self-JOINs & Hierarchies — Relating Rows to Other Rows in the Same Table"
+        short: "Self-JOINs & Hierarchies — rows in the same table"
+        hands_on: ["koan:complete"]
+        status: planned
+      # AFTER CTEs (20) ON PURPOSE: a view is a query given a name that outlives the session, and
+      # the learner already names steps with WITH. "When it hides a problem" has a concrete answer
+      # by now: a view that already joined order lines, summed again by somebody who cannot see
+      # inside it — 15's fan-out, one layer of abstraction removed from the person who pays for it.
+      # Materialized views are Data Warehousing — say so rather than half-teaching them.
+      - n: "45"
+        slug: views
+        title: "VIEWs — Naming a Query So You Can Reuse It"
+        short: "VIEWs — name a query, reuse it"
+        hands_on: ["koan:equivalent"]
+        status: planned
       # The only episode that writes data — placed late, once filtering is second nature.
       # COMMIT/ROLLBACK basics live here; isolation levels belong to a future ops track.
+      # Renumbered from 40 to 48 on 2026-09-14, and it stays after the views: its place is
+      # "late", not any particular neighbour.
       #
       # MUST COVER `INSERT … ON CONFLICT`, and this is the one real hole a competitor audit
       # found (Amigoscode's 60-episode PostgreSQL course, 2026-09-02 — it spends TWO of its
@@ -678,26 +856,20 @@ series:
       # check around it. THIS episode owes only the statement and what it does to one table;
       # the moment it starts discussing load strategies it is teaching that course's lesson.
       # (The audit found nothing else missing: COALESCE/NULLIF are Series 1 · 45, LIKE/ILIKE
-      # are Series 1 · 10, ROUND/CAST are Series 2 · 25, EXTRACT is Series 2 · 20, and every
+      # are Series 1 · 10, ROUND/CAST are Series 2 · 30, EXTRACT is Series 2 · 10, and every
       # key/constraint/DDL topic is deliberately Learn Data Modeling's.)
-      - n: "40"
+      - n: "48"
         slug: insert-update-delete
         title: "INSERT, UPDATE, DELETE & Transactions — Change the Data, Safely"
         short: "INSERT, UPDATE, DELETE & Transactions — safely"
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         status: planned
-      - n: "45"
-        slug: views
-        title: "VIEWs — Naming a Query So You Can Reuse It"
-        short: "VIEWs — name a query, reuse it"
-        hands_on: ["koan:equivalent"]
-        status: planned
       # Moved down from Series 3, because "CTEs, subqueries and window functions on real questions" is not true
       # without them: running totals, month-over-month, rank-within-region and
       # latest-row-per-customer ARE what business questions look like, and they are the
       # table stakes of an analyst screen. They close the series rather than opening it
-      # because a window function reads badly without the CTEs from episode 08.
+      # because a window function reads badly without the CTEs from episode 20.
       #
       # ROW_NUMBER is named in the title on purpose. "The latest row per customer" is the
       # single most-searched SQL task there is, and the keywords-lead title convention
@@ -709,6 +881,8 @@ series:
         hands_on: ["koan:predict", "koan:complete"]
         core: true
         status: planned
+      # BUILDS ON 50 and on 10: month-over-month needs date_trunc to make the months before LAG can
+      # compare them.
       - n: "55"
         slug: window-functions-ii
         title: "Window Functions II: LAG/LEAD, Running Totals & Frames — Month-over-Month Growth in One Query"
@@ -716,10 +890,6 @@ series:
         hands_on: ["koan:predict", "koan:complete"]
         core: true
         status: planned
-      # SERIES 2 PROJECT. The academy-wide audit found this series walking nine core episodes
-      # with nothing that applied them — the same defect Python and Java & Groovy had.
-      # It closes the series' own promise: a question a person actually asked, answered with
-      # the multi-table joins, CTEs and window functions this series taught.
       # NEW 2026-09-07. An audit for performance coverage found something more basic: the words
       # median and percentile appear NOWHERE in any curriculum in this academy — checked by
       # grep across all twenty-eight, not assumed. That is a strange silence for a course whose
@@ -737,6 +907,9 @@ series:
       # moves the average order value and does not move the median at all. When somebody asks
       # for "the typical order", they mean the median and they say average, and the difference
       # has changed real decisions.
+      # THE SHIPPED DATA MAKES THE POINT WITHOUT AN INVENTED ORDER (checked 2026-09-14): the average
+      # order value is 736.12 and the median is 506.17 — the average sits 45% above the typical
+      # order. Freight is the calm contrast: average 50.49, median 47.93.
       #
       # COVER:
       #   THE ORDERED-SET AGGREGATES, which look unlike anything else in SQL and should be
@@ -748,6 +921,8 @@ series:
       #     CONT  for a continuous measure where a number between two rows is meaningful
       #   A CONT median of 47.5 on a table where no order was ever 47.50 is correct and will
       #   still get you asked whether the query is broken.
+      #   79 ORDERS IS AN ODD COUNT, so over the whole table CONT and DISC agree (47.93) — the
+      #   difference has to be shown on an even-sized group.
       #   MODE() WITHIN GROUP as the third member of the family, in a line.
       #   PER GROUP: the whole thing under GROUP BY — a median per category, which is where it
       #   earns its place in a reporting course.
@@ -756,6 +931,8 @@ series:
       #   NTILE, PERCENT_RANK and CUME_DIST from the window family, with the distinction stated
       #   plainly: NTILE BUCKETS ROWS, a percentile RETURNS A VALUE. People reach for NTILE
       #   expecting the second.
+      #   STDDEV, in a line, beside the median: Series 1 · 25 promised "the statistical set" to
+      #   Series 2, and spread is the other half of "what is typical".
       #
       # PORTABILITY, and here it is sharp enough to belong in the lesson rather than in
       # Series 4: PostgreSQL, Oracle, SQL Server and Db2 all have PERCENTILE_CONT and
@@ -783,6 +960,15 @@ series:
         short: "Median and Percentiles — WITHIN GROUP, not AVG"
         hands_on: ["koan:predict", "koan:complete"]
         status: planned
+      # SERIES 2 PROJECT. The academy-wide audit found this series walking nine core episodes
+      # with nothing that applied them — the same defect Python and Java & Groovy had.
+      # It closes the series' own promise: a question a person actually asked, answered with
+      # the subqueries, multi-table joins, CTEs and window functions this series taught.
+      # Its two candidate questions, and what is and is not measured yet: revenue per customer
+      # per quarter walks into 15's fan-out and 10's boundary; "bought in Q1 2024 and not since"
+      # is 10 customers via NOT EXISTS (checked 2026-09-14). The brief's claim that a LEFT JOIN
+      # version gives a DIFFERENT answer has not been measured — it must be, before this
+      # question is chosen, because a wrong answer that matches the right one teaches nothing.
       - n: "60"
         slug: project-a-real-business-question
         title: "Project — Answering a Real Business Question End to End"
@@ -796,34 +982,102 @@ series:
     title: Advanced SQL
     tagline: the harder queries, and how to make a slow one fast
     level: advanced
+    # ── REORDERED 2026-09-14 (Block A only) ─────────────────────────────────────────────────
+    # Block A used to open on recursive CTEs — the hardest syntax in the series, on data that does
+    # not exist yet — with pivot, the gentlest step, second. Now it ramps (● easy … ●●●● hard):
+    #   00 Pivot ●●    05 JSON ●●    10 Recursive CTEs ●●●    15 Cohorts ●●●● (closes Block A)
+    # Block B was already a ramp and did not move:
+    #   18 Writing a query that can be fast ●●●   20 EXPLAIN ●●●   22 Rewrites ●●●   25 Indexes ●●●
+    #   27 COUNT(DISTINCT) ●●●●   30 Query tuning (the project)
+    # OLD → NEW: 00 → 10 · 05 → 00 · 10 → 15 · 15 → 05. Slugs unchanged. Every episode's comment
+    # below names what it builds on, and so does each brief's PLACE IN THE SERIES block.
+    #
+    # ── BEFORE SERIES 3 CAN BE BUILT: THE BULK DATASET (sketched 2026-09-14 — NOT BUILT) ──────
+    # Seven of these ten episodes carry `seed: bulk`, which the header above defines as "the
+    # larger dataset (datasets/bulk/)". THAT FOLDER DOES NOT EXIST. The only large generator,
+    # datasets/generated/make_big_orders.py, writes one flat CSV for the Python track's chunking
+    # episodes — no keys, no second table, no database — and cannot carry an EXPLAIN, an index or
+    # a recursive walk. Block B cannot be written until this exists. What it has to be:
+    #   SHAPE    Northwind's own schema and names ("Customers", "Orders", "Order Details",
+    #            "Products", "Employees" …), so every query from Series 1 and 2 runs unchanged and
+    #            only the planner's choices change. A bigger Northwind, not a new business.
+    #   SIZE     big enough that a sequential scan and an index scan cost visibly different amounts
+    #            on a laptop, small enough to generate in about a minute. Order of magnitude to
+    #            start from: ~100k customers, 2–5M orders, 10–20M order lines. Measure it, then
+    #            write the chosen numbers into the generator's header.
+    #   SKEW     realistic, never uniform: a few customers with thousands of orders and most with a
+    #            handful, seasonal months, a long tail of products. Uniform data makes every plan
+    #            look alike and hides the estimated-versus-actual gap Series 3 · 20 teaches first.
+    #   DEPTH    an org chart several levels deep (hundreds of employees under one CEO) for
+    #            Series 3 · 10, plus one deliberate reporting loop for the termination guard.
+    #            Northwind's 3 employees cannot recurse.
+    #   HISTORY  several years of orders, so cohorts (Series 3 · 15) have enough months.
+    #   NULLS    where production has them — unshipped orders, blank regions — so Series 3 · 22's
+    #            NOT IN and DISTINCT examples fire on this data too.
+    #   INDEXES  primary and foreign keys present; the secondary indexes Series 3 · 25 creates
+    #            ABSENT, so "add the index" is the learner's move.
+    #   JSON     Northwind has no JSON column, and Series 3 · 05 needs one: either a payload column
+    #            here, or a small committed file whose defects are the lesson (a missing key, a
+    #            number stored as text, a nested array) — the second fits datasets/README.md's
+    #            tier 2 better. Decide when 05 is written.
+    # HOW IT IS MADE, by datasets/README.md's tier 3 rules: a generator under datasets/generated/
+    # with a FIXED SEED, deterministic, never committed as data. It loads the SAME rows into DuckDB
+    # (the koans) and PostgreSQL (CloudBeaver and the spec gate), and the spec asserts the counts
+    # match on both. Plans differ between the two engines, so every plan-reading koan says which
+    # engine it is about; EXPLAIN ANALYZE lessons are PostgreSQL-first.
+    # OPEN DECISIONS for the owner: the exact sizes (disk and generation time on a learner's
+    # laptop); whether DataPallas ships it as an optional database or the learner generates it;
+    # whether Series 4 reuses it (probably not — Oracle XE and Db2 Community have resource caps).
     episodes:
-      # Block A — the question shapes that need real machinery. CTEs and both window-function
+      # BLOCK A — the question shapes that need real machinery. CTEs and both window-function
       # episodes moved to Series 2; what stays here is the work that takes them as a
       # prerequisite rather than teaching them.
+      #
+      # OPENS SERIES 3 BECAUSE IT IS THE GENTLEST STEP UP (moved from 05 on 2026-09-14). The
+      # portable pivot IS SUM(CASE …), written in Series 2 · 05, turned into one column per value.
+      # BUILDS ON: Series 2 · 05 (CASE inside SUM), 2 · 38 (subtotals). SETS UP: 15 (a cohort grid
+      # is a pivot). Runs on Northwind; needs no bulk data.
       - n: "00"
+        slug: pivot-and-unpivot
+        title: "PIVOT & UNPIVOT — Turn Rows into a Cross-Tab Report, the Portable Way"
+        short: "PIVOT & UNPIVOT — rows into a cross-tab report"
+        hands_on: ["koan:equivalent", "koan:complete"]
+        status: planned
+      # MOVED FROM 15 ON 2026-09-14: a standalone topic of middle difficulty, placed early so Block
+      # A climbs. BUILDS ON: Series 1 · 07 (types — JSON is text until it is parsed), 1 · 45 (a
+      # missing key is a NULL), Series 2 · 30 (text functions). DATA: Northwind has no JSON column
+      # — see the bulk-dataset note above.
+      - n: "05"
+        slug: json-in-sql
+        title: "JSON in SQL — Query Semi-Structured Data Without Leaving the Database"
+        short: "JSON in SQL — semi-structured data, in place"
+        hands_on: ["koan:complete", "koan:diagnose"]
+        status: planned
+      # MOVED FROM 00 ON 2026-09-14. It opened the series with its hardest syntax, on data that does
+      # not exist yet; here it follows its prerequisites directly. BUILDS ON: Series 2 · 20 (WITH),
+      # 2 · 42 (the self-join it repeats level after level), 2 · 35 (UNION ALL joins the anchor to
+      # the recursive term). Worth one line: it also builds Series 2 · 10's date spine on engines
+      # without generate_series. DATA: seed: bulk — see the note above.
+      - n: "10"
         slug: recursive-ctes
         title: "Recursive CTEs — Walk an Org Chart to the Top"
         short: "Recursive CTEs — walk an org chart to the top"
         hands_on: ["koan:predict", "koan:complete"]
         status: planned
         seed: bulk
-      - n: "05"
-        slug: pivot-and-unpivot
-        title: "PIVOT & UNPIVOT — Turn Rows into a Cross-Tab Report, the Portable Way"
-        short: "PIVOT & UNPIVOT — rows into a cross-tab report"
-        hands_on: ["koan:equivalent", "koan:complete"]
-        status: planned
-      - n: "10"
+      # MOVED FROM 10 ON 2026-09-14, to CLOSE Block A. It is the one episode here that is an
+      # analysis pattern rather than a SQL feature, and the strongest "so this is what it was all
+      # for" moment in the course, so it comes when every tool it uses is in hand.
+      # BUILDS ON: Series 2 · 10 (date_trunc, and the date spine for months nobody came back in),
+      # 2 · 15 (cohort size is counted at CUSTOMER grain, not order grain), 2 · 20 (CTEs),
+      # 2 · 50 and 2 · 55 (first order per customer, months since it), Series 3 · 00 (the grid is a
+      # pivot). DATA: Northwind has 25 customers over 19 months, so the grid is sparse — decide
+      # when the episode is written whether that is enough or it runs on the bulk data.
+      - n: "15"
         slug: cohorts-and-repeat-purchase
         title: "Cohorts & Repeat-Purchase Analysis — Measuring Who Comes Back, and When"
         short: "Cohorts & Repeat-Purchase Analysis — who comes back"
         hands_on: ["koan:predict", "koan:complete"]
-        status: planned
-      - n: "15"
-        slug: json-in-sql
-        title: "JSON in SQL — Query Semi-Structured Data Without Leaving the Database"
-        short: "JSON in SQL — semi-structured data, in place"
-        hands_on: ["koan:complete", "koan:diagnose"]
         status: planned
       # Block B — performance. All six need a dataset big enough for the planner to have real
       # choices to make, hence seed: bulk on every one of them.
@@ -908,6 +1162,8 @@ series:
       # wrapped order_date in a formatting function to make the output prettier, the index
       # stopped being used, and nothing failed — the number is still right, it just takes nine
       # seconds now, and it will be blamed on the data growing.
+      # BUILDS ON: Series 1 · 20 and 1 · 35 (the running order), 1 · 05 (the cost of SELECT *),
+      # Series 2 · 10 (the half-open range IS the sargable rewrite of YEAR(date)). Opens Block B.
       - n: "18"
         slug: writing-a-query-that-can-be-fast
         title: "Writing a Query That Can Be Fast — Filter Early, Don't Hide the Column"
@@ -915,6 +1171,8 @@ series:
         hands_on: ["koan:equivalent", "koan:diagnose"]
         status: planned
         seed: bulk
+      # BUILDS ON: 18. SETS UP: 22, 25, 27, 30. EXPLAIN ANALYZE output is engine-specific — teach it
+      # PostgreSQL-first and say what DuckDB shows instead.
       - n: "20"
         slug: explain-query-plans
         title: "EXPLAIN / EXPLAIN ANALYZE — Reading the Plan to Find Out Why a Query Is Slow"
@@ -932,7 +1190,7 @@ series:
       #   1. ASKING WHETHER A ROW EXISTS. Three ways, and they are not equivalent:
       #        COUNT(*) > 0   counts every matching row to answer yes or no.
       #        EXISTS         stops at the first row it finds. This is the one you want.
-      #        JOIN           finds every match, so it can MULTIPLY your rows — Series 2 · 06's
+      #        JOIN           finds every match, so it can MULTIPLY your rows — Series 2 · 15's
       #                       fan-out arriving as a performance problem instead of a wrong total.
       #      AND THE CORRECTNESS BOMB, which is why this pattern leads the episode:
       #      NOT IN (subquery) RETURNS NO ROWS AT ALL IF THE SUBQUERY PRODUCES A SINGLE NULL.
@@ -943,7 +1201,7 @@ series:
       #   2. DISTINCT AS A PLASTER. Ask the reader the diagnostic question: did you add DISTINCT
       #      because you wanted unique values, or because you were getting duplicates? The second
       #      is a fan-out you have hidden rather than fixed, and DISTINCT pays for the concealment
-      #      with a sort or hash over the entire result set. Fix the grain — Series 2 · 06 owns
+      #      with a sort or hash over the entire result set. Fix the grain — Series 2 · 15 owns
       #      how — and the DISTINCT disappears along with the cost.
       #      UNION against UNION ALL is the same lesson in a second costume: UNION deduplicates,
       #      and that is a sort you are buying. If the two sides cannot overlap, say so with ALL.
@@ -981,6 +1239,8 @@ series:
       # for a year, somebody left a supplier's region blank, and the exception report has been
       # returning zero rows ever since — which reads as "nothing to report" rather than as a
       # failure, and nobody investigates good news.
+      # BUILDS ON: 20 (the plan as evidence), Series 2 · 25 (NOT EXISTS and the NOT IN trap),
+      # 2 · 15 (fan-out, DISTINCT as a plaster), 2 · 35 (UNION against UNION ALL), Series 1 · 15 (OFFSET).
       - n: "22"
         slug: rewrites-that-change-the-plan
         title: "Rewrites That Change the Plan — EXISTS, DISTINCT and Deep Pagination"
@@ -988,6 +1248,7 @@ series:
         hands_on: ["koan:equivalent", "koan:count:scanned"]
         status: planned
         seed: bulk
+      # BUILDS ON: 18 (sargability), 20 (reading the plan), 22 (rewrites). SETS UP: 27, 30.
       - n: "25"
         slug: indexes
         title: "Indexes — Making a Query Faster, and What an Index Costs"
@@ -1057,6 +1318,8 @@ series:
       # visited, so the number is inflated — often by a lot — and it is inflated CONSISTENTLY,
       # which means the trend line still looks sensible and nobody questions it. It is the
       # cleanest example in the course of a number that is wrong and looks right.
+      # BUILDS ON: 25 (why an index was never going to fix it), Series 1 · 25 (count(DISTINCT)),
+      # Series 2 · 50 (COUNT(DISTINCT) OVER), 2 · 58 (the approximate-percentile pointer).
       - n: "27"
         slug: counting-distinct
         title: "COUNT(DISTINCT) — the Aggregate That Will Not Decompose"
@@ -1064,6 +1327,7 @@ series:
         hands_on: ["koan:predict", "koan:count:scanned"]
         status: planned
         seed: bulk
+      # BUILDS ON: all of Block B — this is the Series 3 project.
       - n: "30"
         slug: slow-to-fast
         title: "Query Tuning — Making a Real Slow Query Fast"
@@ -1083,6 +1347,28 @@ series:
     title: Cross-Vendor SQL
     tagline: one query, five databases
     level: advanced
+    # ── BEFORE SERIES 4 CAN BE BUILT: VERIFY THE FIVE ENGINES (sketched 2026-09-14) ───────────
+    # CONFIRMED: DataPallas's database template (reportburster repo,
+    # asbl/src/main/external-resources/db-template/db/docker-compose.yml) defines
+    # rb-northwind-postgres (16.2), -mysql (8.3.0), -mariadb (11.3.2), -sqlserver (2019),
+    # -oracle (XE 21) and -db2 (Community 11.5.9), plus -clickhouse. The five engines exist.
+    # NOT CONFIRMED: that they hold the SAME Northwind, which is the whole claim of Series 4 · 10.
+    # Check, per engine, before any lesson depends on it, and date the result here:
+    #   1. ROW COUNTS per table match PostgreSQL (25 customers, 79 orders, 193 lines, 20 products),
+    #      and spot values agree (Alfreds' 5 orders; total sales 58153.31).
+    #   2. IDENTIFIERS. Are the tables created quoted and mixed-case ("Orders") on every engine?
+    #      Oracle and Db2 fold unquoted names to UPPER case; MySQL's case sensitivity follows its
+    #      file system settings. Series 1's quoted style must parse everywhere, or the lesson says
+    #      why it does not.
+    #   3. TYPES. Money (DECIMAL / NUMBER / MONEY); "Discontinued" (Oracle 21 has no BOOLEAN column
+    #      type); Oracle's DATE carries a time of day.
+    #   4. EMPTY STRINGS. Oracle stores '' AS NULL, so Series 1 · 45's "Region" = '' result differs
+    #      there — a Series 4 · 00 example, not a bug.
+    #   5. A LEARNER'S LAPTOP. Oracle XE and Db2 Community need several GB of RAM and Db2 runs
+    #      privileged. State the minimum machine, or which engines are optional.
+    #   6. HOW KOANS REACH THEM. The koan runner is DuckDB today. Series 4 needs the same koan run
+    #      against each container — JDBC URLs, drivers and their licence terms (SQL Server, Oracle).
+    #      Design that before Series 4 · 05's koans are written.
     episodes:
       - n: "00"
         slug: ansi-sql-vs-dialects

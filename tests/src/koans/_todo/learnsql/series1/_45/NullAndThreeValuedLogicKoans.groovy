@@ -41,7 +41,7 @@ import spock.lang.Stepwise
  * MUST CLOSE THE LOOP BACK TO EPISODE 25, which taught aggregates twenty episodes ago and
  * therefore taught them NULL-unaware: COUNT(col) skips NULLs, COUNT(*) does not, and AVG divides
  * by the non-NULL count. That is a wrong-number-in-a-report bug, not a curiosity.
- * BOUNDARY: Data Modeling Series 1 · 37 owns nullable-or-not as a DESIGN decision. Same word,
+ * BOUNDARY: Data Modeling Series 1 · 52 owns nullable-or-not as a DESIGN decision. Same word,
  * different question. Name it.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait

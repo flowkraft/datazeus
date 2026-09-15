@@ -1,21 +1,21 @@
-package datazeus.learnsql.series2._45
+package datazeus.learnsql.series3._05
 
 import datazeus._internal.KoanBase
 import spock.lang.Stepwise
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════╗
- * ║  SQL KOANS — Learn SQL · Series 2 · 45
+ * ║  SQL KOANS — Learn SQL · Series 3 · 05
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
- * VIEWs — Naming a Query So You Can Reuse It
+ * JSON in SQL — Query Semi-Structured Data Without Leaving the Database
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into
- * src/koans/groovy/datazeus/learnsql/series2/_45/ when it is real.
+ * src/koans/groovy/datazeus/learnsql/series3/_05/ when it is real.
  *
- *     zeus.bat koans learnsql series2 _45     (Windows)
- *     ./zeus.sh koans learnsql series2 _45    (macOS/Linux)
+ *     zeus.bat koans learnsql series3 _05     (Windows)
+ *     ./zeus.sh koans learnsql series3 _05    (macOS/Linux)
  *
  * ── READ THESE FIRST ────────────────────────────────────────────────────
  *   KoanBase                                  shouldReturn, the ___ blank, the dataset
@@ -33,18 +33,20 @@ import spock.lang.Stepwise
  *     count is not.
  *
  * ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
- * GOAL: name a query once and reuse it.
- * SQL: CREATE VIEW, querying a view, when a view is a good idea and when it hides a problem.
- * Materialized views are Data Warehousing — say so rather than half-teaching them.
+ * GOAL: query semi-structured data without leaving the database.
+ * SQL: JSON/JSONB columns, -> and ->>, path expressions, indexing a JSON field, and where the
+ * vendors diverge.
+ * BOUNDARY: Data Modeling Series 2 · 42 owns the DECISION to store JSON at all. This owns
+ * querying it once that decision is made. Same word, two questions.
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
- * LEVEL ●● of ●●●●. AFTER CTEs (Series 2 · 20) ON PURPOSE: a view is a named query that
- * outlives the session. "When it hides a problem" has a concrete answer by now — a view that
- * already joined the order lines, summed again by somebody who cannot see inside it: Series 2 · 15's
- * fan-out, one layer of abstraction away from the person who pays for it.
+ * LEVEL ●● of ●●●●. BUILDS ON: Series 1 · 07 (types — JSON is text until it is parsed),
+ * 1 · 45 (a missing key is a NULL), Series 2 · 30 (text functions).
+ * DATA: Northwind has no JSON column — curriculum.yaml's bulk-dataset note says what to decide.
+ * Was 15 until the 2026-09-14 reorder.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
-class ViewsKoans extends KoanBase {
+class JsonInSqlKoans extends KoanBase {
 
     // TODO: koans, one per idea in the lesson, in the same order.
     //

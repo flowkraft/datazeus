@@ -1,21 +1,21 @@
-package datazeus.learnsql.series2._45
+package datazeus.learnsql.series2._25
 
 import datazeus._internal.KoanBase
 import spock.lang.Stepwise
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════╗
- * ║  SQL KOANS — Learn SQL · Series 2 · 45
+ * ║  SQL KOANS — Learn SQL · Series 2 · 25
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
- * VIEWs — Naming a Query So You Can Reuse It
+ * EXISTS & Correlated Subqueries — Questions About Each Row, and the NOT IN Trap
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into
- * src/koans/groovy/datazeus/learnsql/series2/_45/ when it is real.
+ * src/koans/groovy/datazeus/learnsql/series2/_25/ when it is real.
  *
- *     zeus.bat koans learnsql series2 _45     (Windows)
- *     ./zeus.sh koans learnsql series2 _45    (macOS/Linux)
+ *     zeus.bat koans learnsql series2 _25     (Windows)
+ *     ./zeus.sh koans learnsql series2 _25    (macOS/Linux)
  *
  * ── READ THESE FIRST ────────────────────────────────────────────────────
  *   KoanBase                                  shouldReturn, the ___ blank, the dataset
@@ -33,18 +33,34 @@ import spock.lang.Stepwise
  *     count is not.
  *
  * ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
- * GOAL: name a query once and reuse it.
- * SQL: CREATE VIEW, querying a view, when a view is a good idea and when it hides a problem.
- * Materialized views are Data Warehousing — say so rather than half-teaching them.
+ * GOAL: ask a question about each row — does it have a match, or has it never had one — and
+ * get the "never" right.
+ * SQL: EXISTS, NOT EXISTS, correlated against uncorrelated subqueries, and why EXISTS can stop at
+ * the first match it finds.
+ * SPLIT FROM THE OLD SUBQUERIES EPISODE on 2026-09-14. The uncorrelated half is Series 2 · 00; this
+ * is the harder half, placed after CTEs so correlation is met with the tool that makes it readable.
+ *
+ * THE NOT IN TRAP, ON NORTHWIND'S OWN DATA (DuckDB, 2026-09-14 — re-assert on both engines).
+ * "Which employees manage nobody?"
+ *   WHERE "EmployeeID" NOT IN (SELECT "ReportsTo" FROM "Employees")    -> NO ROWS AT ALL
+ *   WHERE NOT EXISTS (… x."ReportsTo" = e."EmployeeID")                 -> Janet, Nancy
+ * Andrew reports to nobody, so one "ReportsTo" is NULL — and a single NULL in the list makes every
+ * NOT IN test UNKNOWN. It is Series 1 · 45's three-valued logic detonating inside a construct that
+ * looks nothing like a NULL comparison, and an empty result reads as "nothing to report" rather
+ * than as a bug. Teach the habit: NOT EXISTS, always. Series 3 · 22 comes back to it as a query
+ * plan; this episode owns the correctness.
+ *
+ * A SECOND VERIFIED QUESTION, which Series 2 · 35 answers again with EXCEPT: customers who ordered
+ * in Q1 2024 and never since — 10 of them (EXISTS … AND NOT EXISTS …).
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
- * LEVEL ●● of ●●●●. AFTER CTEs (Series 2 · 20) ON PURPOSE: a view is a named query that
- * outlives the session. "When it hides a problem" has a concrete answer by now — a view that
- * already joined the order lines, summed again by somebody who cannot see inside it: Series 2 · 15's
- * fan-out, one layer of abstraction away from the person who pays for it.
+ * LEVEL ●●● of ●●●●. BUILDS ON: Series 2 · 00, 2 · 20, Series 1 · 35 (the HAVING promise),
+ * 1 · 45 (UNKNOWN).
+ * SETS UP: Series 2 · 35 (EXCEPT, the same question), 2 · 60 (the project's "not since" question),
+ * Series 3 · 22 (NOT EXISTS as a plan).
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
-class ViewsKoans extends KoanBase {
+class ExistsAndCorrelatedSubqueriesKoans extends KoanBase {
 
     // TODO: koans, one per idea in the lesson, in the same order.
     //

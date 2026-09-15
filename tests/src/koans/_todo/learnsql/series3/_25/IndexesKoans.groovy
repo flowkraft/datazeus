@@ -36,8 +36,12 @@ import spock.lang.Stepwise
  * GOAL: make a specific slow query fast, and know what it costs.
  * SQL: CREATE INDEX, composite indexes and column order, covering indexes, why an index is not
  * used, and the write cost.
- * seed: bulk. BOUNDARY: Data Modeling Series 2 · 45 owns indexing as a DESIGN decision made
+ * seed: bulk. BOUNDARY: Data Modeling Series 2 · 40 owns indexing as a DESIGN decision made
  * before the query exists; this is the mechanics on a query that already exists.
+ *
+ * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+ * LEVEL ●●● of ●●●●. BUILDS ON: Series 3 · 18 (sargability), 3 · 20 (reading the plan), 3 · 22.
+ * SETS UP: Series 3 · 27, 3 · 30. DATA: seed: bulk, which is not built yet (see curriculum.yaml).
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
 class IndexesKoans extends KoanBase {

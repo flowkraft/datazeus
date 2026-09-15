@@ -1,11 +1,11 @@
 ---
-title: "Query Tuning — Making a Real Slow Query Fast"
+title: "JSON in SQL — Query Semi-Structured Data Without Leaving the Database"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
 topic: "learn-sql"
 tags: []
 level: "advanced"
 module: "series3-advanced"
-order: 30
+order: 5
 published: false
 ---
 
@@ -25,20 +25,22 @@ published: false
       - the koans mirror the lesson beat for beat
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
-    GOAL: the Series 3 project — take a real slow query and fix it, in front of the reader.
-    SQL: nothing new. EXPLAIN, an index, a rewrite, and measuring the difference.
-    seed: bulk. Show at least one change that does NOT help — the honest version of tuning is that
-    you try things and measure, and a demo where every step works teaches the wrong lesson.
+    GOAL: query semi-structured data without leaving the database.
+    SQL: JSON/JSONB columns, -> and ->>, path expressions, indexing a JSON field, and where the
+    vendors diverge.
+    BOUNDARY: Data Modeling Series 2 · 42 owns the DECISION to store JSON at all. This owns
+    querying it once that decision is made. Same word, two questions.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
-    THE SERIES 3 PROJECT. BUILDS ON: all of Block B (Series 3 · 18 to 3 · 27).
-    DATA: seed: bulk, which is not built yet (see curriculum.yaml).
+    LEVEL ●● of ●●●●. BUILDS ON: Series 1 · 07 (types — JSON is text until it is parsed),
+    1 · 45 (a missing key is a NULL), Series 2 · 30 (text functions).
+    DATA: Northwind has no JSON column — curriculum.yaml's bulk-dataset note says what to decide.
+    Was 15 until the 2026-09-14 reorder.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
-      koan:author
-      koan:count:scanned
-      koan:equivalent
-      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_30/SlowToFastKoans.groovy
+      koan:complete
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_05/JsonInSqlKoans.groovy
    ========================================================================== */}
 
 ## The situation this lesson prepares you for

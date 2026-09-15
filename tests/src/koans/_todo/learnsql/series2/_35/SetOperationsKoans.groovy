@@ -37,6 +37,13 @@ import spock.lang.Stepwise
  * SQL: UNION, UNION ALL, INTERSECT, EXCEPT, and the column-count/type rules.
  * UNION ALL versus UNION is the practical half: UNION deduplicates and costs a sort, and people
  * reach for it by habit when they wanted UNION ALL.
+ *
+ * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+ * LEVEL ●● of ●●●●. TWO CALLBACKS make this more than a syntax tour. Series 1 · 40 already
+ * wrote a FULL OUTER JOIN as a UNION of a LEFT and a RIGHT join, and said why UNION and not UNION ALL.
+ * And EXCEPT answers Series 2 · 25's "ordered in Q1 2024 and never since" (10 customers) a second
+ * way — proving the two agree is the koan.
+ * BUILDS ON: Series 2 · 25, Series 1 · 40. SETS UP: Series 2 · 38, which replaces the UNION ALL report.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
 class SetOperationsKoans extends KoanBase {

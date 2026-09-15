@@ -26,7 +26,7 @@ import spock.lang.Stepwise
  * ── READ THESE FIRST ────────────────────────────────────────────────────
  *   KoanBase                                   shouldReturn, the ___ blank, the dataset
  *   learnsql/series1/_10/WhereFilteringKoans   the worked example: twelve koans, one per idea
- *   learnsql/series2/_06/JoinFanOutKoans       the fan-out this project WILL walk into
+ *   learnsql/series2/_15/MultiTableJoinsDuplicateRowsKoans   the fan-out this project WILL walk into
  *
  * ── THE RULES ───────────────────────────────────────────────────────────
  *  1. THE BLANK GOES INSIDE THE SQL. The learner WRITES THE QUERY; the koan checks the
@@ -39,8 +39,8 @@ import spock.lang.Stepwise
  * ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
  * GOAL: take one question a person would actually be asked at work, and answer it correctly
  * end to end — not a drill, and not a query whose right answer was given in the question.
- * SQL: nothing new. Multi-table joins (00), a subquery or EXISTS (05), a CTE to name the steps
- * (08), CASE for the buckets (15), a date range with the right boundaries (20), and a window
+ * SQL: nothing new. Subqueries (00) and EXISTS (25), multi-table joins and their grain (15), a CTE to name the steps
+ * (20), CASE for the buckets (05), a date range with the right boundaries (10), and a window
  * function for the rank or the running total (50/55). That is the point — a project introduces
  * no syntax.
  *
@@ -52,8 +52,8 @@ import spock.lang.Stepwise
  * It has to be a question with a WRONG answer that looks right. Otherwise "end to end" just
  * means "longer". The best candidates all share that shape:
  *   - revenue per customer per quarter, ranked, for a date range — walks straight into the
- *     join fan-out from 06 (freight or an order-level column summed once per LINE), and into
- *     the date boundary from 20 (a range that quietly drops the last day).
+ *     join fan-out from 15 (freight or an order-level column summed once per LINE), and into
+ *     the date boundary from 10 (a range that quietly drops the last day).
  *   - customers who bought in Q1 and NOT since — the classic where a LEFT JOIN and a NOT
  *     EXISTS give different answers, and only one is right.
  * Whichever you choose, the article must state the number a careful person would get WRONG,
@@ -65,6 +65,12 @@ import spock.lang.Stepwise
  * customers change? That check is the transferable skill of this whole series, it is three
  * lines, and it is the thing that would have caught the wrong answer above. Java & Groovy
  * 1 · 40 and Python 1 · 35 close on the same check on purpose.
+ *
+ * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+ * The last episode of the series; it may use anything above it.
+ * DATA (DuckDB, 2026-09-14): "bought in Q1 2024 and not since" is 10 customers via NOT EXISTS. The
+ * claim that a LEFT JOIN version gives a DIFFERENT answer is NOT measured yet — measure it before
+ * that question is chosen, because a wrong answer that matches the right one teaches nothing.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
 class ProjectARealBusinessQuestionKoans extends KoanBase {

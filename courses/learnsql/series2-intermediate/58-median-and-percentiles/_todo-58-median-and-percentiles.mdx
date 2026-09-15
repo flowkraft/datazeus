@@ -18,7 +18,7 @@ published: false
     documentation the whole academy points at. Then read the comment ABOVE THIS
     EPISODE in that file, which is the authority on coverage.
 
-    THE HOUSE METHOD, from the lessons already written:
+    THE HOUSE METHOD, from the Series 1 lessons already written:
       - type the query yourself; copy-paste teaches your eyes only
       - PREDICT the answer before running it, out loud, then run it
       - every query runs on the Northwind that ships with DataPallas
@@ -77,6 +77,14 @@ published: false
     A percentile must ORDER the whole group, so it is one of the aggregates that does not
     get cheap as the data grows. Series 3 · 27 owns approximation and already names
     Oracle's and SQL Server's APPROX_PERCENTILE functions. Point there and stop.
+
+    ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+    LEVEL ●●●● of ●●●●. BUILDS ON: Series 2 · 50 (the MySQL workaround), Series 1 · 25 (AVG, and the
+    STDDEV it promised to Series 2 — one line, beside the median).
+    THE SHIPPED DATA MAKES THE POINT WITHOUT AN INVENTED ORDER (DuckDB, 2026-09-14): the average order
+    value is 736.12 and the median is 506.17 — the average sits 45% above the typical order. Freight
+    is the calm contrast: average 50.49, median 47.93. 79 orders is an ODD count, so CONT and DISC
+    agree over the whole table; the difference has to be shown on an even-sized group.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:predict

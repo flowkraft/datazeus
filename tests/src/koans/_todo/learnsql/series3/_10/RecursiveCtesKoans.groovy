@@ -1,21 +1,21 @@
-package datazeus.learnsql.series2._45
+package datazeus.learnsql.series3._10
 
 import datazeus._internal.KoanBase
 import spock.lang.Stepwise
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════╗
- * ║  SQL KOANS — Learn SQL · Series 2 · 45
+ * ║  SQL KOANS — Learn SQL · Series 3 · 10
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
- * VIEWs — Naming a Query So You Can Reuse It
+ * Recursive CTEs — Walk an Org Chart to the Top
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into
- * src/koans/groovy/datazeus/learnsql/series2/_45/ when it is real.
+ * src/koans/groovy/datazeus/learnsql/series3/_10/ when it is real.
  *
- *     zeus.bat koans learnsql series2 _45     (Windows)
- *     ./zeus.sh koans learnsql series2 _45    (macOS/Linux)
+ *     zeus.bat koans learnsql series3 _10     (Windows)
+ *     ./zeus.sh koans learnsql series3 _10    (macOS/Linux)
  *
  * ── READ THESE FIRST ────────────────────────────────────────────────────
  *   KoanBase                                  shouldReturn, the ___ blank, the dataset
@@ -33,18 +33,19 @@ import spock.lang.Stepwise
  *     count is not.
  *
  * ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
- * GOAL: name a query once and reuse it.
- * SQL: CREATE VIEW, querying a view, when a view is a good idea and when it hides a problem.
- * Materialized views are Data Warehousing — say so rather than half-teaching them.
+ * GOAL: walk a hierarchy of unknown depth.
+ * SQL: WITH RECURSIVE, the anchor and recursive terms, UNION ALL, a depth guard.
+ * seed: bulk — needs the larger dataset; Northwind's 3-row Employees cannot demonstrate depth.
+ * Always show the termination condition. A recursive CTE without one is an outage.
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
- * LEVEL ●● of ●●●●. AFTER CTEs (Series 2 · 20) ON PURPOSE: a view is a named query that
- * outlives the session. "When it hides a problem" has a concrete answer by now — a view that
- * already joined the order lines, summed again by somebody who cannot see inside it: Series 2 · 15's
- * fan-out, one layer of abstraction away from the person who pays for it.
+ * LEVEL ●●● of ●●●●. BUILDS ON: Series 2 · 20 (WITH), 2 · 42 (the self-join it repeats level
+ * after level), 2 · 35 (UNION ALL joins the anchor to the recursive term).
+ * ALSO: it builds Series 2 · 10's date spine on engines without generate_series — say so.
+ * DATA: seed: bulk, which is not built yet (see curriculum.yaml). Was 00 until the 2026-09-14 reorder.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
-class ViewsKoans extends KoanBase {
+class RecursiveCtesKoans extends KoanBase {
 
     // TODO: koans, one per idea in the lesson, in the same order.
     //

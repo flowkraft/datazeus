@@ -37,6 +37,10 @@ import spock.lang.Stepwise
  * SQL: nothing new. EXPLAIN, an index, a rewrite, and measuring the difference.
  * seed: bulk. Show at least one change that does NOT help — the honest version of tuning is that
  * you try things and measure, and a demo where every step works teaches the wrong lesson.
+ *
+ * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+ * THE SERIES 3 PROJECT. BUILDS ON: all of Block B (Series 3 · 18 to 3 · 27).
+ * DATA: seed: bulk, which is not built yet (see curriculum.yaml).
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
 class SlowToFastKoans extends KoanBase {

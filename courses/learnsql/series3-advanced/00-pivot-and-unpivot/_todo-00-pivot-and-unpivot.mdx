@@ -1,11 +1,11 @@
 ---
-title: "Query Tuning — Making a Real Slow Query Fast"
+title: "PIVOT & UNPIVOT — Turn Rows into a Cross-Tab Report, the Portable Way"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
 topic: "learn-sql"
 tags: []
 level: "advanced"
 module: "series3-advanced"
-order: 30
+order: 0
 published: false
 ---
 
@@ -25,20 +25,22 @@ published: false
       - the koans mirror the lesson beat for beat
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
-    GOAL: the Series 3 project — take a real slow query and fix it, in front of the reader.
-    SQL: nothing new. EXPLAIN, an index, a rewrite, and measuring the difference.
-    seed: bulk. Show at least one change that does NOT help — the honest version of tuning is that
-    you try things and measure, and a demo where every step works teaches the wrong lesson.
+    GOAL: turn rows into a cross-tab a person can read.
+    SQL: conditional aggregation (SUM(CASE WHEN …)) as the PORTABLE pivot, and a note on vendor
+    PIVOT syntax. Portable first, because Series 4 exists.
+    Honest framing: in practice pivoting often happens in the BI tool or in pandas — say that, and
+    say when doing it in SQL is right.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
-    THE SERIES 3 PROJECT. BUILDS ON: all of Block B (Series 3 · 18 to 3 · 27).
-    DATA: seed: bulk, which is not built yet (see curriculum.yaml).
+    LEVEL ●● of ●●●● — the gentlest step in Series 3, which is why it opens it.
+    BUILDS ON: Series 2 · 05 (the portable pivot is SUM(CASE …)), 2 · 38 (subtotals).
+    SETS UP: Series 3 · 15 (a cohort grid is a pivot). Runs on Northwind; no bulk data needed.
+    Was 05 until the 2026-09-14 reorder.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
-      koan:author
-      koan:count:scanned
       koan:equivalent
-      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_30/SlowToFastKoans.groovy
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_00/PivotAndUnpivotKoans.groovy
    ========================================================================== */}
 
 ## The situation this lesson prepares you for

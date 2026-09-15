@@ -1,21 +1,21 @@
-package datazeus.learnsql.series2._45
+package datazeus.learnsql.series2._42
 
 import datazeus._internal.KoanBase
 import spock.lang.Stepwise
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════╗
- * ║  SQL KOANS — Learn SQL · Series 2 · 45
+ * ║  SQL KOANS — Learn SQL · Series 2 · 42
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
- * VIEWs — Naming a Query So You Can Reuse It
+ * Self-JOINs & Hierarchies — Relating Rows to Other Rows in the Same Table
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into
- * src/koans/groovy/datazeus/learnsql/series2/_45/ when it is real.
+ * src/koans/groovy/datazeus/learnsql/series2/_42/ when it is real.
  *
- *     zeus.bat koans learnsql series2 _45     (Windows)
- *     ./zeus.sh koans learnsql series2 _45    (macOS/Linux)
+ *     zeus.bat koans learnsql series2 _42     (Windows)
+ *     ./zeus.sh koans learnsql series2 _42    (macOS/Linux)
  *
  * ── READ THESE FIRST ────────────────────────────────────────────────────
  *   KoanBase                                  shouldReturn, the ___ blank, the dataset
@@ -33,18 +33,23 @@ import spock.lang.Stepwise
  *     count is not.
  *
  * ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
- * GOAL: name a query once and reuse it.
- * SQL: CREATE VIEW, querying a view, when a view is a good idea and when it hides a problem.
- * Materialized views are Data Warehousing — say so rather than half-teaching them.
+ * GOAL: relate rows in one table to other rows in the same table.
+ * SQL: joining a table to itself, aliasing both sides, the manager/employee shape.
+ * Northwind's "Employees" is thin (3 rows) — say so rather than pretending. It has exactly enough
+ * for the one idea (checked 2026-09-14): Nancy and Janet report to Andrew, and Andrew's
+ * "ReportsTo" is NULL. So "each employee beside their manager" loses Andrew under a plain JOIN and
+ * keeps him under a LEFT JOIN — Series 1 · 40's rule, on a table joined to itself. If the lesson
+ * needs depth, use a richer example rather than inventing Northwind rows.
+ * Recursive walking is Series 3 · 10.
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
- * LEVEL ●● of ●●●●. AFTER CTEs (Series 2 · 20) ON PURPOSE: a view is a named query that
- * outlives the session. "When it hides a problem" has a concrete answer by now — a view that
- * already joined the order lines, summed again by somebody who cannot see inside it: Series 2 · 15's
- * fan-out, one layer of abstraction away from the person who pays for it.
+ * LEVEL ●● of ●●●●. A different join SHAPE — one table, two roles — and not a third episode about
+ * rows that drop or multiply, which is why it no longer sits beside Series 2 · 15.
+ * BUILDS ON: Series 1 · 40. SETS UP: Series 3 · 10, where a recursive CTE walks the same hierarchy.
+ * Was 10 until the 2026-09-14 reorder.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
-class ViewsKoans extends KoanBase {
+class SelfJoinsAndHierarchiesKoans extends KoanBase {
 
     // TODO: koans, one per idea in the lesson, in the same order.
     //

@@ -37,6 +37,10 @@ import spock.lang.Stepwise
  * SQL: LAG, LEAD, SUM() OVER (ORDER BY …), frame clauses (ROWS/RANGE BETWEEN), month-over-month.
  * Frames are where people get quietly wrong answers — the default frame with ORDER BY is not the
  * one most readers assume. Show the default, then show it stated explicitly.
+ *
+ * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+ * LEVEL ●●●● of ●●●●. BUILDS ON: Series 2 · 50, and 2 · 10 — month-over-month needs date_trunc
+ * to build the months before LAG can compare them.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
 class WindowFunctionsIiKoans extends KoanBase {

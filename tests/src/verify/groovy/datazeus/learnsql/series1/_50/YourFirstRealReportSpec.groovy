@@ -31,7 +31,7 @@ import spock.lang.Unroll
  *
  * ── WHY THIS EPISODE HAS THREE TABLES, AND WHERE THE LINE WITH SERIES 2 IS ──────────────
  *
- * Episode 40 taught JOIN on TWO tables and deferred "three or more" to Series 2 · 00. This
+ * Episode 40 taught JOIN on TWO tables and deferred "three or more" to Series 2 · 15. This
  * episode uses THREE, deliberately and with the boundary drawn:
  *
  *   WHAT 50 DOES. It is the Series 1 PROJECT, and the report it builds is a real one: the top
@@ -42,16 +42,16 @@ import spock.lang.Unroll
  *     CHECKING — not on join mechanics, of which it teaches nothing new.
  *
  *   WHAT 50 DOES NOT DO. It does not teach multi-table joins as a topic: no join order, no
- *     chains longer than three, no discussion of what the optimiser does. Series 2 · 00 opens
- *     on exactly that, from the question this episode has just given the learner a reason to
+ *     chains longer than three, no discussion of what the optimiser does. Series 2 · 15 picks the
+ *     topic up, from the question this episode has just given the learner a reason to
  *     care about — what happens to your row count when you follow the data across three or
  *     more tables.
  *
- *   AND SERIES 2 · 06 IS STILL INTACT. Here the moving row count is HONEST: the grain changes
+ *   AND SERIES 2 · 15 IS STILL INTACT. Here the moving row count is HONEST: the grain changes
  *     from one row per order to one row per order line, which is where the money is, and the
  *     MONEY total is unaffected (asserted below, twice, by two routes). The bug it causes is
  *     confined to COUNTING — count(*) stops counting orders — and count(DISTINCT ...) fixes
- *     it. Series 2 · 06 owns the case DISTINCT cannot fix: a fan-out that double-counts the
+ *     it. Series 2 · 15 owns the case DISTINCT cannot fix: a fan-out that double-counts the
  *     money itself. That is a genuine escalation, not a repeat.
  *
  * ── THE EARN: ONE SILENT WRONG NUMBER, AND THE CHECK THAT CATCHES IT ───────────────────

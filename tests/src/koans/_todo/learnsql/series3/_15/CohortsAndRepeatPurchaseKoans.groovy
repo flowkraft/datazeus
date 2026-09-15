@@ -1,21 +1,21 @@
-package datazeus.learnsql.series2._45
+package datazeus.learnsql.series3._15
 
 import datazeus._internal.KoanBase
 import spock.lang.Stepwise
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════╗
- * ║  SQL KOANS — Learn SQL · Series 2 · 45
+ * ║  SQL KOANS — Learn SQL · Series 3 · 15
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
- * VIEWs — Naming a Query So You Can Reuse It
+ * Cohorts & Repeat-Purchase Analysis — Measuring Who Comes Back, and When
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into
- * src/koans/groovy/datazeus/learnsql/series2/_45/ when it is real.
+ * src/koans/groovy/datazeus/learnsql/series3/_15/ when it is real.
  *
- *     zeus.bat koans learnsql series2 _45     (Windows)
- *     ./zeus.sh koans learnsql series2 _45    (macOS/Linux)
+ *     zeus.bat koans learnsql series3 _15     (Windows)
+ *     ./zeus.sh koans learnsql series3 _15    (macOS/Linux)
  *
  * ── READ THESE FIRST ────────────────────────────────────────────────────
  *   KoanBase                                  shouldReturn, the ___ blank, the dataset
@@ -33,18 +33,20 @@ import spock.lang.Stepwise
  *     count is not.
  *
  * ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
- * GOAL: name a query once and reuse it.
- * SQL: CREATE VIEW, querying a view, when a view is a good idea and when it hides a problem.
- * Materialized views are Data Warehousing — say so rather than half-teaching them.
+ * GOAL: answer "who comes back?" — the analysis everything so far was for.
+ * SQL: nothing new; CTEs, windows, date_trunc and joins doing real work together.
+ * The one episode in Series 3 that is an ANALYSIS PATTERN rather than a SQL feature, and the
+ * strongest "so this is what it was all for" moment in the course. Keep it that way.
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
- * LEVEL ●● of ●●●●. AFTER CTEs (Series 2 · 20) ON PURPOSE: a view is a named query that
- * outlives the session. "When it hides a problem" has a concrete answer by now — a view that
- * already joined the order lines, summed again by somebody who cannot see inside it: Series 2 · 15's
- * fan-out, one layer of abstraction away from the person who pays for it.
+ * LEVEL ●●●● of ●●●● — closes Block A. BUILDS ON: Series 2 · 10 (date_trunc, and the date spine for
+ * months nobody came back in), 2 · 15 (cohort size at CUSTOMER grain), 2 · 20 (CTEs), 2 · 50 and
+ * 2 · 55 (first order per customer, months since it), Series 3 · 00 (the grid is a pivot).
+ * DATA: 25 customers over 19 months makes a sparse grid — decide whether it needs the bulk data.
+ * Was 10 until the 2026-09-14 reorder.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
-class ViewsKoans extends KoanBase {
+class CohortsAndRepeatPurchaseKoans extends KoanBase {
 
     // TODO: koans, one per idea in the lesson, in the same order.
     //

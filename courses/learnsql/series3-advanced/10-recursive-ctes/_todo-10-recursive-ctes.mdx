@@ -1,11 +1,11 @@
 ---
-title: "Query Tuning — Making a Real Slow Query Fast"
+title: "Recursive CTEs — Walk an Org Chart to the Top"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
 topic: "learn-sql"
 tags: []
 level: "advanced"
 module: "series3-advanced"
-order: 30
+order: 10
 published: false
 ---
 
@@ -25,20 +25,21 @@ published: false
       - the koans mirror the lesson beat for beat
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
-    GOAL: the Series 3 project — take a real slow query and fix it, in front of the reader.
-    SQL: nothing new. EXPLAIN, an index, a rewrite, and measuring the difference.
-    seed: bulk. Show at least one change that does NOT help — the honest version of tuning is that
-    you try things and measure, and a demo where every step works teaches the wrong lesson.
+    GOAL: walk a hierarchy of unknown depth.
+    SQL: WITH RECURSIVE, the anchor and recursive terms, UNION ALL, a depth guard.
+    seed: bulk — needs the larger dataset; Northwind's 3-row Employees cannot demonstrate depth.
+    Always show the termination condition. A recursive CTE without one is an outage.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
-    THE SERIES 3 PROJECT. BUILDS ON: all of Block B (Series 3 · 18 to 3 · 27).
-    DATA: seed: bulk, which is not built yet (see curriculum.yaml).
+    LEVEL ●●● of ●●●●. BUILDS ON: Series 2 · 20 (WITH), 2 · 42 (the self-join it repeats level
+    after level), 2 · 35 (UNION ALL joins the anchor to the recursive term).
+    ALSO: it builds Series 2 · 10's date spine on engines without generate_series — say so.
+    DATA: seed: bulk, which is not built yet (see curriculum.yaml). Was 00 until the 2026-09-14 reorder.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
-      koan:author
-      koan:count:scanned
-      koan:equivalent
-      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_30/SlowToFastKoans.groovy
+      koan:predict
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_10/RecursiveCtesKoans.groovy
    ========================================================================== */}
 
 ## The situation this lesson prepares you for

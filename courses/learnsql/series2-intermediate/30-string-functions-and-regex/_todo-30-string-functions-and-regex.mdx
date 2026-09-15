@@ -1,10 +1,10 @@
 ---
-title: "Query Tuning — Making a Real Slow Query Fast"
+title: "String Functions, LIKE & Regex — Clean Up Messy Real-World Data"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
 topic: "learn-sql"
 tags: []
-level: "advanced"
-module: "series3-advanced"
+level: "intermediate"
+module: "series2-intermediate"
 order: 30
 published: false
 ---
@@ -25,20 +25,24 @@ published: false
       - the koans mirror the lesson beat for beat
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
-    GOAL: the Series 3 project — take a real slow query and fix it, in front of the reader.
-    SQL: nothing new. EXPLAIN, an index, a rewrite, and measuring the difference.
-    seed: bulk. Show at least one change that does NOT help — the honest version of tuning is that
-    you try things and measure, and a demo where every step works teaches the wrong lesson.
+    GOAL: work with text that nobody cleaned.
+    SQL: LIKE, ILIKE, wildcards and escaping, regex matching, TRIM, UPPER/LOWER, SUBSTRING,
+    SPLIT_PART, CONCAT, STRING_AGG, plus the number side: ROUND, CAST, formatting for a report.
+    MERGED FROM TWO EPISODES in the 2026-08-24 pass (old "LIKE/ILIKE/Regex" and "String & Number
+    Functions"). Both were reference material a working person looks up rather than memorises, and
+    two episodes for one lookup table was not earning its place.
+    Ships with a cheat sheet — that is the honest format for this content.
+    TWO SERIES 1 PROMISES LAND HERE: Series 1 · 10 left `_`, ESCAPE and case-insensitive matching to
+    Series 2, and Series 1 · 25 named STRING_AGG as Series 2's — the aggregate that turns many rows of
+    text into one. `||` and ROUND are Series 1 · 20's: build on both, re-teach neither.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
-    THE SERIES 3 PROJECT. BUILDS ON: all of Block B (Series 3 · 18 to 3 · 27).
-    DATA: seed: bulk, which is not built yet (see curriculum.yaml).
+    LEVEL ● of ●●●●. THE BREATHER between the two hardest runs of the series (15–25 and 35–38).
+    BUILDS ON: Series 1 · 10, 1 · 20, 1 · 25. Was 25 until the 2026-09-14 reorder.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
-      koan:author
-      koan:count:scanned
-      koan:equivalent
-      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_30/SlowToFastKoans.groovy
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_30/StringFunctionsAndRegexKoans.groovy
    ========================================================================== */}
 
 ## The situation this lesson prepares you for

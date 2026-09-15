@@ -1,11 +1,11 @@
 ---
-title: "Query Tuning — Making a Real Slow Query Fast"
+title: "Cohorts & Repeat-Purchase Analysis — Measuring Who Comes Back, and When"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
 topic: "learn-sql"
 tags: []
 level: "advanced"
 module: "series3-advanced"
-order: 30
+order: 15
 published: false
 ---
 
@@ -25,20 +25,22 @@ published: false
       - the koans mirror the lesson beat for beat
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
-    GOAL: the Series 3 project — take a real slow query and fix it, in front of the reader.
-    SQL: nothing new. EXPLAIN, an index, a rewrite, and measuring the difference.
-    seed: bulk. Show at least one change that does NOT help — the honest version of tuning is that
-    you try things and measure, and a demo where every step works teaches the wrong lesson.
+    GOAL: answer "who comes back?" — the analysis everything so far was for.
+    SQL: nothing new; CTEs, windows, date_trunc and joins doing real work together.
+    The one episode in Series 3 that is an ANALYSIS PATTERN rather than a SQL feature, and the
+    strongest "so this is what it was all for" moment in the course. Keep it that way.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
-    THE SERIES 3 PROJECT. BUILDS ON: all of Block B (Series 3 · 18 to 3 · 27).
-    DATA: seed: bulk, which is not built yet (see curriculum.yaml).
+    LEVEL ●●●● of ●●●● — closes Block A. BUILDS ON: Series 2 · 10 (date_trunc, and the date spine for
+    months nobody came back in), 2 · 15 (cohort size at CUSTOMER grain), 2 · 20 (CTEs), 2 · 50 and
+    2 · 55 (first order per customer, months since it), Series 3 · 00 (the grid is a pivot).
+    DATA: 25 customers over 19 months makes a sparse grid — decide whether it needs the bulk data.
+    Was 10 until the 2026-09-14 reorder.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
-      koan:author
-      koan:count:scanned
-      koan:equivalent
-      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_30/SlowToFastKoans.groovy
+      koan:predict
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_15/CohortsAndRepeatPurchaseKoans.groovy
    ========================================================================== */}
 
 ## The situation this lesson prepares you for

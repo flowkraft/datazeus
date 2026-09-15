@@ -47,9 +47,9 @@
 #     happens, 45 says why it is the same thing happening twice. Do not restate 25's card.
 #   - Lesson 40 owns WHERE THE NULLS CAME FROM (a LEFT JOIN inventing them) and the
 #     anti-join. This deck starts one step later: they exist, now what.
-#   - Series 2 · 15 owns CASE WHEN and will pick COALESCE up again beside it. Here
+#   - Series 2 · 05 owns CASE WHEN and will pick COALESCE up again beside it. Here
 #     COALESCE and NULLIF are taught only as the NULL stand-in and its inverse.
-#   - Data Modeling Series 1 · 37 owns NULLABLE-OR-NOT AS A DESIGN DECISION. One card
+#   - Data Modeling Series 1 · 52 owns NULLABLE-OR-NOT AS A DESIGN DECISION. One card
 #     below names that boundary on purpose, because "just make it NOT NULL" is the wrong
 #     answer to a query problem and somebody will reach for it.
 #

@@ -1,11 +1,11 @@
 ---
-title: "Query Tuning — Making a Real Slow Query Fast"
+title: "INSERT, UPDATE, DELETE & Transactions — Change the Data, Safely"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
 topic: "learn-sql"
 tags: []
-level: "advanced"
-module: "series3-advanced"
-order: 30
+level: "intermediate"
+module: "series2-intermediate"
+order: 48
 published: false
 ---
 
@@ -25,20 +25,28 @@ published: false
       - the koans mirror the lesson beat for beat
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
-    GOAL: the Series 3 project — take a real slow query and fix it, in front of the reader.
-    SQL: nothing new. EXPLAIN, an index, a rewrite, and measuring the difference.
-    seed: bulk. Show at least one change that does NOT help — the honest version of tuning is that
-    you try things and measure, and a demo where every step works teaches the wrong lesson.
+    GOAL: change data on purpose, and be able to undo it.
+    SQL: INSERT (single, multi-row, INSERT … SELECT), UPDATE … WHERE, DELETE … WHERE, BEGIN,
+    COMMIT, ROLLBACK, INSERT … ON CONFLICT DO NOTHING / DO UPDATE.
+    ON CONFLICT IS NOT OPTIONAL HERE — see the curriculum note above this episode. The
+    failure that earns it: an import script run twice. Without ON CONFLICT the second run
+    either duplicates every row or dies on the unique constraint, and the beginner's
+    instinct is SELECT-then-INSERT, which is a race. DO NOTHING is the idempotent load;
+    DO UPDATE is upsert in one statement. Portability (MERGE elsewhere) is Series 4 · 05's
+    job, not this episode's — teach the PostgreSQL form and say the other spellings exist.
+    PLACED LATE ON PURPOSE, and this is the reason: the failure mode of teaching UPDATE early is a
+    learner who runs it without a WHERE. By here, filtering is second nature.
+    Teach the SELECT-first habit: write the WHERE as a SELECT, look at the rows, then change the
+    verb. BOUNDARY: isolation levels and locking are Data Ops; COMMIT/ROLLBACK basics are here.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
-    THE SERIES 3 PROJECT. BUILDS ON: all of Block B (Series 3 · 18 to 3 · 27).
-    DATA: seed: bulk, which is not built yet (see curriculum.yaml).
+    LEVEL ●● of ●●●●. Late on purpose (see above). Renumbered from 40 on 2026-09-14 — Learn Data
+    Modeling's prerequisites ask for "INSERT from Series 2 · 48".
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
-      koan:author
-      koan:count:scanned
-      koan:equivalent
-      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_30/SlowToFastKoans.groovy
+      koan:predict
+      koan:diagnose
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_48/InsertUpdateDeleteKoans.groovy
    ========================================================================== */}
 
 ## The situation this lesson prepares you for

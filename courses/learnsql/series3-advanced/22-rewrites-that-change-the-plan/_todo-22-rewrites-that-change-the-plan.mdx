@@ -18,7 +18,7 @@ published: false
     documentation the whole academy points at. Then read the comment ABOVE THIS
     EPISODE in that file, which is the authority on coverage.
 
-    THE HOUSE METHOD, from the lessons already written:
+    THE HOUSE METHOD, from the Series 1 lessons already written:
       - type the query yourself; copy-paste teaches your eyes only
       - PREDICT the answer before running it, out loud, then run it
       - every query runs on the Northwind that ships with DataPallas
@@ -37,7 +37,7 @@ published: false
     1. ASKING WHETHER A ROW EXISTS — three ways, and they are not equivalent:
          COUNT(*) > 0   counts every matching row to answer yes or no
          EXISTS         stops at the first row it finds. This is the one you want.
-         JOIN           finds every match, so it can MULTIPLY your rows — Series 2 · 06's
+         JOIN           finds every match, so it can MULTIPLY your rows — Series 2 · 15's
                         fan-out arriving as a performance problem instead of a wrong total
 
        AND THE CORRECTNESS BOMB, which is why this pattern leads:
@@ -49,7 +49,7 @@ published: false
     2. DISTINCT AS A PLASTER — ask the diagnostic question: did you add DISTINCT because
        you wanted unique values, or because you were getting duplicates? The second is a
        fan-out you have hidden rather than fixed, and DISTINCT pays for the concealment
-       with a sort or hash over the whole result set. Fix the grain — Series 2 · 06 owns
+       with a sort or hash over the whole result set. Fix the grain — Series 2 · 15 owns
        how — and the DISTINCT disappears along with the cost.
        UNION against UNION ALL is the same lesson in a second costume: UNION deduplicates,
        and that is a sort you are buying. If the two sides cannot overlap, say ALL.
@@ -81,6 +81,11 @@ published: false
     pushed into it; on others it is inlined. Do not teach a rule — teach that it differs,
     that EXPLAIN answers it in ten seconds on the engine in front of you, and that
     Series 4 owns dialect differences.
+
+    ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+    LEVEL ●●● of ●●●●. BUILDS ON: Series 3 · 20 (the plan as evidence), Series 2 · 25 (NOT EXISTS
+    and the NOT IN trap), 2 · 15 (fan-out, DISTINCT as a plaster), 2 · 35 (UNION against UNION ALL),
+    Series 1 · 15 (OFFSET). DATA: seed: bulk, which is not built yet (see curriculum.yaml).
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:equivalent

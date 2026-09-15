@@ -18,7 +18,7 @@ published: false
     documentation the whole academy points at, and it carries the title, short
     and core conventions this episode has to follow.
 
-    THE HOUSE METHOD, from the three lessons already written:
+    THE HOUSE METHOD, from the Series 1 lessons already written:
       - type the query yourself; copy-paste teaches your eyes only
       - PREDICT the answer before running it, out loud, then run it
       - every query runs on the Northwind that ships with DataPallas
@@ -35,9 +35,9 @@ published: false
     GOAL: take one question a person would actually be asked at work and answer it
     correctly, end to end — not a drill, and not a question that hands you its own
     answer.
-    SQL: NOTHING NEW, and say so out loud in the article. Multi-table joins (00), a
-    subquery or EXISTS (05), a CTE to name the steps (08), CASE for the buckets (15),
-    a date range with the right boundaries (20), a window function for the rank or the
+    SQL: NOTHING NEW, and say so out loud in the article. Subqueries (00) and EXISTS (25), multi-table joins and their grain
+    (15), a CTE to name the steps (20), CASE for the buckets (05),
+    a date range with the right boundaries (10), a window function for the rank or the
     running total (50/55). A project introduces no syntax; that is what makes it one.
 
     ── PICK A QUESTION THAT HAS A WRONG ANSWER THAT LOOKS RIGHT ────────────
@@ -45,8 +45,8 @@ published: false
     "longer", and a longer drill is still a drill. Two candidates that have the
     property:
       - revenue per customer per quarter, ranked, over a date range. Walks straight
-        into the fan-out from 06 (an order-level column summed once per LINE) and the
-        boundary bug from 20 (a range that quietly drops the last day).
+        into the fan-out from 15 (an order-level column summed once per LINE) and the
+        boundary bug from 10 (a range that quietly drops the last day).
       - customers who bought in Q1 and not since — where a LEFT JOIN and a NOT EXISTS
         give different answers and only one is right.
     The article must NAME the number a careful person gets wrong, and the koans must be
@@ -59,6 +59,12 @@ published: false
     would have caught the wrong answer above. Java & Groovy Series 1 · 40 and Python
     Series 1 · 35 close on the same check on purpose — a reader who does two of these
     tracks should recognise it and know why it followed them.
+
+    ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+    The last episode of the series; it may use anything above it.
+    DATA (DuckDB, 2026-09-14): "bought in Q1 2024 and not since" is 10 customers via NOT EXISTS. The
+    claim that a LEFT JOIN version gives a DIFFERENT answer is NOT measured yet — measure it before
+    that question is chosen, because a wrong answer that matches the right one teaches nothing.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:author

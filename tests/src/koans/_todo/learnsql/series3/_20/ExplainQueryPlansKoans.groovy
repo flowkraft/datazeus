@@ -37,6 +37,11 @@ import spock.lang.Stepwise
  * SQL: EXPLAIN, EXPLAIN ANALYZE, reading scan types, join methods, estimated vs actual rows.
  * seed: bulk — on 79 rows the planner has no real choices to make, so the plan teaches nothing.
  * The estimated-versus-actual gap is the most useful single thing on the page. Teach that first.
+ *
+ * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+ * LEVEL ●●● of ●●●●. BUILDS ON: Series 3 · 18. SETS UP: 3 · 22, 3 · 25, 3 · 27, 3 · 30.
+ * EXPLAIN ANALYZE is engine-specific: PostgreSQL-first, and say what DuckDB shows instead.
+ * DATA: seed: bulk, which is not built yet (see curriculum.yaml).
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
 class ExplainQueryPlansKoans extends KoanBase {

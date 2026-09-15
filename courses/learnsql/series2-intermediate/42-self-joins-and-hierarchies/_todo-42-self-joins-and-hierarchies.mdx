@@ -1,11 +1,11 @@
 ---
-title: "Query Tuning — Making a Real Slow Query Fast"
+title: "Self-JOINs & Hierarchies — Relating Rows to Other Rows in the Same Table"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
 topic: "learn-sql"
 tags: []
-level: "advanced"
-module: "series3-advanced"
-order: 30
+level: "intermediate"
+module: "series2-intermediate"
+order: 42
 published: false
 ---
 
@@ -25,20 +25,24 @@ published: false
       - the koans mirror the lesson beat for beat
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
-    GOAL: the Series 3 project — take a real slow query and fix it, in front of the reader.
-    SQL: nothing new. EXPLAIN, an index, a rewrite, and measuring the difference.
-    seed: bulk. Show at least one change that does NOT help — the honest version of tuning is that
-    you try things and measure, and a demo where every step works teaches the wrong lesson.
+    GOAL: relate rows in one table to other rows in the same table.
+    SQL: joining a table to itself, aliasing both sides, the manager/employee shape.
+    Northwind's "Employees" is thin (3 rows) — say so rather than pretending. It has exactly enough
+    for the one idea (checked 2026-09-14): Nancy and Janet report to Andrew, and Andrew's
+    "ReportsTo" is NULL. So "each employee beside their manager" loses Andrew under a plain JOIN and
+    keeps him under a LEFT JOIN — Series 1 · 40's rule, on a table joined to itself. If the lesson
+    needs depth, use a richer example rather than inventing Northwind rows.
+    Recursive walking is Series 3 · 10.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
-    THE SERIES 3 PROJECT. BUILDS ON: all of Block B (Series 3 · 18 to 3 · 27).
-    DATA: seed: bulk, which is not built yet (see curriculum.yaml).
+    LEVEL ●● of ●●●●. A different join SHAPE — one table, two roles — and not a third episode about
+    rows that drop or multiply, which is why it no longer sits beside Series 2 · 15.
+    BUILDS ON: Series 1 · 40. SETS UP: Series 3 · 10, where a recursive CTE walks the same hierarchy.
+    Was 10 until the 2026-09-14 reorder.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
-      koan:author
-      koan:count:scanned
-      koan:equivalent
-      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_30/SlowToFastKoans.groovy
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_42/SelfJoinsAndHierarchiesKoans.groovy
    ========================================================================== */}
 
 ## The situation this lesson prepares you for
@@ -64,6 +68,8 @@ TODO
 ## What goes wrong
 
 {/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns its
-    place by preventing a number that is wrong and looks right. */}
+    place by preventing a number that is wrong and looks right.
+    The one to write: the org chart that lost its boss. A plain self-JOIN drops Andrew,
+    because his "ReportsTo" is empty — and the chart of three people now shows two. */}
 
 TODO
