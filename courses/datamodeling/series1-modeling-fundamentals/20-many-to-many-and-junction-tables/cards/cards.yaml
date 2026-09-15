@@ -1,0 +1,81 @@
+# Flashcards for Data Modeling · Series 1 · 20 — Many-to-Many & Junction Tables: When the Link Is the Real Thing
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki); tools/build-anki.py turns it into a
+# .apkg with genanki. The .apkg is a BUILD ARTIFACT — gitignored, built in CI. Only this
+# YAML is source.
+#
+# deck / guid / cards / tags: see the Series 1 · 00 deck's header. The guid is set once and never changed.
+#
+# ── WHAT THIS DECK IS FOR ────────────────────────────────────────────────────────────
+# The checks (NorthwindModelChecks, section 20) test the learner's junction against real rows; this
+# deck drills the reasoning away from a database: why a list in a column breaks, why a LIKE on a list
+# lies, one-to-many as a column versus many-to-many as a table, and a junction that carries facts.
+# Every card is SELF-CONTAINED: lists and tables are described on the front, figures are stated
+# premises. The lesson's figures are asserted in
+# tests/src/verify/groovy/datazeus/datamodeling/series1/_20/ManyToManySpec.groovy.
+#
+# ORDER IS THE LESSON'S: the list shortcut, the LIKE trap, what else a list cannot do, the junction,
+# the link with facts, 1:M vs M:N, the price on the pair, the composite key, and the production card.
+#
+# BALANCE: 12 cards — 1 cloze (junction table), 10 reasoning, 1 production.
+#
+# WHAT THIS DECK LEAVES TO LATER DECKS: foreign keys from a junction to its parents (referential
+# integrity), junctions whose rows are events and whose pair can repeat (a later series), normal forms
+# by name (normalization, next lesson).
+
+deck: "DataZeus::Data Modeling::Series 1::20 Many-to-Many & Junction Tables"
+guid: "datazeus-data-modeling-series1-20-many-to-many-and-junction-tables"
+tags: ["datazeus", "data-modeling", "series-1"]
+
+cards:
+  # ── 1. THE LIST SHORTCUT ──
+  - basic:
+      front: "An orders table has a products column holding text such as \"1,6\" and \"3,5\". To find orders containing product 1, someone writes <code>WHERE products LIKE '%1%'</code>. Why is the count too high?"
+      back: "The pattern matches the digit 1 anywhere in the text, so it also counts orders holding products 10 to 19 (and 21, 31, ...). The database sees text, not a list of product numbers."
+
+  - basic:
+      front: "A list column says 53 orders contain Chai; the order lines table says 10. Which number do you trust, and why?"
+      back: "The order lines: 10. There each product is its own row with its own number, so the database compares whole values. The list count only matched a character in a piece of text."
+
+  - basic:
+      front: "Apart from wrong search results, name two more things a products list stored in one column cannot do."
+      back: "Any two of: store how many of each product (quantity), store the price or discount per product, refuse a product number that does not exist, answer \"which products have more than one order\" without text tricks."
+
+  # ── 2. THE JUNCTION ──
+  - cloze: "A table that resolves a many-to-many relationship into one row per pair, such as order lines between orders and products, is called a {{c1::junction}} table."
+
+  - basic:
+      front: "Orders and products are many-to-many. What is the grain of the table that links them, and what is its key?"
+      back: "One row per product on an order. The key is the pair: (order_id, product_id)."
+
+  # ── 3. THE LINK IS A THING ──
+  - basic:
+      front: "Every row of an order-lines table carries a quantity, a unit price and a discount. Is the order line just plumbing between orders and products?"
+      back: "No. Quantity, price and discount are facts about the pair, so by the three questions (facts of its own?) the order line is a thing in its own right."
+
+  # ── 4. ONE-TO-MANY VERSUS MANY-TO-MANY ──
+  - basic:
+      front: "Each product has exactly one supplier today, stored as supplier_id on products. The buyer now wants some products from two suppliers. Why can't the column stay?"
+      back: "A column holds one supplier per product. Two suppliers per product and many products per supplier is many-to-many, which needs its own table; a second supplier column would be a repeating group."
+
+  - basic:
+      front: "When does a relationship fit in a column, and when does it need a table of its own?"
+      back: "One-to-many fits in a column on the \"many\" side (each product points at its one category). Many-to-many needs a table with one row per pair."
+
+  # ── 5. THE PRICE ON THE PAIR ──
+  - basic:
+      front: "A product can be bought from several suppliers, each at its own price. Where does the price belong: on products, on suppliers, or on the product–supplier table?"
+      back: "On the product–supplier table. The price depends on both the product and the supplier, so it is a fact about the pair."
+
+  - basic:
+      front: "A product_suppliers table has PRIMARY KEY (product_id, supplier_id). What happens when you add Chai from Tokyo Traders a second time, and what does that protect?"
+      back: "It is refused: that pair already exists. It protects one price per product per supplier, so \"what does this supplier charge for Chai?\" has exactly one answer."
+
+  - basic:
+      front: "A product_suppliers table is keyed by product_id alone. The buyer adds a second supplier for Chang. What happens, and what is wrong with the model?"
+      back: "The insert is refused, because Chang already has a row. The key is stricter than the business: it still allows only one supplier per product. The key must be the pair."
+
+  # ── 6. PRODUCTION — hardest, and last. Everything it needs is ON THE CARD. ──
+  - basic:
+      front: "Write the junction. Students take many courses and courses have many students; each enrolment records a grade. Create <code>practice.enrolments</code> for <code>student_id</code>, <code>course_id</code> and <code>grade</code>, and say its grain."
+      back: "Grain: one row per student per course.<br><code>CREATE TABLE practice.enrolments (<br>&nbsp;&nbsp;student_id INTEGER,<br>&nbsp;&nbsp;course_id&nbsp;&nbsp;INTEGER,<br>&nbsp;&nbsp;grade&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;VARCHAR,<br>&nbsp;&nbsp;PRIMARY KEY (student_id, course_id)<br>);</code><br>The grade is a fact about the pair, so the enrolment is a thing."

@@ -1,0 +1,289 @@
+---
+title: "Many-to-Many & Junction Tables — When the Link Is the Real Thing"
+description: "Store each order's products as a list and \"orders containing Chai\" comes back 53 instead of 10. Learn why a many-to-many can never live in a column, and build the junction table that carries facts of its own."
+topic: "learn-data-modeling"
+tags: ["data-modeling", "fundamentals", "many-to-many", "junction-table", "composite-key", "normalization"]
+level: "beginner"
+module: "series1-modeling-fundamentals"
+order: 20
+date: "2026-09-15"
+published: false
+videoId: "datamodeling-series1-20-many-to-many-and-junction-tables"
+---
+
+{/* ==========================================================================
+    HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
+      check:fits
+      check:answers
+      build:schema.sql
+      cards
+      dataset: northwind:model
+      check suite: series1/NorthwindModelChecks.groovy — this episode adds its checks there
+      cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson
+   ========================================================================== */}
+
+## Why not just a list?
+
+The last lesson ended on a question: is `"Order Details"` a real thing, or just glue between orders and products?
+
+The shortcut nearly everybody proposes is to skip it: keep one row per order, and put that order's products in a column as a list, such as `1,6`. Build it, and ask it one question the business really asks.
+
+## One row per order, a list inside
+
+This builds a table in your practice schema with one row per order and its product numbers joined into one piece of text:
+
+```sql file=./scripts/build-order-lists.sql
+CREATE TABLE practice."Order Lists" AS
+SELECT "OrderID",
+       string_agg(
+         CAST("ProductID" AS VARCHAR),
+         ',' ORDER BY "ProductID")
+         AS "Products"
+FROM "Order Details"
+GROUP BY "OrderID";
+```
+
+| Updated Rows |
+| ------------ |
+| 79           |
+
+79 rows, one per order, tidier than 193 order lines. The first four look fine:
+
+```sql file=./scripts/first-order-lists.sql
+SELECT "OrderID", "Products"
+FROM practice."Order Lists"
+ORDER BY "OrderID"
+LIMIT 4;
+```
+
+| OrderID | Products |
+| ------- | -------- |
+| 1       | 1,6      |
+| 2       | 3,5      |
+| 3       | 1,2,4    |
+| 4       | 1,2      |
+
+## How many orders contain Chai?
+
+Chai is product 1. The list contains a 1, so:
+
+```sql file=./scripts/chai-by-list.sql
+SELECT count(*) AS "Orders with Chai"
+FROM practice."Order Lists"
+WHERE "Products" LIKE '%1%';
+```
+
+| Orders with Chai |
+| ---------------- |
+| 53               |
+
+53 orders. Hold on to that number, and ask the order lines the same question:
+
+```sql file=./scripts/chai-by-order-lines.sql
+SELECT count(*) AS "Orders with Chai"
+FROM "Order Details"
+WHERE "ProductID" = 1;
+```
+
+| Orders with Chai |
+| ---------------- |
+| 10               |
+
+Same data, same question: 53 against 10.
+
+## Why 53?
+
+`LIKE '%1%'` matches any text that contains the digit 1 anywhere. How many product numbers contain a 1?
+
+```sql file=./scripts/product-numbers-with-a-1.sql
+SELECT count(*) AS "Product numbers with a 1"
+FROM "Products"
+WHERE CAST("ProductID" AS VARCHAR)
+      LIKE '%1%';
+```
+
+| Product numbers with a 1 |
+| ------------------------ |
+| 11                       |
+
+Eleven: product 1, and products 10 to 19. Every order with Tofu (14) or Ikura (18) was counted as an order with Chai.
+
+Wrong answers are only the start. A list in a column also cannot say **how many** of a product were ordered, or **at what price**, and nothing refuses a product number that does not exist. A list is not data the database understands; it is text that happens to look like data.
+
+> **A list in a column is a lie waiting to be asked.**
+
+## One row per pair
+
+`"Order Details"` stores the same facts the honest way: one row for each order-and-product pair.
+
+```sql file=./scripts/order-line-pairs.sql
+SELECT count(*) AS "Order lines",
+       count(DISTINCT
+             ("OrderID", "ProductID"))
+         AS "Pairs"
+FROM "Order Details";
+```
+
+| Order lines | Pairs |
+| ----------- | ----- |
+| 193         | 193   |
+
+193 rows and 193 pairs: the composite key from the grain lesson. A table that turns a many-to-many relationship into one row per pair is called a **junction table**.
+
+## The link has facts
+
+Look at what every row of `"Order Details"` carries:
+
+- `"OrderID"` + `"ProductID"`: which order, which product
+- `"Quantity"`: how many
+- `"UnitPrice"`: at what price, that day
+- `"Discount"`: how much off
+
+These are facts about the **pair**, not about the order or the product alone. By the three questions from the entities lesson, something with facts of its own is a **thing**. The order line is not glue. It is one of the most important things in the sales side of the business.
+
+## One-to-many is just a column
+
+Compare products and suppliers:
+
+```sql file=./scripts/products-and-suppliers.sql
+SELECT count(*) AS "Products",
+       count(DISTINCT "SupplierID")
+         AS "Suppliers"
+FROM "Products";
+```
+
+| Products | Suppliers |
+| -------- | --------- |
+| 20       | 6         |
+
+20 products, 6 suppliers, and one `"SupplierID"` column. A **one-to-many** relationship fits in a column: each product points at its one supplier.
+
+## A second supplier for Chai
+
+Now the buyer wants Chai from a second supplier too, Tokyo Traders, **at its own price**.
+
+`"SupplierID"` holds one number. A second supplier column would be the repeating group from the entities lesson all over again. Many suppliers per product and many products per supplier is a **many-to-many** relationship, and the pair has a fact of its own: the price.
+
+So the link gets a table:
+
+```sql file=./scripts/create-product-suppliers.sql {4-5}
+CREATE TABLE practice."Product Suppliers" (
+  "ProductID"     INTEGER,
+  "SupplierID"    INTEGER,
+  "SupplierPrice" DECIMAL(19,4),
+  PRIMARY KEY ("ProductID", "SupplierID")
+);
+```
+
+The price lives on the pair, not on the product. Seed the table with today's facts: every product's current supplier, at today's unit price, until the buyer gives you the real supplier prices.
+
+```sql file=./scripts/load-todays-suppliers.sql
+INSERT INTO practice."Product Suppliers"
+SELECT "ProductID", "SupplierID", "UnitPrice"
+FROM "Products"
+ORDER BY "ProductID";
+```
+
+| Updated Rows |
+| ------------ |
+| 20           |
+
+Tokyo Traders supplies 5 of them today:
+
+```sql file=./scripts/tokyo-traders-products.sql
+SELECT count(*) AS "Products"
+FROM practice."Product Suppliers"
+WHERE "SupplierID" = 4;
+```
+
+| Products |
+| -------- |
+| 5        |
+
+Now the buyer's request, Chai from Tokyo Traders at 17:
+
+```sql file=./scripts/add-a-second-supplier-for-chai.sql
+INSERT INTO practice."Product Suppliers"
+VALUES (1, 4, 17);
+```
+
+| Updated Rows |
+| ------------ |
+| 1            |
+
+One row. No new column, and no change to the table.
+
+## And the same supplier again?
+
+```sql file=./scripts/add-the-same-supplier-again.sql
+INSERT INTO practice."Product Suppliers"
+VALUES (1, 4, 17);
+```
+
+```text
+SQL Error [23505]: ERROR: duplicate key value violates unique constraint "Product Suppliers_pkey"
+  Detail: Key ("ProductID", "SupplierID")=(1, 4) already exists.
+```
+
+Refused: one price per product per supplier, and the pair guards it. On DuckDB: *"Constraint Error: Duplicate key "ProductID: 1, SupplierID: 4" violates primary key constraint."*
+
+## Ask it something a list can't
+
+Which products have more than one supplier?
+
+```sql file=./scripts/products-with-several-suppliers.sql
+SELECT "ProductID",
+       count(*) AS "Suppliers"
+FROM practice."Product Suppliers"
+GROUP BY "ProductID"
+HAVING count(*) > 1;
+```
+
+| ProductID | Suppliers |
+| --------- | --------- |
+| 1         | 2         |
+
+Product 1, with two. It is a plain `GROUP BY`, with no `LIKE` and no guessing. And Tokyo Traders now supplies 6 products: run `tokyo-traders-products.sql` again.
+
+## Your turn
+
+Build the junction in your working file, `practice/schema.sql`, under the `Episode 20` heading:
+
+1. Create `practice."Product Suppliers"`: one row per product and supplier, with the price on the pair, and the key on the pair.
+2. Load **today's supplier** for every product, 20 rows, ordered by product.
+3. **Do not** add extra suppliers in the file. The checks add a second supplier themselves and read it back.
+
+```sql
+CREATE TABLE practice."Product Suppliers" (
+  "ProductID"     INTEGER,
+  "SupplierID"    INTEGER,
+  "SupplierPrice" DECIMAL(19,4),
+  PRIMARY KEY (___)
+);
+```
+
+Then run the file and the checks:
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat practice run
+.\zeus.bat koans datamodeling series1
+```
+
+On macOS or Linux, use `./zeus.sh` in place of `.\zeus.bat`.
+
+This lesson adds five checks to the suite:
+
+- today's 20 product-supplier pairs fit your table
+- every one of the 20 products has a supplier in your table
+- Tokyo Traders supplies 5 products in your table
+- the same supplier twice for one product is refused
+- a second supplier for Chang still gets in
+
+## No lists in columns
+
+> **Never a list in a column. A link that carries facts is a thing — give it a table.**
+
+## What is next
+
+You can build the links now. Next: what goes wrong when one fact is stored in two places — **the update that goes half wrong**.
