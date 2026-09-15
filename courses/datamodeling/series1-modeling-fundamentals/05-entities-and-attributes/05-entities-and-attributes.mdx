@@ -1,0 +1,291 @@
+---
+title: "Entities & Attributes — Is It a Thing, or a Fact About a Thing?"
+description: "The business wants a second contact per customer and the table has room for one. Learn to hear the things in what a business says, and decide with three questions what gets a table and what stays a column."
+topic: "learn-data-modeling"
+tags: ["data-modeling", "fundamentals", "entities", "attributes", "repeating-group", "er-diagram"]
+level: "beginner"
+module: "series1-modeling-fundamentals"
+order: 5
+date: "2026-09-15"
+published: false
+videoId: "datamodeling-series1-05-entities-and-attributes"
+---
+
+{/* ==========================================================================
+    HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
+      tab:er-diagram
+      build:schema.sql
+      cards
+      dataset: northwind:read
+      NO CHECK — practised in the working file, the diagram and the cards. See the note above.
+      cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson
+   ========================================================================== */}
+
+## Where does the second contact go?
+
+The manager has a new request: for every customer, keep the **accounts contact** on file, not just the buyer.
+
+The `"Customers"` table already has a contact. Look at it:
+
+```sql file=./scripts/customer-contacts.sql
+SELECT "CompanyName", "ContactName",
+       "ContactTitle"
+FROM "Customers"
+ORDER BY "CompanyName"
+LIMIT 3;
+```
+
+{/* The same highlight as the video: the first row in blue — the one contact a customer has. */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
+| CompanyName                        | ContactName        | ContactTitle         |
+| ---------------------------------- | ------------------ | -------------------- |
+| Alfreds Futterkiste                | Maria Anders       | Sales Representative |
+| Ana Trujillo Emparedados y helados | Ana Trujillo       | Owner                |
+| Antonio Moreno Taquería            | Antonio Moreno     | Owner                |
+
+</div>
+
+One name and one title per customer row: room for **one person**. The business just said two. By the end of this lesson you will know where the second one goes, and why.
+
+## Listen: circle the nouns
+
+Say the business in sentences again, and listen for the nouns:
+
+- Northwind buys **products** from **suppliers**.
+- **Customers** place **orders**, and a **shipper** delivers them.
+- Every **product** sits in a **category**.
+- An **employee** takes each **order**.
+- Each customer has a **contact** — now, two.
+
+Every thing a business keeps track of shows up first as a noun in a sentence. Product, supplier, customer, order, shipper, category, employee all have a table in Northwind. **Contact is the only noun without one.**
+
+## Thing, or fact about a thing?
+
+Does every noun get its own table, then? No. A noun is only a **candidate**. Three questions decide:
+
+1. **Does it have facts of its own?**
+2. **Can one owner have several of it?**
+3. **Would anyone look it up on its own?**
+
+A yes makes it a **thing** the business keeps track of, an **entity**, and an entity gets a table of its own. All no, and it is a **fact about a thing**, an **attribute**: a column in the table of the thing it describes.
+
+## Category: a thing
+
+```sql file=./scripts/list-categories.sql
+SELECT "CategoryName", "Description"
+FROM "Categories"
+ORDER BY "CategoryID";
+```
+
+| CategoryName   | Description                                                |
+| -------------- | ---------------------------------------------------------- |
+| Beverages      | Soft drinks, coffees, teas, beers, and ales                |
+| Condiments     | Sweet and savory sauces, relishes, spreads, and seasonings |
+| Confections    | Desserts, candies, and sweet breads                        |
+| Dairy Products | Cheeses                                                    |
+| Grains/Cereals | Breads, crackers, pasta, and cereal                        |
+| Meat/Poultry   | Prepared meats                                             |
+| Produce        | Dried fruit and bean curd                                  |
+| Seafood        | Seaweed and fish                                           |
+
+A category has a name and a description of its own, eight of them, whether or not a product points at one. And people browse by category. Two yeses: **category is a thing**.
+
+## Country: a fact, for now
+
+```sql file=./scripts/customers-per-country.sql
+SELECT "Country",
+       count(*) AS "Customers"
+FROM "Customers"
+GROUP BY "Country"
+ORDER BY "Customers" DESC, "Country";
+```
+
+{/* The same highlight as the video: Germany in the neutral tan — the row that repeats, not a fault. */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-neutral)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold">
+
+| Country   | Customers |
+| --------- | --------- |
+| Germany   | 11        |
+| France    | 2         |
+| Mexico    | 2         |
+| Sweden    | 2         |
+| UK        | 2         |
+| Venezuela | 2         |
+| Argentina | 1         |
+| Austria   | 1         |
+| Italy     | 1         |
+| USA       | 1         |
+
+</div>
+
+Ten countries across 25 customers, and Germany alone appears 11 times. Does that make country a thing?
+
+**Repeating is not the test.** In Northwind a country has no facts of its own, only its name. Nobody keeps a country's details anywhere. So today, country is **a fact about a customer**.
+
+That is a decision, and it has a cost. The day finance needs a tax rate for each country, country has a fact of its own, and it becomes a thing with its own table. Nothing is wrong with deciding "fact" today, as long as you write the decision down and know what would change it.
+
+## Two columns that travel together
+
+Back to the contact. `"ContactName"` and `"ContactTitle"` always travel together, on `"Customers"`, and again on `"Suppliers"`. The same pair of columns in two tables is the classic disguise of a thing.
+
+> **Two columns that always travel together are a thing hiding.**
+
+Run the three questions on the contact, one at a time.
+
+**Facts of its own?** Every contact has a title:
+
+```sql file=./scripts/customer-contact-titles.sql
+SELECT "ContactTitle",
+       count(*) AS "Customers"
+FROM "Customers"
+GROUP BY "ContactTitle"
+ORDER BY "Customers" DESC, "ContactTitle";
+```
+
+| ContactTitle         | Customers |
+| -------------------- | --------- |
+| Owner                | 6         |
+| Sales Representative | 6         |
+| Marketing Manager    | 5         |
+| Accounting Manager   | 2         |
+| Order Administrator  | 2         |
+| Marketing Assistant  | 1         |
+| Sales Agent          | 1         |
+| Sales Associate      | 1         |
+| Sales Manager        | 1         |
+
+Nine different titles. A title belongs to the **person**, not to the company. That is a yes.
+
+And suppliers have contacts as well:
+
+```sql file=./scripts/supplier-contact-titles.sql
+SELECT "ContactTitle",
+       count(*) AS "Suppliers"
+FROM "Suppliers"
+GROUP BY "ContactTitle"
+ORDER BY "Suppliers" DESC, "ContactTitle";
+```
+
+| ContactTitle         | Suppliers |
+| -------------------- | --------- |
+| Marketing Manager    | 2         |
+| Order Administrator  | 2         |
+| Purchasing Manager   | 1         |
+| Sales Representative | 1         |
+
+Six supplier contacts with four titles between them. One kind of thing lives in two tables, which is twice the reason to give it one home.
+
+## The obvious fix: a second pair of columns
+
+The fix nearly everyone reaches for first is to add a second pair: `"ContactName2"` and `"ContactTitle2"`.
+
+![The Customers row for Alfreds Futterkiste with CompanyName, ContactName Maria Anders, ContactTitle Sales Representative, then two added columns ContactName2 and ContactTitle2 holding question marks, and a dashed ContactName3 labelled "a third contact?". Beside it, the question "Who handles accounts?" written as WHERE "ContactTitle" = 'Accounting Manager' OR "ContactTitle2" = 'Accounting Manager' OR one more for every copy, with the verdict: one condition per copy, one table change per new contact.](/images/data-academy/datamodeling-series1-05/contact-columns.svg)
+
+Now ask the business's own question: **who handles accounts at each customer?** You would have to check `"ContactTitle"`, or `"ContactTitle2"`. A third contact means a third pair of columns, and a change to the table.
+
+## Who handles accounts?
+
+Today's model can only answer for the one contact it holds:
+
+```sql file=./scripts/who-handles-accounts.sql
+SELECT "CompanyName", "ContactName"
+FROM "Customers"
+WHERE "ContactTitle" = 'Accounting Manager'
+ORDER BY "CompanyName";
+```
+
+| CompanyName       | ContactName     |
+| ----------------- | --------------- |
+| LILA-Supermercado | Carlos Gonzalez |
+| QUICK-Stop        | Horst Kloss     |
+
+Two customers. The other customers' accounts people are not missing from the query. **They are missing from the model**: there is nowhere to put them.
+
+Numbered columns only move that wall. The pattern has a name, a **repeating group**: numbered copies of the same columns for something there can be several of. Every question needs one more condition for every copy, and the table changes every time the business grows.
+
+> **Numbered columns are a thing there can be several of.**
+
+## Give the contact a home
+
+![Two boxes joined by a line labelled "has — one or more contacts". Customer holds customer id, company name and country. Contact, one row per person, holds name, role (buyer, accounts…) and which customer. Under them, two example rows: Alfreds Futterkiste, Maria Anders, buyer; Alfreds Futterkiste, to be named, accounts. Beside them: who handles accounts — one condition on role; a third contact — one more row; the table — never changes.](/images/data-academy/datamodeling-series1-05/contact-entity.svg)
+
+Give the contact a home of its own: **one row per person**, with a name, a role, and which customer the person belongs to.
+
+- The buyer and the accounts contact are just **two rows**.
+- "Who handles accounts?" is **one condition on the role**.
+- A third contact is **one more row**, not a new column, and the table never changes.
+
+How one contact row points at its customer, and how to tell one contact from another, are the next lessons' subjects. For now, the decision is made: **the contact is a thing.**
+
+## Three facts in one box
+
+The last disguise hides inside a single value:
+
+```sql file=./scripts/packed-quantities.sql
+SELECT "ProductName", "QuantityPerUnit"
+FROM "Products"
+WHERE "ProductID" IN (1, 2, 12, 19)
+ORDER BY "ProductID";
+```
+
+{/* The same highlight as the video: Queso Cabrales's value in terracotta — the one the question cannot read. */}
+
+<div className="[&_tbody_tr:nth-child(4)_td:nth-child(2)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(4)_td:nth-child(2)]:font-bold">
+
+| ProductName             | QuantityPerUnit      |
+| ----------------------- | -------------------- |
+| Chai                    | 10 boxes x 20 bags   |
+| Chang                   | 24 - 12 oz bottles   |
+| Thuringer Rostbratwurst | 50 bags x 30 sausgs. |
+| Queso Cabrales          | 1 kg pkg.            |
+
+</div>
+
+"24 - 12 oz bottles" is a **count**, a **size** and a **unit**, packed into one piece of text. That is fine to read, and useless to ask: how many grams are in one unit of Queso Cabrales? The column cannot say, because the facts inside it were never stored as facts.
+
+## When to unpack
+
+Splitting every packed value is not the goal. Every extra column costs something to load and to keep right. Unpack a value only when:
+
+- someone **filters** on it,
+- someone **computes** with it, or
+- a **rule** must check it.
+
+If people only ever read it as a label, **leave it packed**.
+
+## Your turn
+
+There is no check for this lesson. Deciding what is a thing has more than one defensible answer, and the reason is the work.
+
+1. Open CloudBeaver's **ER Diagram** tab (`er-diagram`) on Northwind and list the things you can see.
+2. Decide the contact: **two columns, or a thing of its own**.
+3. Write your list and your reason as a comment in your working file, under the `Episode 05` heading:
+
+```sql
+-- Episode 05 · the things I hear:
+-- customer, order, product, ___
+-- A contact is ___
+--   because ___
+```
+
+The file is `c:\DataPallas\db\datazeus\practice\schema.sql`. Your later lessons read it back. Run it as usual:
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat practice run
+```
+
+On macOS or Linux, run `./zeus.sh practice run` from the same folder.
+
+## Thing or fact: three questions
+
+> **Facts of its own? Several of it? Looked up on its own? Then it is a thing. Otherwise, a fact about one.**
+
+And a home for many contacts needs a way to tell one contact from another. That is a whole lesson of its own, coming soon.
+
+## What is next
+
+You found the things. Next, the lesson draws the **lines between them**, and every line turns out to be a business rule you can say out loud. A customer places orders, but does every customer **have** to have one?

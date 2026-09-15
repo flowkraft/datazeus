@@ -1,0 +1,84 @@
+# Flashcards for Data Modeling · Series 1 · 05 — Entities & Attributes: Is It a Thing, or a Fact About a Thing?
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki); tools/build-anki.py turns it into a
+# .apkg with genanki. The .apkg is a BUILD ARTIFACT — gitignored, built in CI. Only this
+# YAML is source.
+#
+# deck / guid / cards / tags: see the Series 1 · 00 deck's header. The guid is set once and never changed.
+#
+# ── WHAT THIS DECK IS FOR ────────────────────────────────────────────────────────────
+# This lesson has NO check (curriculum), so the deck carries most of the practice: the judgement of
+# thing versus fact, on premises the card supplies. Every card is SELF-CONTAINED — reviewed on a
+# phone, weeks later, with no database open. No card asks for a Northwind figure; where a card
+# needs a table, the front describes it generically. The figures the lesson shows are asserted in
+# tests/src/verify/groovy/datazeus/datamodeling/series1/_05/EntitiesAndAttributesSpec.groovy.
+#
+# ORDER IS THE LESSON'S: nouns as candidates, the three questions, a thing, a fact that repeats, the
+# day a fact becomes a thing, columns travelling together, the repeating group, the fix, the packed
+# value, when to unpack, and last the production card.
+#
+# BALANCE: 12 cards — 1 cloze (the three questions), 10 reasoning scenarios, 1 production.
+#
+# WHAT THIS DECK LEAVES TO LATER DECKS: the lines between things and cardinality (relationships),
+# keys and grain (grain & keys), normal forms by name (normalization) — the repeating group is named
+# here as a smell, not as a normal-form violation.
+
+deck: "DataZeus::Data Modeling::Series 1::05 Entities & Attributes"
+guid: "datazeus-data-modeling-series1-05-entities-and-attributes"
+tags: ["datazeus", "data-modeling", "series-1"]
+
+cards:
+  # ── 1. NOUNS ARE CANDIDATES ──
+  - basic:
+      front: "You write down what a business does and underline every noun. Does every noun become a table?"
+      back: "No. A noun is only a candidate. You ask whether it is a thing the business keeps track of (an entity, with its own table) or a fact about a thing (an attribute, a column)."
+
+  # ── 2. THE THREE QUESTIONS ──
+  - cloze: "Three questions decide whether a noun is a thing or a fact about a thing: does it have {{c1::facts of its own}}? can one owner have {{c2::several}} of it? would anyone {{c3::look it up on its own}}?"
+
+  # ── 3. A THING ──
+  - basic:
+      front: "A shop sorts its products into categories. Each category has a name and a description, and customers browse the shop by category. Thing or fact about a thing?"
+      back: "A thing. It has facts of its own (a name and a description) and people look it up on its own, so it gets its own table."
+
+  # ── 4. REPEATING IS NOT THE TEST ──
+  - basic:
+      front: "The customers table has a country column, and \"Germany\" appears on 11 rows. Nobody stores anything about a country except its name. Should country be its own table because the value repeats?"
+      back: "Not because it repeats. Repetition is not the test. With no facts of its own, country is a fact about a customer, so a column is a sound choice today."
+
+  # ── 5. THE DAY A FACT BECOMES A THING ──
+  - basic:
+      front: "Country is a column on customers. Finance now needs a tax rate for each country. What changes in the model?"
+      back: "Country now has a fact of its own, so it becomes a thing: a countries table holding the name and the tax rate, with each customer pointing at a country."
+
+  - basic:
+      front: "A product table has a colour column. Nobody stores anything about a colour, filters by colour family, or looks a colour up on its own. Thing or fact?"
+      back: "A fact about a product. It has no facts of its own, there is one per product, and nobody looks it up on its own, so it stays a column."
+
+  # ── 6. COLUMNS THAT TRAVEL TOGETHER ──
+  - basic:
+      front: "Both the customers table and the suppliers table have the same two columns, contact name and contact title, and the two are always filled in together. What does that suggest?"
+      back: "A thing is hiding. Two columns that always travel together, in more than one table, usually describe one thing of their own, here a contact, that deserves its own table."
+
+  # ── 7. THE REPEATING GROUP ──
+  - basic:
+      front: "A customer can now have a second contact, so someone adds contact_name2 and contact_title2 to the customers table. Name the smell and say what goes wrong."
+      back: "A repeating group. Every question has to check each copy (title OR title2 …), and a third contact means changing the table again."
+
+  - basic:
+      front: "Your table has contact_title and contact_title2. The question is \"who is the accounts contact at each customer?\". Why is the query not the real problem?"
+      back: "Because the people you are looking for may not be stored anywhere. The model has a fixed number of slots, so a customer's accounts contact is missing from the model, not just from the query."
+
+  - basic:
+      front: "How do you model \"a customer has one or more contacts, each with a name and a role\" without a repeating group?"
+      back: "Give the contact its own table: one row per person, with a name, a role, and which customer it belongs to. A second or third contact is just another row, and the table never changes."
+
+  # ── 8. PACKED VALUES ──
+  - basic:
+      front: "A product's quantity per unit is stored as the text \"24 - 12 oz bottles\". How many facts are packed into it, and when should you split them into separate columns?"
+      back: "Three: a count (24), a size (12 oz) and a unit (bottles). Split them only if someone filters on them, computes with them, or a rule must check them. If people only ever read the label, leave it packed."
+
+  # ── 9. PRODUCTION — hardest, and last. The whole brief is ON THE CARD. ──
+  - basic:
+      front: "List the entities, and one attribute for each. The brief: \"A library lends books to members. Each book has a title and belongs to one genre, and each genre has a shelf colour. A member can have several phone numbers. Every loan records the date it was due back.\""
+      back: "<b>Book</b> (title) · <b>Genre</b> (shelf colour, so it has a fact of its own) · <b>Member</b> (name) · <b>Phone number</b> (number; a member can have several, so it is not a column) · <b>Loan</b> (due date)."
