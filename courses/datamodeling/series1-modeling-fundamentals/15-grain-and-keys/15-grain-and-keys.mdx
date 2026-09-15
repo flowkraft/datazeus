@@ -1,0 +1,274 @@
+---
+title: "Grain & Keys — One Row per What, and What Makes It Unique"
+description: "You guess the order number is the key of the order lines, and 193 real rows refuse. Learn to say a table's grain before you choose its key, then build composite keys, compare candidate keys and weigh natural against surrogate."
+topic: "learn-data-modeling"
+tags: ["data-modeling", "fundamentals", "grain", "primary-key", "composite-key", "candidate-key", "surrogate-key"]
+level: "beginner"
+module: "series1-modeling-fundamentals"
+order: 15
+date: "2026-09-15"
+published: false
+videoId: "datamodeling-series1-15-grain-and-keys"
+---
+
+{/* ==========================================================================
+    HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
+      check:fits
+      check:refuses
+      build:schema.sql
+      cards
+      dataset: northwind:model
+      check suite: series1/NorthwindModelChecks.groovy — this episode adds its checks there
+      cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson
+   ========================================================================== */}
+
+## Eleven orders that were five
+
+In the <a href="/data-academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">report lesson</a> of Learn SQL, a count said Alfreds Futterkiste placed **eleven** orders. They placed **five**. The query was counting order lines, not orders: its rows were not what they seemed to be.
+
+That was a **grain** mistake, made from the query side. This lesson makes the same mistake from the model side, where the database refuses to let it through.
+
+## One row per what?
+
+Before choosing any key, answer one question about the table: **one row of this table is one what?** That answer is the table's **grain**.
+
+- `"Customers"`: one row per customer.
+- `"Orders"`: one row per order.
+- `"Products"`: one row per product.
+- `"Order Details"`: one row per… order?
+
+The first three are easy. The fourth is where most people guess wrong.
+
+## Look at order one
+
+```sql file=./scripts/order-1-lines.sql
+SELECT "OrderID", "ProductID",
+       "UnitPrice", "Quantity", "Discount"
+FROM "Order Details"
+WHERE "OrderID" = 1
+ORDER BY "ProductID";
+```
+
+| OrderID | ProductID | UnitPrice | Quantity | Discount |
+| ------- | --------- | --------- | -------- | -------- |
+| 1       | 1         | 18        | 3        | 0.05     |
+| 1       | 6         | 18.4      | 5        | 0        |
+
+Order 1 has **two** rows: product 1 and product 6. So one row of `"Order Details"` is not an order. It is **a product on an order**.
+
+## Build the guess anyway
+
+Suppose you still believe the order number is the key. Build it that way, and let the real rows decide:
+
+```sql file=./scripts/create-order-lines-keyed-by-order.sql {2}
+CREATE TABLE practice."Order Details" (
+  "OrderID"   INTEGER PRIMARY KEY,
+  "ProductID" INTEGER,
+  "UnitPrice" DECIMAL(19,4),
+  "Quantity"  SMALLINT,
+  "Discount"  DECIMAL(8,4)
+);
+```
+
+Now load every order line:
+
+```sql file=./scripts/load-order-lines.sql
+INSERT INTO practice."Order Details"
+SELECT "OrderID", "ProductID", "UnitPrice",
+       "Quantity", "Discount"
+FROM "Order Details"
+ORDER BY "OrderID", "ProductID";
+```
+
+```text
+SQL Error [23505]: ERROR: duplicate key value violates unique constraint "Order Details_pkey"
+  Detail: Key ("OrderID")=(1) already exists.
+```
+
+Refused. Order 1's second line hit the key the first line had already used. Nobody told you the grain of this table; **the real rows just did**.
+
+DuckDB words the same refusal differently: *"Constraint Error: PRIMARY KEY or UNIQUE constraint violated: duplicate key "1""*. The `ORDER BY` is there so that both engines report the same key, 1.
+
+How many order lines got in?
+
+```sql file=./scripts/count-your-order-lines.sql
+SELECT count(*) AS "Order lines"
+FROM practice."Order Details";
+```
+
+| Order lines |
+| ----------- |
+| 0           |
+
+None, out of 193. A load is all or nothing: one refused row and the whole statement is rolled back.
+
+## The key is the pair
+
+Say the grain properly first: **one row per product on an order**. Then the key follows from the sentence. It is **the pair** of order and product, which is called a **composite key**. Drop the table and rebuild it:
+
+```sql file=./scripts/drop-order-lines.sql
+DROP TABLE practice."Order Details";
+```
+
+```sql file=./scripts/create-order-lines-keyed-by-pair.sql {7}
+CREATE TABLE practice."Order Details" (
+  "OrderID"   INTEGER,
+  "ProductID" INTEGER,
+  "UnitPrice" DECIMAL(19,4),
+  "Quantity"  SMALLINT,
+  "Discount"  DECIMAL(8,4),
+  PRIMARY KEY ("OrderID", "ProductID")
+);
+```
+
+Run the same load again, with the same real rows:
+
+| Updated Rows |
+| ------------ |
+| 193          |
+
+193 updated rows, and nothing refused. Check it a second way: count the rows, and count the different pairs.
+
+```sql file=./scripts/count-the-pairs.sql
+SELECT count(*) AS "Rows",
+       count(DISTINCT
+             ("OrderID", "ProductID"))
+         AS "Pairs"
+FROM practice."Order Details";
+```
+
+| Rows | Pairs |
+| ---- | ----- |
+| 193  | 193   |
+
+Every pair appears exactly once. That is what a key means.
+
+## Now try to break it
+
+Try product 1 on order 1 again:
+
+```sql file=./scripts/insert-product-1-on-order-1-again.sql
+INSERT INTO practice."Order Details"
+VALUES (1, 1, 18, 2, 0);
+```
+
+```text
+SQL Error [23505]: ERROR: duplicate key value violates unique constraint "Order Details_pkey"
+  Detail: Key ("OrderID", "ProductID")=(1, 1) already exists.
+```
+
+This time the detail names **both** columns. The pair is the key, so the pair is what it guards. On DuckDB: *"Constraint Error: Duplicate key "OrderID: 1, ProductID: 1" violates primary key constraint."*
+
+## And a good row still gets in
+
+The same product, on a different order:
+
+```sql file=./scripts/insert-product-1-on-order-2.sql
+INSERT INTO practice."Order Details"
+VALUES (2, 1, 18, 2, 0);
+```
+
+| Updated Rows |
+| ------------ |
+| 1            |
+
+Order 2 held products 3 and 5, so this line is new. Product 1 can sit on many orders, just once on each.
+
+## Two columns could be the key
+
+```sql file=./scripts/candidate-keys.sql
+SELECT count(*) AS "Customers",
+       count(DISTINCT "CustomerID")
+         AS "IDs",
+       count(DISTINCT "CompanyName")
+         AS "Names"
+FROM "Customers";
+```
+
+| Customers | IDs | Names |
+| --------- | --- | ----- |
+| 25        | 25  | 25    |
+
+25 customers, 25 different ids and 25 different company names. Both columns are unique today, so both are **candidate keys**. Which one should be the **primary key**?
+
+Choose the one that **stays unique and never changes**. Company names get renamed, merged and misspelled, and two companies can share a name tomorrow. The id it is.
+
+## A code you can read, or a number that means nothing
+
+Northwind uses two key styles side by side:
+
+```sql file=./scripts/customer-keys.sql
+SELECT "CustomerID", "CompanyName"
+FROM "Customers"
+ORDER BY "CustomerID"
+LIMIT 3;
+```
+
+| CustomerID | CompanyName                        |
+| ---------- | ---------------------------------- |
+| ALFKI      | Alfreds Futterkiste                |
+| ANATR      | Ana Trujillo Emparedados y helados |
+| ANTON      | Antonio Moreno Taquería            |
+
+```sql file=./scripts/product-keys.sql
+SELECT "ProductID", "ProductName"
+FROM "Products"
+ORDER BY "ProductID"
+LIMIT 3;
+```
+
+| ProductID | ProductName   |
+| --------- | ------------- |
+| 1         | Chai          |
+| 2         | Chang         |
+| 3         | Aniseed Syrup |
+
+- **Customers get codes built from the name**: `ALFKI` is Alfreds Futterkiste. A key taken from the thing itself is a **natural key**. People can read it, until the name changes and the code stops matching.
+- **Products get plain numbers**: 1, 2, 3. A key that means nothing is a **surrogate key**. It never has to change, but on its own it cannot stop the same product being entered twice.
+
+Neither style is free. Know which one you chose, and what it costs.
+
+## Your turn
+
+The lesson keyed the order lines. Now do the same for every table in your working file, `practice/schema.sql`:
+
+1. For `"Customers"`, `"Orders"`, `"Products"`, `"Suppliers"` and `"Employees"`, **say the grain in a sentence first**.
+2. Then declare the key, and load Northwind's real rows, ordered by the key. If the key is wrong, the load tells you.
+3. Key `"Order Details"` by the pair, as the lesson did.
+
+```sql
+CREATE TABLE practice."Customers" (
+  "CustomerID"  VARCHAR ___,
+  "CompanyName" VARCHAR NOT NULL,
+  …
+);
+```
+
+Then run the file and the checks:
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat practice run
+.\zeus.bat koans datamodeling series1
+```
+
+On macOS or Linux, use `./zeus.sh` in place of `.\zeus.bat`.
+
+This lesson adds eleven checks to the suite:
+
+- Northwind's 25 customers, 79 orders, 20 products, 6 suppliers, 3 employees and 193 order lines each fit your table
+- a second customer ALFKI is refused
+- a second order number 1 is refused
+- the same product twice on one order is refused
+- a new customer NWCO1 still gets in
+- the same product on a different order still gets in
+
+## Grain first, then the key
+
+> **Say the grain in a sentence. Then choose the key. The real rows tell you if you were wrong.**
+
+A refused load is not a failure. It is the database telling you what one row really is.
+
+## What is next
+
+You can find a table's grain now. Next: **why `"Order Details"` exists at all**. It holds the line with many at both ends, and nobody at Northwind ever says "order detail" out loud. So is it a real thing, or just glue?

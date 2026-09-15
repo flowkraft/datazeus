@@ -1,0 +1,79 @@
+# Flashcards for Data Modeling · Series 1 · 15 — Grain & Keys: One Row per What, and What Makes It Unique
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki); tools/build-anki.py turns it into a
+# .apkg with genanki. The .apkg is a BUILD ARTIFACT — gitignored, built in CI. Only this
+# YAML is source.
+#
+# deck / guid / cards / tags: see the Series 1 · 00 deck's header. The guid is set once and never changed.
+#
+# ── WHAT THIS DECK IS FOR ────────────────────────────────────────────────────────────
+# The checks (NorthwindModelChecks, section 15) test the learner's keys against real rows; this deck
+# drills the reasoning that has to come first, away from a database: say the grain, then pick the
+# key; read a refused load as a grain mistake; tell candidate keys apart; weigh natural against
+# surrogate. Every card is SELF-CONTAINED: tables are described generically on the front, and any
+# figure is a stated premise. The lesson's figures are asserted in
+# tests/src/verify/groovy/datazeus/datamodeling/series1/_15/GrainAndKeysSpec.groovy.
+#
+# ORDER IS THE LESSON'S: grain first, the refused load, all or nothing, the composite key, what the
+# pair guards, candidate keys, why not the name, natural vs surrogate, and last the production card.
+#
+# BALANCE: 12 cards — 2 cloze (grain, composite key), 9 reasoning, 1 production.
+#
+# WHAT THIS DECK LEAVES TO LATER DECKS: junction tables (next lesson), foreign keys (referential
+# integrity), the natural key that betrays you (argued properly in a later series), UNIQUE constraints
+# on non-key columns (constraints lesson).
+
+deck: "DataZeus::Data Modeling::Series 1::15 Grain & Keys"
+guid: "datazeus-data-modeling-series1-15-grain-and-keys"
+tags: ["datazeus", "data-modeling", "series-1"]
+
+cards:
+  # ── 1. GRAIN FIRST ──
+  - cloze: "Before choosing a key, say what one row of the table represents. That answer is the table's {{c1::grain}}."
+
+  - basic:
+      front: "You are about to add a primary key to a table of invoice lines. What question do you answer before you pick the column?"
+      back: "One row of this table is one what? Here: one product (or service) on one invoice. The key has to identify exactly that, so it will usually be the invoice number together with the line's product or line number."
+
+  # ── 2. THE REFUSED LOAD ──
+  - basic:
+      front: "You declare PRIMARY KEY (order_id) on a table of order lines and load the real rows. The load fails with a duplicate-key error on order 1. What has the data told you?"
+      back: "Your grain was wrong. Order 1 has more than one line, so one row is not one order; it is one product on an order. The key must be the pair (order_id, product_id)."
+
+  - basic:
+      front: "A load of 193 rows fails because one row breaks the primary key. How many rows are in the table afterwards?"
+      back: "None. An INSERT ... SELECT is one statement, and a refused statement is rolled back as a whole: all rows or no rows."
+
+  # ── 3. THE COMPOSITE KEY ──
+  - cloze: "A primary key made of more than one column, such as <code>PRIMARY KEY (order_id, product_id)</code>, is a {{c1::composite}} key."
+
+  - basic:
+      front: "An order-lines table has PRIMARY KEY (order_id, product_id). Which of these is refused: product 1 added to order 1 a second time, or product 1 added to order 2 for the first time?"
+      back: "Only the second copy on order 1. The key guards the pair, so product 1 may appear on many orders, but only once on each."
+
+  - basic:
+      front: "Your order-lines table has 193 rows. How can you check with a query that (order_id, product_id) really is unique in the data before you declare it as the key?"
+      back: "Count the rows and count the distinct pairs. If both are 193, every pair appears exactly once and the pair can be the key."
+
+  # ── 4. CANDIDATE KEYS ──
+  - basic:
+      front: "In a customers table, both customer_id and company_name are unique across all 25 rows. What are they called, and how do you pick the primary key?"
+      back: "Both are candidate keys. Pick the one that will stay unique and never change, which is almost never a name."
+
+  - basic:
+      front: "Why is a company name a poor primary key, even when every name in the table is unique today?"
+      back: "Names change (renames, mergers, corrected spellings) and two companies can share a name tomorrow. A key that changes or repeats breaks every row that points at it."
+
+  # ── 5. NATURAL OR SURROGATE ──
+  - basic:
+      front: "One table keys customers with codes built from their names, such as ALFKI for Alfreds Futterkiste. Another keys products with plain numbers: 1, 2, 3. Name the two styles and one cost of each."
+      back: "<b>Natural key</b> (taken from the thing): readable, but it stops matching when the name changes.<br><b>Surrogate key</b> (a meaningless number): never has to change, but on its own it cannot stop the same product being entered twice."
+
+  - basic:
+      front: "Your products table uses an auto-numbered product_id as its primary key. A clerk enters \"Chai\" twice by mistake. Does the key stop it?"
+      back: "No. Each entry gets a new number, so both rows are unique by the key. A surrogate key identifies rows, not real-world products; catching the duplicate needs another rule on the real-world identity."
+
+  # ── 6. PRODUCTION — hardest, and last. Everything it needs is ON THE CARD. ──
+  - basic:
+      front: "Write the table. A school records exam results: each student sits each exam at most once, and each result has a mark. Create <code>practice.results</code> with <code>student_id</code>, <code>exam_id</code> and <code>mark</code>, and say its grain."
+      back: "Grain: one row per student per exam.<br><code>CREATE TABLE practice.results (<br>&nbsp;&nbsp;student_id INTEGER,<br>&nbsp;&nbsp;exam_id&nbsp;&nbsp;&nbsp;&nbsp;INTEGER,<br>&nbsp;&nbsp;mark&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;INTEGER,<br>&nbsp;&nbsp;PRIMARY KEY (student_id, exam_id)<br>);</code>"
