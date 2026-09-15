@@ -25,14 +25,7 @@ That is not a flaw. It is how every database you will ever work with is built, a
 
 By the end of it you will be able to match rows from two tables, keep the rows that match nothing, and recognise the single most common way a join quietly returns the wrong answer.
 
-Every query below runs on the Northwind sample database that ships with DataPallas.
-
-**Open the koans before you read on.** There is a koan for every idea in this lesson — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
-
-```powershell
-cd c:/DataPallas/db/datazeus
-.\zeus.bat koans learnsql series1 _40
-```
+Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
 ## First, the thing nobody tells you
 
@@ -131,7 +124,7 @@ You now have everything you need to close a question this course left open. Back
 
 **Who placed our five most recent orders?** Write the `ON` clause yourself before you read on.
 
-```sql file=./scripts/orders-with-customer-names.sql {4}
+```sql file=./scripts/orders-with-customer-names.sql {2-4}
 SELECT o."OrderID", c."CompanyName", o."OrderDate"
 FROM "Orders" o
 JOIN "Customers" c
@@ -158,7 +151,7 @@ Your sales manager wants the June review: **each of our three people, and the or
 
 The `ON` clause is not limited to the key. It is the whole matching rule, so you can put more in it — match this rep to this order, **and** only if the order is from June:
 
-```sql file=./scripts/june-by-rep-inner.sql {4-6}
+```sql file=./scripts/june-by-rep-inner.sql {2-6}
 SELECT e."FirstName", o."OrderID", o."OrderDate"
 FROM "Employees" e
 JOIN "Orders" o
@@ -203,6 +196,11 @@ LEFT JOIN "Orders" o
 ORDER BY e."FirstName", o."OrderDate";
 ```
 
+{/* The same highlight as the video: Andrew's row in blue — left-join-result lights the NULLs the join
+    manufactured, in its LOOK tone */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
 | FirstName | OrderID  | OrderDate               |
 | --------- | -------- | ----------------------- |
 | Andrew    | `[NULL]` | `[NULL]`                |
@@ -210,6 +208,8 @@ ORDER BY e."FirstName", o."OrderDate";
 | Janet     | 7        | 2024-06-12 00:00:00.000 |
 | Nancy     | 6        | 2024-06-07 00:00:00.000 |
 | Nancy     | 5        | 2024-06-10 00:00:00.000 |
+
+</div>
 
 **`LEFT JOIN` keeps every row of the left-hand table** — "left" meaning the one named in your `FROM` line, here `"Employees"` — whether it found a match or not.
 
@@ -235,7 +235,7 @@ Here is the one that costs people days.
 
 The query above works. Now "tidy it up" by moving the date condition down into a `WHERE`, which is where you have put every condition since you first learned `WHERE`:
 
-```sql file=./scripts/june-by-rep-where.sql {5-6}#err
+```sql file=./scripts/june-by-rep-where.sql {5-6}
 SELECT e."FirstName", o."OrderID", o."OrderDate"
 FROM "Employees" e
 LEFT JOIN "Orders" o
