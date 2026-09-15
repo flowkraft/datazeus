@@ -1,0 +1,407 @@
+---
+title: "CASE — SQL's If/Then for Labels & Buckets"
+description: "Label every row inside the query with CASE, put the tests in the right order, write the ELSE, and use CASE inside SUM to build a column for each status."
+topic: "learn-sql"
+tags: ["sql", "intermediate", "case", "case-when", "conditional-aggregation", "coalesce"]
+level: "intermediate"
+module: "series2-intermediate"
+order: 5
+date: "2026-09-14"
+published: false
+videoId: "learnsql-series2-05-case-expressions"
+---
+
+{/* HANDS-ON (from curriculum.yaml): koan:complete, koan:predict — the koans in
+    tests/src/koans/groovy/datazeus/learnsql/series2/_05/CaseExpressionsKoans.groovy.
+    CurriculumSpec requires a PLANNED lesson to name these; this comment can go when the episode is
+    published (curriculum status: published, front matter published: true). Invisible on the page. */}
+
+## Light, medium or heavy?
+
+The shipping team is reviewing freight costs, and they want **every order labelled light, medium or heavy**: freight under 25 is light, under 60 is medium, and anything more is heavy.
+
+With Series 1 alone, this takes three queries, one `WHERE` per band, and the three answers put together by hand. Even then the result is three counts, not a label on each order. This lesson adds the tool that does it in one query: **CASE**, SQL's if-then.
+
+Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
+
+## CASE: a value chosen row by row
+
+{/* The same highlight as the video: the three branch lines, in grey. */}
+
+```sql file=./scripts/freight-band-per-order.sql {3-5}
+SELECT "OrderID", "Freight",
+       CASE
+         WHEN "Freight" < 25 THEN 'light'
+         WHEN "Freight" < 60 THEN 'medium'
+         ELSE 'heavy'
+       END AS "Band"
+FROM "Orders"
+ORDER BY "OrderID"
+LIMIT 6;
+```
+
+For every row, CASE checks each `WHEN` **from the top**. The first test that is true gives the row its value, and CASE stops there. If no test is true, the `ELSE` value is used. `END` closes the CASE, and `AS "Band"` names the new column.
+
+It is an expression, like the calculated columns from the <a href="/data-academy/learn-sql/distinct-aliases-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">aliases and expressions lesson</a>. The difference is that it chooses its value instead of calculating it.
+
+{/* The same highlight as the video: order 1 in blue, the row the text reads. */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
+| OrderID | Freight | Band   |
+| ------- | ------- | ------ |
+| 1       | 25.1    | medium |
+| 2       | 15.5    | light  |
+| 3       | 40      | medium |
+| 4       | 32.38   | medium |
+| 5       | 11.61   | light  |
+| 6       | 45.5    | medium |
+
+</div>
+
+Read order 1 the way CASE does. Its freight is 25.1. The first `WHEN` asks "under 25?", and the answer is no. The second asks "under 60?", and the answer is yes, so CASE stops and returns medium. Order 5, on 11.61, stops at the first `WHEN`.
+
+## Count the bands
+
+The new column can be grouped like any other. Use the same CASE with `GROUP BY "Band"`:
+
+{/* The same highlight as the video: the GROUP BY line, in grey. */}
+
+```sql file=./scripts/orders-per-band.sql {8}
+SELECT CASE
+         WHEN "Freight" < 25 THEN 'light'
+         WHEN "Freight" < 60 THEN 'medium'
+         ELSE 'heavy'
+       END AS "Band",
+       count(*) AS "Orders"
+FROM "Orders"
+GROUP BY "Band"
+ORDER BY min("Freight");
+```
+
+| Band   | Orders |
+| ------ | ------ |
+| light  | 16     |
+| medium | 34     |
+| heavy  | 29     |
+
+16, 34 and 29 add up to 79, every order in the table. The label the query made up is the thing it groups by. `ORDER BY min("Freight")` sorts the bands by the smallest freight in each, so light comes first instead of in alphabetical order.
+
+PostgreSQL and DuckDB both let `GROUP BY` use the name `"Band"` from the `SELECT`. Some databases do not, and there you repeat the whole CASE in the `GROUP BY`.
+
+## The first true WHEN wins
+
+Now swap the first two `WHEN` lines, so medium is tested before light:
+
+{/* The same highlight as the video: the two swapped lines, in red. */}
+
+```sql file=./scripts/orders-per-band-whens-swapped.sql {2-3}#err
+SELECT CASE
+         WHEN "Freight" < 60 THEN 'medium'
+         WHEN "Freight" < 25 THEN 'light'
+         ELSE 'heavy'
+       END AS "Band",
+       count(*) AS "Orders"
+FROM "Orders"
+GROUP BY "Band"
+ORDER BY min("Freight");
+```
+
+{/* The same highlight as the video: medium in terracotta — it swallowed the light orders. */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-fault-ink))]">
+
+| Band   | Orders |
+| ------ | ------ |
+| medium | 50     |
+| heavy  | 29     |
+
+</div>
+
+There are no light orders at all, and medium went from 34 to 50. The 16 light orders are still in the table, and their freight did not change. What changed is the order of the tests: **under 25 is also under 60**. The first `WHEN` now asks "under 60?", every light order answers yes, and CASE stops there. The light test is never reached.
+
+There is no error and no warning. The result simply has one band fewer. So **write the narrow tests first**: a wide test above a narrow one catches its rows before the narrow one is checked.
+
+## No ELSE means NULL
+
+Finance only cares about heavy orders, freight over 50. So the CASE gets one `WHEN` and no `ELSE`:
+
+{/* The same highlight as the video: the CASE's one WHEN, in grey. */}
+
+```sql file=./scripts/heavy-label-no-else.sql {2-3}
+SELECT CASE
+         WHEN "Freight" > 50 THEN 'heavy'
+       END AS "Label",
+       count(*) AS "Orders"
+FROM "Orders"
+GROUP BY "Label"
+ORDER BY "Label" NULLS LAST;
+```
+
+{/* The same highlight as the video: the NULL row in terracotta. */}
+
+<div className="[&_tbody_tr:nth-child(2)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(2)_td]:font-bold [&_tbody_tr:nth-child(2)_td]:text-[rgb(var(--hl-fault-ink))]">
+
+| Label    | Orders |
+| -------- | ------ |
+| heavy    | 37     |
+| `[NULL]` | 42     |
+
+</div>
+
+37 orders are heavy, and **42 orders are labelled NULL**. A CASE with no `ELSE` returns NULL for every row that no `WHEN` matched. It does not look harmful here, because the 42 are still counted. The trouble starts when a query tests the label.
+
+### How many orders are not heavy?
+
+The label is made in a subquery in `FROM` (the <a href="/data-academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a>), because a `WHERE` cannot see a name given in the same query's `SELECT`. Then the `WHERE` keeps the orders whose label is not 'heavy':
+
+{/* The same highlight as the video: the WHERE, in red. */}
+
+```sql file=./scripts/not-heavy-no-else.sql {7}#err
+SELECT count(*) AS "Not heavy"
+FROM (SELECT CASE
+               WHEN "Freight" > 50
+               THEN 'heavy'
+             END AS "Label"
+      FROM "Orders") AS t
+WHERE "Label" <> 'heavy';
+```
+
+| Not heavy |
+| --------- |
+| 0         |
+
+Zero, although 42 orders are not heavy. Every one of them is labelled NULL, and this is the rule from the <a href="/data-academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a>: NULL is not unequal to 'heavy'. The comparison `NULL <> 'heavy'` is **unknown**, and `WHERE` keeps only rows where the test is true. All 42 are dropped.
+
+### Write the ELSE
+
+Give every other order a real label:
+
+{/* The same highlight as the video: the ELSE line, in green. */}
+
+```sql file=./scripts/not-heavy-with-else.sql {5}#good
+SELECT count(*) AS "Not heavy"
+FROM (SELECT CASE
+               WHEN "Freight" > 50
+               THEN 'heavy'
+               ELSE 'standard'
+             END AS "Label"
+      FROM "Orders") AS t
+WHERE "Label" <> 'heavy';
+```
+
+| Not heavy |
+| --------- |
+| 42        |
+
+One line, and the 42 orders are back.
+
+### Your turn
+
+Label every order as shipped or still waiting. A waiting order has no `"ShippedDate"`. Fill in the test, and predict the counts before you run it:
+
+```sql file=./scripts/shipped-or-waiting.sql
+SELECT CASE
+         WHEN "ShippedDate" IS NULL THEN 'waiting'
+         ELSE 'shipped'
+       END AS "Status",
+       count(*) AS "Orders"
+FROM "Orders"
+GROUP BY "Status"
+ORDER BY "Status";
+```
+
+| Status  | Orders |
+| ------- | ------ |
+| shipped | 52     |
+| waiting | 27     |
+
+## CASE inside SUM: a column for each status
+
+Now the most useful thing CASE does. A manager wants, for every country, **how many orders there are and how many are still waiting**, side by side, one row per country.
+
+That is two counts with two different conditions, and one query has only one `WHERE`. The way around it is to move the condition into the column:
+
+{/* The same highlight as the video: the SUM(CASE …) lines, in grey. */}
+
+```sql file=./scripts/orders-and-unshipped-per-country.sql {3-4}
+SELECT "ShipCountry",
+       count(*) AS "Orders",
+       SUM(CASE WHEN "ShippedDate" IS NULL
+           THEN 1 ELSE 0 END) AS "Unshipped"
+FROM "Orders"
+GROUP BY "ShipCountry"
+ORDER BY "Orders" DESC, "ShipCountry";
+```
+
+{/* The same highlight as the video: Germany in blue, the row the text reads. */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
+| ShipCountry | Orders | Unshipped |
+| ----------- | ------ | --------- |
+| Germany     | 32     | 10        |
+| Mexico      | 8      | 4         |
+| Sweden      | 8      | 3         |
+| UK          | 7      | 2         |
+| France      | 6      | 2         |
+| Venezuela   | 6      | 2         |
+| Argentina   | 3      | 1         |
+| Austria     | 3      | 1         |
+| Italy       | 3      | 1         |
+| USA         | 3      | 1         |
+
+</div>
+
+Germany has 32 orders, and 10 of them are still waiting. `SUM` adds numbers, so how did it count? The CASE turns every waiting order into a 1 and every shipped order into a 0, and `SUM` adds the ones. The result is a count of waiting orders, **without a `WHERE`**, next to the count of all orders.
+
+You can add as many of these columns as you need, one per status, all in the same `GROUP BY`. This is how a report with a column for each status is built.
+
+### The same, with count
+
+You will also see it written with `count`, and there the missing `ELSE` is on purpose:
+
+{/* The same highlight as the video: the count(CASE …) lines, in green. */}
+
+```sql file=./scripts/unshipped-counted-with-count.sql {3-4}#good
+SELECT "ShipCountry",
+       count(*) AS "Orders",
+       count(CASE WHEN "ShippedDate" IS NULL
+             THEN 1 END) AS "Unshipped"
+FROM "Orders"
+GROUP BY "ShipCountry"
+ORDER BY "Orders" DESC, "ShipCountry";
+```
+
+Shipped orders get NULL, `count` of a column skips NULLs, and the result is the same table: Germany still has 10. In the filter above, the missing `ELSE` was a bug. Here it does the counting. The difference is whether you meant the NULLs.
+
+### Per employee
+
+The same method works for any group. Join the orders to `"Employees"`, and count each person's orders and how many of them are still waiting:
+
+{/* The same highlight as the video: the SUM(CASE …) lines, in grey. */}
+
+```sql file=./scripts/waiting-per-employee.sql {3-6}
+SELECT e."FirstName",
+       count(*) AS "Orders",
+       SUM(CASE
+             WHEN o."ShippedDate" IS NULL THEN 1
+             ELSE 0
+           END) AS "Waiting"
+FROM "Orders" o
+JOIN "Employees" e
+  ON e."EmployeeID" = o."EmployeeID"
+GROUP BY e."FirstName"
+ORDER BY e."FirstName";
+```
+
+{/* The same highlight as the video: Nancy's row in neutral tan — worth a question, not a fault. */}
+
+<div className="[&_tbody_tr:nth-child(3)]:bg-[rgb(var(--hl-neutral)/var(--hl-row))] [&_tbody_tr:nth-child(3)_td]:font-bold">
+
+| FirstName | Orders | Waiting |
+| --------- | ------ | ------- |
+| Andrew    | 24     | 0       |
+| Janet     | 27     | 2       |
+| Nancy     | 28     | 25      |
+
+</div>
+
+25 of Nancy's 28 orders are still waiting, and Andrew has none. That is worth asking about, with a person rather than with another query. CASE found the number; it cannot say why.
+
+## The short form
+
+When every `WHEN` compares the same column with a value, the column can be written once, after `CASE`:
+
+{/* The same highlight as the video: CASE "ShipVia" and its first WHEN, in grey. */}
+
+```sql file=./scripts/shipper-names-by-case.sql {1-2}
+SELECT CASE "ShipVia"
+         WHEN 1 THEN 'Speedy Express'
+         WHEN 2 THEN 'United Package'
+         WHEN 3 THEN 'Federal Shipping'
+       END AS "Shipper",
+       count(*) AS "Orders"
+FROM "Orders"
+GROUP BY "Shipper"
+ORDER BY "Shipper";
+```
+
+| Shipper          | Orders |
+| ---------------- | ------ |
+| Federal Shipping | 26     |
+| Speedy Express   | 26     |
+| United Package   | 27     |
+
+It works, but these names are already stored in the `"Shippers"` table, and a join reads them from there:
+
+```sql file=./scripts/shipper-names-by-join.sql
+SELECT s."CompanyName" AS "Shipper",
+       count(*) AS "Orders"
+FROM "Orders" o
+JOIN "Shippers" s
+  ON s."ShipperID" = o."ShipVia"
+GROUP BY s."CompanyName"
+ORDER BY s."CompanyName";
+```
+
+It returns the same 26, 26 and 27. The join is better here: when a shipper is renamed, the table changes and the query does not have to. **CASE is for labels that nobody stored**, such as light, medium and heavy. If the label already lives in a table, read it from the table.
+
+## COALESCE is a CASE
+
+The <a href="/data-academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a> used `COALESCE` to put a stand-in where a value is missing. It is a short way of writing a CASE: when the value is NULL, use the stand-in; otherwise use the value.
+
+{/* The same highlight as the video: COALESCE and the CASE's three lines, in grey. */}
+
+```sql file=./scripts/region-coalesce-and-case.sql {2,4-6}
+SELECT "CompanyName",
+       COALESCE("Region", '(none)')
+         AS "With COALESCE",
+       CASE
+         WHEN "Region" IS NULL THEN '(none)'
+         ELSE "Region"
+       END AS "With CASE"
+FROM "Customers"
+ORDER BY "CustomerID"
+LIMIT 4;
+```
+
+| CompanyName                        | With COALESCE | With CASE |
+| ---------------------------------- | ------------- | --------- |
+| Alfreds Futterkiste                | (none)        | (none)    |
+| Ana Trujillo Emparedados y helados | (none)        | (none)    |
+| Antonio Moreno Taquería            | (none)        | (none)    |
+| Around the Horn                    | (none)        | (none)    |
+
+The two columns are identical, and they stay identical for all 25 customers.
+
+## Three rules for CASE
+
+1. **The first true `WHEN` wins.** Put the narrow tests first.
+2. **Write the `ELSE`**, unless the NULLs are the point. A row that no `WHEN` matches gets NULL, and NULL fails every comparison, including "not equal".
+3. **`SUM(CASE …)` gives one column per status**, all in the same `GROUP BY`.
+
+## Practice
+
+There are ten koans for this lesson. They use different tables from this page: products labelled by price and stock, order lines with and without a discount, and suppliers with and without a region, so copying a query from this page will not answer them.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series2 _05
+```
+
+On macOS or Linux, run `./zeus.sh koans learnsql series2 _05` from the same folder.
+
+The file to edit is:
+
+```
+c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series2\_05\CaseExpressionsKoans.groovy
+```
+
+Each koan has a `___` where the answer belongs. Predict the answer, replace the blank, save, run the command again, and watch that koan go green.
+
+The koans follow this page: finishing a CASE with its `ELSE`, writing the tests in the right order, the NULL a missing `ELSE` produces, `SUM(CASE …)` for a count and for money, `count(CASE …)` with the `ELSE` left out on purpose, and `COALESCE` written the long way. The last two give only the question, and the whole query has to be written from scratch.
+
+## What is next
+
+The next lesson is **dates and times**: date ranges and their boundaries, and how long ago something happened. That is what a label such as "has not ordered in months" needs before it can be written as a CASE.

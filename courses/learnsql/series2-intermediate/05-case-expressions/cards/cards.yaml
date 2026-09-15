@@ -1,0 +1,103 @@
+# Flashcards for Learn SQL · Series 2 · 05 — CASE, SQL's if/then for labels and buckets
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki); tools/build-anki.py turns it into a .apkg with
+# genanki. The .apkg is a BUILD ARTIFACT — gitignored, built in CI. Only this YAML is source.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds UPDATE the same deck. Set once, from the slug, never changed.
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# ── WHAT ANKI IS FOR ────────────────────────────────────────────────────────────────────────
+# Reviewed on a phone, weeks later, with no database open. EVERY CARD CARRIES ITS OWN PREMISE:
+# where a card needs a value (a freight of 25.1, 42 unlabelled rows) the FRONT states it, and the
+# card tests the REASONING. No card names a Northwind table as something to remember, and none
+# asks for a figure from the dataset. The koans are where the SQL is typed; this deck is where
+# the rules have to hold without rows in reach.
+#
+# FILE ORDER IS THE CURRICULUM, in the lesson's order: what CASE is and how it reads, grouping by
+# the label, the first-true-WHEN trap, the missing-ELSE trap and its NULL, CASE inside an
+# aggregate, the short form and when a join is better, COALESCE, and last the production card.
+# 13 basic, 4 cloze — about the 3:1 the existing decks run.
+#
+# WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
+#   - Series 1 · 45 owns NULL, three-valued logic and COALESCE itself. The cards here state the
+#     rule a missing ELSE runs into ("a comparison with NULL is unknown") without re-teaching it,
+#     and COALESCE appears only as the CASE it abbreviates.
+#   - Series 1 · 20 owns expressions and aliases in the SELECT. The alias-in-WHERE card here is
+#     about why the label had to go into a subquery, in one line.
+#   - Series 2 · 00 owns subqueries. Series 3 · 00 owns the pivot as a pattern; the SUM(CASE …)
+#     cards here are about one column per status.
+
+deck: "DataZeus::Learn SQL::Series 2::05 CASE"
+guid: "datazeus-learn-sql-series2-05-case-expressions"
+tags: ["datazeus", "learn-sql", "series-2", "sql"]
+
+cards:
+  # ── 1. WHAT CASE IS ──
+  - cloze: "<code>CASE WHEN freight &lt; 25 THEN 'light' ELSE 'heavy' {{c1::END}}</code> — every CASE is closed by {{c1::END}}, and the value for rows no WHEN matched comes after {{c2::ELSE}}."
+
+  - basic:
+      front: "In what order does CASE check its WHEN lines, and when does it stop?"
+      back: "From the top down, one row at a time. It stops at the first WHEN whose test is true and returns that THEN value; the WHENs below it are never checked for that row. If none is true, it returns the ELSE value."
+
+  - basic:
+      front: "<code>CASE WHEN freight &lt; 25 THEN 'light' WHEN freight &lt; 60 THEN 'medium' ELSE 'heavy' END</code>. An order has a freight of 25.1. Walk through what CASE does."
+      back: "The first WHEN asks \"under 25?\": no. The second asks \"under 60?\": yes, so CASE stops and returns 'medium'. The ELSE is never reached."
+
+  - basic:
+      front: "How is CASE different from a calculated column such as <code>price * quantity</code>?"
+      back: "Both are expressions that produce a value for every row. A calculation computes its value; CASE chooses one of several values depending on which test the row passes."
+
+  # ── 2. GROUPING BY THE LABEL ──
+  - basic:
+      front: "You have given each order a band with CASE, <code>AS band</code>. How do you count the orders in each band in the same query?"
+      back: "Group by the label: <code>GROUP BY band</code> with <code>count(*)</code>. PostgreSQL and DuckDB accept the alias in GROUP BY; in databases that do not, repeat the whole CASE there."
+
+  # ── 3. THE FIRST TRUE WHEN WINS ──
+  - basic:
+      front: "<code>CASE WHEN freight &lt; 60 THEN 'medium' WHEN freight &lt; 25 THEN 'light' ELSE 'heavy' END</code> runs with no error, but no order is ever labelled light. Why?"
+      back: "Every freight under 25 is also under 60, so the first WHEN catches it and CASE stops. The light test is never reached. Put the narrow test first: <code>&lt; 25</code> above <code>&lt; 60</code>."
+
+  - cloze: "When two WHEN tests can both be true for the same row, write the {{c1::narrow}} test first, or the {{c2::wide}} one catches its rows before it is checked."
+
+  # ── 4. NO ELSE MEANS NULL ──
+  - basic:
+      front: "A CASE has one WHEN, <code>WHEN freight &gt; 50 THEN 'heavy'</code>, and no ELSE. What label does an order with a freight of 20 get?"
+      back: "NULL. A CASE with no ELSE returns NULL for every row that no WHEN matched."
+
+  - basic:
+      front: "42 orders have a label of NULL because the CASE had no ELSE. You filter <code>WHERE label &lt;&gt; 'heavy'</code>. How many of the 42 come back, and why?"
+      back: "None. <code>NULL &lt;&gt; 'heavy'</code> is unknown, not true, and WHERE keeps only rows where the test is true. Add an ELSE so those rows get a real label, and the filter finds all 42."
+
+  - basic:
+      front: "You want to filter on a label made by CASE in the SELECT. Why can't <code>WHERE band = 'heavy'</code> in the same query see it, and what do you do?"
+      back: "WHERE runs before the SELECT has named its columns, so the alias does not exist there yet. Make the label in a subquery in FROM and filter it in the outer query (or repeat the CASE in the WHERE)."
+
+  # ── 5. CASE INSIDE AN AGGREGATE ──
+  - basic:
+      front: "For each country you need the number of orders AND the number still waiting to ship, on one row. One query has only one WHERE. How do you get both?"
+      back: "Move the condition into a column: <code>count(*) AS orders, SUM(CASE WHEN shipped_date IS NULL THEN 1 ELSE 0 END) AS waiting</code>, grouped by country. The CASE turns each waiting order into a 1 and every other order into a 0, and SUM adds the ones."
+
+  - cloze: "<code>SUM(CASE WHEN status = 'waiting' THEN {{c1::1}} ELSE {{c2::0}} END)</code> counts the waiting rows in each group, without a WHERE."
+
+  - basic:
+      front: "<code>count(CASE WHEN shipped_date IS NULL THEN 1 END)</code> has no ELSE. Is that a bug?"
+      back: "No, it is on purpose. Rows that do not match get NULL, and count of an expression skips NULLs, so it counts exactly the matching rows, the same as SUM(CASE … THEN 1 ELSE 0 END). A missing ELSE is a bug when you filter on the label, not when you count it."
+
+  # ── 6. THE SHORT FORM, AND WHEN NOT TO USE CASE ──
+  - basic:
+      front: "<code>CASE ship_via WHEN 1 THEN 'Speedy Express' WHEN 2 THEN 'United Package' END</code> — the shipper names are already stored in a <code>shippers</code> table. What should the query do instead, and why?"
+      back: "JOIN to <code>shippers</code> and read the name. When a shipper is renamed, the table changes and the query does not have to. CASE is for labels nobody stored, such as light, medium and heavy."
+
+  - basic:
+      front: "When can you use the short form <code>CASE column WHEN value THEN …</code> instead of <code>CASE WHEN column = value THEN …</code>?"
+      back: "When every WHEN compares the same column with a value using equals. For ranges (<code>&lt; 25</code>) or tests on different columns, use the full form."
+
+  # ── 7. COALESCE ──
+  - cloze: "<code>COALESCE(region, '(none)')</code> is a short way of writing <code>CASE WHEN region {{c1::IS NULL}} THEN '(none)' ELSE {{c2::region}} END</code>."
+
+  # ── 8. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  - basic:
+      front: "Write the query. <code>products</code> has <code>category</code> and <code>price</code>. For each category, return three counts: <code>budget</code> (price under 15), <code>standard</code> (15 up to but not including 30) and <code>premium</code> (30 and above), ordered by category."
+      back: "<code>SELECT category,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN price &lt; 15 THEN 1 ELSE 0 END) AS budget,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN price &gt;= 15 AND price &lt; 30 THEN 1 ELSE 0 END) AS standard,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN price &gt;= 30 THEN 1 ELSE 0 END) AS premium<br>FROM products<br>GROUP BY category<br>ORDER BY category;</code><br><br>One SUM(CASE …) per column. A product priced exactly 30 is premium."
