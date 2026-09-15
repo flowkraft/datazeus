@@ -1,0 +1,435 @@
+---
+title: "Subqueries — Using One Query's Result Inside Another"
+description: "Put a query in brackets inside another query: compare with the value it returns, test a list with IN, or query the table it builds, and check which average you are really comparing with."
+topic: "learn-sql"
+tags: ["sql", "intermediate", "subqueries", "in", "having", "grain"]
+level: "intermediate"
+module: "series2-intermediate"
+order: 0
+date: "2026-09-14"
+published: false
+videoId: "learnsql-series2-00-subqueries"
+---
+
+{/* HANDS-ON (from curriculum.yaml): koan:predict, koan:complete — the koans in
+    tests/src/koans/groovy/datazeus/learnsql/series2/_00/SubqueriesKoans.groovy.
+    CurriculumSpec requires a PLANNED lesson to name these; this comment can go when the episode is
+    published (curriculum status: published, front matter published: true). Invisible on the page. */}
+
+## The report came back with a question
+
+The top 10 customers report from the <a href="/data-academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">last lesson of Series 1</a> went to the manager, and it came back with a question: **which customers spend more than the average customer?**
+
+That question contains a second question: what is the average customer? Without SQL beyond Series 1, the only way to answer it is to run one query, write the number down, and paste it into a second query. This lesson shows how to let the database answer the first question inside the second one, with a **subquery**: a query in brackets that runs first, and whose result the outer query uses.
+
+Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
+
+## Warm up on one table
+
+Before customers, which needs three tables, start with something smaller: **which products cost more than the average price?**
+
+First question: what is the average price?
+
+```sql file=./scripts/avg-price.sql
+SELECT ROUND(AVG("UnitPrice"), 2)
+       AS "Average price"
+FROM "Products";
+```
+
+| Average price |
+| ------------- |
+| 28.72         |
+
+Second question: which products cost more than that? Paste the number into a `WHERE`:
+
+{/* The same highlight as the video: the typed number, in grey. Nothing is wrong with it today. */}
+
+```sql file=./scripts/above-average-price-typed.sql {3}
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+WHERE "UnitPrice" > 28.72
+ORDER BY "UnitPrice" DESC;
+```
+
+| ProductName                    | UnitPrice |
+| ------------------------------ | --------- |
+| Thuringer Rostbratwurst        | 123.79    |
+| Mishi Kobe Niku                | 97        |
+| Gnocchi di nonna Alice         | 38        |
+| Camembert Pierrot              | 34        |
+| Ikura                          | 31        |
+| Uncle Bobs Organic Dried Pears | 30        |
+
+Six products, and the answer is correct today. The problem is the number 28.72: it was typed by hand. If a price changes tomorrow, the real average moves, but the query still compares with 28.72. It keeps answering yesterday's question, and nothing reports that it is out of date.
+
+## Why the average cannot go in the WHERE
+
+The obvious fix is to let the database calculate the average in the same place:
+
+{/* The same highlight as the video: the refused line in red. */}
+
+```sql file=./scripts/aggregate-in-where.sql {3}#err
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+WHERE "UnitPrice" > AVG("UnitPrice");
+```
+
+PostgreSQL refuses it:
+
+```
+SQL Error [42803]: ERROR: aggregate functions are not allowed in WHERE
+  Position: 71
+```
+
+This is the rule from the <a href="/data-academy/learn-sql/having-vs-where" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">HAVING vs WHERE lesson</a>. `WHERE` looks at one row at a time, before anything has been added up, so when it runs there is no average to compare with. The average exists, but only as the result of a different query.
+
+## A query in brackets
+
+So give the `WHERE` that different query. Put it in brackets, where the typed number was:
+
+{/* The same highlight as the video: the two bracket lines in green. */}
+
+```sql file=./scripts/above-average-price.sql {3-4}#good
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+WHERE "UnitPrice" > (SELECT AVG("UnitPrice")
+                     FROM "Products")
+ORDER BY "UnitPrice" DESC;
+```
+
+The database runs the query in brackets first. It returns **one value**, the average price, and the outer query compares every product with that value, exactly as it did with the typed 28.72. The result is the same six products. The difference is that tomorrow the brackets return tomorrow's average, and there is no number to keep up to date.
+
+### Run the inside on its own
+
+A subquery is a complete query. In CloudBeaver, select just the text inside the brackets and run it (CloudBeaver runs only the selected text). It should return what you expect, here a single number. If the inside returns something unexpected, the whole query cannot be right either.
+
+1. Select only the part in brackets.
+2. Run it on its own, and check that it returns what you expected.
+3. Then run the whole query.
+
+## One value, or the query stops
+
+Now a question of our own: which products cost more than our drinks? Beverages are category 1, so the brackets return the beverages' prices:
+
+{/* The same highlight as the video: the subquery's three lines in red. */}
+
+```sql file=./scripts/dearer-than-beverages-error.sql {3-5}#err
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+WHERE "UnitPrice" > (SELECT "UnitPrice"
+                     FROM "Products"
+                     WHERE "CategoryID" = 1);
+```
+
+```
+SQL Error [21000]: ERROR: more than one row returned by a subquery used as an expression
+```
+
+There are three beverages, so the brackets return three prices, and `>` compares one value with one value. The error is really a question: which of the three prices is meant? "More than every beverage" means more than the most expensive beverage, so ask for that one value with `MAX`:
+
+{/* The same highlight as the video: the MAX line in green. */}
+
+```sql file=./scripts/dearer-than-every-beverage.sql {3}#good
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+WHERE "UnitPrice" > (SELECT MAX("UnitPrice")
+                     FROM "Products"
+                     WHERE "CategoryID" = 1)
+ORDER BY "UnitPrice" DESC;
+```
+
+| ProductName                    | UnitPrice |
+| ------------------------------ | --------- |
+| Thuringer Rostbratwurst        | 123.79    |
+| Mishi Kobe Niku                | 97        |
+| Gnocchi di nonna Alice         | 38        |
+| Camembert Pierrot              | 34        |
+| Ikura                          | 31        |
+| Uncle Bobs Organic Dried Pears | 30        |
+| Tofu                           | 23.25     |
+| Chef Antons Cajun Seasoning    | 22        |
+| Queso Cabrales                 | 21        |
+| Ravioli Angelo                 | 19.5      |
+
+Ten products cost more than the most expensive beverage, Chang, at 19.
+
+## Three shapes
+
+What a subquery returns decides where it can go:
+
+| The brackets return | Shape | Where it goes |
+| ------------------- | ----- | ------------- |
+| one row, one column | a **value** | anywhere a single value can go: `WHERE x > (…)` |
+| one column, many rows | a **list** | inside `IN (…)` |
+| rows and columns | a **table** | in the `FROM`, like any table |
+
+The queries above used a value. Next, a list.
+
+## A list: IN
+
+Which customers have ever bought Chai? Chai is product 1. The brackets return the customer of every order line for Chai, and `IN` keeps each customer whose `"CustomerID"` appears in that list:
+
+{/* The same highlight as the video: the IN line, in grey. */}
+
+```sql file=./scripts/chai-customers.sql {3}
+SELECT "CompanyName"
+FROM "Customers"
+WHERE "CustomerID" IN (
+  SELECT o."CustomerID"
+  FROM "Orders" o
+  JOIN "Order Details" d
+    ON d."OrderID" = o."OrderID"
+  WHERE d."ProductID" = 1
+)
+ORDER BY "CompanyName";
+```
+
+Chai sold on 10 order lines, so it is tempting to predict 10 customers. The result has 8:
+
+{/* The same highlight as the video: Alfreds Futterkiste in blue, the row the text is about. */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
+| CompanyName              |
+| ------------------------ |
+| Alfreds Futterkiste      |
+| Around the Horn          |
+| Berglunds snabbköp       |
+| Drachenblut Delikatessen |
+| Ernst Handel             |
+| Great Lakes Food Market  |
+| Island Trading           |
+| Morgenstern Gesundkost   |
+
+</div>
+
+Alfreds Futterkiste bought Chai three times. `IN` asks one yes-or-no question for each customer, "is this customer's id in the list?", so each customer appears once, however many times their id appears inside the brackets.
+
+The same question written as a join returns one row per matching order line:
+
+```sql file=./scripts/chai-customers-joined.sql
+SELECT c."CompanyName"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID"
+WHERE d."ProductID" = 1
+ORDER BY c."CompanyName";
+```
+
+{/* The same highlight as the video: the three Alfreds rows in grey. */}
+
+<div className="[&_tbody_tr:nth-child(-n+3)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(-n+3)_td]:font-bold">
+
+| CompanyName              |
+| ------------------------ |
+| Alfreds Futterkiste      |
+| Alfreds Futterkiste      |
+| Alfreds Futterkiste      |
+| Around the Horn          |
+| Berglunds snabbköp       |
+| Drachenblut Delikatessen |
+| Ernst Handel             |
+| Great Lakes Food Market  |
+| Island Trading           |
+| Morgenstern Gesundkost   |
+
+</div>
+
+Ten rows, with Alfreds three times. Both queries are correct SQL, but only the first answers the question: who bought Chai is a list of customers, not a list of order lines. This is the repeated-rows problem from the <a href="/data-academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">report lesson</a>, seen from the other side: there, `count(DISTINCT …)` removed the repeats; here, `IN` never creates them.
+
+### Your turn
+
+How many products sell at or below the average price? Six are above it, so predict the rest before you run it:
+
+```sql file=./scripts/at-or-below-average-price.sql
+SELECT count(*) AS "Products"
+FROM "Products"
+WHERE "UnitPrice" <= (SELECT AVG("UnitPrice")
+                      FROM "Products");
+```
+
+| Products |
+| -------- |
+| 14       |
+
+14: every product that is not above the average, because no product costs exactly 28.72.
+
+## Now the customers
+
+Back to the manager's question: which customers spend more than the average customer? Same method as with prices. First, the average:
+
+```sql file=./scripts/average-sale.sql
+SELECT ROUND(AVG("UnitPrice" * "Quantity"
+         * (1 - "Discount")), 2) AS "Average"
+FROM "Order Details";
+```
+
+| Average |
+| ------- |
+| 301.31  |
+
+Then the report from the last lesson, with a `HAVING` at the end that keeps the customers whose total is above 301.31:
+
+{/* The same highlight as the video: the HAVING lines, in grey. */}
+
+```sql file=./scripts/customers-above-the-average-line.sql {10-11}
+SELECT c."CompanyName",
+       ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")), 2) AS "Total sales"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID"
+GROUP BY c."CompanyName"
+HAVING SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")) > 301.31
+ORDER BY "Total sales" DESC;
+```
+
+{/* The same highlight as the video: QUICK-Stop in terracotta — the smallest customer, "above average". */}
+
+<div className="[&_tbody_tr:nth-child(6)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(6)_td]:font-bold [&_tbody_tr:nth-child(6)_td]:text-[rgb(var(--hl-fault-ink))]">
+
+| CompanyName                | Total sales |
+| -------------------------- | ----------- |
+| Cactus Comidas para llevar | 4567.8      |
+| Blauer See Delikatessen    | 4318.8      |
+| Frankenversand             | 4267.27     |
+| …                          | …           |
+| Die Wandernde Kuh          | 991.76      |
+| QUICK-Stop                 | 691.28      |
+
+</div>
+
+25 rows come back: **every customer is "above average"**, including QUICK-Stop with 691.28. Nothing errors, and the answer cannot be right. If every customer is above an average, it is not the average of the customers.
+
+## The average of what?
+
+301.31 is the average of the money column in `"Order Details"`, and every row of that table is one order line. So 301.31 is the **average order line**. A customer's total is many order lines added together (every customer here has at least five), so it will always be bigger than one line. The query compared each customer with an order line.
+
+This is the question from the report lesson again: **one row represents what?** To compare a customer with the average customer, first build one total per customer, then take the average of those totals. That needs the third shape: a table in brackets.
+
+## A table in brackets
+
+{/* The same highlight as the video: the lines that open and close the table in brackets, in grey. */}
+
+```sql file=./scripts/average-customer.sql {2,9}
+SELECT ROUND(AVG("Total"), 2) AS "Average customer"
+FROM (SELECT o."CustomerID",
+             SUM(d."UnitPrice" * d."Quantity"
+               * (1 - d."Discount"))
+               AS "Total"
+      FROM "Orders" o
+      JOIN "Order Details" d
+        ON d."OrderID" = o."OrderID"
+      GROUP BY o."CustomerID") AS t;
+```
+
+| Average customer |
+| ---------------- |
+| 2326.13          |
+
+The query in brackets returns a table with one row per customer and that customer's total. The outer query reads that table in its `FROM` and averages the totals.
+
+The table in brackets is given a name, `AS t`. PostgreSQL 16 and DuckDB accept a subquery in `FROM` without a name, but older versions of PostgreSQL, MySQL and SQL Server refuse it, so always name it.
+
+The two averages are far apart:
+
+| Average of | Value |
+| ---------- | ----- |
+| an order line | 301.31 |
+| a customer | 2326.13 |
+
+Neither is wrong. They answer different questions, and the manager asked about customers.
+
+### Customers above the average customer
+
+Now put the table in brackets inside the `HAVING`. The brackets build the table of customer totals and return its average, a single value, and `HAVING` compares each customer's total with it:
+
+{/* The same highlight as the video: the whole subquery, in grey. */}
+
+```sql file=./scripts/customers-above-the-average-customer.sql {12-20}
+SELECT c."CompanyName",
+       ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")), 2) AS "Total sales"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID"
+GROUP BY c."CompanyName"
+HAVING SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount"))
+     > (SELECT AVG(t."Total")
+        FROM (SELECT o2."CustomerID",
+                     SUM(d2."UnitPrice"
+                       * d2."Quantity"
+                       * (1 - d2."Discount")) AS "Total"
+              FROM "Orders" o2
+              JOIN "Order Details" d2
+                ON d2."OrderID" = o2."OrderID"
+              GROUP BY o2."CustomerID") AS t)
+ORDER BY "Total sales" DESC;
+```
+
+The inner query uses different aliases, `o2` and `d2`, so it is clear which tables belong to which query.
+
+{/* The same highlight as the video: Great Lakes Food Market in neutral tan, the last row above the line. */}
+
+<div className="[&_tbody_tr:nth-child(9)]:bg-[rgb(var(--hl-neutral)/var(--hl-row))] [&_tbody_tr:nth-child(9)_td]:font-bold">
+
+| CompanyName                | Total sales |
+| -------------------------- | ----------- |
+| Cactus Comidas para llevar | 4567.8      |
+| Blauer See Delikatessen    | 4318.8      |
+| Frankenversand             | 4267.27     |
+| Lehmanns Marktstand        | 4077.12     |
+| Ernst Handel               | 3902.78     |
+| Alfreds Futterkiste        | 3838.43     |
+| Morgenstern Gesundkost     | 3289.13     |
+| Around the Horn            | 2701.58     |
+| Great Lakes Food Market    | 2683.28     |
+
+</div>
+
+9 of the 25 customers spend more than the average customer. Great Lakes Food Market, with 2683.28, is the last one above 2326.13; LILA-Supermercado, with 2127.61, is the first one below it.
+
+The outer query is exactly the same as before. Only the query in brackets changed, and the answer went from all 25 customers to 9. The outer query trusts whatever the brackets return, which is what makes subqueries both useful and easy to get wrong.
+
+### Reading a nested query
+
+The last query works, but it is hard to read: brackets inside brackets inside a `HAVING`. Read it from the inside out: the innermost query builds a table of customer totals, the query around it averages them, and the outer query compares each customer with that average. A later lesson in this series gives each step a name, so a query like this reads from top to bottom.
+
+## Before you trust a subquery
+
+1. **Run the inside on its own.**
+2. **Check its shape:** a value, a list or a table. The shape decides where it can go, and the wrong shape stops the query with an error.
+3. **Check its grain:** one row of the inside represents what? The wrong grain does not produce an error. It produces 25 customers who are all above average.
+
+## Practice
+
+There are ten koans for this lesson. They use different tables from this page: orders compared with the average freight, the products one customer bought, and suppliers compared with the average supplier, so copying a query from this page will not answer them.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series2 _00
+```
+
+On macOS or Linux, run `./zeus.sh koans learnsql series2 _00` from the same folder.
+
+The file to edit is:
+
+```
+c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series2\_00\SubqueriesKoans.groovy
+```
+
+Each koan has a `___` where the answer belongs. Replace one, save, run the command again, and watch that koan go green.
+
+The koans follow this page: a value in brackets, a comparison that must receive one value, a list with `IN` and the extra rows a join returns instead, a table in `FROM` and its grain, and the average of the right thing. The last two give only the question, and the whole query has to be written from scratch.
+
+## What is next
+
+The next lesson is **CASE**: how a query turns a number into a label, such as "light", "medium" and "heavy", or a column for each status in one report.

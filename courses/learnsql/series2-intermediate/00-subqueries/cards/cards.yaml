@@ -1,0 +1,102 @@
+# Flashcards for Learn SQL · Series 2 · 00 — Subqueries, using one query's result inside another
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki); tools/build-anki.py turns it into a .apkg with
+# genanki. The .apkg is a BUILD ARTIFACT — gitignored, built in CI. Only this YAML is source.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds UPDATE the same deck. Set once, from the slug, never changed.
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# ── WHAT ANKI IS FOR ────────────────────────────────────────────────────────────────────────
+# Reviewed on a phone, weeks later, with no database open. EVERY CARD CARRIES ITS OWN PREMISE:
+# where a card needs a number (an average of 301.31, three beverages) the FRONT states it, and the
+# card tests the REASONING. No card names a Northwind table as something to remember, and none
+# asks for a figure from the dataset. The koans are where the SQL is typed; this deck is where
+# the rules have to hold without rows in reach.
+#
+# FILE ORDER IS THE CURRICULUM, in the lesson's order: why a subquery is needed, how it runs, the
+# value shape and its error, the list shape and why it does not repeat rows, the table shape and
+# its name, the average-of-what trap, the habits, and last the production card.
+# 13 basic, 4 cloze — about the 3:1 the existing decks run.
+#
+# WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
+#   - Series 1 · 35 owns WHERE against HAVING. The card here is about why an aggregate needs a
+#     subquery inside a WHERE, and it states that rule rather than re-teaching it.
+#   - Series 1 · 50 owns count(DISTINCT ...) and the grain of a join. The IN card here is about why
+#     IN never creates the repeats in the first place.
+#   - Series 2 · 25 owns EXISTS, NOT EXISTS, correlated subqueries and the NOT IN / NULL trap.
+#     Nothing here touches them.
+#   - Series 2 · 20 owns CTEs. The "read it from the inside out" card is a reading habit, not WITH.
+
+deck: "DataZeus::Learn SQL::Series 2::00 Subqueries"
+guid: "datazeus-learn-sql-series2-00-subqueries"
+tags: ["datazeus", "learn-sql", "series-2", "sql"]
+
+cards:
+  # ── 1. WHY A SUBQUERY ──
+  - basic:
+      front: "You find the average price with one query, then type that number into the WHERE of a second query. The report is correct today. What goes wrong later?"
+      back: "The typed number goes stale. When prices change, the real average moves but the query still compares with the old number, and nothing warns you. A subquery recalculates the average every time the query runs."
+
+  - basic:
+      front: "Why does <code>WHERE unit_price &gt; AVG(unit_price)</code> fail?"
+      back: "WHERE is checked one row at a time, before anything has been aggregated, so there is no average to compare with yet. Put the average in a subquery instead: <code>WHERE unit_price &gt; (SELECT AVG(unit_price) FROM products)</code>."
+
+  - cloze: "A subquery is a query in {{c1::brackets}}. The database runs it {{c2::first}}, and the outer query uses its result."
+
+  # ── 2. THE VALUE SHAPE, AND ITS ERROR ──
+  - basic:
+      front: "A subquery sits on the right of <code>&gt;</code>. What must it return?"
+      back: "Exactly one value: one row and one column. The comparison uses it as if the number had been typed there."
+
+  - basic:
+      front: "<code>WHERE price &gt; (SELECT price FROM products WHERE category_id = 1)</code> stops with \"more than one row returned by a subquery used as an expression\". Category 1 has three products. What is the error really asking?"
+      back: "Which of the three prices you mean. More than all of them means more than the highest, so ask for one value: <code>(SELECT MAX(price) FROM products WHERE category_id = 1)</code>."
+
+  - cloze: "\"More than every price in the list\" is the same as more than the {{c1::MAX}}; \"less than every price in the list\" is the same as less than the {{c2::MIN}}."
+
+  # ── 3. THE LIST SHAPE ──
+  - cloze: "A subquery that returns one column of many rows is a list. Test a value against it with {{c1::IN}}: <code>WHERE customer_id {{c1::IN}} (SELECT customer_id FROM orders …)</code>."
+
+  - basic:
+      front: "A product sold on 10 order lines, and one customer bought it 3 times. How many rows does each return: customers WHERE customer_id IN (the customers of those lines), and customers JOINed to those lines?"
+      back: "IN returns each customer once, so 8 rows. The join returns one row per matching line, so 10 rows, with that customer 3 times. IN asks a yes-or-no question for each customer."
+
+  # ── 4. THE TABLE SHAPE ──
+  - basic:
+      front: "You need the average of per-customer totals. Why can't you write <code>AVG(SUM(amount))</code> in one query with no subquery?"
+      back: "The totals have to exist as rows before they can be averaged. Build them in a subquery in FROM, one row per customer, then average that table: <code>SELECT AVG(total) FROM (SELECT customer_id, SUM(amount) AS total FROM … GROUP BY customer_id) AS t</code>."
+
+  - basic:
+      front: "Why give a subquery in FROM a name, as in <code>FROM (SELECT …) AS t</code>?"
+      back: "The outer query refers to its columns through that name, and many databases (older PostgreSQL, MySQL, SQL Server) refuse a subquery in FROM without one. Name it even where it is optional."
+
+  # ── 5. THE AVERAGE OF WHAT? ──
+  - basic:
+      front: "The average of the amount column in an order-lines table is 301.31. You list customers whose total spend is above 301.31, and every customer appears. Why?"
+      back: "301.31 is the average order line. A customer's total is many lines added together, so it is almost always bigger than one line. To compare customers with the average customer, average the per-customer totals."
+
+  - cloze: "Before comparing with an average, ask what one row of the averaged data represents: the average {{c1::order line}} and the average {{c2::customer}} can be many times apart."
+
+  - basic:
+      front: "Two queries are identical except for the subquery inside the HAVING. One returns 25 customers, the other 9. Neither errors. What does that tell you about subqueries?"
+      back: "The outer query trusts whatever value the subquery returns. A subquery with the wrong grain produces a plausible, wrong answer with no warning, so check what it returns before you trust the result."
+
+  # ── 6. THE HABITS ──
+  - basic:
+      front: "Before you trust a query that contains a subquery, what three things do you check?"
+      back: "<b>1.</b> Run the subquery on its own.<br><b>2.</b> Check its shape: a value, a list or a table, because the shape decides where it can go.<br><b>3.</b> Check its grain: one row of it represents what?"
+
+  - basic:
+      front: "A query has a subquery inside a subquery inside a HAVING. In what order do you read it?"
+      back: "From the inside out: the innermost query first (what does it return?), then the query around it, then the outer query that uses the result."
+
+  - basic:
+      front: "A subquery in a WHERE returns no rows at all, for example <code>WHERE price &gt; (SELECT MAX(price) FROM products WHERE category_id = 99)</code> when there is no category 99. What does the outer query return?"
+      back: "No rows. MAX over no rows is NULL, and a comparison with NULL is never true, so no row passes. Running the subquery on its own shows the NULL before it empties the result."
+
+  # ── 7. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  - basic:
+      front: "Write the query. <code>orders</code> has <code>order_id</code> and <code>customer_id</code>; <code>order_lines</code> has <code>order_id</code> and <code>amount</code>. List each <code>customer_id</code> whose total amount is greater than the average of the customers' totals, with that total, biggest first."
+      back: "<code>SELECT o.customer_id,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SUM(l.amount) AS total<br>FROM orders o<br>JOIN order_lines l ON l.order_id = o.order_id<br>GROUP BY o.customer_id<br>HAVING SUM(l.amount) &gt; (<br>&nbsp;&nbsp;SELECT AVG(t.total)<br>&nbsp;&nbsp;FROM (SELECT o2.customer_id, SUM(l2.amount) AS total<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FROM orders o2<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JOIN order_lines l2 ON l2.order_id = o2.order_id<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GROUP BY o2.customer_id) AS t)<br>ORDER BY total DESC;</code><br><br>The average must be over per-customer totals, not over order lines."
