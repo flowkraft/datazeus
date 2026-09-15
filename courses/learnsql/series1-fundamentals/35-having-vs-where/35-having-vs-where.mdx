@@ -23,20 +23,13 @@ Last lesson you built one number per group and then hit a wall: you could produc
 
 By the end of this lesson you will be able to filter on a total, say which of the two filters any given condition belongs in, and recognise the mistake that puts it in the wrong one — because that mistake does not produce an error. It produces a report that agrees with itself.
 
-Every query below runs on the Northwind sample database that ships with DataPallas.
-
-**Open the koans before you read on.** There is a koan for every idea in this lesson — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
-
-```powershell
-cd c:/DataPallas/db/datazeus
-.\zeus.bat koans learnsql series1 _35
-```
+Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
 ## HAVING: the word you were missing
 
 Here is the query you could not write last time.
 
-```sql file=./scripts/countries-over-five-orders.sql
+```sql file=./scripts/countries-over-five-orders.sql {3-4}
 SELECT "ShipCountry", count(*) AS "OrderCount"
 FROM "Orders"
 GROUP BY "ShipCountry"
@@ -93,7 +86,7 @@ Look at where the two filters sit: `WHERE` is step 2, `HAVING` is step 4, and th
 
 ### Why the aggregate in a WHERE is refused
 
-```sql file=./scripts/aggregate-in-where-fails.sql
+```sql file=./scripts/aggregate-in-where-fails.sql {3}#err {4}
 SELECT "ShipCountry", count(*)
 FROM "Orders"
 WHERE count(*) > 5
@@ -151,11 +144,18 @@ GROUP BY "ShipCountry"
 ORDER BY "ShipCountry";
 ```
 
+{/* The same highlight as the video: Germany in terracotta with a ring on 45.15 — trap-result shows it
+    once, so the 95.75 below has something to contradict */}
+
+<div className="[&_tbody_tr:nth-child(3)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(3)_td]:font-bold [&_tbody_tr:nth-child(3)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | ShipCountry | Dearest |
 | ----------- | ------: |
 | Argentina | 49.71 |
 | France | 47.93 |
-| Germany | 45.15 |
+| Germany | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">45.15</span> |
+
+</div>
 | Italy | 48.32 |
 | Mexico | 24.06 |
 | Sweden | 40 |
@@ -211,9 +211,16 @@ ORDER BY "Freight" DESC
 LIMIT 6;
 ```
 
+{/* The same highlight as the video: order 33 in terracotta with a ring on 95.75 — proof-result's
+    counterexample */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | ShipCountry | OrderID | Freight |
 | ----------- | ------: | ------: |
-| Germany | 33 | 95.75 |
+| Germany | 33 | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">95.75</span> |
+
+</div>
 | Germany | 20 | 94.36 |
 | Germany | 58 | 90.5 |
 | Germany | 45 | 89.11 |
@@ -230,7 +237,7 @@ A note on what is *not* wrong here. Austria has three orders and all three cost 
 
 You already read the fix back to yourself two sections ago. Here it is put where it belongs, and run for real.
 
-```sql file=./scripts/cheap-to-ship-right.sql
+```sql file=./scripts/cheap-to-ship-right.sql {3-4}#good
 SELECT "ShipCountry", max("Freight") AS "Dearest"
 FROM "Orders"
 GROUP BY "ShipCountry"
@@ -339,7 +346,7 @@ You will still write the two together almost every time. `HAVING` without `GROUP
 
 You named that count `AS "OrderCount"`. So surely you can filter on the name.
 
-```sql file=./scripts/alias-in-having-fails.sql
+```sql file=./scripts/alias-in-having-fails.sql {4}#err
 SELECT "ShipCountry", count(*) AS "OrderCount"
 FROM "Orders"
 GROUP BY "ShipCountry"
