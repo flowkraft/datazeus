@@ -23,18 +23,11 @@ Nothing errors. Nothing warns you. The query is not broken; it is answering a di
 
 That is the whole of this lesson, and it happens three times over: once where the result is empty and looks wrong, once where two correct reports quietly fail to add up, and once where a number lands on a slide and is simply false.
 
-Every query below runs on the Northwind sample database that ships with DataPallas.
-
-**Open the koans before you read on.** There is a koan for every idea here — a query with a blank for you to fill in. Keep them open in a second window and solve each one as you reach it; you remember what you type, and you forget what you read.
-
-```powershell
-cd c:/DataPallas/db/datazeus
-.\zeus.bat koans learnsql series1 _45
-```
+Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
 ## The obvious query, and what it returns
 
-```sql file=./scripts/backlog-equals-null.sql
+```sql file=./scripts/backlog-equals-null.sql {3}#err
 SELECT count(*) AS "Unshipped"
 FROM "Orders"
 WHERE "ShippedDate" = NULL;
@@ -76,7 +69,7 @@ And now the part that costs money:
 
 ## IS NULL: the test that always answers
 
-```sql file=./scripts/backlog-is-null.sql
+```sql file=./scripts/backlog-is-null.sql {3}#good
 SELECT count(*) AS "Unshipped"
 FROM "Orders"
 WHERE "ShippedDate" IS NULL;
@@ -164,11 +157,18 @@ say so if you ask it directly:
 
 And the opposite test is the worse one, because it looks safe:
 
+{/* The same highlight as the video: the IS NULL row in blue — empty-string's LOOK tone; the two above it
+    are not broken, they ask something else */}
+
+<div className="[&_tbody_tr:nth-child(3)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(3)_td]:font-bold [&_tbody_tr:nth-child(3)_td]:text-[rgb(var(--hl-pick-ink))]">
+
 | WHERE clause      | rows |
 | ----------------- | ---- |
 | `"Region" = ''`   | 0    |
 | `"Region" <> ''`  | 4    |
 | `"Region" IS NULL`| 21   |
+
+</div>
 
 Ask for every region that is **not** an empty string and you would expect all 25 customers back —
 not one of them is an empty string. You get **4**. The 21 blanks cannot answer that comparison
@@ -269,7 +269,7 @@ The same 34. Not one of the 27 came back.
 
 That first row is the fix. Bolt an `OR` onto the filter and the empty rows have a way back in:
 
-```sql file=./scripts/shipped-before-or-never.sql
+```sql file=./scripts/shipped-before-or-never.sql {4}#good
 SELECT count(*) AS "Orders"
 FROM "Orders"
 WHERE "ShippedDate" < DATE '2024-01-01'
@@ -350,11 +350,18 @@ ORDER BY "CustomerID"
 LIMIT 3;
 ```
 
+{/* The same highlight as the video: Berlin in terracotta — label-broken's ALARM, the only one in the
+    lesson: the city is there and the label came back empty */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | City        | Region | Label |
 | ----------- | ------ | ----- |
 | Berlin      | `[NULL]` | `[NULL]` |
 | México D.F. | `[NULL]` | `[NULL]` |
 | México D.F. | `[NULL]` | `[NULL]` |
+
+</div>
 
 The city is right there on every row. The label is gone — not the region part of it, **the whole line**.
 
@@ -514,6 +521,10 @@ GROUP BY "Region"
 ORDER BY "Customers" DESC, "Region";
 ```
 
+{/* The same highlight as the video: the NULL pile of 21 in blue — label-question's LOOK tone */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
 | Region        | Customers |
 | ------------- | --------- |
 | `[NULL]` | 21        |
@@ -521,6 +532,8 @@ ORDER BY "Customers" DESC, "Region";
 | Lara          | 1         |
 | OR            | 1         |
 | Táchira       | 1         |
+
+</div>
 
 `GROUP BY` gathers every empty region into a single group of 21. And that group total is worth noticing on its own: unlike every `WHERE` on this page, **nothing was lost** — the five groups add up to all 25 customers.
 
@@ -551,10 +564,17 @@ result. They are simply *somewhere* in the list — and that word is the catch.
 Leave the `NULLS LAST` off, run plain `ORDER BY "ShippedDate" DESC`, and the two engines this
 course puts you on disagree:
 
+{/* The same highlight as the video: the PostgreSQL row in blue — order-by-blanks' LOOK tone; both
+    engines are correct */}
+
+<div className="[&_tbody_tr:nth-child(2)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(2)_td]:font-bold [&_tbody_tr:nth-child(2)_td]:text-[rgb(var(--hl-pick-ink))]">
+
 | engine                   | where the 27 blanks land |
 | ------------------------ | ------------------------ |
 | DuckDB — your koans      | last                     |
 | PostgreSQL — CloudBeaver | first                    |
+
+</div>
 
 **Both are correct.** The standard leaves it implementation-defined, so neither engine has a bug —
 and because this course has you running koans on DuckDB and CloudBeaver on PostgreSQL, it is not a
