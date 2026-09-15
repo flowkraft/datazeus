@@ -1,0 +1,102 @@
+# Flashcards for Learn SQL · Series 2 · 15 — Multi-Table JOINs & Grain, when a join silently drops or multiplies
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki); tools/build-anki.py turns it into a .apkg with
+# genanki. The .apkg is a BUILD ARTIFACT — gitignored, built in CI. Only this YAML is source.
+#
+# deck:  Anki deck name ("::" = sub-deck; keeps everything under DataZeus).
+# guid:  STABLE per-deck id so rebuilds UPDATE the same deck. Set once, from the slug, never changed.
+# cards: a list of either { basic: {front, back} } or { cloze: "… {{c1::…}} …" }.
+# tags:  applied to every card in the file.
+#
+# ── WHAT ANKI IS FOR ────────────────────────────────────────────────────────────────────────
+# Reviewed on a phone, weeks later, with no database open. EVERY CARD CARRIES ITS OWN PREMISE:
+# where a card needs a number (an order with freight 80 and three lines, 20 products in) the FRONT
+# states it, and the card tests the REASONING. No card names a Northwind table as something to
+# remember, and none asks for a figure from the dataset.
+#
+# FILE ORDER IS THE CURRICULUM, in the lesson's order: counting rows, the inner join after a left
+# join, the left-join "repair", narrowing first, freight multiplied by a join, SUM(DISTINCT), grain
+# and aggregating first, the bridge table, and last the production card.
+# 13 basic, 4 cloze — about the 3:1 the existing decks run.
+#
+# WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
+#   - Series 1 · 40 owns LEFT JOIN and ON versus WHERE; the card here is the inner join placed AFTER
+#     a left join, one table further along.
+#   - Series 1 · 50 owns counting rows at each join and count(DISTINCT); the cards here are about
+#     summing a column that belongs to a coarser grain, and why DISTINCT does not rescue a SUM.
+#   - Series 2 · 00 owns the subquery in FROM; the cards use it as the cure without re-teaching it.
+#   - Data Modeling Series 1 · 15 owns grain from the design side.
+
+deck: "DataZeus::Learn SQL::Series 2::15 Multi-Table JOINs & Grain"
+guid: "datazeus-learn-sql-series2-15-multi-table-joins-duplicate-rows"
+tags: ["datazeus", "learn-sql", "series-2", "sql"]
+
+cards:
+  # ── 1. COUNT THE ROWS ──
+  - cloze: "Before trusting a query with joins, count the rows {{c1::before}} and {{c2::after}} every join."
+
+  - basic:
+      front: "An employee took 27 orders, and every order has 1, 2 or 3 lines. You join the orders to their order lines and <code>count(*)</code>. Will you get 27?"
+      back: "No, more (unless every order has exactly one line). After the join one row is one order LINE, so count(*) counts lines. To count orders, use <code>count(DISTINCT o.order_id)</code>."
+
+  # ── 2. AN INNER JOIN AFTER A LEFT JOIN ──
+  - basic:
+      front: "<code>FROM products p LEFT JOIN order_lines l ON … JOIN orders o ON o.order_id = l.order_id AND &lt;June&gt;</code>. There are 20 products, and 6 sold in June. How many products come back, and why?"
+      back: "Only the 6 that matched a June order. The LEFT JOIN kept all 20, but the plain JOIN after it keeps only rows that found a match, so it drops exactly the rows the LEFT JOIN kept."
+
+  - cloze: "An {{c1::INNER}} JOIN placed after a {{c2::LEFT}} JOIN drops the rows the left join kept."
+
+  # ── 3. THE LEFT-JOIN "REPAIR" ──
+  - basic:
+      front: "To keep all 20 products you change the second join to <code>LEFT JOIN orders o ON o.order_id = l.order_id AND &lt;June&gt;</code>. All 20 are back, but the units for June are far too big. Why?"
+      back: "The June test in the ON of a LEFT JOIN only decides whether an order is attached. Every order line is kept with its quantity, whatever its date, so the sum is all-time units. The report looks repaired and every number is wrong."
+
+  # ── 4. NARROW FIRST ──
+  - basic:
+      front: "How do you get every product with its June units, including 0 or NULL for products that did not sell in June?"
+      back: "Narrow first: sum June's lines per product in a subquery in FROM, then LEFT JOIN the products to it. <code>FROM products p LEFT JOIN (SELECT product_id, SUM(quantity) AS units FROM order_lines … WHERE &lt;June&gt; GROUP BY product_id) AS j ON j.product_id = p.product_id</code>"
+
+  # ── 5. A JOIN THAT MULTIPLIES MONEY ──
+  - basic:
+      front: "An order has a freight of 80.00 and 3 order lines. You join orders to order lines and <code>SUM(o.freight)</code>. What does this order contribute, and why?"
+      back: "240.00. Freight is stored once per order, and the join copies it onto each of the 3 lines, so SUM adds it 3 times."
+
+  - basic:
+      front: "A report sums sales (price × quantity from the order lines) and freight (from the orders) per customer, after joining orders to their lines. Which column is wrong?"
+      back: "Freight. Sales belong to the lines, so summing over the joined lines is correct. Freight belongs to the order and is repeated on every line, so it is multiplied by the number of lines."
+
+  - basic:
+      front: "How do you check a freight total that was calculated after joining the order lines?"
+      back: "Calculate it a second way: SUM the freight over the orders table alone, without the order lines. If the two totals differ, the join multiplied it."
+
+  # ── 6. SUM(DISTINCT) ──
+  - basic:
+      front: "After the join, <code>SUM(DISTINCT o.freight)</code> gives exactly the right company total. Why is it still the wrong fix?"
+      back: "It adds each distinct VALUE once, not each order once. It is right only while no two orders have the same freight. The first time two orders share a value, one of them silently disappears from the total."
+
+  - basic:
+      front: "Three orders have freight 10.00, 10.00 and 25.50. What do <code>SUM(DISTINCT freight)</code> and <code>SUM(freight)</code> return?"
+      back: "SUM(DISTINCT freight) is 35.50, because the two 10.00 values count once. SUM(freight) is 45.50, the real total."
+
+  # ── 7. GRAIN ──
+  - cloze: "The {{c1::grain}} of a table or result is what one row represents, for example one order or one {{c2::order line}}."
+
+  - basic:
+      front: "What is the rule for a report that needs one measure from orders (freight) and one from order lines (sales)?"
+      back: "Aggregate each measure at its own grain first, then join the results: sum freight per customer over orders alone, sum sales per customer over the lines, and join both to the customers."
+
+  - cloze: "Before any SUM after a join, ask: one row here is one {{c1::what}}? A column may only be summed where one row is one of {{c2::its own}}."
+
+  # ── 8. THE BRIDGE TABLE ──
+  - basic:
+      front: "An order-lines table connects orders and products. What kind of table is it, and what does <code>count(*)</code> count when you join through it?"
+      back: "A bridge table for a many-to-many relationship. Joined through it, count(*) counts lines. Count the customers or orders you mean with count(DISTINCT …)."
+
+  - basic:
+      front: "A product sold on 10 order lines. Can it have fewer than 10 customers?"
+      back: "Yes. One customer can buy it on several orders, so the number of different customers (count DISTINCT customer_id) can be smaller than the number of lines."
+
+  # ── 9. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  - basic:
+      front: "Write the query. <code>orders</code> has <code>order_id</code>, <code>customer_id</code>, <code>freight</code>; <code>order_lines</code> has <code>order_id</code> and <code>amount</code>. Return each <code>customer_id</code> with its total freight and total amount, both correct."
+      back: "<code>SELECT f.customer_id, f.freight, a.amount<br>FROM (SELECT customer_id, SUM(freight) AS freight<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FROM orders GROUP BY customer_id) AS f<br>JOIN (SELECT o.customer_id, SUM(l.amount) AS amount<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FROM orders o<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JOIN order_lines l ON l.order_id = o.order_id<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GROUP BY o.customer_id) AS a<br>&nbsp;&nbsp;ON a.customer_id = f.customer_id;</code><br><br>Freight is summed over orders alone; the amount over the lines; then the two are joined."
