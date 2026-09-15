@@ -16,8 +16,11 @@
 #
 # FILE ORDER IS THE CURRICULUM, in the lesson's order: EXTRACT against date_trunc, partial periods,
 # BETWEEN and the half-open range, the time of day, CURRENT_DATE and anchoring, interval against
-# days, the date spine and count(*), and last the production card.
-# 13 basic, 4 cloze — about the 3:1 the existing decks run.
+# days (and the overdue order with no ship date, from the case file), the date spine and count(*),
+# and last the production card.
+# 13 basic, 4 cloze — about the 3:1 the existing decks run. Every date literal is DATE '…'.
+# 2026-09-15: the two time-of-day cards became one (Series 1 · 10 owns that argument); the case
+# file added the overdue-with-no-ship-date card, written without Northwind's figures.
 #
 # WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
 #   - Series 1 · 10 owns the half-open range as a WHERE pattern; the cards here are about why dates
@@ -49,23 +52,19 @@ cards:
 
   # ── 3. BETWEEN AND THE HALF-OPEN RANGE ──
   - basic:
-      front: "July's report uses <code>shipped BETWEEN '2023-07-01' AND '2023-08-01'</code>; August's uses <code>BETWEEN '2023-08-01' AND '2023-09-01'</code>. One order shipped on 1 August. What goes wrong?"
+      front: "July's report uses <code>shipped BETWEEN DATE '2023-07-01' AND DATE '2023-08-01'</code>; August's uses <code>BETWEEN DATE '2023-08-01' AND DATE '2023-09-01'</code>. One order shipped on 1 August. What goes wrong?"
       back: "BETWEEN includes both ends, so the 1 August shipment is in July's report and in August's. The two months add up to one more shipment than there was."
 
   - cloze: "A half-open date range is {{c1::&gt;=}} the first day AND {{c2::&lt;}} the first day of the next period, so consecutive periods never share a day."
 
   - basic:
       front: "Write the WHERE for \"shipped in the first quarter of 2024\" as a half-open range on <code>shipped_date</code>."
-      back: "<code>WHERE shipped_date &gt;= '2024-01-01'<br>&nbsp;&nbsp;AND shipped_date &lt; '2024-04-01'</code><br><br>The right edge is the first day after the quarter, so there is no 31 and no 23:59:59."
+      back: "<code>WHERE shipped_date &gt;= DATE '2024-01-01'<br>&nbsp;&nbsp;AND shipped_date &lt; DATE '2024-04-01'</code><br><br>The right edge is the first day after the quarter, so there is no 31 and no 23:59:59."
 
-  # ── 4. THE TIME OF DAY ──
+  # ── 4. THE TIME OF DAY — one card: Series 1 · 10 owns the argument, this lesson calls it back ──
   - basic:
-      front: "A delivery happened at <code>2024-06-30 14:00</code>. Is it inside <code>BETWEEN '2024-06-01' AND '2024-06-30'</code>?"
-      back: "No. '2024-06-30' means midnight at the start of 30 June, and 14:00 is later than that. The half-open range <code>&gt;= '2024-06-01' AND &lt; '2024-07-01'</code> includes it."
-
-  - basic:
-      front: "Every timestamp in your table is at midnight, so <code>BETWEEN … AND '2024-06-30'</code> gives the right answer today. Why write the half-open range anyway?"
-      back: "The BETWEEN version is only correct while every time is midnight. The first timestamp with a time of day on the last day is silently dropped. The half-open range is right whatever the time."
+      front: "Every timestamp in your table is at midnight, so <code>BETWEEN DATE '2024-06-01' AND DATE '2024-06-30'</code> gives the right answer today. Why write the half-open range anyway?"
+      back: "Against a timestamp, DATE '2024-06-30' means midnight at the start of 30 June, so a delivery at 14:00 that day is later than the end of the range and silently dropped. <code>&gt;= DATE '2024-06-01' AND &lt; DATE '2024-07-01'</code> keeps it, whatever the time."
 
   # ── 5. "RECENT" ──
   - basic:
@@ -84,6 +83,10 @@ cards:
   - basic:
       front: "An order has no shipped date yet. What is <code>CAST(shipped_at AS DATE) - CAST(ordered_at AS DATE)</code> for it, and what does AVG do with it?"
       back: "NULL, not 0: there is nothing to subtract from. AVG skips NULLs, so unshipped orders do not pull the average days to ship down."
+
+  - basic:
+      front: "<code>WHERE shipped_at &gt; required_at</code> finds one late order. Many orders have no shipped date yet, and their required date has passed. Why are none of them in the result, and how do you count them? The data is a snapshot."
+      back: "With no shipped date the comparison is unknown, not true, and WHERE drops it. Ask the other way: <code>WHERE shipped_at IS NULL AND required_at &lt; (SELECT max(ordered_at) FROM orders)</code>, anchored on the data's last day (on a live database, CURRENT_DATE)."
 
   # ── 7. THE MISSING DAYS ──
   - basic:

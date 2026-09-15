@@ -1,0 +1,89 @@
+---
+title: "Window Functions I: OVER, PARTITION BY & ROW_NUMBER — The Latest Row per Customer"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-sql"
+tags: []
+level: "intermediate"
+module: "series2-intermediate"
+order: 35
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build.
+    Drop the _todo- prefix when it becomes a real lesson.
+
+    READ FIRST: courses/learnsql/curriculum.yaml's header — it is the field
+    documentation the whole academy points at, and it carries the title, short
+    and core conventions this episode has to follow.
+
+    THE HOUSE METHOD, from the Series 1 lessons already written:
+      - type the query yourself; copy-paste teaches your eyes only
+      - PREDICT the answer before running it, out loud, then run it
+      - every query runs on the Northwind that ships with DataPallas
+      - the koans mirror the lesson beat for beat
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: see the detail row and its group's total at the same time, and rank within a group.
+    SQL: OVER (), PARTITION BY, ORDER BY inside OVER, ROW_NUMBER, RANK, DENSE_RANK.
+    MOVED DOWN FROM SERIES 3 in the 2026-08-24 pass. "Answer real business questions" is not true
+    without windows: rank-within-region and latest-row-per-customer ARE business questions, and
+    they are table stakes in an analyst screen. They sit mid-series (35, moved from 50 on
+    2026-09-15), after the CTEs from episode 20: a window function reads badly without them.
+    ROW_NUMBER IS NAMED IN THE TITLE ON PURPOSE: "the latest row per customer" is the single most
+    searched SQL task there is, and the keywords-lead title convention exists so the person
+    searching for it finds this line.
+
+    ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
+    Rank rows within groups (ROW_NUMBER, RANK, DENSE_RANK and when each is right), the first/latest row per
+    group, top N per group, a detail row beside its group's total or average (SUM/AVG OVER PARTITION BY), and
+    removing duplicate rows with ROW_NUMBER — keep one per key.
+
+    ── THE SERIES CASE — CASE FILE SEGMENT (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
+    CASE FILE: each customer's oldest order with no ShippedDate (ROW_NUMBER = 1 — the call list's order), and
+    the corrected top 10 by DELIVERED sales with RANK: Lehmanns Marktstand 3881.75 · Ernst Handel 3812.63 ·
+    Alfreds Futterkiste 3748.28 · Frankenversand 3581.22 · Morgenstern Gesundkost 2782.96 · LILA-Supermercado
+    1728.38 · Blauer See 1626.00 · Toms Spezialitäten 1411.10 · Bon app' 1393.33 · Around the Horn 1290.48;
+    Cactus, #1 on ordered sales, is #14 (1181.95). DuckDB 2026-09-15.
+    WHAT GOES WRONG (off-story): ties. Northwind has NO tie at first place in any natural group (checked: latest
+    order per customer/employee/country, dearest/cheapest per category). Use Series 1 · 15's two products at
+    12.5: ROW_NUMBER() <= 4 over price returns 4 rows with an ARBITRARY fourth; RANK() <= 4 returns 5.
+
+    ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+    LEVEL ●●●● of ●●●●. BUILDS ON: Series 2 · 20 (keeping only ROW_NUMBER = 1 needs a CTE), 2 · 30 (the self-join it replaces),
+    Series 1 · 30 (PARTITION BY groups the rows without collapsing them).
+    SETS UP: Series 2 · 45, 2 · 58.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:predict
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_35/WindowFunctionsIKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. The published lessons all open this way;
+    keep it. Never "SELECT is used to…". Always "your boss asks…". */}
+
+TODO
+
+## TODO — the SQL
+
+{/* BEAT 2 — the keywords, one at a time, each with a query the reader types.
+    Every query runs on Northwind. Predict, then run. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns its
+    place by preventing a number that is wrong and looks right. */}
+
+TODO

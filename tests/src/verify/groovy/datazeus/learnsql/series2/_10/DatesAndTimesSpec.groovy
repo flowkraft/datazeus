@@ -15,14 +15,21 @@ import java.sql.SQLException
  *
  *    orders-per-month-extract, orders-per-month, orders-per-quarter            §1 truncate, don't extract
  *    shipped-in-july-between, shipped-in-august-between,
- *    shipped-in-july-half-open, two-oclock-on-june-30, orders-in-may-2024      §2 half-open ranges
+ *    shipped-in-july-half-open, orders-in-may-2024                              §2 half-open ranges
  *    last-30-days, last-30-days-of-data                                         §3 anchor on the data
  *    slow-orders-interval-error, slow-orders, days-to-ship,
- *    average-days-to-ship, late-orders, days-since-last-order                   §4 date arithmetic
+ *    average-days-to-ship, late-orders                                          §4 date arithmetic
  *    orders-per-day-june, june-date-spine, june-spine-count-star                §5 the missing days
+ *    open-orders-per-quarter, open-orders-days-waiting,
+ *    open-orders-past-required-date                                             §6 the case file: since when?
  *
- * §6 asserts every number the KOANS' comments state, and §7 runs the koans file itself, as
+ * §7 asserts every number the KOANS' comments state, and §8 runs the koans file itself, as
  * written, on both engines (ported from Series 1 · 50 §8).
+ *
+ * 2026-09-15 (plan-sql-series2-story.md §3 S2·10): days-since-last-order and its "gone quiet" CASE
+ * (11 customers) are gone with the churn through-line; two-oclock-on-june-30 is gone because
+ * Series 1 · 10 owns that argument and this lesson now only calls it back (its claim is still
+ * asserted inline in §2). Every date literal is DATE '…', as in Series 1.
  *
  * ── DATES, AS VALUES ───────────────────────────────────────────────────────────────────────
  * date_trunc hands back a TIMESTAMP on PostgreSQL and a DATE on DuckDB; the drivers hand back
@@ -76,9 +83,9 @@ class DatesAndTimesSpec extends NorthwindGateSpec {
 
         and: "the trailer's split: June 2023 and June 2024 hold 4 each"
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
-                                   WHERE "OrderDate" >= '2023-06-01' AND "OrderDate" < '2023-07-01' ''').n == 4
+                                   WHERE "OrderDate" >= DATE '2023-06-01' AND "OrderDate" < DATE '2023-07-01' ''').n == 4
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
-                                   WHERE "OrderDate" >= '2024-06-01' AND "OrderDate" < '2024-07-01' ''').n == 4
+                                   WHERE "OrderDate" >= DATE '2024-06-01' AND "OrderDate" < DATE '2024-07-01' ''').n == 4
 
         where:
         engine << ENGINES
@@ -142,7 +149,7 @@ class DatesAndTimesSpec extends NorthwindGateSpec {
 
         and: "August half-open is still 4, so BETWEEN's 3 + 4 = 7 describes 6 shipments"
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
-                                   WHERE "ShippedDate" >= '2023-08-01' AND "ShippedDate" < '2023-09-01' ''').n == 4
+                                   WHERE "ShippedDate" >= DATE '2023-08-01' AND "ShippedDate" < DATE '2023-09-01' ''').n == 4
 
         and: "order 39 is the ONLY shipment in the data that lands on the first of a month"
         sqlFor(engine).rows('SELECT "OrderID" AS o FROM "Orders" WHERE EXTRACT(DAY FROM "ShippedDate") = 1')*.o == [39]
@@ -152,9 +159,19 @@ class DatesAndTimesSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] 2 PM on June 30: BETWEEN says false, half-open says true"() {
+    def "[#engine] the half-open callback: 14:00 on 31 July is outside BETWEEN … DATE '2023-07-31', inside the half-open range"() {
+        // The article's one-paragraph callback to Series 1 · 10 (the two-oclock scene and script are
+        // gone). A timestamp compared with a DATE is compared with midnight at the start of that day.
         expect:
-        sqlFor(engine).firstRow(script("two-oclock-on-june-30")).with { [it["BETWEEN"], it["Half-open"]] } == [false, true]
+        sqlFor(engine).firstRow('''SELECT TIMESTAMP '2023-07-31 14:00:00'
+                                            BETWEEN DATE '2023-07-01' AND DATE '2023-07-31' AS b,
+                                          TIMESTAMP '2023-07-31 14:00:00' >= DATE '2023-07-01'
+                                            AND TIMESTAMP '2023-07-31 14:00:00' < DATE '2023-08-01' AS h''')
+                .with { [it.b, it.h] } == [false, true]
+
+        and: "on THIS table the last-day BETWEEN happens to agree (every timestamp is midnight, §0): July has 2"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
+                                   WHERE "ShippedDate" BETWEEN DATE '2023-07-01' AND DATE '2023-07-31' ''').n == 2
 
         where:
         engine << ENGINES
@@ -242,27 +259,6 @@ class DatesAndTimesSpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
-    @Unroll
-    def "[#engine] days since each customer's last order: QUICK-Stop 199 … Berglunds 0"() {
-        given:
-        def rows = sqlFor(engine).rows(script("days-since-last-order"))
-        def pairs = rows.collect { [it.CompanyName, it["Days since last order"] as int] }
-
-        expect: "days-since-result's card: the top three and the bottom three"
-        rows.size() == 25
-        pairs.take(3) == [["QUICK-Stop", 199], ["Toms Spezialitäten", 190], ["Die Wandernde Kuh", 183]]
-        pairs.takeRight(3) == [["Around the Horn", 5], ["Ana Trujillo Emparedados y helados", 2], ["Berglunds snabbköp", 0]]
-
-        and: "no two customers tie, so the DESC order is the query's promise, not a name sort"
-        pairs*.getAt(1).toSet().size() == 25
-
-        and: "the CASE Mnemosyne proposes ('over 90 days is gone quiet') has a real answer: 11 customers"
-        pairs.count { it[1] > 90 } == 11
-
-        where:
-        engine << ENGINES
-    }
-
     // --- 5. THE MISSING DAYS -----------------------------------------------------------------------
 
     @Unroll
@@ -291,7 +287,90 @@ class DatesAndTimesSpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
-    // --- 6. What the KOANS stand on --------------------------------------------------------------
+    // --- 6. THE CASE FILE: SINCE WHEN? ---------------------------------------------------------------
+    // plan-sql-series2-story.md §2 "Since when", measured on DuckDB 2026-09-15; asserted here on both.
+
+    @Unroll
+    def "[#engine] no ship date per quarter placed: 2, 4, 4, 4, 4, 4, 5 — 27 in all, from the first quarter"() {
+        given:
+        def rows = sqlFor(engine).rows(script("open-orders-per-quarter"))
+
+        expect: "case-per-quarter's card, row for row (SUM is BIGINT on PostgreSQL, HUGEINT on DuckDB)"
+        rows.collect { [day(it.Quarter), it.Orders as int, it["No ship date"] as int] } == [
+                ["2022-10-01", 4, 2],
+                ["2023-01-01", 12, 4],
+                ["2023-04-01", 12, 4],
+                ["2023-07-01", 12, 4],
+                ["2023-10-01", 12, 4],
+                ["2024-01-01", 13, 4],
+                ["2024-04-01", 14, 5],
+        ]
+        rows.sum { it["No ship date"] as int } == 27
+        rows.sum { it.Orders as int } == 79
+
+        and: "the same quarters and counts as orders-per-quarter's card — only the column was added"
+        sqlFor(engine).rows(script("orders-per-quarter")).collect { [day(it.Quarter), it.Orders as int] } ==
+                rows.collect { [day(it.Quarter), it.Orders as int] }
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] days waiting, anchored on 2024-06-12: order 8 (ALFKI, the first order in the data) 555 … order 7 0"() {
+        given:
+        def rows = sqlFor(engine).rows(script("open-orders-days-waiting"))
+        def cells = rows.collect { [it.OrderID, it.CustomerID, day(it.OrderDate), it["Days waiting"] as int] }
+
+        expect: "case-oldest's card: the top three and the bottom two"
+        rows.size() == 27
+        cells.take(3) == [[8, "ALFKI", "2022-12-05", 555], [11, "AROUT", "2022-12-26", 534], [14, "BONAP", "2023-01-19", 510]]
+        cells.takeRight(2) == [[5, "ANATR", "2024-06-10", 2], [7, "BERGS", "2024-06-12", 0]]
+
+        and: "no two orders tie, so the DESC order is the query's, not an accident"
+        cells*.getAt(3).toSet().size() == 27
+
+        and: "ALFKI is Alfreds Futterkiste, and order 8 is the first order in the data"
+        sqlFor(engine).firstRow('''SELECT "CompanyName" AS n FROM "Customers" WHERE "CustomerID" = 'ALFKI' ''').n == "Alfreds Futterkiste"
+        sqlFor(engine).rows('''SELECT "OrderID" AS o FROM "Orders" WHERE "OrderDate" = (SELECT min("OrderDate") FROM "Orders")''')*.o == [8]
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] 25 of the 27 are past their RequiredDate — late-orders' 1 never saw them"() {
+        given:
+        def r = sqlFor(engine).firstRow(script("open-orders-past-required-date"))
+
+        expect: "case-past-due's card"
+        (r["No ship date"] as int) == 27
+        (r["Past required date"] as int) == 25
+
+        and: "the two not due yet are orders 5 and 7, required 2024-06-25 and 2024-06-30"
+        sqlFor(engine).rows('''SELECT "OrderID" AS o, "RequiredDate" AS d FROM "Orders"
+                               WHERE "ShippedDate" IS NULL
+                                 AND "RequiredDate" >= (SELECT max("OrderDate") FROM "Orders")
+                               ORDER BY "OrderID"''').collect { [it.o, day(it.d)] } == [[5, "2024-06-25"], [7, "2024-06-30"]]
+
+        and: "late-orders compares the ship date, which is NULL on all 27: none of them is in its 1 row"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
+                                   WHERE "ShippedDate" IS NULL AND "ShippedDate" > "RequiredDate"''').n == 0
+
+        and: "the article's aside: the slowest shipment took 9 days, and the SAME 25 have waited longer than that"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
+                                   WHERE "ShippedDate" IS NULL
+                                     AND CAST((SELECT max("OrderDate") FROM "Orders") AS DATE) - CAST("OrderDate" AS DATE) > 9
+                                     AND "RequiredDate" < (SELECT max("OrderDate") FROM "Orders")''').n == 25
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
+                                   WHERE "ShippedDate" IS NULL
+                                     AND CAST((SELECT max("OrderDate") FROM "Orders") AS DATE) - CAST("OrderDate" AS DATE) > 9''').n == 25
+
+        where:
+        engine << ENGINES
+    }
+
+    // --- 7. What the KOANS stand on --------------------------------------------------------------
 
     @Unroll
     def "[#engine] the koan comments' facts are true"() {
@@ -304,14 +383,14 @@ class DatesAndTimesSpec extends NorthwindGateSpec {
 
         and: "koan 2: the half-open answer agrees with the date_trunc one"
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
-                                   WHERE "ShippedDate" >= '2024-05-01' AND "ShippedDate" < '2024-06-01' ''').n == 5
+                                   WHERE "ShippedDate" >= DATE '2024-05-01' AND "ShippedDate" < DATE '2024-06-01' ''').n == 5
 
         and: "koan 4: the BETWEEN version returned 1"
         sqlFor(engine).firstRow('''SELECT count(*) AS n
                                    FROM (VALUES (TIMESTAMP '2024-01-01 00:00:00'),
                                                 (TIMESTAMP '2024-03-31 18:30:00'),
                                                 (TIMESTAMP '2024-04-01 00:00:00')) AS t(delivered)
-                                   WHERE delivered BETWEEN '2024-01-01' AND '2024-03-31' ''').n == 1
+                                   WHERE delivered BETWEEN DATE '2024-01-01' AND DATE '2024-03-31' ''').n == 1
 
         and: "koan 5: CURRENT_DATE would find no shipment in the last 7 days"
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
@@ -319,7 +398,7 @@ class DatesAndTimesSpec extends NorthwindGateSpec {
 
         and: "koan 9: no day in May 2024 had two shipments"
         sqlFor(engine).rows('''SELECT date_trunc('day', "ShippedDate") AS d, count(*) AS n FROM "Orders"
-                               WHERE "ShippedDate" >= '2024-05-01' AND "ShippedDate" < '2024-06-01'
+                               WHERE "ShippedDate" >= DATE '2024-05-01' AND "ShippedDate" < DATE '2024-06-01'
                                GROUP BY date_trunc('day', "ShippedDate") HAVING count(*) > 1''').isEmpty()
 
         and: "koan 10: the employees are three, and one of them took the last order"
@@ -341,7 +420,7 @@ class DatesAndTimesSpec extends NorthwindGateSpec {
         }
     }
 
-    // --- 7. THE KOAN FILE ITSELF, RUN AS WRITTEN (Series 1 · 50 §8) --------------------------------
+    // --- 8. THE KOAN FILE ITSELF, RUN AS WRITTEN (Series 1 · 50 §8) --------------------------------
 
     @Unroll
     def "[#engine] koan file, as written: '#title' runs and returns exactly what it claims"() {
@@ -407,9 +486,9 @@ class DatesAndTimesSpec extends NorthwindGateSpec {
     /** THE INTENDED ANSWER FOR EACH BLANK, in koan order. */
     private static final Map<String, List<String>> ANSWERS = [
             "date_trunc keeps the year: how many quarters had a shipment"         : ["'quarter'"],
-            "diagnose: two Mays in one count"                                     : ["date_trunc('month', \"ShippedDate\") = '2024-05-01'"],
-            "a half-open range: shipped in the first quarter of 2024"             : ["\"ShippedDate\" < '2024-04-01'"],
-            "diagnose: BETWEEN misses the evening of the last day"                : ["delivered >= '2024-01-01' AND delivered < '2024-04-01'"],
+            "diagnose: two Mays in one count"                                     : ["date_trunc('month', \"ShippedDate\") = DATE '2024-05-01'"],
+            "a half-open range: shipped in the first quarter of 2024"             : ["\"ShippedDate\" < DATE '2024-04-01'"],
+            "diagnose: BETWEEN misses the evening of the last day"                : ["delivered >= DATE '2024-01-01' AND delivered < DATE '2024-04-01'"],
             "anchor recent on the data: the last week of shipping"                : ['(SELECT max("ShippedDate") FROM "Orders")'],
             "a date plus an INTERVAL: two weeks to deliver"                       : ["INTERVAL '14 days'"],
             "a date minus a date: whole days from order to required date"         : ['CAST("OrderDate" AS DATE)'],

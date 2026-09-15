@@ -36,20 +36,21 @@ import spock.lang.Stepwise
  *
  * ── THESE ARE NOT THE LESSON'S QUERIES ──────────────────────────────────────
  *
- * The same ideas, in the same order, on DIFFERENT TABLES. The lesson reports products in
- * June 2024 and freight per customer. Here you work with categories in other months,
- * freight per shipper and per employee, and a few orders you type in yourself.
+ * The same ideas, in the same order, on DIFFERENT QUESTIONS. The lesson reports products in
+ * June 2024 and freight per customer, and its case file the orders with no ship date per rep
+ * and courier. Here: categories in other months, freight per customer country, orders per
+ * year, and a few orders you write into the query yourself.
  *
  * TEN KOANS, EASIEST FIRST:
  *   1    count the rows after the join: Janet's orders become lines
  *   2    diagnose: an INNER JOIN after a LEFT JOIN drops categories
  *   3    predict: LEFT all the way looks repaired
- *   4    predict: what one more join does to freight per shipper
- *   5    count what you mean: orders, not lines, per employee
+ *   4    predict: what one more join does to freight per country
+ *   5    count what you mean: orders, not lines, per year
  *   6    SUM(DISTINCT) is luck: two orders with the same freight
- *   7    aggregate first: freight and lines per shipper
+ *   7    aggregate first: freight and lines per country
  *   8    through the bridge: lines and customers for Chang
- *   9    write the whole query: orders, freight and sales per employee
+ *   9    write the whole query: orders, freight and sales per year
  *  10    write the whole query: products and December 2022 units per category
  *
  * These run on DuckDB, and every one returns the SAME answer on the PostgreSQL in
@@ -59,7 +60,7 @@ import spock.lang.Stepwise
  * ── RELEVANT SCHEMA ─────────────────────────────────────────────────────────
  *
  *   "Orders" — 79 rows, ONE PER ORDER. "OrderID" INTEGER, "CustomerID" VARCHAR,
- *     "EmployeeID" INTEGER, "OrderDate" TIMESTAMP, "ShipVia" INTEGER (-> "Shippers"),
+ *     "EmployeeID" INTEGER, "OrderDate" TIMESTAMP (December 2022 to June 2024),
  *     "Freight" DECIMAL(19,4). No two orders have the same freight.
  *
  *   "Order Details" — 193 rows, ONE PER ORDER LINE. "OrderID" INTEGER,
@@ -68,8 +69,7 @@ import spock.lang.Stepwise
  *
  *   "Products" — 20 rows. "ProductID" INTEGER, "ProductName" VARCHAR, "CategoryID" INTEGER.
  *   "Categories" — 8 rows. "CategoryID" INTEGER, "CategoryName" VARCHAR.
- *   "Shippers" — 3 rows. "ShipperID" INTEGER, "CompanyName" VARCHAR.
- *   "Employees" — 3 rows. "EmployeeID" INTEGER, "FirstName" VARCHAR.
+ *   "Customers" — 25 rows. "CustomerID" VARCHAR, "Country" VARCHAR (10 countries).
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait (the path to enlightenment)
 class MultiTableJoinsDuplicateRowsKoans extends KoanBase {
@@ -129,47 +129,52 @@ class MultiTableJoinsDuplicateRowsKoans extends KoanBase {
             LEFT JOIN "Order Details" d ON d."ProductID" = p."ProductID"
             ___ JOIN "Orders" o
               ON o."OrderID" = d."OrderID"
-             AND o."OrderDate" >= '2024-01-01'
-             AND o."OrderDate" <  '2024-02-01'
+             AND o."OrderDate" >= DATE '2024-01-01'
+             AND o."OrderDate" <  DATE '2024-02-01'
         '''
     }
 
-    // 4) PREDICT: WHAT ONE MORE JOIN DOES TO FREIGHT. Over "Orders" alone, the shippers'
-    //    freight is Federal Shipping 1338.78, Speedy Express 1335.32, United Package 1314.42.
-    //    Add the order lines to this query — fill in the join — and predict what happens to
-    //    those numbers before you run it.
+    // 4) PREDICT: WHAT ONE MORE JOIN DOES TO FREIGHT. Over "Orders" alone, the six countries
+    //    whose customers paid the most freight are Germany 1841.78, Sweden 410.60, France 347.85,
+    //    Venezuela 254.38, Austria 226.15 and Mexico 212.88. Add the order lines to this query —
+    //    fill in the join — and predict before you run it: do the numbers only grow, or does
+    //    the order of the six change too?
     //    (Every order has 1, 2 or 3 lines, and "Freight" is stored once per order.)
-    def "predict: what one more join does to freight per shipper"() {
+    def "predict: what one more join does to freight per country"() {
         expect:
-        shouldReturn([["Federal Shipping", 3335.24], ["Speedy Express", 3300.60], ["United Package", 3235.72]], '''
-            SELECT s."CompanyName", SUM(o."Freight") AS "Freight"
-            FROM "Shippers" s
-            JOIN "Orders" o ON o."ShipVia" = s."ShipperID"
+        shouldReturn([["Germany", 4521.64], ["Sweden", 1037.48], ["France", 880.67],
+                      ["Venezuela", 563.22], ["Mexico", 548.52], ["Austria", 527.35]], '''
+            SELECT c."Country", SUM(o."Freight") AS "Freight"
+            FROM "Customers" c
+            JOIN "Orders" o ON o."CustomerID" = c."CustomerID"
             ___
-            GROUP BY s."CompanyName"
+            GROUP BY c."Country"
             ORDER BY "Freight" DESC
+            LIMIT 6
         ''')
     }
 
-    // 5) COUNT WHAT YOU MEAN. After joining the order lines, count(*) counts LINES. Fill in
-    //    the count that gives each employee's number of ORDERS.
-    //    (Janet: 27 orders. Koan 1 told you how many lines.)
-    def "count what you mean: orders, not lines, per employee"() {
+    // 5) COUNT WHAT YOU MEAN. After joining the order lines, count(*) counts LINES: 10, 120 and
+    //    63 in the three years of orders. Fill in the count that gives each year's number of
+    //    ORDERS.
+    //    (The lesson on GROUP BY counted them over "Orders" alone. Same answer, one more join.)
+    def "count what you mean: orders, not lines, per year"() {
         expect:
-        shouldReturn([["Andrew", 24], ["Janet", 27], ["Nancy", 28]], '''
-            SELECT e."FirstName", ___ AS "Orders"
-            FROM "Employees" e
-            JOIN "Orders" o ON o."EmployeeID" = e."EmployeeID"
+        shouldReturn([[2022, 4], [2023, 48], [2024, 27]], '''
+            SELECT EXTRACT(YEAR FROM o."OrderDate") AS "Year",
+                   ___ AS "Orders"
+            FROM "Orders" o
             JOIN "Order Details" d ON d."OrderID" = o."OrderID"
-            GROUP BY e."FirstName"
-            ORDER BY e."FirstName"
+            GROUP BY EXTRACT(YEAR FROM o."OrderDate")
+            ORDER BY "Year"
         ''')
     }
 
-    // 6) SUM(DISTINCT) IS LUCK. Three orders typed in — 101 and 102 both cost 32.00, 103 costs
-    //    18.40 — after a join that gave each of them two lines. SUM(DISTINCT "Freight") returns
-    //    50.40: it keeps one 32.00 and throws the other ORDER's freight away. Make ONE ROW PER
-    //    ORDER first, then sum: fill in the keyword that removes the repeated lines.
+    // 6) SUM(DISTINCT) IS LUCK. Three orders written into the query — 101 and 102 both cost
+    //    32.00, 103 costs 18.40 — after a join that gave each of them two lines.
+    //    SUM(DISTINCT "Freight") returns 50.40: it keeps one 32.00 and throws the other ORDER's
+    //    freight away. Make ONE ROW PER ORDER first, then sum: fill in the keyword that removes
+    //    the repeated lines.
     //    (Predict: 32 + 32 + 18.40.)
     def "SUM(DISTINCT) is luck: two orders with the same freight"() {
         expect:
@@ -182,26 +187,28 @@ class MultiTableJoinsDuplicateRowsKoans extends KoanBase {
         '''
     }
 
-    // 7) AGGREGATE FIRST. Freight and order lines per shipper, both right, on one row: the
-    //    freight is summed over "Orders" alone, the lines are counted over the join, each in its
-    //    own brackets, and only then joined to the shippers. Fill in the condition that joins
-    //    the lines inside the second brackets.
-    //    (Koan 4's freight was wrong; these are the orders-alone figures.)
-    def "aggregate first: freight and lines per shipper"() {
+    // 7) AGGREGATE FIRST. Freight and order lines per country, both right, on one row: the
+    //    freight is summed over customers and "Orders" alone, the lines are counted over the join,
+    //    each in its own brackets, and only then are the two joined on the country. Fill in the
+    //    condition that joins the lines inside the second brackets.
+    //    (Koan 4's freight was wrong. Predict where Mexico lands now, and look at its lines.)
+    def "aggregate first: freight and lines per country"() {
         expect:
-        shouldReturn([["Federal Shipping", 1338.78, 65], ["Speedy Express", 1335.32, 64], ["United Package", 1314.42, 64]], '''
-            SELECT s."CompanyName", f."Freight", l."Lines"
-            FROM "Shippers" s
-            JOIN (SELECT "ShipVia", SUM("Freight") AS "Freight"
-                  FROM "Orders"
-                  GROUP BY "ShipVia") AS f
-              ON f."ShipVia" = s."ShipperID"
-            JOIN (SELECT o."ShipVia", count(*) AS "Lines"
-                  FROM "Orders" o
+        shouldReturn([["Germany", 1841.78, 78], ["Sweden", 410.60, 19], ["France", 347.85, 15],
+                      ["Venezuela", 254.38, 14], ["Austria", 226.15, 7], ["Mexico", 212.88, 18]], '''
+            SELECT f."Country", f."Freight", l."Lines"
+            FROM (SELECT c."Country", SUM(o."Freight") AS "Freight"
+                  FROM "Customers" c
+                  JOIN "Orders" o ON o."CustomerID" = c."CustomerID"
+                  GROUP BY c."Country") AS f
+            JOIN (SELECT c."Country", count(*) AS "Lines"
+                  FROM "Customers" c
+                  JOIN "Orders" o ON o."CustomerID" = c."CustomerID"
                   JOIN "Order Details" d ON ___
-                  GROUP BY o."ShipVia") AS l
-              ON l."ShipVia" = s."ShipperID"
-            ORDER BY s."CompanyName"
+                  GROUP BY c."Country") AS l
+              ON l."Country" = f."Country"
+            ORDER BY f."Freight" DESC
+            LIMIT 6
         ''')
     }
 
@@ -221,21 +228,20 @@ class MultiTableJoinsDuplicateRowsKoans extends KoanBase {
     }
 
     // 9) The whole query — no scaffolding.
-    //    THE QUESTION: for each employee, how many orders, how much freight, and how much in
-    //    sales?
-    //      · one row per "Employees"."FirstName", ordered by "FirstName"
-    //      · four columns, in this order: first name, orders, freight, sales
+    //    THE QUESTION: for each year, how many orders, how much freight, and how much in sales?
+    //      · one row per year of "OrderDate" — EXTRACT(YEAR FROM …) — ordered by the year
+    //      · four columns, in this order: year, orders, freight, sales
     //      · freight is summed where one row is one ORDER            -> "Orders" alone
     //      · sales are UnitPrice × Quantity × (1 − Discount), ROUNDed to 2 decimals, summed
     //        where one row is one ORDER LINE                         -> "Orders" JOIN "Order Details"
-    //    AGGREGATE EACH IN ITS OWN BRACKETS, THEN JOIN. If Nancy's freight comes back as
-    //    3458.45, you summed it after joining the lines.
+    //    AGGREGATE EACH IN ITS OWN BRACKETS, THEN JOIN THE TWO ON THE YEAR. If 2023's freight
+    //    comes back as 6798.36, you summed it after joining the lines.
     //    (Three rows.)
-    def "write the whole query: orders, freight and sales per employee"() {
+    def "write the whole query: orders, freight and sales per year"() {
         expect:
-        shouldReturn([["Andrew", 24, 1264.56, 20079.39],
-                      ["Janet", 27, 1323.91, 18655.17],
-                      ["Nancy", 28, 1400.05, 19418.75]], '''
+        shouldReturn([[2022, 4, 82.18, 1897.53],
+                      [2023, 48, 2721.60, 38631.96],
+                      [2024, 27, 1184.74, 17623.82]], '''
             ___
         ''')
     }
@@ -246,7 +252,7 @@ class MultiTableJoinsDuplicateRowsKoans extends KoanBase {
     //       · one row per "Categories"."CategoryName" — ALL EIGHT — ordered by "CategoryName"
     //       · three columns: the name, the products, the December 2022 units
     //       · a category that sold nothing in December 2022 shows an empty units cell
-    //       · December 2022, half-open: on or after 2022-12-01, before 2023-01-01
+    //       · December 2022, half-open: on or after DATE '2022-12-01', before DATE '2023-01-01'
     //     TWO GRAINS AGAIN: products are counted where one row is one product; units are summed
     //     over order lines. Count the products after joining the lines and Beverages has 30.
     //     (Eight rows, one of them with no December units.)

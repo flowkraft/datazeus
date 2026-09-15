@@ -8,7 +8,7 @@ import spock.lang.Stepwise
  * ║  SQL KOANS — Learn SQL · Series 2 · 60
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
- * Project — Answering a Real Business Question End to End
+ * Subqueries + CTEs + Window Functions — Solving a Real Business Case, End to End
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into
@@ -41,24 +41,22 @@ import spock.lang.Stepwise
  * end to end — not a drill, and not a query whose right answer was given in the question.
  * SQL: nothing new. Subqueries (00) and EXISTS (25), multi-table joins and their grain (15), a CTE to name the steps
  * (20), CASE for the buckets (05), a date range with the right boundaries (10), and a window
- * function for the rank or the running total (50/55). That is the point — a project introduces
+ * function for the rank or the running total (35/45). That is the point — a project introduces
  * no syntax.
  *
  * THE RUNGS ARE `koan:author` + `cloudbeaver`, and the author rung is the whole exercise:
  * NO SCAFFOLDING. One `___` for the entire query, graded on the row set. Anything less makes
  * it another drill, and this series already has twelve of those.
  *
- * ── THE QUESTION TO PICK, AND WHY IT MATTERS WHICH ──────────────────────
- * It has to be a question with a WRONG answer that looks right. Otherwise "end to end" just
- * means "longer". The best candidates all share that shape:
- *   - revenue per customer per quarter, ranked, for a date range — walks straight into the
- *     join fan-out from 15 (freight or an order-level column summed once per LINE), and into
- *     the date boundary from 10 (a range that quietly drops the last day).
- *   - customers who bought in Q1 and NOT since — the classic where a LEFT JOIN and a NOT
- *     EXISTS give different answers, and only one is right.
- * Whichever you choose, the article must state the number a careful person would get WRONG,
- * and the koan must be able to tell the two apart. If the wrong answer and the right answer
- * produce the same row set, it is the wrong question for this episode.
+ * ── THE QUESTION — CHOSEN 2026-09-15 ────────────────────────────────────
+ * The lesson answers the series case: a third of what we sold has no shipping record — did
+ * those orders really not ship, or did nobody record it? (customers, reps, couriers). The
+ * KOANS must not copy it: build THE SAME CASE FROM THE SUPPLIER SIDE, on "Suppliers",
+ * "Products" and "Order Details" — whose goods sit in the orders with no ShippedDate, as a share
+ * of each supplier's sales — the way Series 1 · 50's koans built the supplier side of that
+ * lesson's report. Keep the property that matters: each step has a wrong answer that looks
+ * right (a fan-out, a 0% share from integer division, a count that moved after a join), and
+ * the koan can tell it apart. MEASURE every figure first.
  *
  * ── AND ONE KOAN THAT IS NOT ABOUT SQL ──────────────────────────────────
  * End the file with the habit, not the query: after the join, did the number of distinct
@@ -66,11 +64,14 @@ import spock.lang.Stepwise
  * lines, and it is the thing that would have caught the wrong answer above. Java & Groovy
  * 1 · 40 and Python 1 · 35 close on the same check on purpose.
  *
+ * ── KOANS AND THE SERIES CASE (.docs/plan-sql-series2-story.md §0, §3) ─────────────
+ * See THE QUESTION above: the koans build the same case from the supplier side, on different tables, and end
+ * on the habit check (the key count survives every join).
+ *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
  * The last episode of the series; it may use anything above it.
- * DATA (DuckDB, 2026-09-14): "bought in Q1 2024 and not since" is 10 customers via NOT EXISTS. The
- * claim that a LEFT JOIN version gives a DIFFERENT answer is NOT measured yet — measure it before
- * that question is chosen, because a wrong answer that matches the right one teaches nothing.
+ * DATA: the lesson's figures are in .docs/plan-sql-series2-story.md §2 (DuckDB 2026-09-15); the
+ * supplier-side figures are not measured yet.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
 class ProjectARealBusinessQuestionKoans extends KoanBase {

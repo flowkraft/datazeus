@@ -6,8 +6,8 @@ LEFT JOIN (SELECT d."ProductID",
            FROM "Order Details" d
            JOIN "Orders" o
              ON o."OrderID" = d."OrderID"
-           WHERE o."OrderDate" >= '2024-06-01'
-             AND o."OrderDate" <  '2024-07-01'
+           WHERE o."OrderDate" >= DATE '2024-06-01'
+             AND o."OrderDate" <  DATE '2024-07-01'
            GROUP BY d."ProductID") AS j
   ON j."ProductID" = p."ProductID"
 WHERE j."June units" IS NULL;

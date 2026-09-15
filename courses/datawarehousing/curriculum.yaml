@@ -183,7 +183,7 @@ series:
         core: true
         status: planned
       # SEAM ADDED 2026-09-07, when Learn SQL gained its own GROUPING SETS episode at its
-      # Series 2 · 38. The two are not redundant and the split is by READER:
+      # Series 2 · 50 (38 until the 2026-09-15 reorder). The two are not redundant and the split is by READER:
       #   LEARN SQL     owns the SYNTAX — the three keywords, the GROUPING() function and the
       #                 subtotal NULL, on Northwind, for someone learning to write queries.
       #   HERE          owns the WAREHOUSING MOVE — subtotals over a star schema, next to

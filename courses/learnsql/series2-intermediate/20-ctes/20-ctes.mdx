@@ -20,7 +20,7 @@ videoId: "learnsql-series2-20-ctes"
 
 The last two lessons ended on queries that return the right answer and are hard to read: brackets inside brackets, a subquery in `FROM` next to a `LEFT JOIN`. This lesson adds one tool that changes how such queries read, without changing what they return: `WITH`, which gives each step of a query a **name**.
 
-Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
+Every query below runs on the Northwind database on PostgreSQL. Write each one in CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
 ## The nested version
 
@@ -132,8 +132,8 @@ WITH june_lines AS (
   FROM "Order Details" d
   JOIN "Orders" o
     ON o."OrderID" = d."OrderID"
-  WHERE o."OrderDate" >= '2024-06-01'
-    AND o."OrderDate" <  '2024-07-01'
+  WHERE o."OrderDate" >= DATE '2024-06-01'
+    AND o."OrderDate" <  DATE '2024-07-01'
 ),
 june_units AS (
   SELECT "ProductID",
@@ -160,8 +160,8 @@ WITH june_lines AS (
   FROM "Order Details" d
   JOIN "Orders" o
     ON o."OrderID" = d."OrderID"
-  WHERE o."OrderDate" >= '2024-06-01'
-    AND o."OrderDate" <  '2024-07-01'
+  WHERE o."OrderDate" >= DATE '2024-06-01'
+    AND o."OrderDate" <  DATE '2024-07-01'
 ),
 june_units AS (
   SELECT "ProductID",
@@ -212,8 +212,8 @@ SELECT p."ProductName",
 FROM "Products" p
 LEFT JOIN order_lines l
   ON l."ProductID" = p."ProductID"
-WHERE l."OrderDate" >= '2024-06-01'
-  AND l."OrderDate" <  '2024-07-01'
+WHERE l."OrderDate" >= DATE '2024-06-01'
+  AND l."OrderDate" <  DATE '2024-07-01'
 GROUP BY p."ProductName"
 ORDER BY p."ProductName";
 ```
@@ -243,8 +243,8 @@ report AS (
   FROM "Products" p
   LEFT JOIN order_lines l
     ON l."ProductID" = p."ProductID"
-  WHERE l."OrderDate" >= '2024-06-01'
-    AND l."OrderDate" <  '2024-07-01'
+  WHERE l."OrderDate" >= DATE '2024-06-01'
+    AND l."OrderDate" <  DATE '2024-07-01'
   GROUP BY p."ProductName"
 )
 SELECT count(*) AS "Rows",
@@ -317,8 +317,8 @@ WITH june_lines AS (
   FROM "Order Details" d
   JOIN "Orders" o
     ON o."OrderID" = d."OrderID"
-  WHERE o."OrderDate" >= '2024-06-01'
-    AND o."OrderDate" <  '2024-07-01'
+  WHERE o."OrderDate" >= DATE '2024-06-01'
+    AND o."OrderDate" <  DATE '2024-07-01'
 )
 SELECT *
 FROM june_lines
@@ -336,74 +336,105 @@ ORDER BY "OrderID", "ProductID";
 
 Six June lines from four orders, adding up to 40 units. This step is correct, so the problem, if there is one, is in a later step.
 
-## Customers who have gone quiet
+## The case file: the report, as named steps
 
 The case this series follows: in Northwind, a third of what was sold, 19169 of 58153.31, is on orders that have no ship date. The <a href="/academy/learn-sql/multi-table-joins-duplicate-rows" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">multi-table joins lesson</a> found where that money sits, by sales rep and by courier: the value of each order added up first, in brackets, and joined to the orders with no ship date. That is a report somebody re-runs every week, so it has to be easy to read.
 
-{/* The same highlight as the video: the two step names in green; the CASE in grey. */}
+As named steps: `open_orders` keeps the orders with no `"ShippedDate"`, `order_value` adds up the order lines of each one, reading the step above it, and the final query joins both to the rep and the courier:
 
-```sql file=./scripts/days-quiet-with.sql {1,7,16-17}
-WITH last_order AS (
-  SELECT "CustomerID",
-         max("OrderDate") AS "Last order"
+{/* The same highlight as the video: the two step names in green; order_value reading open_orders,
+    and the final query reading both steps, in grey. */}
+
+```sql file=./scripts/open-orders-by-rep-and-courier-with.sql {1,6,10,19-20}
+WITH open_orders AS (
+  SELECT "OrderID", "EmployeeID", "ShipVia", "Freight"
   FROM "Orders"
-  GROUP BY "CustomerID"
+  WHERE "ShippedDate" IS NULL
 ),
-days_quiet AS (
-  SELECT "CustomerID",
-         CAST((SELECT max("OrderDate")
-               FROM "Orders") AS DATE)
-         - CAST("Last order" AS DATE)
-           AS "Days"
-  FROM last_order
+order_value AS (
+  SELECT o."OrderID",
+         SUM(d."UnitPrice" * d."Quantity"
+           * (1 - d."Discount")) AS "Order value"
+  FROM open_orders o
+  JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+  GROUP BY o."OrderID"
 )
-SELECT c."CompanyName", q."Days",
-       CASE WHEN q."Days" > 90 THEN 'gone quiet'
-            ELSE 'active' END AS "Status"
-FROM days_quiet q
-JOIN "Customers" c
-  ON c."CustomerID" = q."CustomerID"
-ORDER BY q."Days" DESC
-LIMIT 5;
+SELECT e."FirstName" AS "Rep",
+       s."CompanyName" AS "Courier",
+       count(*) AS "Orders",
+       ROUND(SUM(v."Order value"), 2) AS "Sales",
+       SUM(o."Freight") AS "Freight"
+FROM open_orders o
+JOIN order_value v ON v."OrderID" = o."OrderID"
+JOIN "Employees" e ON e."EmployeeID" = o."EmployeeID"
+JOIN "Shippers" s ON s."ShipperID" = o."ShipVia"
+GROUP BY e."FirstName", s."CompanyName"
+ORDER BY "Sales" DESC;
 ```
 
-| CompanyName             | Days | Status     |
-| ----------------------- | ---- | ---------- |
-| QUICK-Stop              | 199  | gone quiet |
-| Toms Spezialitäten      | 190  | gone quiet |
-| Die Wandernde Kuh       | 183  | gone quiet |
-| Antonio Moreno Taquería | 159  | gone quiet |
-| Blauer See Delikatessen | 138  | gone quiet |
+{/* The same highlight as the video: the first row, in grey — the row the text talks about, no verdict. */}
 
-The same steps, grouped by the label:
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold">
 
-```sql file=./scripts/customers-by-status-with.sql
-WITH last_order AS (
-  SELECT "CustomerID",
-         max("OrderDate") AS "Last order"
+| Rep   | Courier        | Orders | Sales   | Freight |
+| ----- | -------------- | ------ | ------- | ------- |
+| Nancy | Speedy Express | 24     | 18848.3 | 1277.84 |
+| Janet | United Package | 2      | 292.2   | 38.25   |
+| Nancy | United Package | 1      | 28.5    | 11.61   |
+
+</div>
+
+`open_orders` is used twice: `order_value` reads it, and so does the final query, for the rep, the courier and the freight. Each order's value is added up in its own step, where one row is one order, so the freight next to it is counted once.
+
+In Northwind, 24 of the orders with no ship date are her orders sent with Speedy Express, and they carry 18848.3 of the 19169. The other two rows belong in the picture too: two of Janet's orders and one more of Nancy's, all with United Package. The report shows where the money sits, not why it has no ship date.
+
+### Check that the answer did not move
+
+The same check as on the June report: add the report as one more step, then count its rows and add up its orders and its sales.
+
+```sql file=./scripts/open-orders-by-rep-and-courier-check.sql
+WITH open_orders AS (
+  SELECT "OrderID", "EmployeeID", "ShipVia", "Freight"
   FROM "Orders"
-  GROUP BY "CustomerID"
+  WHERE "ShippedDate" IS NULL
 ),
-days_quiet AS (
-  SELECT "CustomerID",
-         CAST((SELECT max("OrderDate")
-               FROM "Orders") AS DATE)
-         - CAST("Last order" AS DATE)
-           AS "Days"
-  FROM last_order
+order_value AS (
+  SELECT o."OrderID",
+         SUM(d."UnitPrice" * d."Quantity"
+           * (1 - d."Discount")) AS "Order value"
+  FROM open_orders o
+  JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+  GROUP BY o."OrderID"
+),
+report AS (
+  SELECT e."FirstName" AS "Rep",
+         s."CompanyName" AS "Courier",
+         count(*) AS "Orders",
+         ROUND(SUM(v."Order value"), 2) AS "Sales",
+         SUM(o."Freight") AS "Freight"
+  FROM open_orders o
+  JOIN order_value v ON v."OrderID" = o."OrderID"
+  JOIN "Employees" e ON e."EmployeeID" = o."EmployeeID"
+  JOIN "Shippers" s ON s."ShipperID" = o."ShipVia"
+  GROUP BY e."FirstName", s."CompanyName"
 )
-SELECT CASE WHEN "Days" > 90 THEN 'gone quiet'
-            ELSE 'active' END AS "Status",
-       count(*) AS "Customers"
-FROM days_quiet
-GROUP BY "Status"
-ORDER BY "Status";
+SELECT count(*) AS "Rows",
+       sum("Orders") AS "Orders",
+       sum("Sales") AS "Sales"
+FROM report;
 ```
 
-| Status     | Customers |
-| ---------- | --------- |
-| active     | 14        |
-| gone quiet | 11        |
+{/* The same highlight as the video: the check, in green. */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-good)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-good-ink))]">
+
+| Rows | Orders | Sales |
+| ---- | ------ | ----- |
+| 3    | 27     | 19169 |
+
+</div>
+
+Three rows, 27 orders, 19169 in sales: the same as the nested version in the joins lesson. The rewrite changed how the report reads and nothing that it returns. When it is re-run next week and a number looks different, each step can be looked at on its own, starting with `SELECT * FROM open_orders`.
 
 ## For reading, not for speed
 
@@ -418,7 +449,7 @@ Do not expect a CTE to make a query faster. The database is free to treat a CTE 
 
 ## Practice
 
-There are ten koans for this lesson. They use different tables from this page: categories, employees, suppliers, shippers and countries, so copying a query from this page will not answer them. Two of them are **equivalence koans**: they run a correct nested query first, and your rewrite with `WITH` has to return exactly the same rows.
+There are ten koans for this lesson. They ask different questions from this page: categories, suppliers and countries, and employees and shippers across every order rather than the orders with no ship date, so copying a query from this page will not answer them. Two of them are **equivalence koans**: they run a correct nested query first, and your rewrite with `WITH` has to return exactly the same rows.
 
 ```powershell
 cd c:/DataPallas/db/datazeus
@@ -439,4 +470,4 @@ The koans follow this page: reading a step by its name, using a step twice, a st
 
 ## What is next
 
-The next lesson is **EXISTS and correlated subqueries**: a subquery that looks at each row in turn, which is what a question like "which customers ordered in the first quarter and never came back?" needs.
+The next lesson is **EXISTS and correlated subqueries**: a subquery that looks at each row in turn. It opens the second question of the case: which customers waited for an order with no ship date, and did they keep ordering?

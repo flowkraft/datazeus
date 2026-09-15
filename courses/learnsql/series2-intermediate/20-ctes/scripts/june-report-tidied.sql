@@ -10,7 +10,7 @@ SELECT p."ProductName",
 FROM "Products" p
 LEFT JOIN order_lines l
   ON l."ProductID" = p."ProductID"
-WHERE l."OrderDate" >= '2024-06-01'
-  AND l."OrderDate" <  '2024-07-01'
+WHERE l."OrderDate" >= DATE '2024-06-01'
+  AND l."OrderDate" <  DATE '2024-07-01'
 GROUP BY p."ProductName"
 ORDER BY p."ProductName";

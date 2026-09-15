@@ -163,7 +163,7 @@ title: Data Modeling
 # "one series and one statement", so say exactly that.
 prerequisites:
   - course: learn-sql
-    needs: "Series 1 entire, plus INSERT from Series 2 · 48"
+    needs: "Series 1 entire, plus INSERT from Series 2 · 55"
     why: >-
       Series 1 models Northwind, the business you queried all through Learn SQL: you decide what
       its tables should be, load its real rows into them, and run your first report again on

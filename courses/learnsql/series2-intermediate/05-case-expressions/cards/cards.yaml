@@ -10,22 +10,26 @@
 #
 # ── WHAT ANKI IS FOR ────────────────────────────────────────────────────────────────────────
 # Reviewed on a phone, weeks later, with no database open. EVERY CARD CARRIES ITS OWN PREMISE:
-# where a card needs a value (a freight of 25.1, 42 unlabelled rows) the FRONT states it, and the
-# card tests the REASONING. No card names a Northwind table as something to remember, and none
-# asks for a figure from the dataset. The koans are where the SQL is typed; this deck is where
-# the rules have to hold without rows in reach.
+# where a card needs a value (a freight of 25.1, 42 unlabelled rows, 10 matching rows of 32) the
+# FRONT states it, and the card tests the REASONING. No card names a Northwind table as something
+# to remember, and none asks for a figure from the dataset. The koans are where the SQL is written;
+# this deck is where the rules have to hold without rows in reach.
 #
 # FILE ORDER IS THE CURRICULUM, in the lesson's order: what CASE is and how it reads, grouping by
-# the label, the first-true-WHEN trap, the missing-ELSE trap and its NULL, CASE inside an
-# aggregate, the short form and when a join is better, COALESCE, and last the production card.
-# 13 basic, 4 cloze — about the 3:1 the existing decks run.
+# the label, the first-true-WHEN trap, the missing-ELSE trap and its NULL, the short form and when a
+# join is better, COALESCE, CASE inside an aggregate, the share and its integer division, and last
+# the production card. 15 basic, 5 cloze — about the 3:1 the existing decks run.
+#
+# THE SHARE CARDS CARRY A RULE THAT HAS NO KOAN. DuckDB, which the koans run on, keeps the fraction
+# of an integer division that PostgreSQL throws away, so a koan would pass the query CloudBeaver
+# shows as a column of zeros. The lesson says so; this deck is where the rule is drilled instead.
 #
 # WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
 #   - Series 1 · 45 owns NULL, three-valued logic and COALESCE itself. The cards here state the
 #     rule a missing ELSE runs into ("a comparison with NULL is unknown") without re-teaching it,
 #     and COALESCE appears only as the CASE it abbreviates.
-#   - Series 1 · 20 owns expressions and aliases in the SELECT. The alias-in-WHERE card here is
-#     about why the label had to go into a subquery, in one line.
+#   - Series 1 · 20 owns expressions, aliases and ROUND in the SELECT. The alias-in-WHERE card here
+#     is about why the label had to go into a subquery, in one line.
 #   - Series 2 · 00 owns subqueries. Series 3 · 00 owns the pivot as a pattern; the SUM(CASE …)
 #     cards here are about one column per status.
 
@@ -74,18 +78,7 @@ cards:
       front: "You want to filter on a label made by CASE in the SELECT. Why can't <code>WHERE band = 'heavy'</code> in the same query see it, and what do you do?"
       back: "WHERE runs before the SELECT has named its columns, so the alias does not exist there yet. Make the label in a subquery in FROM and filter it in the outer query (or repeat the CASE in the WHERE)."
 
-  # ── 5. CASE INSIDE AN AGGREGATE ──
-  - basic:
-      front: "For each country you need the number of orders AND the number still waiting to ship, on one row. One query has only one WHERE. How do you get both?"
-      back: "Move the condition into a column: <code>count(*) AS orders, SUM(CASE WHEN shipped_date IS NULL THEN 1 ELSE 0 END) AS waiting</code>, grouped by country. The CASE turns each waiting order into a 1 and every other order into a 0, and SUM adds the ones."
-
-  - cloze: "<code>SUM(CASE WHEN status = 'waiting' THEN {{c1::1}} ELSE {{c2::0}} END)</code> counts the waiting rows in each group, without a WHERE."
-
-  - basic:
-      front: "<code>count(CASE WHEN shipped_date IS NULL THEN 1 END)</code> has no ELSE. Is that a bug?"
-      back: "No, it is on purpose. Rows that do not match get NULL, and count of an expression skips NULLs, so it counts exactly the matching rows, the same as SUM(CASE … THEN 1 ELSE 0 END). A missing ELSE is a bug when you filter on the label, not when you count it."
-
-  # ── 6. THE SHORT FORM, AND WHEN NOT TO USE CASE ──
+  # ── 5. THE SHORT FORM, AND WHEN NOT TO USE CASE ──
   - basic:
       front: "<code>CASE ship_via WHEN 1 THEN 'Speedy Express' WHEN 2 THEN 'United Package' END</code> — the shipper names are already stored in a <code>shippers</code> table. What should the query do instead, and why?"
       back: "JOIN to <code>shippers</code> and read the name. When a shipper is renamed, the table changes and the query does not have to. CASE is for labels nobody stored, such as light, medium and heavy."
@@ -94,10 +87,32 @@ cards:
       front: "When can you use the short form <code>CASE column WHEN value THEN …</code> instead of <code>CASE WHEN column = value THEN …</code>?"
       back: "When every WHEN compares the same column with a value using equals. For ranges (<code>&lt; 25</code>) or tests on different columns, use the full form."
 
-  # ── 7. COALESCE ──
+  # ── 6. COALESCE ──
   - cloze: "<code>COALESCE(region, '(none)')</code> is a short way of writing <code>CASE WHEN region {{c1::IS NULL}} THEN '(none)' ELSE {{c2::region}} END</code>."
 
-  # ── 8. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  # ── 7. CASE INSIDE AN AGGREGATE ──
+  - basic:
+      front: "For each country you need the number of orders AND the number with no ship date, on one row. One query has only one WHERE. How do you get both?"
+      back: "Move the condition into a column: <code>count(*) AS orders, SUM(CASE WHEN shipped_date IS NULL THEN 1 ELSE 0 END) AS no_ship_date</code>, grouped by country. The CASE turns each order with no ship date into a 1 and every other order into a 0, and SUM adds the ones."
+
+  - cloze: "<code>SUM(CASE WHEN status = 'returned' THEN {{c1::1}} ELSE {{c2::0}} END)</code> counts the returned rows in each group, without a WHERE."
+
+  - basic:
+      front: "<code>count(CASE WHEN shipped_date IS NULL THEN 1 END)</code> has no ELSE. Is that a bug?"
+      back: "No, it is on purpose. Rows that do not match get NULL, and count of an expression skips NULLs, so it counts exactly the matching rows, the same as SUM(CASE … THEN 1 ELSE 0 END). A missing ELSE is a bug when you filter on the label, not when you count it."
+
+  # ── 8. THE SHARE, AND THE DIVISION THAT THROWS THE FRACTION AWAY ──
+  - basic:
+      front: "A group has 32 rows and 10 of them match. <code>SUM(CASE WHEN … THEN 1 ELSE 0 END) / count(*)</code> returns 0 on PostgreSQL, and 0.3125 on DuckDB. Why the 0, and how do you write the share so every database agrees?"
+      back: "Both sides are whole numbers, and on PostgreSQL (and SQL Server, and SQLite) a whole number divided by a whole number is a whole number: the fraction is thrown away. DuckDB keeps it. Put a decimal number in first: <code>ROUND(100.0 * SUM(CASE … END) / count(*), 1)</code> gives 31.3 on both. There is no error either way — the zeros simply look like an answer."
+
+  - cloze: "<code>ROUND({{c1::100.0}} * SUM(CASE … END) / count(*), 1)</code> — the decimal point makes the division keep its fraction, and the multiplication comes {{c2::before}} the division."
+
+  - basic:
+      front: "One country shows 50% of its orders with no ship date, another 31.3%, and the whole company 34.2%. Before anyone calls the 50% country the problem, what has to be on the report beside each share?"
+      back: "Its count. 50% can be 4 orders of 8, where one order moves it by 12.5 points; 31.3% can be 10 orders of 32, the most of any country. A share always travels with its count, and the overall share is what tells you whether any group is really high."
+
+  # ── 9. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
   - basic:
       front: "Write the query. <code>products</code> has <code>category</code> and <code>price</code>. For each category, return three counts: <code>budget</code> (price under 15), <code>standard</code> (15 up to but not including 30) and <code>premium</code> (30 and above), ordered by category."
       back: "<code>SELECT category,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN price &lt; 15 THEN 1 ELSE 0 END) AS budget,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN price &gt;= 15 AND price &lt; 30 THEN 1 ELSE 0 END) AS standard,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN price &gt;= 30 THEN 1 ELSE 0 END) AS premium<br>FROM products<br>GROUP BY category<br>ORDER BY category;</code><br><br>One SUM(CASE …) per column. A product priced exactly 30 is premium."

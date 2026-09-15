@@ -22,7 +22,7 @@ The manager wants a chart: **orders per month**, one bar for every month the bus
 
 It sounds like something Series 1 already covered. The <a href="/academy/learn-sql/group-by" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">GROUP BY lesson</a> used `EXTRACT` to pull the month out of a date, and grouping by that gives one row per month. This lesson starts there, because that query returns a chart that looks reasonable and is wrong. The rest of the lesson is about getting the edges of dates right: months, quarters, ranges, "recent", the difference between two dates, and the days that have no rows at all. At the end, the same tools take the case from the last two lessons one step further: the orders with no ship date, and since when.
 
-Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
+Every query below runs on the Northwind database on PostgreSQL. Run each one in CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
 ## EXTRACT throws the year away
 
@@ -134,8 +134,8 @@ Now a date range. Shipping wants every order shipped in July 2023, and `BETWEEN`
 ```sql file=./scripts/shipped-in-july-between.sql {3-4}
 SELECT "OrderID", "ShippedDate"
 FROM "Orders"
-WHERE "ShippedDate" BETWEEN '2023-07-01'
-                        AND '2023-08-01'
+WHERE "ShippedDate" BETWEEN DATE '2023-07-01'
+                        AND DATE '2023-08-01'
 ORDER BY "ShippedDate";
 ```
 
@@ -151,15 +151,15 @@ ORDER BY "ShippedDate";
 
 </div>
 
-Order 39 shipped on 1 August. The end of the range was typed as 1 August, and `BETWEEN` includes its end, so an August shipment is in July's report. August's report, written the same way, starts on 1 August too:
+Order 39 shipped on 1 August. The end of the range was written as 1 August, and `BETWEEN` includes its end, so an August shipment is in July's report. August's report, written the same way, starts on 1 August too:
 
 {/* The same highlight as the video: the BETWEEN line, in red. */}
 
 ```sql file=./scripts/shipped-in-august-between.sql {3}#err
 SELECT "OrderID", "ShippedDate"
 FROM "Orders"
-WHERE "ShippedDate" BETWEEN '2023-08-01'
-                        AND '2023-09-01'
+WHERE "ShippedDate" BETWEEN DATE '2023-08-01'
+                        AND DATE '2023-09-01'
 ORDER BY "ShippedDate";
 ```
 
@@ -185,8 +185,8 @@ The fix is a habit rather than a better end date: **on or after the first day, a
 ```sql file=./scripts/shipped-in-july-half-open.sql {3-4}#good
 SELECT "OrderID", "ShippedDate"
 FROM "Orders"
-WHERE "ShippedDate" >= '2023-07-01'
-  AND "ShippedDate" <  '2023-08-01'
+WHERE "ShippedDate" >= DATE '2023-07-01'
+  AND "ShippedDate" <  DATE '2023-08-01'
 ORDER BY "ShippedDate";
 ```
 
@@ -199,30 +199,7 @@ ORDER BY "ShippedDate";
 
 </div>
 
-Two orders for July, and order 39 belongs to August only. When every month is written this way, the end of one month is the start of the next, and no day can fall into two of them. This is the half-open range from the <a href="/data-academy/learn-sql/where-filtering" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">WHERE lesson</a>, and for dates it is the only version worth using.
-
-### Why not end BETWEEN on the last day?
-
-`BETWEEN '2023-07-01' AND '2023-07-31'` gives the right answer on this table, but only because every timestamp in `"Orders"` is at midnight. `'2023-07-31'` means midnight at the start of 31 July, so anything later that day is outside the range. Here is a timestamp at 2 PM on the last day of June:
-
-{/* The same highlight as the video: the BETWEEN line and the half-open edges, in grey. */}
-
-```sql file=./scripts/two-oclock-on-june-30.sql {2,5,7}
-SELECT TIMESTAMP '2024-06-30 14:00:00'
-         BETWEEN '2024-06-01' AND '2024-06-30'
-         AS "BETWEEN",
-       TIMESTAMP '2024-06-30 14:00:00'
-         >= '2024-06-01'
-         AND TIMESTAMP '2024-06-30 14:00:00'
-           < '2024-07-01'
-         AS "Half-open";
-```
-
-| BETWEEN | Half-open |
-| ------- | --------- |
-| false   | true      |
-
-`BETWEEN` leaves it out; the half-open range keeps it. The half-open range is correct whatever time of day the data holds.
+Two orders for July, and order 39 belongs to August only. When every month is written this way, the end of one month is the start of the next, and no day can fall into two of them. This is the half-open range from the <a href="/academy/learn-sql/where-filtering" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">WHERE lesson</a>, which also showed why ending `BETWEEN` on the last day, `DATE '2023-07-31'`, is no way out: `"ShippedDate"` is a timestamp, so an order at 14:00 on 31 July is later than the end of that range and silently drops out. On this table every timestamp happens to be midnight; the half-open range does not depend on that.
 
 ### Your turn
 
@@ -231,8 +208,8 @@ Count the orders placed in May 2024 with a half-open range. Predict the answer b
 ```sql file=./scripts/orders-in-may-2024.sql
 SELECT count(*) AS "Orders"
 FROM "Orders"
-WHERE "OrderDate" >= '2024-05-01'
-  AND "OrderDate" <  '2024-06-01';
+WHERE "OrderDate" >= DATE '2024-05-01'
+  AND "OrderDate" <  DATE '2024-06-01';
 ```
 
 | Orders |
@@ -374,44 +351,7 @@ WHERE "ShippedDate" > "RequiredDate";
 | ------- | ----------------------- | ----------------------- |
 | 6       | 2024-06-12 00:00:00.000 | 2024-06-13 00:00:00.000 |
 
-One order, one day late.
-
-## Days since the last order
-
-The <a href="/data-academy/learn-sql/case-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">CASE lesson</a> ended on a label that could not be written yet: customers who have not ordered in months. Every piece now exists: the anchor in brackets, both sides cast, one row per customer.
-
-{/* The same highlight as the video: the calculation, in grey. */}
-
-```sql file=./scripts/days-since-last-order.sql {2-4}
-SELECT c."CompanyName",
-       CAST((SELECT max("OrderDate")
-             FROM "Orders") AS DATE)
-       - CAST(max(o."OrderDate") AS DATE)
-         AS "Days since last order"
-FROM "Customers" c
-JOIN "Orders" o
-  ON o."CustomerID" = c."CustomerID"
-GROUP BY c."CompanyName"
-ORDER BY "Days since last order" DESC;
-```
-
-{/* The same highlight as the video: QUICK-Stop in blue. */}
-
-<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
-
-| CompanyName                        | Days since last order |
-| ---------------------------------- | --------------------- |
-| QUICK-Stop                         | 199                   |
-| Toms Spezialitäten                 | 190                   |
-| Die Wandernde Kuh                  | 183                   |
-| …                                  | …                     |
-| Around the Horn                    | 5                     |
-| Ana Trujillo Emparedados y helados | 2                     |
-| Berglunds snabbköp                 | 0                     |
-
-</div>
-
-QUICK-Stop has not ordered for 199 days; Berglunds snabbköp placed the last order in the data. Put this number in a CASE, for example over 90 days is 'gone quiet', and 11 of the 25 customers get that label.
+One order, one day late. Keep that 1 in mind: it comes back in the case file at the end of this lesson.
 
 ## The days that have no rows
 
@@ -423,8 +363,8 @@ A daily chart of June 2024 needs orders per day:
 SELECT date_trunc('day', "OrderDate") AS "Day",
        count(*) AS "Orders"
 FROM "Orders"
-WHERE "OrderDate" >= '2024-06-01'
-  AND "OrderDate" <  '2024-07-01'
+WHERE "OrderDate" >= DATE '2024-06-01'
+  AND "OrderDate" <  DATE '2024-07-01'
 GROUP BY date_trunc('day', "OrderDate")
 ORDER BY "Day";
 ```
@@ -496,7 +436,105 @@ LEFT JOIN "Orders" o
 | -------- | -------------- |
 | 30       | 4              |
 
-`count(*)` counts rows, and every day produces a row, empty or not: 30. On an empty day `o."OrderID"` is NULL, and <a href="/data-academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">count of a column skips NULLs</a>, so `count(o."OrderID")` returns the real 4.
+`count(*)` counts rows, and every day produces a row, empty or not: 30. On an empty day `o."OrderID"` is NULL, and <a href="/academy/learn-sql/aggregate-functions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">count of a column skips NULLs</a>, so `count(o."OrderID")` returns the real 4.
+
+## The case file: since when?
+
+The <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> found that a third of what Northwind sold sits on orders with no ship date, and the <a href="/academy/learn-sql/case-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">CASE lesson</a> counted them per country. The next question is **since when?** Nothing below is new SQL: it is this lesson's tools, pointed at those orders.
+
+### Every quarter since the first
+
+Group the orders by the quarter they were placed in, as in the quarters query above, and add one column that counts only the orders with no ship date, with the CASE lesson's `SUM(CASE …)`:
+
+{/* The same highlight as the video: date_trunc and the conditional count, in grey. */}
+
+```sql file=./scripts/open-orders-per-quarter.sql {1,4-5}
+SELECT date_trunc('quarter', "OrderDate")
+         AS "Quarter",
+       count(*) AS "Orders",
+       SUM(CASE WHEN "ShippedDate" IS NULL
+           THEN 1 ELSE 0 END) AS "No ship date"
+FROM "Orders"
+GROUP BY date_trunc('quarter', "OrderDate")
+ORDER BY "Quarter";
+```
+
+{/* The same highlight as the video: the whole "No ship date" column, in grey. */}
+
+<div className="[&_th:nth-child(3)]:bg-[rgb(var(--hl-grey)/var(--hl-head))] [&_td:nth-child(3)]:bg-[rgb(var(--hl-grey)/var(--hl-col))]">
+
+| Quarter                 | Orders | No ship date |
+| ----------------------- | ------ | ------------ |
+| 2022-10-01 00:00:00.000 | 4      | 2            |
+| 2023-01-01 00:00:00.000 | 12     | 4            |
+| 2023-04-01 00:00:00.000 | 12     | 4            |
+| 2023-07-01 00:00:00.000 | 12     | 4            |
+| 2023-10-01 00:00:00.000 | 12     | 4            |
+| 2024-01-01 00:00:00.000 | 13     | 4            |
+| 2024-04-01 00:00:00.000 | 14     | 5            |
+
+</div>
+
+2, then 4, 4, 4, 4, 4 and 5. It is not one bad month and it did not start recently: it is there **from the first quarter of the data, steadily**, about four more orders every quarter. The first quarter shows only 2 because it is one of the partial quarters from earlier: the data starts on 5 December, so that quarter has only 4 orders in all.
+
+### How long they have waited
+
+"How long" needs an anchor, and this data is a snapshot, so anchor on the data's last day exactly as "recent" did, then cast both sides to `DATE` and subtract:
+
+{/* The same highlight as the video: the anchor and the subtraction, in grey. */}
+
+```sql file=./scripts/open-orders-days-waiting.sql {2-4}
+SELECT "OrderID", "CustomerID", "OrderDate",
+       CAST((SELECT max("OrderDate")
+             FROM "Orders") AS DATE)
+       - CAST("OrderDate" AS DATE)
+         AS "Days waiting"
+FROM "Orders"
+WHERE "ShippedDate" IS NULL
+ORDER BY "Days waiting" DESC;
+```
+
+{/* The same highlight as the video: the oldest order in blue. */}
+
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
+| OrderID | CustomerID | OrderDate               | Days waiting |
+| ------- | ---------- | ----------------------- | ------------ |
+| 8       | ALFKI      | 2022-12-05 00:00:00.000 | 555          |
+| 11      | AROUT      | 2022-12-26 00:00:00.000 | 534          |
+| 14      | BONAP      | 2023-01-19 00:00:00.000 | 510          |
+| …       | …          | …                       | …            |
+| 5       | ANATR      | 2024-06-10 00:00:00.000 | 2            |
+| 7       | BERGS      | 2024-06-12 00:00:00.000 | 0            |
+
+</div>
+
+27 rows. The oldest is order 8, placed by ALFKI, Alfreds Futterkiste, on 5 December 2022. It is the very first order in the data, and by the data's last day it has waited **555 days** with no ship date. At the other end, orders 5 and 7 are 2 days and 0 days old.
+
+### Past the date the customer needed them
+
+The late-orders query above found **one** late order. It compared `"ShippedDate"` with `"RequiredDate"`, and on these 27 orders `"ShippedDate"` is NULL. As the <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a> showed, a comparison with a missing value is unknown, and `WHERE` drops it, so that query never saw them. To ask whether an order with no ship date is late, compare its `"RequiredDate"` with the data's last day instead:
+
+{/* The same highlight as the video: the comparison with the anchor, in grey. */}
+
+```sql file=./scripts/open-orders-past-required-date.sql {2-4}
+SELECT count(*) AS "No ship date",
+       SUM(CASE WHEN "RequiredDate" <
+                  (SELECT max("OrderDate")
+                   FROM "Orders")
+           THEN 1 ELSE 0 END)
+         AS "Past required date"
+FROM "Orders"
+WHERE "ShippedDate" IS NULL;
+```
+
+| No ship date | Past required date |
+| ------------ | ------------------ |
+| 27           | 25                 |
+
+**25 of the 27 are past the date the customer asked for.** The other two are orders 5 and 7, which are not due until 25 and 30 June. The same 25 orders have also waited longer than the slowest shipment in the data took, which was 9 days (the "Longest" above).
+
+So, in Northwind: the orders with no ship date go back to the first quarter of the data, about four more every quarter, and nearly all of them are past due. A missing ship date is not yet proof that nothing was delivered, and SQL alone will not decide that. What these queries cannot say yet is whose orders they are, and how much money is on them. That needs more than one table.
 
 ## Four habits for dates
 
@@ -507,7 +545,7 @@ LEFT JOIN "Orders" o
 
 ## Practice
 
-There are ten koans for this lesson. They use different columns from this page: shipped and required dates, a few delivery times you type in yourself, and the employees who took the orders, so copying a query from this page will not answer them. Three of them are diagnoses: the comment shows a query somebody wrote and what it returned, and you work out why before you fix it.
+There are ten koans for this lesson. They use different columns and questions from this page, the case file included: shipped and required dates, a few delivery times written straight into the query, and the employees who took the orders, so copying a query from this page will not answer them. Three of them are diagnoses: the comment shows a query somebody wrote and what it returned, and you work out why before you fix it.
 
 ```powershell
 cd c:/DataPallas/db/datazeus
@@ -528,4 +566,4 @@ The koans follow this page: `date_trunc` against `EXTRACT`, half-open ranges, `B
 
 ## What is next
 
-The next lesson is **joining several tables**: the June product report needs orders, order lines, products and categories together, and a join can quietly drop rows or repeat them.
+The next lesson is **several tables at once**, and the case's next question: **whose orders are these, and how much money is on them?** Answering it takes orders, order lines and more in one query, and a join can quietly drop rows or repeat them.

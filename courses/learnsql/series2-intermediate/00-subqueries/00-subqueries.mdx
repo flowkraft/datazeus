@@ -22,7 +22,7 @@ The top 10 customers report from the <a href="/academy/learn-sql/select-sum-join
 
 That question contains a second question: what is the average customer? Without SQL beyond Series 1, the only way to answer it is to run one query, write the number down, and paste it into a second query. This lesson shows how to let the database answer the first question inside the second one, with a **subquery**: a query in brackets that runs first, and whose result the outer query uses.
 
-Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
+Every query below runs on the Northwind database on PostgreSQL. Write each one in CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
 ## Warm up on one table
 
@@ -42,7 +42,7 @@ FROM "Products";
 
 Second question: which products cost more than that? Paste the number into a `WHERE`:
 
-{/* The same highlight as the video: the typed number, in grey. Nothing is wrong with it today. */}
+{/* The same highlight as the video: the pasted number, in grey. Nothing is wrong with it today. */}
 
 ```sql file=./scripts/above-average-price-typed.sql {3}
 SELECT "ProductName", "UnitPrice"
@@ -60,7 +60,7 @@ ORDER BY "UnitPrice" DESC;
 | Ikura                          | 31        |
 | Uncle Bobs Organic Dried Pears | 30        |
 
-Six products, and the answer is correct today. The problem is the number 28.72: it was typed by hand. If a price changes tomorrow, the real average moves, but the query still compares with 28.72. It keeps answering yesterday's question, and nothing reports that it is out of date.
+Six products, and the answer is correct today. The problem is the number 28.72: it was pasted in by hand. If a price changes tomorrow, the real average moves, but the query still compares with 28.72. It keeps answering yesterday's question, and nothing reports that it is out of date.
 
 ## Why the average cannot go in the WHERE
 
@@ -85,7 +85,7 @@ This is the rule from the <a href="/academy/learn-sql/having-vs-where" target="_
 
 ## A query in brackets
 
-So give the `WHERE` that different query. Put it in brackets, where the typed number was:
+So give the `WHERE` that different query. Put it in brackets, where the pasted number was:
 
 {/* The same highlight as the video: the two bracket lines in green. */}
 
@@ -97,7 +97,7 @@ WHERE "UnitPrice" > (SELECT AVG("UnitPrice")
 ORDER BY "UnitPrice" DESC;
 ```
 
-The database runs the query in brackets first. It returns **one value**, the average price, and the outer query compares every product with that value, exactly as it did with the typed 28.72. The result is the same six products. The difference is that tomorrow the brackets return tomorrow's average, and there is no number to keep up to date.
+The database runs the query in brackets first. It returns **one value**, the average price, and the outer query compares every product with that value, exactly as it did with the pasted-in 28.72. The result is the same six products. The difference is that tomorrow the brackets return tomorrow's average, and there is no number to keep up to date.
 
 ### Run the inside on its own
 
@@ -403,6 +403,103 @@ The outer query is exactly the same as before. Only the query in brackets change
 
 The last query works, but it is hard to read: brackets inside brackets inside a `HAVING`. Read it from the inside out: the innermost query builds a table of customer totals, the query around it averages them, and the outer query compares each customer with that average. A later lesson in this series gives each step a name, so a query like this reads from top to bottom.
 
+{/* THE CASE FILE (.docs/plan-sql-series2-story.md §3, S2·00). The same skill as the lesson, applied
+    to one more question about the same report; nothing in it is new SQL. Mirrors the video's six
+    case-* slides. Every figure is asserted in SubqueriesSpec §4b on both engines. */}
+
+## The report counted orders with no ship date
+
+Before those nine customers go back to the manager, look once more at the money the report adds up. It adds up every order line of every order. In Northwind, 27 of the 79 orders have no ship date: their `"ShippedDate"` is `NULL`, the orders from the <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a>. The report counts their money like any other sale.
+
+So how much of the money is on those orders? That is two values: the sales on orders with no ship date, and all sales.
+
+### Two values, side by side
+
+Each of the two is a value in brackets, and a value can go anywhere a single value can go, including the select list. So one query can return both, next to each other:
+
+{/* The same highlight as the video: the IS NULL line, in grey. */}
+
+```sql file=./scripts/sales-with-no-ship-date.sql {6}
+SELECT (SELECT ROUND(SUM(d."UnitPrice" * d."Quantity"
+                 * (1 - d."Discount")), 2)
+        FROM "Order Details" d
+        JOIN "Orders" o
+          ON o."OrderID" = d."OrderID"
+        WHERE o."ShippedDate" IS NULL) AS "No ship date",
+       (SELECT ROUND(SUM("UnitPrice" * "Quantity"
+                 * (1 - "Discount")), 2)
+        FROM "Order Details") AS "All sales";
+```
+
+| No ship date | All sales |
+| ------------ | --------- |
+| 19169        | 58153.31  |
+
+The first bracket is the report's money, joined to `"Orders"` so that it can see `"ShippedDate"`, and kept only where the ship date `IS NULL`. The second is the total from the report lesson's second check. Select either bracket on its own and run it: each returns one number.
+
+The outer `SELECT` has no `FROM`, because all it does is return the two values. PostgreSQL and DuckDB accept that; older versions of Oracle need `FROM dual` at the end.
+
+19169 of 58153.31: **a third of the report's money is on orders with no ship date.**
+
+## The nine, on delivered sales
+
+The nine customers were ranked on all of that money. To rank them on what was delivered, keep only the orders that have a ship date. There is nothing new to write. It is the query from above with one line added in two places, `WHERE o."ShippedDate" IS NOT NULL`, once in the outer query and once inside the table in brackets, and with the column renamed so the report says what it adds up:
+
+{/* The same highlight as the video: the two WHERE lines, in green. */}
+
+```sql file=./scripts/customers-above-the-average-customer-delivered.sql {9,21}#good
+SELECT c."CompanyName",
+       ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")), 2) AS "Delivered sales"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID"
+WHERE o."ShippedDate" IS NOT NULL
+GROUP BY c."CompanyName"
+HAVING SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount"))
+     > (SELECT AVG(t."Total")
+        FROM (SELECT o2."CustomerID",
+                     SUM(d2."UnitPrice"
+                       * d2."Quantity"
+                       * (1 - d2."Discount")) AS "Total"
+              FROM "Orders" o2
+              JOIN "Order Details" d2
+                ON d2."OrderID" = o2."OrderID"
+              WHERE o2."ShippedDate" IS NOT NULL
+              GROUP BY o2."CustomerID") AS t)
+ORDER BY "Delivered sales" DESC;
+```
+
+| CompanyName             | Delivered sales |
+| ----------------------- | --------------- |
+| Lehmanns Marktstand     | 3881.75         |
+| Ernst Handel            | 3812.63         |
+| Alfreds Futterkiste     | 3748.28         |
+| Frankenversand          | 3581.22         |
+| Morgenstern Gesundkost  | 2782.96         |
+| LILA-Supermercado       | 1728.38         |
+| Blauer See Delikatessen | 1626            |
+
+7 customers beat the average delivered customer, which is 1559.37. Three of the nine drop out, Around the Horn, Great Lakes Food Market and **Cactus Comidas para llevar**, and LILA-Supermercado comes in.
+
+Cactus is the report's number one on what it ordered, 4567.8. Its delivered sales are 1181.95, 14th of the 25 and below the average delivered customer.
+
+| Cactus Comidas para llevar | Total   |
+| -------------------------- | ------- |
+| ordered                    | 4567.8  |
+| delivered                  | 1181.95 |
+
+### Why the filter is written twice
+
+The query in brackets is a query of its own, and it does not see the outer query's `WHERE`. Leave the filter out of the brackets, and they still return the average of what customers **ordered**, 2326.13. Each customer's delivered total is then compared with it, and only 5 customers pass. There is no error. It is the grain question again: one row of the inside represents what? Without the filter, it is a customer's ordered total, and the question is about delivered totals.
+
+Run the inside on its own, as always. With the filter, the table in brackets returns 25 rows, so every customer has at least one order with a ship date, and the average is still the average of all 25 customers.
+
+None of this says what happened to the 27 orders. A ship date can be missing for more than one reason, and SQL cannot tell which. What it does show is that the report answered "what did they order?", and the manager may have meant "what was delivered?".
+
 ## Before you trust a subquery
 
 1. **Run the inside on its own.**
@@ -411,7 +508,7 @@ The last query works, but it is hard to read: brackets inside brackets inside a 
 
 ## Practice
 
-There are ten koans for this lesson. They use different tables from this page: orders compared with the average freight, the products one customer bought, and suppliers compared with the average supplier, so copying a query from this page will not answer them.
+There are ten koans for this lesson. They ask different questions from this page, mostly on different tables: orders compared with the average freight, the products one customer bought, and suppliers compared with the average supplier, so copying a query from this page will not answer them.
 
 ```powershell
 cd c:/DataPallas/db/datazeus
@@ -432,4 +529,6 @@ The koans follow this page: a value in brackets, a comparison that must receive 
 
 ## What is next
 
-The next lesson is **CASE**: how a query turns a number into a label, such as "light", "medium" and "heavy", or a column for each status in one report.
+A third of the report's money is on orders with no ship date, and that raises the questions this series follows: **how big is it, since when, where, and whose?**
+
+The next lesson is **CASE**: how a query turns a number into a label, such as "light", "medium" and "heavy", and how one report gets a column for the orders with a ship date and one for the orders without.

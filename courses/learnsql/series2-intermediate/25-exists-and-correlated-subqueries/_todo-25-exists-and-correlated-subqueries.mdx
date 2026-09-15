@@ -42,8 +42,8 @@ published: false
     than as a bug. Teach the habit: NOT EXISTS, always. Series 3 · 22 comes back to it as a query
     plan; this episode owns the correctness.
 
-    A SECOND VERIFIED QUESTION, which Series 2 · 35 answers again with EXCEPT: customers who ordered
-    in Q1 2024 and never since — 10 of them (EXISTS … AND NOT EXISTS …).
+    (Was: "a second verified question — customers who ordered in Q1 2024 and never since, 10". Dropped as a
+    churn question on 2026-09-15 — see THE SERIES CASE below. The series case is this episode's main example.)
 
     ── A PROMISE MADE IN SERIES 1 · 35, HAVING vs WHERE ────────────────────
     That episode answers "does HAVING always need a GROUP BY?" with no, shows a query
@@ -77,11 +77,31 @@ published: false
     proving exactly why. CHECK THE THRESHOLD if the dataset ever changes: > 100 returns
     nothing on this one, and an example that returns no rows teaches the wrong lesson.
 
+    ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
+    Answer "has any / has none" questions correctly — customers who ever…, products never…, orders with
+    no…: EXISTS, NOT EXISTS, and Series 1 · 40's LEFT JOIN … IS NULL anti-join as the third way, with when
+    to use which; a correlated subquery (the inner query reads the outer row); why NOT IN returns nothing
+    when its list holds a NULL. Worth one beat: each order beside the customer's PREVIOUS order date as a
+    correlated subquery — Series 2 · 45 redoes it with LAG in one pass.
+
+    ── THE SERIES CASE — MAIN EXAMPLE — question 2 opens (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
+    The series case (a third of sales has no shipping record) moves from "how big, whose" to "did those
+    orders really not ship?". Figures, DuckDB 2026-09-15 — re-assert on PostgreSQL:
+      24 of 25 customers had an order with no ShippedDate (EXISTS); QUICK-Stop never did (NOT EXISTS).
+      18 customers placed a NEW order while an older one still had no ship date (correlated EXISTS on a
+      later order by the same customer). Ask it out loud: would a customer reorder, on schedule, from a
+      supplier that never delivered? That is question 2.
+    OFF-STORY, KEPT: the NOT IN trap stays on Employees.ReportsTo — a real NULL (shipping data would
+    need an invented one). KEEP SHORT: HAVING with no GROUP BY inside EXISTS — the Series 1 · 35 promise,
+    one small example, not a section.
+    DROPPED 2026-09-15: "ordered in Q1 2024 and never since" as a churn question — all 10 are simply not
+    due for their next order (78–159 days since the last, on a ~190-day cycle). Plain SQL at most.
+
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     LEVEL ●●● of ●●●●. BUILDS ON: Series 2 · 00, 2 · 20, Series 1 · 35 (the HAVING promise),
     1 · 45 (UNKNOWN).
-    SETS UP: Series 2 · 35 (EXCEPT, the same question), 2 · 60 (the project's "not since" question),
-    Series 3 · 22 (NOT EXISTS as a plan).
+    SETS UP: Series 2 · 48 (EXCEPT reconciles the Speedy Express lists), 2 · 45 (LAG redoes the
+    "previous order" correlated subquery), 2 · 60 (the case's question 2), Series 3 · 22 (NOT EXISTS as a plan).
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:choose

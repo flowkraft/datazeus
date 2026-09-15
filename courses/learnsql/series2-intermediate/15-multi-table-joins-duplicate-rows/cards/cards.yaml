@@ -16,8 +16,9 @@
 #
 # FILE ORDER IS THE CURRICULUM, in the lesson's order: counting rows, the inner join after a left
 # join, the left-join "repair", narrowing first, freight multiplied by a join, SUM(DISTINCT), grain
-# and aggregating first, the bridge table, and last the production card.
-# 13 basic, 4 cloze — about the 3:1 the existing decks run.
+# and aggregating first, the bridge table, the case file's report (one row per order, then join the
+# rest), and last the production card.
+# 14 basic, 4 cloze — about the 3:1 the existing decks run.
 #
 # WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
 #   - Series 1 · 40 owns LEFT JOIN and ON versus WHERE; the card here is the inner join placed AFTER
@@ -96,7 +97,12 @@ cards:
       front: "A product sold on 10 order lines. Can it have fewer than 10 customers?"
       back: "Yes. One customer can buy it on several orders, so the number of different customers (count DISTINCT customer_id) can be smaller than the number of lines."
 
-  # ── 9. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  # ── 9. ONE ROW PER ORDER, THEN THE REPORT (the case file's shape, with no dataset figures) ──
+  - basic:
+      front: "A report needs, per sales rep, the orders that have not shipped, their total value and their freight. Order value comes from <code>order_lines</code>; freight and the rep are on <code>orders</code>. In what order do you build it?"
+      back: "First each order's value, summed from its lines in a subquery: one row per order. Join that to the orders (filtered to the unshipped ones) and to the reps, then GROUP BY the rep. Every joined row is one order, so count(*) counts orders and SUM(freight) adds each freight once. Joining the lines directly would repeat each freight once per line."
+
+  # ── 10. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
   - basic:
       front: "Write the query. <code>orders</code> has <code>order_id</code>, <code>customer_id</code>, <code>freight</code>; <code>order_lines</code> has <code>order_id</code> and <code>amount</code>. Return each <code>customer_id</code> with its total freight and total amount, both correct."
       back: "<code>SELECT f.customer_id, f.freight, a.amount<br>FROM (SELECT customer_id, SUM(freight) AS freight<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FROM orders GROUP BY customer_id) AS f<br>JOIN (SELECT o.customer_id, SUM(l.amount) AS amount<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;FROM orders o<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JOIN order_lines l ON l.order_id = o.order_id<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;GROUP BY o.customer_id) AS a<br>&nbsp;&nbsp;ON a.customer_id = f.customer_id;</code><br><br>Freight is summed over orders alone; the amount over the lines; then the two are joined."

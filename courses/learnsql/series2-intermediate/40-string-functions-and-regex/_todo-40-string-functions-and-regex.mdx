@@ -1,0 +1,90 @@
+---
+title: "String Functions, LIKE & Regex — Clean Up Messy Real-World Data"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-sql"
+tags: []
+level: "intermediate"
+module: "series2-intermediate"
+order: 40
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build.
+    Drop the _todo- prefix when it becomes a real lesson.
+
+    READ FIRST: courses/learnsql/curriculum.yaml's header — it is the field
+    documentation the whole academy points at, and it carries the title, short
+    and core conventions this episode has to follow.
+
+    THE HOUSE METHOD, from the Series 1 lessons already written:
+      - type the query yourself; copy-paste teaches your eyes only
+      - PREDICT the answer before running it, out loud, then run it
+      - every query runs on the Northwind that ships with DataPallas
+      - the koans mirror the lesson beat for beat
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: work with text that nobody cleaned.
+    SQL: LIKE, ILIKE, wildcards and escaping, regex matching, TRIM, UPPER/LOWER, SUBSTRING,
+    SPLIT_PART, CONCAT, STRING_AGG, plus the number side: ROUND, CAST, formatting for a report.
+    MERGED FROM TWO EPISODES in the 2026-08-24 pass (old "LIKE/ILIKE/Regex" and "String & Number
+    Functions"). Both were reference material a working person looks up rather than memorises, and
+    two episodes for one lookup table was not earning its place.
+    Ships with a cheat sheet — that is the honest format for this content.
+    TWO SERIES 1 PROMISES LAND HERE: Series 1 · 10 left `_`, ESCAPE and case-insensitive matching to
+    Series 2, and Series 1 · 25 named STRING_AGG as Series 2's — the aggregate that turns many rows of
+    text into one. `||` and ROUND are Series 1 · 20's: build on both, re-teach neither.
+
+    ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
+    Clean and match text nobody cleaned: case-insensitive search (LOWER/UPPER, ILIKE and its portability),
+    TRIM, SUBSTRING and SPLIT_PART, LIKE's _ and ESCAPE, practical regular expressions (keep the digits,
+    find a pattern), concatenation that survives NULL, STRING_AGG with an ORDER BY, and the number side a
+    report needs — CAST between text and numbers (it closes Series 1 · 07's '9' > '10' gap), ROUND and
+    formatting. A cheat sheet ships with it.
+
+    ── THE SERIES CASE — CASE FILE SEGMENT — the call sheet (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
+    LESSON DATA (Northwind is clean — no stray spaces or case variants; say so): "Customers"."Phone" comes
+    in many formats — (1) 135-5555 · 91.24.45.40 · 0621-08460 — normalise it; "Products"."QuantityPerUnit"
+    is free text — 10 boxes x 20 bags · 24 - 12 oz bottles · 10 pkgs. — pull out the pack count.
+    CASE FILE: the manager's call sheet for the customers with an order that has no ShippedDate — the phone
+    in one format, each customer's open order numbers in one cell (STRING_AGG … ORDER BY). Measure it.
+    NO REGEX PUZZLES — a pattern earns its place only if people write it at work.
+    WHAT GOES WRONG candidates: a case-sensitive match that silently misses rows; STRING_AGG without ORDER BY
+    giving a list whose order changes between runs (Series 1 · 15's lesson, in a cell).
+
+    ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+    LEVEL ● of ●●●●. THE BREATHER between the two window-function episodes (Series 2 · 35 and 2 · 45).
+    BUILDS ON: Series 1 · 10, 1 · 20, 1 · 25. Was 25 until the 2026-09-14 reorder, and 30 until 2026-09-15.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_40/StringFunctionsAndRegexKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. The published lessons all open this way;
+    keep it. Never "SELECT is used to…". Always "your boss asks…". */}
+
+TODO
+
+## TODO — the SQL
+
+{/* BEAT 2 — the keywords, one at a time, each with a query the reader types.
+    Every query runs on Northwind. Predict, then run. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns its
+    place by preventing a number that is wrong and looks right. */}
+
+TODO

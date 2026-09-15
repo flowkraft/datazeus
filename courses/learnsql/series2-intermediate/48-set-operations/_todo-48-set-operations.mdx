@@ -1,0 +1,89 @@
+---
+title: "UNION, INTERSECT, EXCEPT — Stacking and Reconciling Result Sets"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-sql"
+tags: []
+level: "intermediate"
+module: "series2-intermediate"
+order: 48
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build.
+    Drop the _todo- prefix when it becomes a real lesson.
+
+    READ FIRST: courses/learnsql/curriculum.yaml's header — it is the field
+    documentation the whole academy points at, and it carries the title, short
+    and core conventions this episode has to follow.
+
+    THE HOUSE METHOD, from the Series 1 lessons already written:
+      - type the query yourself; copy-paste teaches your eyes only
+      - PREDICT the answer before running it, out loud, then run it
+      - every query runs on the Northwind that ships with DataPallas
+      - the koans mirror the lesson beat for beat
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: stack two result sets, or subtract one from the other.
+    SQL: UNION, UNION ALL, INTERSECT, EXCEPT, and the column-count/type rules.
+    UNION ALL versus UNION is the practical half: UNION deduplicates and costs a sort, and people
+    reach for it by habit when they wanted UNION ALL.
+
+    ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
+    Stack result sets from two sources (UNION ALL), remove duplicates only on purpose (UNION, and the sort
+    it costs), reconcile two lists (EXCEPT both ways, INTERSECT), the column count / type / name rules, and
+    ORDER BY on the combined result.
+
+    ── THE SERIES CASE — MAIN EXAMPLE — reconciliation (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
+    Reconciliation is what EXCEPT and INTERSECT are for at work. Figures, DuckDB 2026-09-15:
+      customers with a Speedy Express order: 24; of them, customers who never received a Speedy delivery
+      (EXCEPT customers with a shipped Speedy order): 23. Speedy's two shipped orders are order 1 (Nancy)
+      and order 4 (Janet).
+      customers with both an order that has no ShippedDate and one that shipped (INTERSECT): 24 — every
+      affected customer also received other orders.
+    CORRECTED 2026-09-15: the old claim that Series 1 · 40 wrote a FULL OUTER JOIN as a UNION is FALSE —
+    Series 1 · 40 has no UNION. The real callback: Series 1 · 40 says FULL OUTER JOIN earns its place in
+    reconciling two lists; EXCEPT/INTERSECT are the set-based way to do it.
+    WHAT GOES WRONG candidate: UNION instead of UNION ALL when stacking two real sources — identical rows
+    that were genuinely two records collapse into one, and the total comes back short with no error.
+
+    ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+    LEVEL ●● of ●●●●. THE CALLBACK: Series 1 · 40 says FULL OUTER JOIN earns its place in reconciling two
+    lists that should agree; EXCEPT and INTERSECT are the set-based way (see THE SERIES CASE above — the old
+    "S1·40 wrote a FULL OUTER JOIN as a UNION" callback was false). A good koan: prove an EXCEPT and a
+    NOT EXISTS (Series 2 · 25) return the same rows, on a different question from the lesson's.
+    BUILDS ON: Series 2 · 25, Series 1 · 40. SETS UP: Series 2 · 50, which replaces the UNION ALL report. Was 35 until 2026-09-15.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:predict
+      koan:choose
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_48/SetOperationsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. The published lessons all open this way;
+    keep it. Never "SELECT is used to…". Always "your boss asks…". */}
+
+TODO
+
+## TODO — the SQL
+
+{/* BEAT 2 — the keywords, one at a time, each with a query the reader types.
+    Every query runs on Northwind. Predict, then run. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns its
+    place by preventing a number that is wrong and looks right. */}
+
+TODO

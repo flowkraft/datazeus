@@ -33,7 +33,7 @@ published: false
     and AVG is the wrong answer to it.
     WHY IT SITS AT 58: a percentile is defined by ORDERING, the ANSI spelling is literally
     an ORDER BY inside the aggregate, its neighbours (NTILE, PERCENT_RANK, CUME_DIST) are
-    window functions, and the MySQL workaround below needs ROW_NUMBER from 2 · 50. It is
+    window functions, and the MySQL workaround below needs ROW_NUMBER from 2 · 35. It is
     before the project so the project can ask for a median.
 
     ── THE FRAMING — A BUSINESS POINT BEFORE A SYNTAX POINT ────────────────
@@ -70,7 +70,7 @@ published: false
     PostgreSQL, Oracle, SQL Server and Db2 all have PERCENTILE_CONT and PERCENTILE_DISC.
     MYSQL HAS NEITHER, and neither does SQLite. SHOW THE WORKAROUND: ROW_NUMBER() and
     COUNT(*) over the group, then take the middle row — or the two middle rows and average
-    them when the count is even. It needs 2 · 50, it is genuinely fiddly, and a large share
+    them when the count is even. It needs 2 · 35, it is genuinely fiddly, and a large share
     of readers will need it.
 
     ── COST, ONE PARAGRAPH AND A POINTER ───────────────────────────────────
@@ -78,8 +78,20 @@ published: false
     get cheap as the data grows. Series 3 · 27 owns approximation and already names
     Oracle's and SQL Server's APPROX_PERCENTILE functions. Point there and stop.
 
+    ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
+    Say what is typical with the median, not the average; percentiles (PERCENTILE_CONT vs PERCENTILE_DISC) for
+    service levels (p90/p95); a median per group; NTILE for quartiles; the ROW_NUMBER workaround on engines with
+    no percentile function. MODE, PERCENT_RANK, CUME_DIST: one line each.
+
+    ── THE SERIES CASE — CASE FILE SEGMENT (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
+    MAIN EXAMPLE STAYS: average vs median order value, 736.12 vs 506.17.
+    CASE FILE: define "late" from the data instead of guessing — shipped orders take a median 6 days, the
+    slowest 9 (Federal Shipping and United Package alike); the open orders' median age is 260 days by the
+    data's last day. And Series 2 · 45's evidence confirmed with the median: the gap to a customer's next order
+    is 190 days after an order with no ShippedDate and 190 after a shipped one. DuckDB 2026-09-15.
+
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
-    LEVEL ●●●● of ●●●●. BUILDS ON: Series 2 · 50 (the MySQL workaround), Series 1 · 25 (AVG, and the
+    LEVEL ●●●● of ●●●●. BUILDS ON: Series 2 · 35 (the MySQL workaround), Series 1 · 25 (AVG, and the
     STDDEV it promised to Series 2 — one line, beside the median).
     THE SHIPPED DATA MAKES THE POINT WITHOUT AN INVENTED ORDER (DuckDB, 2026-09-14): the average order
     value is 736.12 and the median is 506.17 — the average sits 45% above the typical order. Freight

@@ -39,8 +39,8 @@ import spock.lang.Stepwise
  * Always show the termination condition. A recursive CTE without one is an outage.
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
- * LEVEL ●●● of ●●●●. BUILDS ON: Series 2 · 20 (WITH), 2 · 42 (the self-join it repeats level
- * after level), 2 · 35 (UNION ALL joins the anchor to the recursive term).
+ * LEVEL ●●● of ●●●●. BUILDS ON: Series 2 · 20 (WITH), 2 · 30 (the self-join it repeats level
+ * after level), 2 · 48 (UNION ALL joins the anchor to the recursive term).
  * ALSO: it builds Series 2 · 10's date spine on engines without generate_series — say so.
  * DATA: seed: bulk, which is not built yet (see curriculum.yaml). Was 00 until the 2026-09-14 reorder.
  */

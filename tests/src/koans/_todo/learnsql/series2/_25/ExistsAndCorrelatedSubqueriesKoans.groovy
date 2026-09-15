@@ -50,14 +50,22 @@ import spock.lang.Stepwise
  * than as a bug. Teach the habit: NOT EXISTS, always. Series 3 · 22 comes back to it as a query
  * plan; this episode owns the correctness.
  *
- * A SECOND VERIFIED QUESTION, which Series 2 · 35 answers again with EXCEPT: customers who ordered
- * in Q1 2024 and never since — 10 of them (EXISTS … AND NOT EXISTS …).
+ * ("Customers who ordered in Q1 2024 and never since" was dropped as a churn question on 2026-09-15:
+ * all 10 are simply not due for their next order.)
+ *
+ * ── KOANS AND THE SERIES CASE (.docs/plan-sql-series2-story.md §0, §3) ─────────────
+ * The LESSON's main example is the case on Customers/Orders (24 of 25 customers waited, QUICK-Stop never;
+ * 18 reordered while an order was open) and its NOT IN trap is on Employees.ReportsTo. The KOANS must ask
+ * different questions on other tables — candidates (measure first): suppliers with a discontinued product
+ * (EXISTS); categories with no out-of-stock product (NOT EXISTS); the same via the Series 1 · 40 anti-join;
+ * products priced above their own category's average (correlated); a NOT IN that returns nothing because
+ * "Customers"."Region" holds NULLs (21 of 25).
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
  * LEVEL ●●● of ●●●●. BUILDS ON: Series 2 · 00, 2 · 20, Series 1 · 35 (the HAVING promise),
  * 1 · 45 (UNKNOWN).
- * SETS UP: Series 2 · 35 (EXCEPT, the same question), 2 · 60 (the project's "not since" question),
- * Series 3 · 22 (NOT EXISTS as a plan).
+ * SETS UP: Series 2 · 48 (EXCEPT), 2 · 45 (LAG redoes "the previous order"), 2 · 60 (the case's
+ * question 2), Series 3 · 22 (NOT EXISTS as a plan).
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
 class ExistsAndCorrelatedSubqueriesKoans extends KoanBase {

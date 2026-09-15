@@ -37,10 +37,10 @@ import spock.lang.Stepwise
  *
  * ── THESE ARE NOT THE LESSON'S QUERIES ──────────────────────────────────────
  *
- * The same ideas, in the same order, on DIFFERENT TABLES. The lesson names the steps of
- * the customer report, the June product report and the days since each customer's last
- * order. Here you name steps over categories, employees, suppliers, shippers and
- * countries.
+ * The same ideas, in the same order, on DIFFERENT QUESTIONS. The lesson names the steps
+ * of the customer report, the June product report and the orders with no ship date by rep
+ * and courier. Here you name steps over categories, suppliers, countries, and employees
+ * and shippers across every order.
  *
  * TEN KOANS, EASIEST FIRST:
  *   1    name it, then use the name: the three biggest categories
@@ -214,7 +214,7 @@ class CtesKoans extends KoanBase {
     //    and the August test moved to the final WHERE. It returned 6 rows out of 8 — a WHERE on a
     //    LEFT JOINed column throws away the categories with no August line, and the unit totals
     //    all still looked right. Put the August test back INSIDE the step, where it narrows the
-    //    lines before the join: fill in the step's WHERE, half-open.
+    //    lines before the join: fill in the step's WHERE, half-open, with DATE '…' literals.
     //    (Eight rows. Two categories sold nothing in August 2023.)
     def "diagnose: the tidy-up that dropped two categories"() {
         expect:
@@ -250,7 +250,7 @@ class CtesKoans extends KoanBase {
               SELECT d."OrderID", d."Quantity"
               FROM "Order Details" d
               JOIN "Orders" o ON o."OrderID" = d."OrderID"
-              WHERE o."OrderDate" >= '2023-08-01' AND o."OrderDate" < '2023-09-01'
+              WHERE o."OrderDate" >= DATE '2023-08-01' AND o."OrderDate" < DATE '2023-09-01'
             )
             SELECT count(*) AS "Lines", sum("Quantity") AS "Units"
             FROM ___
@@ -316,7 +316,7 @@ class CtesKoans extends KoanBase {
     //     of them sold in August 2023?
     //       · one row per "Suppliers"."CompanyName", ordered by "CompanyName"
     //       · three columns: the name, the products, the August 2023 units
-    //       · August 2023, half-open: on or after 2023-08-01, before 2023-09-01
+    //       · August 2023, half-open: on or after DATE '2023-08-01', before DATE '2023-09-01'
     //     TWO STEPS, EACH AT ITS OWN GRAIN: products counted where one row is one product, units
     //     summed over the August lines — then join both to the suppliers. Keep the August test
     //     inside its step (koan 6).

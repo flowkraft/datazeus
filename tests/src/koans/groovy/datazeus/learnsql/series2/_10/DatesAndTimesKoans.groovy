@@ -38,8 +38,8 @@ import spock.lang.Stepwise
  * ── THESE ARE NOT THE LESSON'S QUERIES ──────────────────────────────────────
  *
  * The same ideas, in the same order, on DIFFERENT COLUMNS. The lesson counts orders by
- * "OrderDate" and ships July 2023. Here you work with "ShippedDate" and "RequiredDate",
- * three delivery times you make up yourself, and the employees who took the orders.
+ * "OrderDate", ships July 2023 and ages the orders with no ship date. Here you work with
+ * "ShippedDate", "RequiredDate", three made-up delivery times, and the employees.
  *
  * TEN KOANS, EASIEST FIRST:
  *   1    date_trunc keeps the year: how many quarters had a shipment
@@ -95,7 +95,7 @@ class DatesAndTimesKoans extends KoanBase {
     //    May 2024?", and somebody wrote
     //        WHERE EXTRACT(MONTH FROM "ShippedDate") = 5
     //    It returned 9. What else did it count? Write a WHERE that keeps the year.
-    //    (date_trunc('month', …) = '2024-05-01' works; so does a half-open range.)
+    //    (date_trunc('month', …) = DATE '2024-05-01' works; so does a half-open range.)
     def "diagnose: two Mays in one count"() {
         expect:
         shouldReturn 5, '''
@@ -113,18 +113,18 @@ class DatesAndTimesKoans extends KoanBase {
         shouldReturn 9, '''
             SELECT count(*)
             FROM "Orders"
-            WHERE "ShippedDate" >= '2024-01-01'
+            WHERE "ShippedDate" >= DATE '2024-01-01'
               AND ___
         '''
     }
 
-    // 4) DIAGNOSE: BETWEEN MISSES THE EVENING OF THE LAST DAY. Three deliveries, typed
+    // 4) DIAGNOSE: BETWEEN MISSES THE EVENING OF THE LAST DAY. Three deliveries, written
     //    straight into the query. Which of them happened in the first quarter of 2024?
     //    Somebody wrote
-    //        WHERE delivered BETWEEN '2024-01-01' AND '2024-03-31'
-    //    and got 1. '2024-03-31' means midnight at the START of March 31, so the delivery
-    //    at 18:30 that evening is later than the end of the range. Write the half-open
-    //    version.
+    //        WHERE delivered BETWEEN DATE '2024-01-01' AND DATE '2024-03-31'
+    //    and got 1. Against a timestamp, DATE '2024-03-31' is midnight at the START of
+    //    March 31, so the delivery at 18:30 that evening is later than the end of the
+    //    range. Write the half-open version.
     //    (Predict how many of the three are in the quarter before you run it.)
     def "diagnose: BETWEEN misses the evening of the last day"() {
         expect:

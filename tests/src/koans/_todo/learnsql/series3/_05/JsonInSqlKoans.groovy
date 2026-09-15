@@ -41,7 +41,7 @@ import spock.lang.Stepwise
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
  * LEVEL ●● of ●●●●. BUILDS ON: Series 1 · 07 (types — JSON is text until it is parsed),
- * 1 · 45 (a missing key is a NULL), Series 2 · 30 (text functions).
+ * 1 · 45 (a missing key is a NULL), Series 2 · 40 (text functions).
  * DATA: Northwind has no JSON column — curriculum.yaml's bulk-dataset note says what to decide.
  * Was 15 until the 2026-09-14 reorder.
  */

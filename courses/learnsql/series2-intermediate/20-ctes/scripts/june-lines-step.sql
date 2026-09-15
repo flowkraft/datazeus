@@ -4,8 +4,8 @@ WITH june_lines AS (
   FROM "Order Details" d
   JOIN "Orders" o
     ON o."OrderID" = d."OrderID"
-  WHERE o."OrderDate" >= '2024-06-01'
-    AND o."OrderDate" <  '2024-07-01'
+  WHERE o."OrderDate" >= DATE '2024-06-01'
+    AND o."OrderDate" <  DATE '2024-07-01'
 )
 SELECT *
 FROM june_lines

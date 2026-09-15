@@ -14,7 +14,8 @@ import spock.lang.Unroll
  *    customers-above-the-average-customer-with                                §1 name it, then use it
  *    june-report-with, june-report-with-check, june-lines-step                §2 steps that read steps
  *    june-report-tidied, june-report-tidied-check                             §3 the tidy-up
- *    sales-and-freight-with, days-quiet-with, customers-by-status-with        §4 the hands-on and the through-line
+ *    sales-and-freight-with                                                   §4 the hands-on
+ *    open-orders-by-rep-and-courier-with, open-orders-by-rep-and-courier-check §4b the case file
  *
  * §5 asserts the numbers the KOANS' comments state, and §6 runs the koans file itself, as written,
  * on both engines — including the two EQUIVALENCE koans, whose expected rows are whatever the given
@@ -22,8 +23,9 @@ import spock.lang.Unroll
  *
  * ── A REWRITE IS ONLY A REWRITE IF THE ANSWER DID NOT MOVE ────────────────────────────────
  * The WITH versions are compared ROW FOR ROW with the queries they rewrite, including the ones that
- * live in other lessons' scripts folders (Series 2 · 00's nested query, Series 2 · 15's June cure and
- * sales-and-freight cure). If either lesson's script changes, this gate fails.
+ * live in other lessons' scripts folders (Series 2 · 00's nested query, Series 2 · 15's June cure,
+ * sales-and-freight cure and case-file report by rep and courier). If either lesson's script changes,
+ * this gate fails.
  */
 class CtesSpec extends NorthwindGateSpec {
 
@@ -109,7 +111,7 @@ class CtesSpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
-    // --- 4. THE HANDS-ON AND THE THROUGH-LINE --------------------------------------------------------
+    // --- 4. THE HANDS-ON ---------------------------------------------------------------------------
 
     @Unroll
     def "[#engine] the hands-on rewrite returns last lesson's sales-and-freight cure row for row: Frankenversand 268.33 first"() {
@@ -126,19 +128,40 @@ class CtesSpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
+    // --- 4b. THE CASE FILE: THE REPORT, AS NAMED STEPS ----------------------------------------------
+
     @Unroll
-    def "[#engine] days_quiet: QUICK-Stop 199 on top, and 11 gone quiet against 14 active"() {
+    def "[#engine] case file: the joins lesson's report as named steps — 3 rows by rep and courier, row for row the nested version, 27 orders, 19169"() {
         given:
-        def top = sqlFor(engine).rows(script("days-quiet-with"))
-        def byStatus = sqlFor(engine).rows(script("customers-by-status-with"))
+        def with = sqlFor(engine).rows(script("open-orders-by-rep-and-courier-with"))
+        def nested = sqlFor(engine).rows(new File("../courses/learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/scripts/no-ship-date-by-rep-and-courier.sql").text)
+        def check = sqlFor(engine).firstRow(script("open-orders-by-rep-and-courier-check"))
+        def asCard = { List rows -> rows.collect { [it.Rep, it.Courier, it.Orders as int, dec(it.Sales), dec(it.Freight)] } }
 
-        expect: "gone-quiet's card"
-        top.collect { [it.CompanyName, it.Days as int, it.Status] } == [
-                ["QUICK-Stop", 199, "gone quiet"], ["Toms Spezialitäten", 190, "gone quiet"], ["Die Wandernde Kuh", 183, "gone quiet"],
-                ["Antonio Moreno Taquería", 159, "gone quiet"], ["Blauer See Delikatessen", 138, "gone quiet"]]
+        expect: "case-report's card, in order"
+        asCard(with) == [
+                ["Nancy", "Speedy Express", 24, dec("18848.3"), dec("1277.84")],
+                ["Janet", "United Package", 2, dec("292.2"), dec("38.25")],
+                ["Nancy", "United Package", 1, dec("28.5"), dec("11.61")]]
 
-        and: "its label"
-        byStatus.collect { [it.Status, it.Customers as int] } == [["active", 14], ["gone quiet", 11]]
+        and: "a rewrite, not a new report: row for row what the joins lesson's nested version returns"
+        asCard(with) == asCard(nested)
+
+        and: "case-report-check's card: 3 rows, 27 orders, 19169"
+        [check.Rows as int, check.Orders as int, dec(check.Sales)] == [3, 27, dec("19169")]
+
+        and: "the step the article says to look inside first holds all 27 orders with no ship date"
+        (sqlFor(engine).firstRow('''WITH open_orders AS (SELECT "OrderID" FROM "Orders" WHERE "ShippedDate" IS NULL)
+                                    SELECT count(*) AS n FROM open_orders''').n as int) == 27
+
+        and: "case-the-report's note, and the article's opening: 19169 of 58153.31 — a third"
+        def money = sqlFor(engine).firstRow('''SELECT ROUND(SUM(CASE WHEN o."ShippedDate" IS NULL
+                                                        THEN d."UnitPrice" * d."Quantity" * (1 - d."Discount") ELSE 0 END), 2) AS open_sales,
+                                                      ROUND(SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")), 2) AS all_sales
+                                               FROM "Order Details" d JOIN "Orders" o ON o."OrderID" = d."OrderID"''')
+        dec(money.open_sales) == dec("19169")
+        dec(money.all_sales) == dec("58153.31")
+        (money.open_sales as BigDecimal).divide(money.all_sales as BigDecimal, 4, java.math.RoundingMode.HALF_UP) == new BigDecimal("0.3296")   // "a third"
 
         where:
         engine << ENGINES
@@ -160,7 +183,7 @@ class CtesSpec extends NorthwindGateSpec {
                                              JOIN "Orders" o ON o."OrderID" = d."OrderID")
                                SELECT c."CategoryName", sum(l."Quantity") AS u FROM "Categories" c
                                LEFT JOIN lines l ON l."CategoryID" = c."CategoryID"
-                               WHERE l."OrderDate" >= '2023-08-01' AND l."OrderDate" < '2023-09-01'
+                               WHERE l."OrderDate" >= DATE '2023-08-01' AND l."OrderDate" < DATE '2023-09-01'
                                GROUP BY c."CategoryName"''').size() == 6
 
         and: "koan 9: ten countries, the average country is 5815.33"
@@ -175,7 +198,7 @@ class CtesSpec extends NorthwindGateSpec {
         sqlFor(engine).firstRow('''SELECT count(DISTINCT p."SupplierID") AS n FROM "Products" p
                                    JOIN "Order Details" d ON d."ProductID" = p."ProductID"
                                    JOIN "Orders" o ON o."OrderID" = d."OrderID"
-                                   WHERE o."OrderDate" >= '2023-08-01' AND o."OrderDate" < '2023-09-01' ''').n == 6
+                                   WHERE o."OrderDate" >= DATE '2023-08-01' AND o."OrderDate" < DATE '2023-09-01' ''').n == 6
 
         where:
         engine << ENGINES
@@ -282,7 +305,7 @@ class CtesSpec extends NorthwindGateSpec {
               FROM "Products" p
               JOIN "Order Details" d ON d."ProductID" = p."ProductID"
               GROUP BY p."SupplierID"'''],
-            "diagnose: the tidy-up that dropped two categories"                   : ["o.\"OrderDate\" >= '2023-08-01' AND o.\"OrderDate\" < '2023-09-01'"],
+            "diagnose: the tidy-up that dropped two categories"                   : ["o.\"OrderDate\" >= DATE '2023-08-01' AND o.\"OrderDate\" < DATE '2023-09-01'"],
             "run one step on its own"                                             : ["august_lines"],
             "equivalent: rewrite the shipper report with WITH"                    : ['''SELECT o."ShipVia", count(*) AS "Lines"
               FROM "Orders" o
@@ -313,7 +336,7 @@ class CtesSpec extends NorthwindGateSpec {
                   FROM "Products" p
                   JOIN "Order Details" d ON d."ProductID" = p."ProductID"
                   JOIN "Orders" o ON o."OrderID" = d."OrderID"
-                  WHERE o."OrderDate" >= '2023-08-01' AND o."OrderDate" < '2023-09-01'
+                  WHERE o."OrderDate" >= DATE '2023-08-01' AND o."OrderDate" < DATE '2023-09-01'
                   GROUP BY p."SupplierID"
                 )
                 SELECT s."CompanyName", pc."Products", a."Units"

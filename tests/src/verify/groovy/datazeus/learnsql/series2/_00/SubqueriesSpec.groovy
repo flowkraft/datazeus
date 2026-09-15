@@ -20,6 +20,8 @@ import java.sql.SQLException
  *    chai-customers, chai-customers-joined                          §3 a list
  *    average-sale, customers-above-the-average-line,
  *    average-customer, customers-above-the-average-customer         §4 a table, and the trap
+ *    sales-with-no-ship-date,
+ *    customers-above-the-average-customer-delivered                 §4b the case file
  *
  * §5 asserts every number the KOANS' comments state, and §6 runs the koans file itself, as
  * written, on both engines (ported from Series 1 · 50 §8).
@@ -276,6 +278,115 @@ class SubqueriesSpec extends NorthwindGateSpec {
         engine << ENGINES
     }
 
+    // --- 4b. THE CASE FILE: the report counted orders with no ship date -------------------------
+    // The video's case-* slides and the article's "The report counted orders with no ship date" and
+    // "The nine, on delivered sales". Figures from .docs/plan-sql-series2-story.md §2, measured on
+    // DuckDB 2026-09-15 and asserted here on both engines.
+
+    @Unroll
+    def "[#engine] two values side by side: 19169 of 58153.31 is on orders with no ship date — a third"() {
+        given:
+        def rows = sqlFor(engine).rows(script("sales-with-no-ship-date"))
+
+        expect: "case-no-ship-date's premise: in Northwind, 27 of the 79 orders have no ship date"
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Orders" WHERE "ShippedDate" IS NULL').n == 27
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Orders"').n == 79
+
+        and: "case-a-third's card: one row, the two values"
+        rows.size() == 1
+        dec(rows[0]["No ship date"]) == dec("19169")
+        dec(rows[0]["All sales"]) == dec("58153.31")
+
+        and: "'a third' — 19169 / 58153.31 = 0.33"
+        new BigDecimal("19169").divide(new BigDecimal("58153.31"), 2, java.math.RoundingMode.HALF_UP) == new BigDecimal("0.33")
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] on delivered sales, 7 customers beat the average delivered customer, 1559.37 — and Cactus is not one of them"() {
+        given:
+        def seven = sqlFor(engine).rows(script("customers-above-the-average-customer-delivered"))
+        def nine = sqlFor(engine).rows(script("customers-above-the-average-customer"))
+        def delivered = sqlFor(engine).rows('''
+                SELECT c."CompanyName" AS n,
+                       ROUND(SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")), 2) AS t
+                FROM "Customers" c
+                JOIN "Orders" o ON o."CustomerID" = c."CustomerID"
+                JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+                WHERE o."ShippedDate" IS NOT NULL
+                GROUP BY c."CompanyName"
+                ORDER BY t DESC''')
+
+        expect: "case-seven's card, row for row"
+        seven.collect { [it.CompanyName, dec(it["Delivered sales"])] } ==
+                [["Lehmanns Marktstand", dec("3881.75")], ["Ernst Handel", dec("3812.63")],
+                 ["Alfreds Futterkiste", dec("3748.28")], ["Frankenversand", dec("3581.22")],
+                 ["Morgenstern Gesundkost", dec("2782.96")], ["LILA-Supermercado", dec("1728.38")],
+                 ["Blauer See Delikatessen", dec("1626")]]
+
+        and: "the average delivered customer is 1559.37"
+        dec(sqlFor(engine).firstRow('''SELECT ROUND(AVG(t."Total"), 2) AS a
+                                       FROM (SELECT o."CustomerID",
+                                                    SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")) AS "Total"
+                                             FROM "Orders" o
+                                             JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+                                             WHERE o."ShippedDate" IS NOT NULL
+                                             GROUP BY o."CustomerID") AS t''').a) == dec("1559.37")
+
+        and: "run the inside on its own: 25 rows — every customer has an order with a ship date, so it is still the average of all 25"
+        delivered.size() == 25
+
+        and: "NOTHING NEW IN THE SQL: the nine's script, plus the two WHERE lines and the renamed column — nothing else"
+        lines(script("customers-above-the-average-customer-delivered"))
+                .findAll { !it.contains('"ShippedDate" IS NOT NULL') }
+                *.replace('"Delivered sales"', '"Total sales"') == lines(script("customers-above-the-average-customer"))
+        lines(script("customers-above-the-average-customer-delivered")).count { it.contains('"ShippedDate" IS NOT NULL') } == 2
+
+        and: "three of the nine drop out — Cactus, Around the Horn, Great Lakes — and LILA-Supermercado comes in"
+        (nine*.CompanyName - seven*.CompanyName).toSet() ==
+                ["Cactus Comidas para llevar", "Around the Horn", "Great Lakes Food Market"] as Set
+        (seven*.CompanyName - nine*.CompanyName) == ["LILA-Supermercado"]
+
+        and: "case-cactus: number one on what it ordered, 4567.8; 1181.95 delivered, 14th of 25"
+        nine[0].CompanyName == "Cactus Comidas para llevar"
+        dec(nine[0]["Total sales"]) == dec("4567.8")
+        delivered.findIndexOf { it.n == "Cactus Comidas para llevar" } == 13
+        dec(delivered[13].t) == dec("1181.95")
+
+        and: "the delivered totals are all different, so the rank and the row order are the query's promise"
+        delivered.collect { dec(it.t) }.toSet().size() == 25
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] why the filter is written twice: with the outer WHERE only, the brackets average what was ORDERED and 5 pass"() {
+        // case-seven's second and third turns, and the article's "Why the filter is written twice".
+        // The query is the lesson's own script with the inner WHERE removed — so this asserts exactly
+        // the mistake the slide names, not a look-alike.
+        given:
+        def src = script("customers-above-the-average-customer-delivered")
+        def outerOnly = src.replaceAll(/(?m)^[ \t]*WHERE o2\."ShippedDate" IS NOT NULL[ \t]*\r?\n/, '')
+        def rows = sqlFor(engine).rows(outerOnly)
+
+        expect: "the inner WHERE really was removed, and only that"
+        outerOnly != src
+        outerOnly.count('"ShippedDate" IS NOT NULL') == 1
+
+        and: "the brackets without it return the average ordered customer, 2326.13"
+        dec(sqlFor(engine).firstRow(script("average-customer")).values().first()) == dec("2326.13")
+
+        and: "five customers pass, with no error: the top five of the seven"
+        rows*.CompanyName == ["Lehmanns Marktstand", "Ernst Handel", "Alfreds Futterkiste",
+                              "Frankenversand", "Morgenstern Gesundkost"]
+
+        where:
+        engine << ENGINES
+    }
+
     // --- 5. What the KOANS stand on --------------------------------------------------------------
 
     @Unroll
@@ -367,6 +478,11 @@ class SubqueriesSpec extends NorthwindGateSpec {
 
     private static String script(String name) {
         new File("../courses/learnsql/series2-intermediate/00-subqueries/scripts/${name}.sql").text
+    }
+
+    /** A script's lines with trailing whitespace (and any CR) removed, for a line-by-line comparison. */
+    private static List<String> lines(String s) {
+        s.readLines().collect { it.replaceAll(/\s+$/, '') }.findAll { it }
     }
 
     private static String koansSource() {

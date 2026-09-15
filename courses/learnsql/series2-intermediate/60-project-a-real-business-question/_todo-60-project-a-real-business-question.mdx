@@ -1,5 +1,5 @@
 ---
-title: "Project — Answering a Real Business Question End to End"
+title: "Subqueries + CTEs + Window Functions — Solving a Real Business Case, End to End"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
 topic: "learn-sql"
 tags: ["project"]
@@ -38,20 +38,16 @@ published: false
     SQL: NOTHING NEW, and say so out loud in the article. Subqueries (00) and EXISTS (25), multi-table joins and their grain
     (15), a CTE to name the steps (20), CASE for the buckets (05),
     a date range with the right boundaries (10), a window function for the rank or the
-    running total (50/55). A project introduces no syntax; that is what makes it one.
+    running total (35/45). A project introduces no syntax; that is what makes it one.
 
-    ── PICK A QUESTION THAT HAS A WRONG ANSWER THAT LOOKS RIGHT ────────────
-    This is the whole design of the episode. Without it, "end to end" just means
-    "longer", and a longer drill is still a drill. Two candidates that have the
-    property:
-      - revenue per customer per quarter, ranked, over a date range. Walks straight
-        into the fan-out from 15 (an order-level column summed once per LINE) and the
-        boundary bug from 10 (a range that quietly drops the last day).
-      - customers who bought in Q1 and not since — where a LEFT JOIN and a NOT EXISTS
-        give different answers and only one is right.
-    The article must NAME the number a careful person gets wrong, and the koans must be
-    able to tell the two apart. If the wrong answer and the right answer produce the same
-    rows, it is the wrong question for this episode.
+    ── A QUESTION THAT HAS WRONG ANSWERS THAT LOOK RIGHT — CHOSEN 2026-09-15 ────
+    Without that property, "end to end" just means "longer", and a longer drill is still a
+    drill. The question is the series case (THE SERIES CASE below): a third of what we sold
+    has no shipping record — did those orders really not ship, or did nobody record it? The
+    article must NAME the numbers a careful person gets wrong on the way, and the koans must
+    be able to tell the right answer from them.
+    (The two earlier candidates are dropped: revenue per customer per quarter answered nothing
+    the series asks, and "bought in Q1 and not since" is not churn on this data.)
 
     ── END ON THE HABIT, NOT THE QUERY ─────────────────────────────────────
     The last beat is the check, not the answer: after the join, did the number of
@@ -60,11 +56,34 @@ published: false
     Series 1 · 35 close on the same check on purpose — a reader who does two of these
     tracks should recognise it and know why it followed them.
 
+    ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
+    Take a real question end to end: steps that each run on their own, the row-count and total checks after
+    every join, a query someone can re-run, and a written recommendation that says what the numbers do and do
+    not prove. Nothing new in the SQL — say so.
+
+    ── THE SERIES CASE — THE WHOLE CASE (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
+    The question, chosen 2026-09-15: A THIRD OF WHAT WE SOLD HAS NO SHIPPING RECORD — did those orders really
+    not ship, or did nobody record it? The report for the manager:
+      size — 19169 of 58153.31 (33%), 27 of 79 orders, 24 of 25 customers, 25 past their RequiredDate;
+      since when — the first quarter of the data, ~4 more a quarter;
+      whose — Nancy's orders sent with Speedy Express (24 of 25), with the counter-examples;
+      the evidence both ways — customers kept reordering on the same rhythm (Series 2 · 45/58);
+      what SQL cannot decide — the rep's process or the courier;
+      the recommendation — send Speedy Express the 24 order numbers first, record what comes back, call only
+      the customers whose orders cannot be confirmed, and fix reports that count ordered sales as delivered
+      (the corrected top 10: Lehmanns first; Cactus falls from #1 to #14).
+    THE WRONG ANSWERS THAT LOOKED RIGHT, named in the article: the ordered-sales top 10, "it's Germany" (most
+    such orders, below-average share), Mexico's 50% (4 of 8), the freight fan-out, a 0% share from integer
+    division, "it's Nancy", "it's Speedy Express".
+    KOANS: the same case from the SUPPLIER side (Suppliers, Products, Order Details) — different tables, as
+    Series 1 · 50's koans did — ending on the habit check (the key count survives every join). Measure first.
+    RULES: "in Northwind"; "her orders"; a recommendation, not a verdict. All figures in .docs §2 — DuckDB
+    2026-09-15, re-assert on PostgreSQL.
+
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     The last episode of the series; it may use anything above it.
-    DATA (DuckDB, 2026-09-14): "bought in Q1 2024 and not since" is 10 customers via NOT EXISTS. The
-    claim that a LEFT JOIN version gives a DIFFERENT answer is NOT measured yet — measure it before
-    that question is chosen, because a wrong answer that matches the right one teaches nothing.
+    DATA: every figure of the case is in .docs/plan-sql-series2-story.md §2 (DuckDB, 2026-09-15) —
+    re-assert each on PostgreSQL in the spec before the article uses it.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:author

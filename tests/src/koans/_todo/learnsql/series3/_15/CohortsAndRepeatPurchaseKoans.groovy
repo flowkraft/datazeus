@@ -40,8 +40,8 @@ import spock.lang.Stepwise
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
  * LEVEL ●●●● of ●●●● — closes Block A. BUILDS ON: Series 2 · 10 (date_trunc, and the date spine for
- * months nobody came back in), 2 · 15 (cohort size at CUSTOMER grain), 2 · 20 (CTEs), 2 · 50 and
- * 2 · 55 (first order per customer, months since it), Series 3 · 00 (the grid is a pivot).
+ * months nobody came back in), 2 · 15 (cohort size at CUSTOMER grain), 2 · 20 (CTEs), 2 · 35 and
+ * 2 · 45 (first order per customer, months since it), Series 3 · 00 (the grid is a pivot).
  * DATA: 25 customers over 19 months makes a sparse grid — decide whether it needs the bulk data.
  * Was 10 until the 2026-09-14 reorder.
  */

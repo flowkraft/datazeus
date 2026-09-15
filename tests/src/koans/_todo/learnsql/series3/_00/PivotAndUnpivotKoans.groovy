@@ -41,7 +41,7 @@ import spock.lang.Stepwise
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
  * LEVEL ●● of ●●●● — the gentlest step in Series 3, which is why it opens it.
- * BUILDS ON: Series 2 · 05 (the portable pivot is SUM(CASE …)), 2 · 38 (subtotals).
+ * BUILDS ON: Series 2 · 05 (the portable pivot is SUM(CASE …)), 2 · 50 (subtotals).
  * SETS UP: Series 3 · 15 (a cohort grid is a pivot). Runs on Northwind; no bulk data needed.
  * Was 05 until the 2026-09-14 reorder.
  */

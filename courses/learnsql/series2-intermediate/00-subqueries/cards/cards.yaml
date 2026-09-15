@@ -12,13 +12,14 @@
 # Reviewed on a phone, weeks later, with no database open. EVERY CARD CARRIES ITS OWN PREMISE:
 # where a card needs a number (an average of 301.31, three beverages) the FRONT states it, and the
 # card tests the REASONING. No card names a Northwind table as something to remember, and none
-# asks for a figure from the dataset. The koans are where the SQL is typed; this deck is where
+# asks for a figure from the dataset. The koans are where the SQL is written; this deck is where
 # the rules have to hold without rows in reach.
 #
 # FILE ORDER IS THE CURRICULUM, in the lesson's order: why a subquery is needed, how it runs, the
 # value shape and its error, the list shape and why it does not repeat rows, the table shape and
-# its name, the average-of-what trap, the habits, and last the production card.
-# 13 basic, 4 cloze — about the 3:1 the existing decks run.
+# its name, the average-of-what trap, a filter the brackets do not see, the habits, and last the
+# production card.
+# 14 basic, 4 cloze — about the 3:1 the existing decks run.
 #
 # WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
 #   - Series 1 · 35 owns WHERE against HAVING. The card here is about why an aggregate needs a
@@ -36,8 +37,8 @@ tags: ["datazeus", "learn-sql", "series-2", "sql"]
 cards:
   # ── 1. WHY A SUBQUERY ──
   - basic:
-      front: "You find the average price with one query, then type that number into the WHERE of a second query. The report is correct today. What goes wrong later?"
-      back: "The typed number goes stale. When prices change, the real average moves but the query still compares with the old number, and nothing warns you. A subquery recalculates the average every time the query runs."
+      front: "You find the average price with one query, then paste that number into the WHERE of a second query. The report is correct today. What goes wrong later?"
+      back: "The pasted number goes stale. When prices change, the real average moves but the query still compares with the old number, and nothing warns you. A subquery recalculates the average every time the query runs."
 
   - basic:
       front: "Why does <code>WHERE unit_price &gt; AVG(unit_price)</code> fail?"
@@ -48,7 +49,7 @@ cards:
   # ── 2. THE VALUE SHAPE, AND ITS ERROR ──
   - basic:
       front: "A subquery sits on the right of <code>&gt;</code>. What must it return?"
-      back: "Exactly one value: one row and one column. The comparison uses it as if the number had been typed there."
+      back: "Exactly one value: one row and one column. The comparison uses it as if the number had been written there."
 
   - basic:
       front: "<code>WHERE price &gt; (SELECT price FROM products WHERE category_id = 1)</code> stops with \"more than one row returned by a subquery used as an expression\". Category 1 has three products. What is the error really asking?"
@@ -82,6 +83,11 @@ cards:
   - basic:
       front: "Two queries are identical except for the subquery inside the HAVING. One returns 25 customers, the other 9. Neither errors. What does that tell you about subqueries?"
       back: "The outer query trusts whatever value the subquery returns. A subquery with the wrong grain produces a plausible, wrong answer with no warning, so check what it returns before you trust the result."
+
+  # ── 5b. A FILTER THE BRACKETS DO NOT SEE (the case file: the nine re-run on delivered sales) ──
+  - basic:
+      front: "A report keeps only shipped orders with <code>WHERE shipped_date IS NOT NULL</code>, and its HAVING compares each customer's total with <code>(SELECT AVG(t.total) FROM (SELECT customer_id, SUM(amount) AS total FROM … GROUP BY customer_id) AS t)</code>. The shipped filter is written only in the outer query. What goes wrong?"
+      back: "The subquery is a query of its own and does not see the outer query's WHERE, so it still averages every order, shipped or not. Shipped totals get compared with an all-orders average: a plausible, wrong list with no error. Write the same filter inside the brackets too."
 
   # ── 6. THE HABITS ──
   - basic:

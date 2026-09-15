@@ -185,7 +185,7 @@ title: Learn SQL
 # Nothing before this: episode 00 assumes a person who has never written a query.
 #
 # What comes AFTER is Learn Data Modeling, which declares this track in its own
-# `prerequisites` block (Series 1 entire, plus INSERT from Series 2 · 48). The two compose in
+# `prerequisites` block (Series 1 entire, plus INSERT from Series 2 · 55). The two compose in
 # that order: you get read access before you get DDL rights, in a career and in this academy.
 prerequisites: []
 
@@ -204,7 +204,7 @@ excludes:
   - topic: "Choosing indexes while designing the schema"
     where: "covered in Data Modeling, Series 2 · 40. In this course, Series 3 is EXPLAIN and the mechanics, on a query that already exists"
   - topic: "Isolation levels, locking & concurrency"
-    where: "covered in Data Ops, Series 2 — Running PostgreSQL in Production. In this course, Series 2 · 48 covers the COMMIT and ROLLBACK basics"
+    where: "covered in Data Ops, Series 2 — Running PostgreSQL in Production. In this course, Series 2 · 55 covers the COMMIT and ROLLBACK basics"
   # ADDED 2026-09-02. An audit found stored procedures had no episode and NO EXCLUDE anywhere
   # in the academy — the single most conspicuous silence for a reader arriving from an
   # enterprise codebase, where a large share of the business logic is in the database.
@@ -431,7 +431,7 @@ series:
       # NOT TAUGHT HERE, and each was considered: HAVING is 35, and the episode ends by walking
       # Leo into the error that makes it necessary. COUNT(col) skipping NULLs is 45's loop back
       # to 25. Names beside the grouped codes need the JOIN (40). GROUPING SETS / ROLLUP / CUBE
-      # are Series 2 - 38, added 2026-09-07 to keep this promise; GROUP BY <ordinal> is later. `GROUP BY <select alias>` IS used on screen —
+      # are Series 2 - 50, added 2026-09-07 to keep this promise; GROUP BY <ordinal> is later. `GROUP BY <select alias>` IS used on screen —
       # both our engines allow it, it is not standard, and the article carries the portable form.
       - n: "30"
         slug: group-by
@@ -511,16 +511,21 @@ series:
     #      join that silently DROPS rows or MULTIPLIES the money, cured in both cases by narrowing
     #      or aggregating BEFORE the join, which is 00's tool.
     #   3. THE ONE-TOOL EPISODES MOVED FORWARD, AND BETWEEN THE HARD ONES. CASE (05) and dates (10)
-    #      follow the opener; strings (30) is the breather after 25; self-joins (42) and views (45)
-    #      sit between grouping sets and the window functions.
+    #      follow the opener; strings (40) is the breather between the two window-function episodes.
+    #   4. WINDOW FUNCTIONS MOVED TO THE MIDDLE (2026-09-15). They are the most-used intermediate skill,
+    #      and at 50 and 55 anyone who stopped two-thirds of the way never met them, while the series
+    #      ended on three ●●●● episodes back to back. Now self-joins (30) put a row beside another row
+    #      the hard way, Window Functions I (35) replaces that, strings (40) is the breather, and Window
+    #      Functions II (45) follows. The case's second question runs forward too: the reorder evidence
+    #      (45) and the twist (50) come before the fix (55), not after it.
     #
     # THE RAMP — ● easy, ●●●● hard — and the rule behind it: EVERY EPISODE USES ONLY WHAT CAME
     # BEFORE IT. Each episode's comment below names what it builds on.
     #   00 Subqueries ●●          05 CASE ●                 10 Dates & Times ●●
     #   15 JOINs & Grain ●●●      20 CTEs ●●                25 EXISTS & correlated ●●●
-    #   30 Strings & regex ●      35 Set operations ●●      38 Grouping sets ●●●
-    #   42 Self-joins ●●          45 Views ●●               48 INSERT/UPDATE/DELETE ●●
-    #   50 Windows I ●●●●         55 Windows II ●●●●        58 Median ●●●●      60 Project
+    #   30 Self-joins ●●          35 Windows I ●●●●         40 Strings & regex ●
+    #   45 Windows II ●●●●        48 Set operations ●●      50 Grouping sets ●●●
+    #   52 Views ●●               55 INSERT/UPDATE/DELETE ●●  58 Median ●●●●    60 Project
     #
     # WHY SUBQUERIES OPEN IT, AND NOT CASE (the gentlest candidate). Series 1 · 50 closes, in the
     # video and in the article, on "Series 2 starts where today ended — queries built out of other
@@ -532,10 +537,46 @@ series:
     #   05 subqueries → 00 subqueries (uncorrelated) + 25 exists-and-correlated-subqueries
     #   08 → 20 · 10 → 42 · 15 → 05 · 20 → 10 · 25 → 30 · 40 → 48
     #   35, 38, 45, 50, 55, 58 and 60 kept their numbers.
+    #   REORDERED 2026-09-15, before any of them was written (slugs unchanged):
+    #   30 → 40 · 35 → 48 · 38 → 50 · 42 → 30 · 45 → 52 · 48 → 55 · 50 → 35 · 55 → 45. 58 and 60 kept theirs.
     #
     # EVERY NUMBER QUOTED BELOW AND IN THE BRIEFS was run on datasets/northwind/northwind.duckdb on
     # 2026-09-14. They are DuckDB results; each lesson's spec re-asserts them on BOTH engines before
     # anything is written on top of them, exactly as Series 1 did.
+    #
+    # ── A COMPLETE CURRICULUM, AND THE STORY WHERE IT TEACHES BEST (owner, 2026-09-15) ─────────
+    # THE JOB OF THIS SERIES IS THE INTERMEDIATE SQL PEOPLE ACTUALLY USE AT WORK — all of it, not the
+    # parts a story happens to need. The story does not compete with that; it appears where it is the
+    # best way to show a skill on real data and make it stick. Each episode has two possible parts:
+    #   THE LESSON     the whole workplace skill on its best examples. Never trimmed for the story.
+    #   THE CASE FILE  optional: the SAME skill applied to the series case, one clue forward.
+    # A case file exists only if it passes three tests: it uses EXACTLY this episode's skill; it yields a
+    # real, measured number that moves the case; and it is an example you would pick anyway to teach this
+    # skill at work. Where the case's rows ARE the best example, the story is the lesson's MAIN EXAMPLE.
+    # Every episode below says which: MAIN EXAMPLE, CASE FILE SEGMENT, or NONE. The clues follow the
+    # curriculum's order, never the reverse, and a learner who skips the case files misses no skill.
+    # Also: no SQL invented for the story; NO PUZZLES (an edge case earns airtime only if it produces a
+    # wrong number at work; niche syntax gets a line); koans keep using different tables from the lesson.
+    #
+    # ── THE SERIES STORY (2026-09-15; REPLACES "which customers are we losing?") ─────────────────
+    # That question failed on its own data: every customer reorders on a ~190-day cycle, so a
+    # "gone quiet after 90 days" label flagged on-schedule customers, #1 and #2 among them, and the
+    # honest answer was "nobody" — true and worthless to a business.
+    # THE NEW ONE, opened at the end of 00: Series 1 · 50's top 10 ranks customers on what they
+    # ORDERED; on what actually SHIPPED, #1 falls to #14. A THIRD OF WHAT WE SOLD HAS NO SHIPPING
+    # RECORD (19169.00 of 58153.31, 27 of 79 orders, 24 of 25 customers). Two questions, in order:
+    #   00–20  HOW BIG IS IT, SINCE WHEN, WHERE, AND WHOSE? — since the first week, ~4 a quarter; not a
+    #          country, not a product; almost all one rep's orders sent through one courier.
+    #   25–60  DID THOSE ORDERS REALLY NOT SHIP, OR DID NOBODY RECORD IT? — customers kept ordering on
+    #          the same rhythm while they sat open; the rep and the courier cannot be separated in the
+    #          data; "late" defined from the data; the fix applied safely.
+    #   60     A RECOMMENDATION, NOT A VERDICT: send Speedy Express the 24 order numbers first, call only
+    #          the customers whose orders cannot be confirmed, fix the reports, say what SQL cannot decide.
+    # The case is the MAIN EXAMPLE in 7 episodes, a CASE FILE SEGMENT in 7, and absent (NONE) from 2.
+    # NEVER: present Northwind as a real company's figures; blame a person (say "her orders", keep the
+    # counter-examples on screen, end on a process); claim a verdict.
+    # Every figure, the fit per episode and what the five drafts must change: .docs/plan-sql-series2-story.md.
+    # ALL FIGURES THERE ARE DuckDB ONLY (2026-09-15) — re-assert on PostgreSQL before a lesson uses one.
     episodes:
       # OPENS THE SERIES ON SERIES 1 · 50's LAST LINE — "queries built out of other queries" — and
       # on that report's next question: WHICH CUSTOMERS SPEND MORE THAN THE AVERAGE CUSTOMER?
@@ -552,6 +593,12 @@ series:
       #   a TABLE   subquery in FROM     the per-customer totals the hook needs
       # EXISTS, NOT EXISTS and correlated subqueries are 25, after CTEs. Do not preview them here.
       # BUILDS ON: Series 1 · 25 (aggregates), 1 · 30 (GROUP BY), 1 · 50 (the report and its grain).
+      # WORKPLACE: compare each row with a number the data computes (an average, a maximum); filter by a list
+      #   another query produces; query a query's result; check what the inside query's rows are first.
+      # STORY — CASE FILE SEGMENT (the ending): the nine-customer query re-run on DELIVERED sales (WHERE
+      #   "ShippedDate" IS NOT NULL in both halves): 7 customers beat the average delivered customer (1559.37), and
+      #   Cactus — #1 on ordered sales, 4567.8 — is not one of them (delivered 1181.95). A pair of value subqueries
+      #   shows 19169 of 58153.31 (33%) sits on orders with no ship date. The series question is asked.
       - n: "00"
         slug: subqueries
         title: "Subqueries — Using One Query's Result Inside Another"
@@ -571,7 +618,13 @@ series:
       # over 50 as 'heavy' and nothing else, and 42 of the 79 orders carry no label at all — which
       # Series 1 · 45's rules then drop from every comparison and every count(column).
       # COALESCE is Series 1 · 45's; name it here in one line as the CASE it abbreviates.
-      # SETS UP: 38 (the GROUPING() labelling idiom is a CASE) and Series 3 · 00 (the portable pivot).
+      # SETS UP: 50 (the GROUPING() labelling idiom is a CASE) and Series 3 · 00 (the portable pivot).
+      # WORKPLACE: label and bucket rows; one column per status with conditional counts and sums; percentages
+      #   that do not come back as 0 (integer division); always write the ELSE.
+      # STORY — MAIN EXAMPLE (the status columns): shipped vs no ship date per country, with a share column.
+      #   SUM(CASE …) / count(*) is 0 on PostgreSQL (integer division) and 0.3125 for Germany on DuckDB; 100.0 * …
+      #   gives Germany 31.3 — the most such orders, yet below the company's 34.2 — and Mexico 50.0, which is 4 of 8.
+      #   Per rep: Nancy 25 of 28 — her orders, not a verdict. The freight bands and both ELSE traps keep their examples.
       - n: "05"
         slug: case-expressions
         title: "CASE — SQL's If/Then for Labels & Buckets"
@@ -581,7 +634,7 @@ series:
         status: planned
       # MOVED UP FROM 20 ON 2026-09-14. It adds one tool to three Series 1 skills — the half-open
       # range of 1 · 10, EXTRACT from 1 · 30, and the date arithmetic 1 · 45 used on trust — and two
-      # later episodes need it: 15 (the June report needs a clean month boundary) and 55
+      # later episodes need it: 15 (the June report needs a clean month boundary) and 45
       # (month-over-month needs date_trunc).
       #
       # DATE ARITHMETIC IS PART OF THIS EPISODE, not a footnote — the same competitor audit
@@ -609,6 +662,11 @@ series:
       # PORTABILITY, in one line: generate_series is PostgreSQL's and DuckDB's (DuckDB returns TIMESTAMPs
       # even from DATE arguments); SQL Server and MySQL spell it differently, and a recursive CTE
       # (Series 3 · 10) builds the same spine anywhere. Series 4 owns the spellings.
+      # WORKPLACE: group by real months, half-open ranges, partial periods, days between dates, anchoring
+      #   "recent" on the data, filling days that have no rows.
+      # STORY — CASE FILE SEGMENT (since when): orders with no ship date per quarter placed — 2, 4, 4, 4, 4, 4, 5,
+      #   from the first quarter of the data; the oldest has waited 555 days; 25 of the 27 are past the customer's own
+      #   RequiredDate. The two Junes, BETWEEN's double count and the June date spine stay the main examples.
       - n: "10"
         slug: dates-and-times
         title: "Dates & Times — Getting Ranges and Boundaries Right"
@@ -657,6 +715,13 @@ series:
       # A five-table chain (sales per category per country) adds nothing a Series 1 · 50 viewer
       # needs taught — use it as an exercise, not as the lesson.
       # BUILDS ON: 00 (the cure), 10 (the June boundary), Series 1 · 40 and 1 · 50.
+      # WORKPLACE: joins across several tables that neither drop nor multiply rows; aggregate each measure at
+      #   its own grain before joining; bridge tables.
+      # STORY — CASE FILE SEGMENT (the money): aggregate first, then open orders by rep and courier — Nancy with
+      #   Speedy Express 24 orders, 18848.3 in sales, 1277.84 freight; Janet with United Package 2, 292.2; Nancy with
+      #   United Package 1, 28.5. MEASURED 2026-09-15: per courier the freight fan-out inflates every total ~2.5x
+      #   (Federal 3335.24 joined vs 1338.78) but keeps the ranking, so the per-customer version — which moves #1 —
+      #   stays the main example.
       - n: "15"
         slug: multi-table-joins-duplicate-rows
         title: "Multi-Table JOINs & Grain — When a Join Silently Drops or Multiplies Your Rows"
@@ -672,8 +737,12 @@ series:
       # The motivation is free at this point: 15's cures work, and they are subqueries nested in a
       # FROM. "Name it, then use the name" is the whole lesson — the June product report rewritten
       # as a WITH reads top to bottom in the order a person thinks it.
-      # SETS UP: 25 (correlated subqueries read far better beside named steps) and 50 (filtering on
+      # SETS UP: 25 (correlated subqueries read far better beside named steps) and 35 (filtering on
       # ROW_NUMBER needs a CTE or a subquery).
+      # WORKPLACE: break a long query into named steps, reuse a step, debug one step at a time, check a rewrite
+      #   returns the same rows and totals.
+      # STORY — CASE FILE SEGMENT (the report): open_orders -> order_value -> by rep and courier, checked against
+      #   15's nested version (3 rows, 19169 in total). Replaces the "customers who have gone quiet" section.
       - n: "20"
         slug: ctes
         title: "CTEs (WITH) — Breaking a Long Query Into Named Steps"
@@ -699,9 +768,15 @@ series:
       # 50 units, EXISTS (… HAVING sum("Quantity") > 50) with no GROUP BY: 6 orders. The brief
       # carries the query.
       #
-      # A second verified question, which 35 answers again with EXCEPT: customers who ordered in
-      # Q1 2024 and never since — 10 of them.
+      # A second verified question: customers who ordered in Q1 2024 and never since — 10 of them.
+      # NOT A CHURN QUESTION (2026-09-15): every one of the 10 is simply not due for its next order
+      # yet (78–159 days since the last, ~190-day cycle). Use it as plain SQL, or not at all.
       # BUILDS ON: 00, 20, Series 1 · 35 and 1 · 45.
+      # WORKPLACE: "has any / has none" questions — EXISTS, NOT EXISTS, the Series 1 · 40 anti-join — correlated
+      #   subqueries, and NOT IN failing on a NULL.
+      # STORY — MAIN EXAMPLE (question 2 opens): 24 of 25 customers had an order with no ship date and
+      #   QUICK-Stop never did (NOT EXISTS); 18 placed a new order while an older one was still open (correlated
+      #   EXISTS). Would they, if it never arrived? The NOT IN trap keeps Employees.ReportsTo — a real NULL.
       - n: "25"
         slug: exists-and-correlated-subqueries
         title: "EXISTS & Correlated Subqueries — Questions About Each Row, and the NOT IN Trap"
@@ -709,29 +784,89 @@ series:
         hands_on: ["koan:choose", "koan:predict"]
         core: true
         status: planned
+      # MOVED FROM 10 TO 42 ON 2026-09-14, AND TO 30 ON 2026-09-15. It is a different join SHAPE — one
+      # table, two roles — not a third "rows that multiply" episode, so it does not belong beside 15.
+      # It sits DIRECTLY BEFORE WINDOW FUNCTIONS I (35): a row beside an earlier row, done with a
+      # self-join, is the hard way that 35 replaces. Series 3 · 10 walks the same hierarchy recursively.
+      # Northwind's "Employees" is thin (3 rows) — say so rather than pretending. What it has is
+      # enough for the one idea (checked 2026-09-14): Nancy and Janet report to Andrew, whose
+      # "ReportsTo" is NULL — so "each employee and their manager" loses Andrew under a plain JOIN
+      # and keeps him under a LEFT one. Series 1 · 40's rule, on a table joined to itself.
+      # Recursive walking is Series 3 · 10.
+      # WORKPLACE: compare rows in the same table — employee and manager, pairs of related rows, a row beside
+      #   an earlier row the pre-window way.
+      # STORY — NONE. Its best examples are manager and employee, and pairs of related rows; one line at most.
+      - n: "30"
+        slug: self-joins-and-hierarchies
+        title: "Self-JOINs & Hierarchies — Relating Rows to Other Rows in the Same Table"
+        short: "Self-JOINs & Hierarchies — rows in the same table"
+        hands_on: ["koan:complete"]
+        status: planned
+      # Moved down from Series 3, because "CTEs, subqueries and window functions on real questions" is not true
+      # without them: running totals, month-over-month, rank-within-region and
+      # latest-row-per-customer ARE what business questions look like, and they are the
+      # table stakes of an analyst screen. MOVED FROM 50 TO 35 ON 2026-09-15: mid-series, where most
+      # learners still are, rather than at the end. After the CTEs from episode 20 (a window function
+      # reads badly without them) and straight after 30's self-join, which it replaces.
+      #
+      # ROW_NUMBER is named in the title on purpose. "The latest row per customer" is the
+      # single most-searched SQL task there is, and the keywords-lead title convention
+      # exists precisely so the person searching for it finds this line.
+      # WORKPLACE: rank within groups, first/latest row per group, top N per group, a row beside its group's
+      #   total, removing duplicates.
+      # STORY — CASE FILE SEGMENT: each customer's oldest open order (ROW_NUMBER) and the corrected top 10 by
+      #   delivered sales (RANK). The tie trap stays off-story: no natural Northwind group ties at first place.
+      - n: "35"
+        slug: window-functions-i
+        title: "Window Functions I: OVER, PARTITION BY & ROW_NUMBER — The Latest Row per Customer"
+        short: "Window Functions I: OVER, PARTITION BY & ROW_NUMBER"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
       # One episode, not two: pattern matching and the string/number helpers are both
       # "functions for data nobody cleaned", and both are reference material a working
       # person looks up rather than memorises. Ships with a cheat sheet and covers the
       # number side too — ROUND, CAST and the formatting a report actually needs.
       #
-      # MOVED FROM 25 TO 30 ON 2026-09-14: it is the breather between the two hardest runs of the
-      # series (15–25 and 35–38), one tool at a time. It collects two Series 1 promises: LIKE's
+      # MOVED FROM 25 TO 30 ON 2026-09-14, AND TO 40 ON 2026-09-15: the breather between the two
+      # window-function episodes (35 and 45), one tool at a time. Its call sheet formats 35's call list. It collects two Series 1 promises: LIKE's
       # `_`, ESCAPE and case-insensitive matching (deferred by 1 · 10), and STRING_AGG — the text
       # aggregate 1 · 25 named as Series 2's. `||` is 1 · 20's; build on it, do not re-teach it.
-      - n: "30"
+      # WORKPLACE: case-insensitive search, trim and split, practical patterns, a list of rows in one cell
+      #   (STRING_AGG), CAST and number formatting for a report. No regex puzzles.
+      # STORY — CASE FILE SEGMENT (the call sheet): "Phone" in one format, each customer's open order numbers
+      #   in one cell (STRING_AGG). Parsing QuantityPerUnit stays off-story.
+      - n: "40"
         slug: string-functions-and-regex
         title: "String Functions, LIKE & Regex — Clean Up Messy Real-World Data"
         short: "String Functions, LIKE & Regex — clean up messy data"
         hands_on: ["koan:complete"]
         status: planned
-      # TWO CALLBACKS MAKE THIS MORE THAN A SYNTAX TOUR. Series 1 · 40 showed a FULL OUTER JOIN
-      # written as a UNION of a LEFT and a RIGHT join — and why UNION and not UNION ALL — so the
-      # learner has already used the operator once. And EXCEPT answers 25's "ordered in Q1 2024
-      # and never since" a second way (10 customers): prove the two agree, which is the koan.
-      - n: "35"
+      # MOVED FROM 55 TO 45 ON 2026-09-15. BUILDS ON 35 and on 10: month-over-month needs date_trunc to make the months before LAG can
+      # compare them.
+      # WORKPLACE: previous/next row (LAG, LEAD), running totals, month-over-month, frames.
+      # STORY — MAIN EXAMPLE for LAG (the key evidence): days from each order to the customer's next one average
+      #   175.5 after an order with no ship date and 178.3 after a shipped one (the medians, 190 and 190, wait for
+      #   58); plus the running total of sales with no ship date, 1501.25 -> 19169. The missing-months trap stays off-story.
+      - n: "45"
+        slug: window-functions-ii
+        title: "Window Functions II: LAG/LEAD, Running Totals & Frames — Month-over-Month Growth in One Query"
+        short: "Window Functions II: LAG/LEAD, Running Totals & Frames"
+        hands_on: ["koan:predict", "koan:complete"]
+        core: true
+        status: planned
+      # CORRECTED 2026-09-15: this said Series 1 · 40 wrote a FULL OUTER JOIN as a UNION of a LEFT and
+      # a RIGHT join. It does not — Series 1 · 40 has no UNION at all. The real callback: Series 1 · 40
+      # says FULL OUTER JOIN earns its place in RECONCILIATION, comparing two lists that should agree —
+      # and EXCEPT and INTERSECT are the set-based way to do exactly that.
+      # WORKPLACE: stack result sets (UNION ALL), deduplicate on purpose (UNION), reconcile two lists
+      #   (EXCEPT, INTERSECT).
+      # STORY — MAIN EXAMPLE (reconciliation): customers with a Speedy Express order EXCEPT customers who received
+      #   a Speedy delivery (23 of 24); customers with both an open and a shipped order (INTERSECT, 24).
+      - n: "48"
         slug: set-operations
-        title: "UNION, INTERSECT, EXCEPT — Combining and Subtracting Result Sets"
-        short: "UNION, INTERSECT, EXCEPT — combine or subtract"
+        title: "UNION, INTERSECT, EXCEPT — Stacking and Reconciling Result Sets"
+        short: "UNION, INTERSECT, EXCEPT — stack and reconcile lists"
         hands_on: ["koan:predict", "koan:choose"]
         status: planned
       # NEW 2026-09-07, and it closes a promise this file made and never kept: the GROUP BY
@@ -744,12 +879,12 @@ series:
       # Way" and has been all along.
       # THE EPISODE STILL BELONGS HERE, and the seam is clean: THIS course owns the SQL, so a
       # reader learning to write queries meets the syntax here, on Northwind, with UNION ALL
-      # fresh from 35. DATA WAREHOUSING owns the same keywords as a WAREHOUSING move — subtotals
+      # fresh from 48. DATA WAREHOUSING owns the same keywords as a WAREHOUSING move — subtotals
       # over a star schema, beside slice, dice, roll-up and drill-down, for a reader who is
       # there to build a warehouse rather than to learn SQL. Neither is redundant, and that
       # course's episode may assume this one.
       #
-      # PLACED AT 38, DIRECTLY AFTER UNION (35), and the order is the argument. The reader has
+      # PLACED AT 50, DIRECTLY AFTER UNION (48), and the order is the argument. The reader has
       # just learnt to stack result sets, so they can feel what this replaces: the report with
       # per-category totals, per-category-per-quarter totals and a grand total, written as three
       # queries stitched together with UNION ALL — three passes over the same table to produce
@@ -798,32 +933,25 @@ series:
       # UNIONed the detail and the grand total, then added a category filter to only one half —
       # or read a real NULL region as the "all regions" row and reported the same money twice.
       # Both look plausible on a slide, which is how they survive.
-      - n: "38"
+      # WORKPLACE: subtotals and a grand total in one query; label and sort the subtotal rows. ROLLUP, GROUPING
+      #   SETS and GROUPING() are the workplace part; CUBE's 2^n and GROUPING_ID get a line each.
+      # STORY — MAIN EXAMPLE (the twist): rep x courier with subtotals — Nancy sends 25 of 28 orders with
+      #   Speedy Express and 24 have no ship date; her 2 Federal Shipping orders shipped; Janet's one Speedy order
+      #   shipped. The data cannot separate the rep from the courier. The NULL collision keeps Customers.Region.
+      - n: "50"
         slug: grouping-sets-rollup-cube
         title: "GROUPING SETS, ROLLUP & CUBE — Subtotals and Grand Totals in One Pass"
         short: "GROUPING SETS, ROLLUP & CUBE — subtotals in one pass"
         hands_on: ["koan:equivalent", "koan:predict"]
-        status: planned
-      # MOVED FROM 10 TO 42 ON 2026-09-14. It is a different join SHAPE — one table, two roles —
-      # not a third "rows that multiply" episode, so it does not belong beside 15; and placed late
-      # it hands straight to Series 3 · 10, which walks the same hierarchy recursively.
-      # Northwind's "Employees" is thin (3 rows) — say so rather than pretending. What it has is
-      # enough for the one idea (checked 2026-09-14): Nancy and Janet report to Andrew, whose
-      # "ReportsTo" is NULL — so "each employee and their manager" loses Andrew under a plain JOIN
-      # and keeps him under a LEFT one. Series 1 · 40's rule, on a table joined to itself.
-      # Recursive walking is Series 3 · 10.
-      - n: "42"
-        slug: self-joins-and-hierarchies
-        title: "Self-JOINs & Hierarchies — Relating Rows to Other Rows in the Same Table"
-        short: "Self-JOINs & Hierarchies — rows in the same table"
-        hands_on: ["koan:complete"]
         status: planned
       # AFTER CTEs (20) ON PURPOSE: a view is a query given a name that outlives the session, and
       # the learner already names steps with WITH. "When it hides a problem" has a concrete answer
       # by now: a view that already joined order lines, summed again by somebody who cannot see
       # inside it — 15's fan-out, one layer of abstraction removed from the person who pays for it.
       # Materialized views are Data Warehousing — say so rather than half-teaching them.
-      - n: "45"
+      # WORKPLACE: save a query as a named, reusable object; know a view's grain before summing from it.
+      # STORY — NONE (one line at most: an open_orders view). The fan-out-hidden-in-a-view trap keeps its own example.
+      - n: "52"
         slug: views
         title: "VIEWs — Naming a Query So You Can Reuse It"
         short: "VIEWs — name a query, reuse it"
@@ -831,8 +959,9 @@ series:
         status: planned
       # The only episode that writes data — placed late, once filtering is second nature.
       # COMMIT/ROLLBACK basics live here; isolation levels belong to a future ops track.
-      # Renumbered from 40 to 48 on 2026-09-14, and it stays after the views: its place is
-      # "late", not any particular neighbour.
+      # Renumbered from 40 to 48 on 2026-09-14 and to 55 on 2026-09-15, still after the views: its
+      # place is "late", not any particular neighbour. In the case it is the fix, so it follows the
+      # evidence (45) and the twist (50). It needs only Series 1 skills.
       #
       # MUST COVER `INSERT … ON CONFLICT`, and this is the one real hole a competitor audit
       # found (Amigoscode's 60-episode PostgreSQL course, 2026-09-02 — it spends TWO of its
@@ -856,38 +985,18 @@ series:
       # check around it. THIS episode owes only the statement and what it does to one table;
       # the moment it starts discussing load strategies it is teaching that course's lesson.
       # (The audit found nothing else missing: COALESCE/NULLIF are Series 1 · 45, LIKE/ILIKE
-      # are Series 1 · 10, ROUND/CAST are Series 2 · 30, EXTRACT is Series 2 · 10, and every
+      # are Series 1 · 10, ROUND/CAST are Series 2 · 40, EXTRACT is Series 2 · 10, and every
       # key/constraint/DDL topic is deliberately Learn Data Modeling's.)
-      - n: "48"
-        slug: insert-update-delete
-        title: "INSERT, UPDATE, DELETE & Transactions — Change the Data, Safely"
-        short: "INSERT, UPDATE, DELETE & Transactions — safely"
-        hands_on: ["koan:predict", "koan:diagnose"]
-        core: true
-        status: planned
-      # Moved down from Series 3, because "CTEs, subqueries and window functions on real questions" is not true
-      # without them: running totals, month-over-month, rank-within-region and
-      # latest-row-per-customer ARE what business questions look like, and they are the
-      # table stakes of an analyst screen. They close the series rather than opening it
-      # because a window function reads badly without the CTEs from episode 20.
-      #
-      # ROW_NUMBER is named in the title on purpose. "The latest row per customer" is the
-      # single most-searched SQL task there is, and the keywords-lead title convention
-      # exists precisely so the person searching for it finds this line.
-      - n: "50"
-        slug: window-functions-i
-        title: "Window Functions I: OVER, PARTITION BY & ROW_NUMBER — The Latest Row per Customer"
-        short: "Window Functions I: OVER, PARTITION BY & ROW_NUMBER"
-        hands_on: ["koan:predict", "koan:complete"]
-        core: true
-        status: planned
-      # BUILDS ON 50 and on 10: month-over-month needs date_trunc to make the months before LAG can
-      # compare them.
+      # WORKPLACE: change data safely — the WHERE as a SELECT first, a transaction, check, roll back;
+      #   insert-or-update; update rows from a list somebody sends.
+      # STORY — MAIN EXAMPLE (the fix, safely): SUPPOSE Speedy Express sends confirmations — a typed VALUES list,
+      #   said plainly to be example input — record them in a transaction, re-run the report, roll back. The trap: an
+      #   UPDATE without "ShippedDate" IS NULL overwrites dates that were already recorded.
       - n: "55"
-        slug: window-functions-ii
-        title: "Window Functions II: LAG/LEAD, Running Totals & Frames — Month-over-Month Growth in One Query"
-        short: "Window Functions II: LAG/LEAD, Running Totals & Frames"
-        hands_on: ["koan:predict", "koan:complete"]
+        slug: insert-update-delete
+        title: "INSERT, UPDATE, DELETE, UPSERT & Transactions — Change the Data, Safely"
+        short: "INSERT, UPDATE, DELETE, UPSERT & Transactions — safely"
+        hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         status: planned
       # NEW 2026-09-07. An audit for performance coverage found something more basic: the words
@@ -899,7 +1008,7 @@ series:
       # PLACED AT 58, AFTER BOTH WINDOW-FUNCTION EPISODES, and it has to be: a percentile is
       # defined by ORDERING, the ANSI spelling is literally an ORDER BY inside the aggregate,
       # the neighbouring functions (NTILE, PERCENT_RANK, CUME_DIST) are window functions, and
-      # the MySQL workaround below needs ROW_NUMBER from 50. Before the Series 2 project, so
+      # the MySQL workaround below needs ROW_NUMBER from 35. Before the Series 2 project, so
       # the project can ask for a median.
       #
       # THE FRAMING, and it is a business point before it is a syntax point: the average is
@@ -938,7 +1047,7 @@ series:
       # Series 4: PostgreSQL, Oracle, SQL Server and Db2 all have PERCENTILE_CONT and
       # PERCENTILE_DISC. MYSQL HAS NEITHER, and neither does SQLite. So SHOW THE WORKAROUND —
       # ROW_NUMBER() and COUNT(*) over the group, then pick the middle row, or the two middle
-      # rows and average them for an even count. It needs Series 2 · 50, it is genuinely
+      # rows and average them for an even count. It needs Series 2 · 35, it is genuinely
       # fiddly, and a large share of readers will need it.
       #
       # COST, in one paragraph with a forward pointer rather than a detour: a percentile has to
@@ -954,6 +1063,10 @@ series:
       # and the number was never wrong — it was the wrong statistic. It is the purest example in
       # the course of a number that is right and still misleads, which is the flip side of the
       # rule this track uses everywhere else.
+      # WORKPLACE: typical values (the median, not the average), percentiles for service levels, medians per group.
+      # STORY — CASE FILE SEGMENT: "late" defined from the data (median 6 days to ship, slowest 9), and the
+      #   median gap to the next order confirmed: 190 after an open order, 190 after a shipped one. Average vs median
+      #   order value (736.12 vs 506.17) stays the main example.
       - n: "58"
         slug: median-and-percentiles
         title: "Median and Percentiles — WITHIN GROUP, and Why AVG Is Not the Answer"
@@ -964,15 +1077,18 @@ series:
       # with nothing that applied them — the same defect Python and Java & Groovy had.
       # It closes the series' own promise: a question a person actually asked, answered with
       # the subqueries, multi-table joins, CTEs and window functions this series taught.
-      # Its two candidate questions, and what is and is not measured yet: revenue per customer
-      # per quarter walks into 15's fan-out and 10's boundary; "bought in Q1 2024 and not since"
-      # is 10 customers via NOT EXISTS (checked 2026-09-14). The brief's claim that a LEFT JOIN
-      # version gives a DIFFERENT answer has not been measured — it must be, before this
-      # question is chosen, because a wrong answer that matches the right one teaches nothing.
+      # QUESTION CHOSEN 2026-09-15 — the series story's ending (see the series header): a third of
+      # what we sold has no shipping record; did those orders not ship, or did nobody record it?
+      # The two earlier candidates are dropped: revenue per customer per quarter answered nothing the
+      # series was asking, and "bought in Q1 2024 and not since" is not churn on this data.
+      # WORKPLACE: answer a real question end to end, with the checks, and write the recommendation.
+      # STORY — THE WHOLE CASE: size, since when, whose orders and which courier, the evidence both ways,
+      #   what SQL cannot decide, the recommendation (Speedy Express's confirmations first, then call only the
+      #   unconfirmed), the corrected top 10 — and the wrong answers that looked right on the way.
       - n: "60"
         slug: project-a-real-business-question
-        title: "Project — Answering a Real Business Question End to End"
-        short: "Project — a real business question, answered"
+        title: "Subqueries + CTEs + Window Functions — Solving a Real Business Case, End to End"
+        short: "Subqueries + CTEs + Window Functions — a real case"
         hands_on: ["koan:author", "cloudbeaver"]
         core: true
         tags: ["project"]
@@ -1035,7 +1151,7 @@ series:
       #
       # OPENS SERIES 3 BECAUSE IT IS THE GENTLEST STEP UP (moved from 05 on 2026-09-14). The
       # portable pivot IS SUM(CASE …), written in Series 2 · 05, turned into one column per value.
-      # BUILDS ON: Series 2 · 05 (CASE inside SUM), 2 · 38 (subtotals). SETS UP: 15 (a cohort grid
+      # BUILDS ON: Series 2 · 05 (CASE inside SUM), 2 · 50 (subtotals). SETS UP: 15 (a cohort grid
       # is a pivot). Runs on Northwind; needs no bulk data.
       - n: "00"
         slug: pivot-and-unpivot
@@ -1045,7 +1161,7 @@ series:
         status: planned
       # MOVED FROM 15 ON 2026-09-14: a standalone topic of middle difficulty, placed early so Block
       # A climbs. BUILDS ON: Series 1 · 07 (types — JSON is text until it is parsed), 1 · 45 (a
-      # missing key is a NULL), Series 2 · 30 (text functions). DATA: Northwind has no JSON column
+      # missing key is a NULL), Series 2 · 40 (text functions). DATA: Northwind has no JSON column
       # — see the bulk-dataset note above.
       - n: "05"
         slug: json-in-sql
@@ -1055,7 +1171,7 @@ series:
         status: planned
       # MOVED FROM 00 ON 2026-09-14. It opened the series with its hardest syntax, on data that does
       # not exist yet; here it follows its prerequisites directly. BUILDS ON: Series 2 · 20 (WITH),
-      # 2 · 42 (the self-join it repeats level after level), 2 · 35 (UNION ALL joins the anchor to
+      # 2 · 30 (the self-join it repeats level after level), 2 · 48 (UNION ALL joins the anchor to
       # the recursive term). Worth one line: it also builds Series 2 · 10's date spine on engines
       # without generate_series. DATA: seed: bulk — see the note above.
       - n: "10"
@@ -1070,7 +1186,7 @@ series:
       # for" moment in the course, so it comes when every tool it uses is in hand.
       # BUILDS ON: Series 2 · 10 (date_trunc, and the date spine for months nobody came back in),
       # 2 · 15 (cohort size is counted at CUSTOMER grain, not order grain), 2 · 20 (CTEs),
-      # 2 · 50 and 2 · 55 (first order per customer, months since it), Series 3 · 00 (the grid is a
+      # 2 · 35 and 2 · 45 (first order per customer, months since it), Series 3 · 00 (the grid is a
       # pivot). DATA: Northwind has 25 customers over 19 months, so the grid is sparse — decide
       # when the episode is written whether that is enough or it runs on the bulk data.
       - n: "15"
@@ -1240,7 +1356,7 @@ series:
       # returning zero rows ever since — which reads as "nothing to report" rather than as a
       # failure, and nobody investigates good news.
       # BUILDS ON: 20 (the plan as evidence), Series 2 · 25 (NOT EXISTS and the NOT IN trap),
-      # 2 · 15 (fan-out, DISTINCT as a plaster), 2 · 35 (UNION against UNION ALL), Series 1 · 15 (OFFSET).
+      # 2 · 15 (fan-out, DISTINCT as a plaster), 2 · 48 (UNION against UNION ALL), Series 1 · 15 (OFFSET).
       - n: "22"
         slug: rewrites-that-change-the-plan
         title: "Rewrites That Change the Plan — EXISTS, DISTINCT and Deep Pagination"
@@ -1307,7 +1423,7 @@ series:
       # DuckDB's approx_count_distinct are why analytical engines answer this instantly.
       #
       # ONE LINE ON WINDOWS: COUNT(DISTINCT ...) OVER (...) is not supported on several engines,
-      # which surprises people who reach for it after Series 2 · 50.
+      # which surprises people who reach for it after Series 2 · 35.
       #
       # KOANS: `predict` is the one that teaches the whole episode — given daily distinct counts,
       # predict whether summing them equals the monthly distinct count, then run both.
@@ -1319,7 +1435,7 @@ series:
       # which means the trend line still looks sensible and nobody questions it. It is the
       # cleanest example in the course of a number that is wrong and looks right.
       # BUILDS ON: 25 (why an index was never going to fix it), Series 1 · 25 (count(DISTINCT)),
-      # Series 2 · 50 (COUNT(DISTINCT) OVER), 2 · 58 (the approximate-percentile pointer).
+      # Series 2 · 35 (COUNT(DISTINCT) OVER), 2 · 58 (the approximate-percentile pointer).
       - n: "27"
         slug: counting-distinct
         title: "COUNT(DISTINCT) — the Aggregate That Will Not Decompose"

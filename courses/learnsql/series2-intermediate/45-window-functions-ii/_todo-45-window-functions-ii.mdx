@@ -1,0 +1,83 @@
+---
+title: "Window Functions II: LAG/LEAD, Running Totals & Frames — Month-over-Month Growth in One Query"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-sql"
+tags: []
+level: "intermediate"
+module: "series2-intermediate"
+order: 45
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build.
+    Drop the _todo- prefix when it becomes a real lesson.
+
+    READ FIRST: courses/learnsql/curriculum.yaml's header — it is the field
+    documentation the whole academy points at, and it carries the title, short
+    and core conventions this episode has to follow.
+
+    THE HOUSE METHOD, from the Series 1 lessons already written:
+      - type the query yourself; copy-paste teaches your eyes only
+      - PREDICT the answer before running it, out loud, then run it
+      - every query runs on the Northwind that ships with DataPallas
+      - the koans mirror the lesson beat for beat
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: compare a row to the one before it, and build a running total.
+    SQL: LAG, LEAD, SUM() OVER (ORDER BY …), frame clauses (ROWS/RANGE BETWEEN), month-over-month.
+    Frames are where people get quietly wrong answers — the default frame with ORDER BY is not the
+    one most readers assume. Show the default, then show it stated explicitly.
+
+    ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
+    Compare a row with the one before or after it (LAG, LEAD), running totals, month-over-month change,
+    moving averages, and frames — the default frame with ORDER BY is RANGE UNBOUNDED PRECEDING, which is not
+    what most readers assume (ties share a running total; LAST_VALUE returns the current row).
+
+    ── THE SERIES CASE — MAIN EXAMPLE for LAG — the key evidence (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
+    Days from each order to the SAME customer's next order: 175.5 on average after an order with no
+    ShippedDate (19 pairs) vs 178.3 after a shipped one (35 pairs). Customers behaved as if they received
+    their orders. (The medians, 190 and 190, are Series 2 · 58's.) Also the running total of sales with no
+    ShippedDate by quarter placed: 1501.25 · 4299 · 5729.64 · 10852.22 · 12454.02 · 17856.42 · 19169.
+    Worth one beat: LAG does in one pass what Series 2 · 25's correlated "previous order date" did.
+    OFF-STORY, KEPT — WHAT GOES WRONG: LAG gives the previous ROW, not the previous MONTH. Month-over-month per
+    ship country: 27 of 53 comparisons skip at least one month (Sweden's July 2023 is compared with February).
+    The fix is a country x month grid (CROSS JOIN, .docs §5.4 — not decided). DuckDB 2026-09-15.
+
+    ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+    LEVEL ●●●● of ●●●●. BUILDS ON: Series 2 · 35, and 2 · 10 — month-over-month needs date_trunc
+    to build the months before LAG can compare them.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:predict
+      koan:complete
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_45/WindowFunctionsIiKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. The published lessons all open this way;
+    keep it. Never "SELECT is used to…". Always "your boss asks…". */}
+
+TODO
+
+## TODO — the SQL
+
+{/* BEAT 2 — the keywords, one at a time, each with a query the reader types.
+    Every query runs on Northwind. Predict, then run. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns its
+    place by preventing a number that is wrong and looks right. */}
+
+TODO
