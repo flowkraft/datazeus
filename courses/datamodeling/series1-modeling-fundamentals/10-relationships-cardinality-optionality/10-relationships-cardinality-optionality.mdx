@@ -1,0 +1,260 @@
+---
+title: "Relationships, Cardinality & Optionality — Business Rules as Lines on a Diagram"
+description: "Every customer in the data has orders, so the line must say a customer always has orders? No. Learn to turn business sentences into crow's-foot lines and back, and why the data never decides whether an end is optional."
+topic: "learn-data-modeling"
+tags: ["data-modeling", "fundamentals", "relationships", "cardinality", "optionality", "crows-foot", "er-diagram"]
+level: "beginner"
+module: "series1-modeling-fundamentals"
+order: 10
+date: "2026-09-15"
+published: false
+videoId: "datamodeling-series1-10-relationships-cardinality-optionality"
+---
+
+{/* ==========================================================================
+    HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
+      tab:er-diagram
+      cards
+      dataset: northwind:read
+      NO CHECK — practised in the working file, the diagram and the cards. See the note above.
+      cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson
+   ========================================================================== */}
+
+## Every line starts as a sentence
+
+The last lesson found the **things** a business keeps track of. This one draws the **lines between them**, and every line starts as a sentence about the business:
+
+> **Every order is placed by exactly one customer. A customer may have placed none.**
+
+Two sentences, one line. Watch what the words **exactly one** and **may** turn into.
+
+## Three marks
+
+![The three marks of crow's-foot notation: a bar means one, a circle means zero (may be missing), a crow's foot means many; nearer the box is the most, further out is the least. Beside them the four line ends they make, each drawn against a box: two bars mean exactly one; a circle then a bar mean zero or one; a bar then a crow's foot mean one or many; a circle then a crow's foot mean zero or many.](/images/data-academy/datamodeling-series1-10/crows-foot.svg)
+
+Crow's-foot notation has three marks:
+
+- a **bar** means **one**,
+- a **circle** means **zero**: the thing is allowed to be missing,
+- a **crow's foot** means **many**.
+
+Each end of a line carries two marks, and says two things. The mark nearer the box is **the most** there can be, called the **cardinality**. The mark further out is **the least**, called the **optionality**.
+
+## The sentence, drawn
+
+![Customer and Order joined by one line. At Customer, two bars labelled exactly one. At Order, a circle and a crow's foot labelled zero or many, with the circle ringed. Under the diagram, the line read back: "Every order is placed by exactly one customer. A customer may have placed none, or many."](/images/data-academy/datamodeling-series1-10/customer-order.svg)
+
+At `Customer`: two bars, **exactly one**. At `Order`: a circle and a crow's foot, **zero or many**.
+
+Read it back out loud: *every order has exactly one customer, and a customer has zero or many orders*. You get the sentence back. That circle at the order end is what the next two queries put to the test.
+
+## What does the data say?
+
+Count each customer's orders, fewest first. If a customer can have none, the data should show one:
+
+```sql file=./scripts/fewest-orders.sql
+SELECT "CustomerID",
+       count(*) AS "Orders"
+FROM "Orders"
+GROUP BY "CustomerID"
+ORDER BY "Orders", "CustomerID"
+LIMIT 3;
+```
+
+| CustomerID | Orders |
+| ---------- | ------ |
+| QUICK      | 2      |
+| TOMSP      | 2      |
+| WANDK      | 2      |
+
+The fewest is 2. And a `LEFT JOIN` confirms that no customer is without an order:
+
+```sql file=./scripts/customers-without-orders.sql
+SELECT count(*) AS "Customers without orders"
+FROM "Customers" c
+LEFT JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+WHERE o."OrderID" IS NULL;
+```
+
+| Customers without orders |
+| ------------------------ |
+| 0                        |
+
+So the data says every customer has orders. Should the circle go, making the end **one or many**?
+
+## What happened, or what is allowed?
+
+Picture a customer who signed up this morning. How many orders have they placed? **None.** That customer is perfectly real, and the business allows them. The data simply does not have them yet.
+
+> **The data shows what happened. The model says what is allowed.**
+
+The data can prove a line is **too strict**: one real row that breaks a rule is enough. It can never prove that an end is **not** optional, because the row that would need the circle may not exist yet. Keep the circle.
+
+## Products and suppliers
+
+The same test on a second line. Every product has exactly one supplier. How many products does each supplier have?
+
+```sql file=./scripts/products-per-supplier.sql
+SELECT s."CompanyName",
+       count(*) AS "Products"
+FROM "Suppliers" s
+JOIN "Products" p
+  ON p."SupplierID" = s."SupplierID"
+GROUP BY s."SupplierID", s."CompanyName"
+ORDER BY s."SupplierID";
+```
+
+{/* The same highlight as the video: Tokyo Traders in the neutral tan — the most, not a fault. */}
+
+<div className="[&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-neutral)/var(--hl-row))] [&_tbody_tr:nth-child(4)_td]:font-bold">
+
+| CompanyName                | Products |
+| -------------------------- | -------- |
+| Exotic Liquids             | 3        |
+| New Orleans Cajun Delights | 2        |
+| Grandma Kellys Homestead   | 3        |
+| Tokyo Traders              | 5        |
+| Pavlova Ltd                | 3        |
+| Pasta Buttini s.r.l.       | 4        |
+
+</div>
+
+Between 2 and 5 products each, today. Could the business sign a supplier before stocking their first product? It could. So at the product end the line says **zero or many**. The six rows do not get a vote; the business does.
+
+## Is the shipper optional?
+
+```sql file=./scripts/unshipped-orders.sql
+SELECT count(*) AS "Unshipped",
+       count("ShipVia") AS "With a shipper"
+FROM "Orders"
+WHERE "ShippedDate" IS NULL;
+```
+
+| Unshipped | With a shipper |
+| --------- | -------------- |
+| 27        | 27             |
+
+27 orders have not shipped yet, and all 27 already name a shipper. Is the shipper mandatory, then?
+
+It depends on the business, not on these rows. If this business picks the shipper when the order is placed, every order has one: **exactly one**. If another business picks the shipper only when the order actually ships, an order can wait without one: **zero or one**. Same data today, two different line ends. **Ask before you draw the circle.**
+
+## A line can have a name
+
+The column in `"Orders"` that points at `"Shippers"` is not called `"ShipperID"`. It is called `"ShipVia"`. The name says the **role** the shipper plays for the order: the line *ships via*.
+
+Role names matter as soon as one table points at another more than once. An order could name a shipper that carries it **and** a different shipper that returns it: two lines between the same two tables, told apart only by their roles.
+
+## A line back to itself
+
+```sql file=./scripts/reports-to.sql
+SELECT e."FirstName" AS "Employee",
+       m."FirstName" AS "Reports to"
+FROM "Employees" e
+LEFT JOIN "Employees" m
+  ON m."EmployeeID" = e."ReportsTo"
+ORDER BY e."EmployeeID";
+```
+
+{/* The same highlight as the video: Andrew's empty manager in the neutral tan. */}
+
+<div className="[&_tbody_tr:nth-child(2)_td:nth-child(2)]:bg-[rgb(var(--hl-neutral)/var(--hl-row))] [&_tbody_tr:nth-child(2)_td:nth-child(2)]:font-bold">
+
+| Employee | Reports to |
+| -------- | ---------- |
+| Nancy    | Andrew     |
+| Andrew   | [NULL]     |
+| Janet    | Andrew     |
+
+</div>
+
+Employees point at employees. Nancy and Janet report to Andrew, and Andrew reports to nobody. A line from a table back to itself is a **recursive relationship**. It is optional at the manager end, because somebody is at the top.
+
+## One line, many at both ends
+
+```sql file=./scripts/products-on-order-1.sql
+SELECT "OrderID", "ProductID"
+FROM "Order Details"
+WHERE "OrderID" = 1
+ORDER BY "ProductID";
+```
+
+| OrderID | ProductID |
+| ------- | --------- |
+| 1       | 1         |
+| 1       | 6         |
+
+One order holds many products. And one product sits on many orders:
+
+```sql file=./scripts/orders-with-chai.sql
+SELECT count(*) AS "Orders with Chai"
+FROM "Order Details"
+WHERE "ProductID" = 1;
+```
+
+| Orders with Chai |
+| ---------------- |
+| 10               |
+
+That is **many at both ends**: a crow's foot on both sides of one line, called **many-to-many**. Where such a line actually goes in a database has a lesson of its own.
+
+## Write the diagram as text
+
+In CloudBeaver's **ER Diagram** tab (`er-diagram`) you do not have to draw with a mouse. You can write the diagram as **PlantUML** text, and text can be compared, reviewed, changed and kept:
+
+```
+@startuml
+entity Customer
+entity Order
+entity Supplier
+entity Product
+entity Shipper
+entity Employee
+Customer ||--o{ Order : places
+Supplier ||--o{ Product : supplies
+Shipper |o--o{ Order : "ships via"
+Employee |o--o{ Employee : "reports to"
+@enduml
+```
+
+The symbols are the marks: `||` exactly one, `|o` zero or one, `o{` zero or many, `|{` one or many. `Customer ||--o{ Order` is the sentence from the top of this page in five symbols.
+
+## Read it back
+
+Reading a line out loud is how you catch a wrong one. Try these three:
+
+1. `Customer ||--o{ Order`: every order has exactly one customer; a customer has zero or many orders. **Right.**
+2. `Supplier ||--|{ Product`: every supplier has **one or more** products. **Wrong.** The business said a new supplier may have none, so that end needs a circle: `o{`.
+3. `Employee |o--o{ Employee`: an employee has zero or one manager; a manager has zero or many reports. **Right.**
+
+Say the line, and listen for a sentence the business would not say.
+
+## Northwind declares none of this
+
+One honest note. Northwind **declares none of these lines**: the database does not know about a single one. The diagram above was **inferred**, from column names, from the data and from sentences about the business. Making the database enforce these lines has a lesson of its own.
+
+## Your turn
+
+There is no check for this lesson. The practice is the diagram, and the reason behind every end.
+
+1. **Write the sentences first**, one per relationship in Northwind.
+2. Then open the **ER Diagram** tab and turn each sentence into a PlantUML line, with the least and the most at both ends:
+
+```
+Customer ||--o{ Order : places
+Shipper ___ Order : "ships via"
+Supplier ___ Product : supplies
+Employee ___ Employee : "reports to"
+```
+
+3. Read every line back out loud. Each one must give you back your sentence.
+
+## Sentence first
+
+> **Say the sentence. Then draw the line. The data never decides the circle.**
+
+A row that breaks a rule shows up in the data. A customer who might exist tomorrow shows up only in the business.
+
+## What is next
+
+You can draw the rules now. Next: what exactly **one row** of a table is, and what makes it different from every other row. One row of `"Order Details"` has an order **and** a product. So one row is… which one?

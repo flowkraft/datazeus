@@ -1,0 +1,81 @@
+# Flashcards for Data Modeling · Series 1 · 10 — Relationships, Cardinality & Optionality
+#
+# OUR OWN minimal authoring format (NOT CrowdAnki); tools/build-anki.py turns it into a
+# .apkg with genanki. The .apkg is a BUILD ARTIFACT — gitignored, built in CI. Only this
+# YAML is source.
+#
+# deck / guid / cards / tags: see the Series 1 · 00 deck's header. The guid is set once and never changed.
+#
+# ── WHAT THIS DECK IS FOR ────────────────────────────────────────────────────────────
+# This lesson has NO check (curriculum), so the deck carries the drill: reading a line as a sentence,
+# writing a sentence as a line, and the judgement that the data never decides optionality. Every card
+# is SELF-CONTAINED: a diagram is described in words or in PlantUML symbols on the front, and any
+# figure it needs is a stated premise. The lesson's figures are asserted in
+# tests/src/verify/groovy/datazeus/datamodeling/series1/_10/RelationshipsCardinalitySpec.groovy.
+#
+# ORDER IS THE LESSON'S: the marks, cardinality vs optionality, reading a line, the data vs the rule,
+# the shipper decision, role names, the recursive line, many-to-many, the PlantUML symbols, the wrong
+# line, and last the production card.
+#
+# BALANCE: 12 cards — 2 cloze (the three marks, the two words), 9 reasoning, 1 production.
+#
+# WHAT THIS DECK LEAVES TO LATER DECKS: how a many-to-many line is built (junction tables), declaring
+# lines as foreign keys (referential integrity), grain and keys (next lesson).
+
+deck: "DataZeus::Data Modeling::Series 1::10 Relationships, Cardinality & Optionality"
+guid: "datazeus-data-modeling-series1-10-relationships-cardinality-optionality"
+tags: ["datazeus", "data-modeling", "series-1"]
+
+cards:
+  # ── 1. THE MARKS ──
+  - cloze: "In crow's-foot notation a {{c1::bar}} means one, a {{c2::circle}} means zero (the thing may be missing), and a {{c3::crow's foot}} means many."
+
+  - cloze: "At each end of a line, the mark nearer the box is the most there can be, the {{c1::cardinality}}; the mark further out is the least, the {{c2::optionality}}."
+
+  # ── 2. READING A LINE ──
+  - basic:
+      front: "A line joins Customer and Order. At the Customer end there are two bars; at the Order end, a circle and a crow's foot. Say the line as sentences."
+      back: "Every order is placed by exactly one customer. A customer has placed zero or many orders."
+
+  # ── 3. THE DATA VERSUS THE RULE ──
+  - basic:
+      front: "In your database every customer has at least two orders, and none has zero. Should the Order end of the Customer–Order line lose its circle?"
+      back: "No. The data shows what happened, not what is allowed. A customer who signs up today has no orders yet, and the business allows that, so the end stays zero or many."
+
+  - basic:
+      front: "Why can data prove a line is too strict, but never prove that an end is not optional?"
+      back: "One real row that breaks a rule is proof that the rule is wrong. But the row that would need the circle, such as a brand-new customer, may simply not exist yet, so its absence proves nothing."
+
+  # ── 4. THE SHIPPER DECISION ──
+  - basic:
+      front: "Every order that has not shipped yet already names a shipper. Is the shipper end of the Order–Shipper line exactly one, or zero or one?"
+      back: "The data cannot decide. If the business picks the shipper when the order is placed, it is exactly one. If it picks the shipper only when the order ships, it is zero or one. Ask the business."
+
+  # ── 5. ROLE NAMES ──
+  - basic:
+      front: "The orders table points at the shippers table through a column called ShipVia, not ShipperID. What does that name tell you, and when does such a name become necessary?"
+      back: "It names the role the shipper plays for the order (the line \"ships via\"). Role names become necessary when one table points at another more than once, for example a delivering shipper and a returning shipper."
+
+  # ── 6. THE RECURSIVE LINE ──
+  - basic:
+      front: "Each employee row has a reports_to column holding another employee's id, and the managing director's reports_to is empty. What kind of relationship is this, and what are its ends?"
+      back: "A recursive relationship: a line from the employees table back to itself. An employee has zero or one manager (optional, because someone is at the top), and a manager has zero or many reports."
+
+  # ── 7. MANY-TO-MANY ──
+  - basic:
+      front: "An order can contain many products, and a product can appear on many orders. How is that line drawn, and can it be stored as a column on either table?"
+      back: "A crow's foot at both ends: many-to-many. It cannot be a single column on orders or on products, because each side would need a list. It needs a table of its own."
+
+  # ── 8. PLANTUML ──
+  - basic:
+      front: "In PlantUML, what does <code>Shipper |o--o{ Order : \"ships via\"</code> say?"
+      back: "An order ships via zero or one shipper (<code>|o</code> at the Shipper end), and a shipper ships zero or many orders (<code>o{</code> at the Order end)."
+
+  - basic:
+      front: "The business says a supplier may be signed up before it supplies anything. Your diagram says <code>Supplier ||--|{ Product</code>. Is it right?"
+      back: "No. <code>|{</code> means one or many products per supplier, so a new supplier with no products would break it. The end should be <code>o{</code>, zero or many."
+
+  # ── 9. PRODUCTION — hardest, and last. Everything it needs is ON THE CARD. ──
+  - basic:
+      front: "Write each sentence as a PlantUML line. \"Every booking is made by exactly one guest; a guest may have no bookings yet.\" \"A room may be empty tonight, and a booking is for exactly one room.\" \"A guest may be referred by one other guest, or by nobody.\""
+      back: "<code>Guest ||--o{ Booking : makes</code><br><code>Room ||--o{ Booking : \"is booked by\"</code><br><code>Guest |o--o{ Guest : \"refers\"</code>"
