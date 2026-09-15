@@ -61,7 +61,7 @@ excludes:
   - topic: "Running the server — deployment, upgrades, monitoring, capacity"
     where: "covered in Data Ops for the discipline. That track runs PostgreSQL, so the habits transfer and the commands do not"
   - topic: "Storing JSON inside a relational database"
-    where: "covered in Learn SQL, Series 3 · 15 for querying it and Learn Data Modeling, Series 2 · 42 for deciding to. Often the better answer, and NoSQL Concepts, Series 4 · 00 argues that case"
+    where: "covered in Learn SQL, Series 3 · 05 for querying it and Learn Data Modeling, Series 2 · 42 for deciding to. Often the better answer, and NoSQL Concepts, Series 4 · 00 argues that case"
   - topic: "Atlas as a managed platform, and Atlas-only features"
     where: "not covered beyond naming them. Search, Vector Search and Charts are a hosted product's surface, and an episode about them would age faster than anything else here"
 

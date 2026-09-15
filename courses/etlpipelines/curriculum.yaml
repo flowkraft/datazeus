@@ -368,7 +368,7 @@ series:
       #   FIND IT       which columns are personal is a decision, not a guess. Names, emails,
       #                 phone numbers, addresses — and the ones people miss: free-text notes,
       #                 IP addresses, and an ID that is a national insurance number.
-      #                 Data Modeling, Series 2 - 27 is where they get CLASSIFIED; this is
+      #                 Data Modeling, Series 2 - 30 is where they get CLASSIFIED; this is
       #                 where the classification gets used.
       #   THREE OPTIONS, and when each is right: MASK (same shape, fake value), SYNTHESISE
       #                 (generated rows, no real person involved), SUBSET (fewer real rows,

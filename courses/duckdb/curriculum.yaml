@@ -208,7 +208,7 @@ series:
       # time-series join and is otherwise a correlated subquery or a window function most people
       # get subtly wrong. Then the classic use: prices, rates and readings joined to events.
       # PIVOT and UNPIVOT as statements rather than hand-written CASE columns.
-      # SEAM: Learn SQL Series 3 · 05 teaches portable pivoting; this is the shorthand.
+      # SEAM: Learn SQL Series 3 · 00 teaches portable pivoting; this is the shorthand.
       - n: "05"
         slug: asof-and-pivot
         title: "ASOF JOIN and PIVOT — The Time-Series Join, and Cross-Tabs Without CASE"

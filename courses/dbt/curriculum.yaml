@@ -120,7 +120,7 @@ prerequisites:
     needs: "Series 2"
     why: >-
       A dbt model IS a SELECT. CTEs especially — the staging/marts split is CTEs promoted to
-      files, and Series 2 · 08 is where you learn to read one.
+      files, and Series 2 · 20 is where you learn to read one.
   - course: learn-etl-pipelines
     needs: "Series 1"
     why: >-
@@ -319,7 +319,7 @@ series:
       #   THE PREFIXES: stg_, int_, dim_, fct_. Boring on purpose — the point is that a
       #   colleague can tell what a file IS from its name in a directory listing, without
       #   opening it and without asking you.
-      #   DISTINCT FROM Data Modeling, Series 3 · 29, which names TABLES AND COLUMNS in a
+      #   DISTINCT FROM Data Modeling, Series 1 · 55, which names TABLES AND COLUMNS in a
       #   schema somebody is designing. This is a naming convention for MODEL FILES in a
       #   project, which is a different artifact with a different audience.
       #   ENFORCE IT, do not document it: sqlfluff in the same pipeline that runs the tests.
@@ -458,7 +458,7 @@ series:
       #   FINAL forces it and costs real time; a GROUP BY with argMax is the cheaper habit.
       #   `predict` is the right rung precisely because the honest answer to "how many rows
       #   does this return" is "it depends when you ask" — which is the lesson.
-      # SCD Type 2 as a MODELLING idea stays where it lives: Data Modeling, Series 3 · 15.
+      # SCD Type 2 as a MODELLING idea stays where it lives: Data Modeling, Series 3 · 35.
       # This is only what happens to that idea on an engine that cannot update a row.
       - n: "15"
         slug: history-without-snapshots

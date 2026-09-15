@@ -60,13 +60,13 @@ track: bi
 title: BI & Data Visualization
 
 # Assumes Learn SQL, because every widget is a query and the most expensive mistake in this
-# track is a chart that is beautiful and wrong. Series 2 · 06 (join fan-out) is the specific
+# track is a chart that is beautiful and wrong. Series 2 · 15 (join fan-out) is the specific
 # episode: a dashboard that double-counts is the same bug, drawn.
 prerequisites:
   - course: learn-sql
     needs: "Series 2"
     why: >-
-      A chart is a GROUP BY you can see. Series 2 · 06 in particular — a widget built on a
+      A chart is a GROUP BY you can see. Series 2 · 15 in particular — a widget built on a
       fanned-out join shows a number that is confidently, plausibly too big.
 
 excludes:

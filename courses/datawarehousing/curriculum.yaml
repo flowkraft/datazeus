@@ -89,7 +89,7 @@ series:
       #            dimensional marts spun off it. Slower to first value, stronger on
       #            enterprise consistency.
       #   KIMBALL  bottom-up. A dimensional mart per business process, kept joinable by
-      #            sharing CONFORMED dimensions (Data Modeling, Series 3 - 32). Faster to
+      #            sharing CONFORMED dimensions (Data Modeling, Series 3 - 45). Faster to
       #            first value, and the bus matrix is what stops it fragmenting.
       #   TODAY    most teams run something closer to Kimball on a lakehouse, and dbt's
       #            staging/marts split is the same shape. Say both names, then move on.
@@ -114,13 +114,13 @@ series:
         hands_on: ["koan:choose"]
         core: true
         status: planned
-      # SOURCE (kimball): THE STAR SCHEMA from the query side — designed in Data Modeling, Series 3 - 05; read here.
+      # SOURCE (kimball): THE STAR SCHEMA from the query side — designed in Data Modeling, Series 3 - 10; read here.
       - n: "10"
         slug: star-schema-for-analytics
         title: "The Star Schema from the Query Side — Why Analysts Like It"
         credits:
           - source: kimball
-            concept: "THE STAR SCHEMA from the query side — designed in Data Modeling, Series 3 - 05; read here"
+            concept: "THE STAR SCHEMA from the query side — designed in Data Modeling, Series 3 - 10; read here"
         tags: ["kimball"]
         hands_on: ["koan:complete", "cloudbeaver"]
         core: true
@@ -392,7 +392,7 @@ series:
       #
       # THE OTHER ONE IS A SCHEMA SHAPE, and it has nothing whatever to do with the company —
       # a star whose dimensions have been normalised into sub-dimensions. Decades old, nobody's
-      # product. Data Modeling, Series 3 · 10 is "Snowflake vs Star — Normalizing Dimensions,
+      # product. Data Modeling, Series 3 · 32 is "Snowflake vs Star — Normalizing Dimensions,
       # and What It Costs You".
       #
       # IT IS PURE COINCIDENCE, AND THIS FILE CAUSES THE COLLISION ITSELF: two of this course's

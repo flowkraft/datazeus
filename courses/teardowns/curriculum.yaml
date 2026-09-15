@@ -117,6 +117,11 @@ series:
       # Method first, deliberately. Without it every later episode has to re-explain how to
       # get from "1,400 migrations" to "here are the eight tables that are the model", and
       # that is the transferable skill the whole track is selling.
+      # ALSO OWNS SUBJECT AREAS AND BOUNDED CONTEXTS, moved here from Data Modeling on
+      # 2026-09-14: "I have been handed a 200-table database, where do I start?" only bites on
+      # schemas far larger than Northwind or the library, and these apps ARE that size. Name the
+      # vocabulary — subject areas (Hoberman), bounded contexts (Evans, "Domain-Driven Design") —
+      # and show it on the DataPallas Domain-Grouped Schema tab, which groups tables that way.
       - n: "00"
         slug: how-to-read-a-schema-you-did-not-write
         title: "How to Read a Schema You Didn't Write — Find the Model in 1,400 Tables"
@@ -177,6 +182,20 @@ series:
         slug: commerce-schemas
         title: "Medusa and Saleor — Variants, Carts and the Price at Checkout"
         short: "Medusa & Saleor — variants, carts, checkout price"
+        status: planned
+      # MOVED HERE from Data Modeling, Series 2 on 2026-09-14. The one modelling decision that is
+      # made once and is nearly impossible to reverse — and the library brief has no second tenant,
+      # so there it could only ever be a contrived exercise. Real products live it:
+      #   shared schema + tenant_id   cheapest, one migration for all, one forgotten WHERE from a breach
+      #   schema per tenant           real isolation, migrations multiply by tenant count
+      #   database per tenant         strongest isolation, the biggest operational bill
+      # The interesting part is not the three options; it is that the choice follows from who the
+      # customers are (one enterprise vs ten thousand self-serve) and what compliance must survive.
+      # DataPallas and ReportBurster live this decision too — a fair, first-hand example.
+      - n: "25"
+        slug: multi-tenancy-in-real-products
+        title: "Multi-Tenancy — How Real Products Keep Their Customers' Data Apart"
+        short: "Multi-Tenancy — keeping customers' data apart"
         status: planned
 
   - slug: series3-rebuild-it

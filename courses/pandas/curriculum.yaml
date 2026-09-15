@@ -151,7 +151,7 @@ series:
       # arguments nobody uses and everybody needs: indicator=True to see which side each row
       # came from, and validate='one_to_one'/'one_to_many' to make a fan-out an ERROR instead
       # of a silent row explosion.
-      # SEAM: Learn SQL Series 2 · 06 owns join fan-out and grain as a concept. This is the
+      # SEAM: Learn SQL Series 2 · 15 owns join fan-out and grain as a concept. This is the
       # pandas spelling, and validate= is the tool that catches it.
       - n: "05"
         slug: merge

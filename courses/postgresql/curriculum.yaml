@@ -160,7 +160,7 @@ series:
       # documents into rows with jsonb_to_recordset and jsonb_array_elements. When JSONB is the
       # right answer (genuinely variable attributes, third-party payloads you did not design)
       # and when it is a column you were too lazy to add.
-      # SEAM: Data Modeling owns "should this be JSON at all"; Learn SQL Series 3 · 15 owns
+      # SEAM: Data Modeling owns "should this be JSON at all"; Learn SQL Series 3 · 05 owns
       # querying JSON generically. Here it is Postgres's own operators and indexing.
       - n: "10"
         slug: jsonb

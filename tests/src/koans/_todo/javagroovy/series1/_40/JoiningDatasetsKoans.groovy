@@ -36,7 +36,7 @@ import spock.lang.Stepwise
  * ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
  * GOAL: combine two sources on a key, and get the totals right.
  * CONSTRUCTS: index one side into a Map, stream the other, flatMap for one-to-many.
- * THE BEST KOAN IN SERIES 1. This is the SAME join fan-out bug as Learn SQL Series 2 · 06, which
+ * THE BEST KOAN IN SERIES 1. This is the SAME join fan-out bug as Learn SQL Series 2 · 15, which
  * the reader has already met — except in memory NOTHING warns you: no database, no constraint,
  * no row count. Join orders to order-lines, sum the order total, get 3x revenue.
  * Say the cross-reference out loud; it is the strongest argument for why SQL came first.

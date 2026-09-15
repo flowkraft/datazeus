@@ -119,7 +119,7 @@ series:
       # COVER: joins (the how= set including the semi/anti joins pandas lacks), and the
       # validate= argument for catching a fan-out. concat and its strategies. group_by with
       # expression aggregations, and the fact that agg returns lists naturally.
-      # SEAM: Learn SQL Series 2 · 06 owns fan-out and grain as a concept.
+      # SEAM: Learn SQL Series 2 · 15 owns fan-out and grain as a concept.
       - n: "20"
         slug: joins-and-groupby
         title: "Joins and group_by — Semi, Anti, and Catching a Fan-Out With validate"

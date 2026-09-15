@@ -67,7 +67,7 @@ excludes:
   - topic: "Why a graph at all, and how it differs from the other shapes"
     where: "covered in NoSQL Concepts, Series 2 · 20, which this course assumes"
   - topic: "Walking a hierarchy in SQL"
-    where: "covered in Learn SQL, Series 3 · 00, which is the recursive CTE. In this course, Series 3 · 15 compares the two honestly rather than assuming this one wins"
+    where: "covered in Learn SQL, Series 3 · 10, which is the recursive CTE. In this course, Series 3 · 15 compares the two honestly rather than assuming this one wins"
   - topic: "Graph theory as mathematics"
     where: "not covered. Series 3 · 00 uses the algorithms and explains what each one answers; the proofs are somebody else's course"
   - topic: "Running the server — clustering, backups, upgrades, capacity"
@@ -125,7 +125,7 @@ series:
       # COVER: variable-length patterns — [:KNOWS*1..3] — shortestPath and allShortestPaths, and
       # returning a path as a value you can work with rather than as rows to reassemble.
       # WHY IT MATTERS: this is the question SQL expresses badly. A recursive CTE can do it, and
-      # Learn SQL, Series 3 · 00 shows how, but "friends of friends up to four hops, excluding
+      # Learn SQL, Series 3 · 10 shows how, but "friends of friends up to four hops, excluding
       # anyone already connected" is one line here and a page there.
       # THE WARNING IN THE SAME BREATH: an unbounded variable-length match over a dense graph
       # will try to walk the world. Bound the depth, and know your densest nodes — a supernode
@@ -279,7 +279,7 @@ series:
       #                                    question; relationships with their own properties and
       #                                    types that multiply; paths as results rather than rows.
       #   WHERE SQL IS AT LEAST AS GOOD    one or two hops, which is a join; a fixed hierarchy,
-      #                                    which is a recursive CTE — Learn SQL, Series 3 · 00 —
+      #                                    which is a recursive CTE — Learn SQL, Series 3 · 10 —
       #                                    and performs perfectly well; aggregation over
       #                                    everything, which relational engines do better.
       #   AND THE OPTION IN BETWEEN        PostgreSQL with recursive CTEs, or a graph extension,

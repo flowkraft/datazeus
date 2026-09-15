@@ -24,7 +24,7 @@ published: false
     the official Neo4j documentation — the Cypher Manual page for that clause, the Graph Data Modeling guide, or the GDS library.
     Open its own section for this topic BEFORE writing, use it as the COVERAGE
     CHECKLIST, and use its VOCABULARY FOR THE NOUNS. Anything left out should be
-    left out because an academy rule says so (NoSQL Concepts owns the graph shape, Learn SQL Series 3 - 00 owns the recursive CTE this must be measured against),
+    left out because an academy rule says so (NoSQL Concepts owns the graph shape, Learn SQL Series 3 - 10 owns the recursive CTE this must be measured against),
     and NEVER because it was missed.
 
     ── THE ACADEMY RULE THAT OUTRANKS EVERYTHING ELSE ──────────────────────
@@ -36,7 +36,7 @@ published: false
      COVER: variable-length patterns — [:KNOWS*1..3] — shortestPath and allShortestPaths, and
      returning a path as a value you can work with rather than as rows to reassemble.
      WHY IT MATTERS: this is the question SQL expresses badly. A recursive CTE can do it, and
-     Learn SQL, Series 3 · 00 shows how, but "friends of friends up to four hops, excluding
+     Learn SQL, Series 3 · 10 shows how, but "friends of friends up to four hops, excluding
      anyone already connected" is one line here and a page there.
      THE WARNING IN THE SAME BREATH: an unbounded variable-length match over a dense graph
      will try to walk the world. Bound the depth, and know your densest nodes — a supernode
