@@ -1,6 +1,6 @@
 -- ============================================================================
---  YOUR REBUILD OF NORTHWIND'S INTEGRITY LAYER
---  Data Modeling · Series 1 · grown from episode 10 onward, finished at episode 60.
+--  YOUR MODEL OF NORTHWIND'S BUSINESS
+--  Data Modeling · Series 1 · started at episode 00, grown from 15, finished at episode 60.
 -- ============================================================================
 --
 --  `zeus practice reset` copies this file into practice/schema.sql the first time and
@@ -36,45 +36,121 @@ DROP SCHEMA IF EXISTS practice CASCADE;
 CREATE SCHEMA practice;
 
 
--- ── Episode 10 · Grain & Primary Keys ───────────────────────────────────────
--- Start with the easy one, then do "Order Details" and let it argue with you.
+-- ── Episode 00 · Start Here: The Modeling Loop ──────────────────────────────
+-- Say it first, as a sentence: "every product belongs to exactly one category".
+-- Then one table, one load, and try to get a bad row past it. The lesson's version, to copy:
 --
--- Before you write anything: say out loud what ONE ROW of the table is. One row of
--- Categories is one category. One row of "Order Details" is... that is the whole lesson.
--- Try PRIMARY KEY ("OrderID") first. Read what the database tells you.
-
 -- CREATE TABLE practice."Categories" (
 --   "CategoryID"   INTEGER PRIMARY KEY,
---   "CategoryName" VARCHAR NOT NULL
+--   "CategoryName" VARCHAR NOT NULL,
+--   "Description"  VARCHAR
 -- );
 -- INSERT INTO practice."Categories"
---   SELECT "CategoryID", "CategoryName" FROM main."Categories";
-
-
--- ── Episode 15 · Foreign Keys & Referential Integrity ───────────────────────
--- Declare the parent before the child; a FK cannot point at a table that is not there yet.
--- Northwind's data is referentially clean, so every correct FK will load fine — the payoff
--- is the NEXT bad row, not this one.
+-- SELECT "CategoryID", "CategoryName", "Description"
+-- FROM "Categories"
+-- ORDER BY "CategoryID";
 --
--- (Note: DuckDB does not support ON DELETE CASCADE. Postgres does. Worth knowing.)
+-- YOUR TURN — Shippers: a number no two shippers share, and a name every shipper has.
+-- Write it below (not as a comment), load Northwind's 3 shippers, then run the checks:
+--   zeus practice run
+--   zeus koans datamodeling series1
+--
+-- CREATE TABLE practice."Shippers" (
+--   "ShipperID"   INTEGER ___,
+--   "CompanyName" VARCHAR ___,
+--   "Phone"       VARCHAR
+-- );
 
 
--- ── Episode 20 · One-to-Many & Junction Tables ──────────────────────────────
--- "Order Details" is a junction that carries facts of its own. Give it the composite key
--- you worked out in episode 10.
+-- ── Episode 05 · Entities & Attributes ──────────────────────────────────────
+-- No table to build yet. Open the ER Diagram tab on Northwind, list the THINGS you hear in the
+-- business, and decide the contact: two columns on Customers, or a thing of its own. The reason
+-- is the work — write it here, where your later lessons will read it back.
+--
+-- Episode 05 · the things I hear:
+-- customer, order, product, ___
+-- A contact is ___
+--   because ___
 
 
--- ── Episode 30 · Data Types ─────────────────────────────────────────────────
--- Money is not a float. Look at what the Database Schema tab says the real columns are,
--- and decide whether you agree.
+-- ── Episode 15 · Grain & Keys ───────────────────────────────────────────────
+-- Before you write anything: say out loud what ONE ROW of the table is. One row of Categories
+-- is one category. One row of "Order Details" is... that is the whole lesson.
+-- Try PRIMARY KEY ("OrderID") on the order lines first. Read what the database tells you,
+-- then rebuild it keyed by the pair, as the lesson does:
+--
+-- CREATE TABLE practice."Order Details" (
+--   "OrderID"   INTEGER,
+--   "ProductID" INTEGER,
+--   "UnitPrice" DECIMAL(19,4),
+--   "Quantity"  SMALLINT,
+--   "Discount"  DECIMAL(8,4),
+--   PRIMARY KEY ("OrderID", "ProductID")
+-- );
+--
+-- YOUR TURN — say the grain, then declare a key, for "Customers", "Orders", "Products",
+-- "Suppliers" and "Employees" too. Load each from Northwind's real rows (ORDER BY the key),
+-- then run the checks:
+--   zeus practice run
+--   zeus koans datamodeling series1
 
 
--- ── Episode 35 · Constraints ────────────────────────────────────────────────
--- NOT NULL, CHECK, UNIQUE, DEFAULT. Be careful with NOT NULL on "Region" — check the data
--- before you assume. And a CHECK that reality violates is a bug in your model, not in the
--- business.
+-- ── Episode 20 · Many-to-Many & Junction Tables ─────────────────────────────
+-- The order line is a thing with facts of its own. And a product can now come from several
+-- suppliers, each at its own price — Products.SupplierID cannot say that.
+--
+-- YOUR TURN — give the link a table: one row per product and supplier, the price on the pair.
+-- Load today's supplier of every product (20 rows, today's unit price as the starting price).
+-- Do NOT add extra suppliers here: the checks add a second supplier themselves and read it back.
+--
+-- CREATE TABLE practice."Product Suppliers" (
+--   "ProductID"     INTEGER,
+--   "SupplierID"    INTEGER,
+--   "SupplierPrice" DECIMAL(19,4),
+--   PRIMARY KEY (___)
+-- );
+--   zeus practice run
+--   zeus koans datamodeling series1
+
+
+-- ── Episode 25 · Normalization ──────────────────────────────────────────────
+-- Build the flat table from your Learn SQL report query, find its anomalies, decompose it.
+
+
+-- ── Episode 30 · Copy or Reference ──────────────────────────────────────────
+-- Decide which copies are history (the price on the order line, the ship-to address) and keep
+-- them. Change a price in YOUR tables and check what last year's orders still say.
+
+
+-- ── Episode 35 · Supertypes & Subtypes ──────────────────────────────────────
+-- Customers, suppliers, shippers, employees: record the choice you made, and why, as a comment.
+
+
+-- ── Episode 40 · Data Types & Domains ───────────────────────────────────────
+-- Money is not a float. Look at what the Database Schema tab says the real columns are, and
+-- decide whether you agree.
+
+
+-- ── Episode 45 · Foreign Keys ───────────────────────────────────────────────
+-- Declare the parent before the child. Northwind's data is referentially clean, so every
+-- correct FK loads — the payoff is the NEXT bad row. (DuckDB has no ON DELETE CASCADE.)
+
+
+-- ── Episode 50 · Constraints ────────────────────────────────────────────────
+-- NOT NULL, CHECK, UNIQUE, DEFAULT. Check the data before NOT NULL on "Region". A CHECK that
+-- reality violates is a bug in your model, not in the business.
+
+
+-- ── Episode 52 · What an Empty Cell Should Mean ─────────────────────────────
+-- For every nullable column, one comment: optional value, fact not there yet, or a different
+-- kind of thing?
+
+
+-- ── Episode 55 · From Diagram to DDL, and Naming ────────────────────────────
+-- Regenerate the diagram from this file and diff it against the one you drew.
 
 
 -- ── Episode 60 · Project ────────────────────────────────────────────────────
--- Every table, every key, every constraint, one run, the full dataset. When this file runs
--- clean end to end, you have rebuilt a real database's integrity layer from the data up.
+-- Every table, every key, every rule, one run. End the file with the views the project names
+-- (customers, orders, order lines, contacts, product suppliers): the checks read only those,
+-- and Series 3 builds its stars from them.

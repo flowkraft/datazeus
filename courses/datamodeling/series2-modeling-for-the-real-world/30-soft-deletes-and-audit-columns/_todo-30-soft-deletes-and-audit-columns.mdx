@@ -1,11 +1,11 @@
 ---
-title: "Design the Library — Your First Schema, From Nothing"
+title: "created_at, updated_by & deleted_at — System Time, and What Soft Deletes Cost"
 description: "TODO — one sentence, written from THE SITUATION beat below, not from the topic."
 topic: "learn-data-modeling"
 tags: []
 level: "intermediate"
 module: "series2-modeling-for-the-real-world"
-order: 5
+order: 30
 published: false
 ---
 
@@ -19,31 +19,28 @@ published: false
     Read that header first — it is the argument this lesson is one instance of.
 
     WHY THIS EPISODE, SPECIFICALLY
-    GOAL: produce a first schema from nothing but a brief and a spreadsheet, and load the spreadsheet into it.
-    MODELS: everything from Series 1, applied with no answer key; set-aside rows.
-    BUILDS ON: all of Series 1; Series 1 · 50 for the opposite of this episode's rule-vs-data case.
+    GOAL: record when a row changed, know what soft delete breaks, and mark personal data.
+    MODELS: audit columns, soft delete, partial unique index, personal-data classification.
+    BUILDS ON: Series 1 · 52 — what absence means; deleted_at is absence with a timestamp.
 
-    The acceptance suite (series2/LibraryChecks.groovy) grades through views the learner
-    writes, never through their table names. Any model that passes is correct.
-    FITS: all 26 rows of lending-log.csv must land. One cannot land honestly: "The Illustrated
-    Riverside" is "reference only — do not lend", yet Priya borrowed it (2026-05-05 to 05-12).
-    In Series 1 · 50 the RULE was wrong and changed; here the rule is right and the DATA is wrong —
-    so the row is set aside for a person, and the rule stays. Name that contrast out loud.
+    Material: Jonah Whitfield `left`, but his two loans are still in the file — a soft delete done by
+    hand in a spreadsheet; last_edited / edited_by holding initials — audit columns as they appear in
+    the wild; email addresses and free-text notes as personal data.
+    Check: a new member re-using a soft-deleted member's email.
+    Conclusion to land: a real technique with a real price; "we might need it back" is not by itself
+    a reason to pay it.
 
-    YOUR TURN: draw and build your first library schema, add the four views, load the spreadsheet — and set aside the lent reference-only book.
-    CARDS: wrong rule vs wrong data: which one you change, with examples of each.
+    YOUR TURN: add audit columns, decide on soft delete for members, and mark the personal-data columns.
+    CARDS: what soft delete breaks (UNIQUE, foreign keys, every later query); which columns are personal data.
 
     HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
-      tab:er-diagram
-      check:fits
+      cloudbeaver
       check:refuses
-      check:answers
       build:library
       cards
       dataset: library
       check suite: series2/LibraryChecks.groovy — this episode adds its checks there
       cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson
-      NAME THE TAB IN THE PROSE — "er-diagram".
    ========================================================================== */}
 
 ## The situation this lesson prepares you for

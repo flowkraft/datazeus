@@ -1,11 +1,11 @@
 ---
-title: "Design the Library — Your First Schema, From Nothing"
+title: "One Big Table & Wide Tables — What Columnar Storage Changed, and What It Didn't"
 description: "TODO — one sentence, written from THE SITUATION beat below, not from the topic."
 topic: "learn-data-modeling"
 tags: []
-level: "intermediate"
-module: "series2-modeling-for-the-real-world"
-order: 5
+level: "advanced"
+module: "series3-dimensional-modeling"
+order: 55
 published: false
 ---
 
@@ -19,31 +19,25 @@ published: false
     Read that header first — it is the argument this lesson is one instance of.
 
     WHY THIS EPISODE, SPECIFICALLY
-    GOAL: produce a first schema from nothing but a brief and a spreadsheet, and load the spreadsheet into it.
-    MODELS: everything from Series 1, applied with no answer key; set-aside rows.
-    BUILDS ON: all of Series 1; Series 1 · 50 for the opposite of this episode's rule-vs-data case.
+    GOAL: decide when one wide table is the better model, and what it still needs.
+    MODELS: one big table, wide tables, when the star still earns its joins.
+    BUILDS ON: Series 3 · 15 and 35 — grain and history, which a wide table still has to get right.
 
-    The acceptance suite (series2/LibraryChecks.groovy) grades through views the learner
-    writes, never through their table names. Any model that passes is correct.
-    FITS: all 26 rows of lending-log.csv must land. One cannot land honestly: "The Illustrated
-    Riverside" is "reference only — do not lend", yet Priya borrowed it (2026-05-05 to 05-12).
-    In Series 1 · 50 the RULE was wrong and changed; here the rule is right and the DATA is wrong —
-    so the row is set aside for a person, and the rule stays. Name that contrast out loud.
+    Look at main.vw_sales_detail: a one-big-table over the shipped star.
+    Scenario card: three consumers (a BI tool for self-service, a nightly finance reconciliation, a
+    dimension whose history changes) — which gets a star, which a wide table.
+    Point at Data Warehousing, Series 2 for what it measures on columnar engines.
 
-    YOUR TURN: draw and build your first library schema, add the four views, load the spreadsheet — and set aside the lent reference-only book.
-    CARDS: wrong rule vs wrong data: which one you change, with examples of each.
+    YOUR TURN: build one wide view over your star — it must still reconcile.
+    CARDS: when one big table is the better model, and what grain and history it still needs.
 
     HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
-      tab:er-diagram
-      check:fits
-      check:refuses
-      check:answers
-      build:library
+      check:reconciles
+      build:star
       cards
-      dataset: library
-      check suite: series2/LibraryChecks.groovy — this episode adds its checks there
+      dataset: northwind:star
+      check suite: series3/StarChecks.groovy — this episode adds its checks there
       cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson
-      NAME THE TAB IN THE PROSE — "er-diagram".
    ========================================================================== */}
 
 ## The situation this lesson prepares you for
@@ -55,7 +49,7 @@ TODO
 
 ## TODO — the decision
 
-{/* BEAT 2 — the modeling choice itself, on the learner's own library schema.
+{/* BEAT 2 — the modeling choice itself, on the learner's own Northwind star.
     NAME THE ALTERNATIVES YOU DID NOT PICK, and why. The alternatives are the lesson;
     a single option presented as obvious teaches a rule instead of judgement. */}
 

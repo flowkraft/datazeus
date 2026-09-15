@@ -1,11 +1,11 @@
 ---
-title: "Design the Library — Your First Schema, From Nothing"
+title: "Title, Edition, Copy & Keys — Choosing What a Key Identifies"
 description: "TODO — one sentence, written from THE SITUATION beat below, not from the topic."
 topic: "learn-data-modeling"
 tags: []
 level: "intermediate"
 module: "series2-modeling-for-the-real-world"
-order: 5
+order: 10
 published: false
 ---
 
@@ -19,31 +19,28 @@ published: false
     Read that header first — it is the argument this lesson is one instance of.
 
     WHY THIS EPISODE, SPECIFICALLY
-    GOAL: produce a first schema from nothing but a brief and a spreadsheet, and load the spreadsheet into it.
-    MODELS: everything from Series 1, applied with no answer key; set-aside rows.
-    BUILDS ON: all of Series 1; Series 1 · 50 for the opposite of this episode's rule-vs-data case.
+    GOAL: find the entity a natural key really belongs to, then choose surrogate or natural keys with that in mind.
+    MODELS: title / edition / copy, natural key, surrogate key, identity columns, the durable key.
+    BUILDS ON: Series 1 · 15 — the first look at natural vs surrogate, now on a key that betrays you.
 
-    The acceptance suite (series2/LibraryChecks.groovy) grades through views the learner
-    writes, never through their table names. Any model that passes is correct.
-    FITS: all 26 rows of lending-log.csv must land. One cannot land honestly: "The Illustrated
-    Riverside" is "reference only — do not lend", yet Priya borrowed it (2026-05-05 to 05-12).
-    In Series 1 · 50 the RULE was wrong and changed; here the rule is right and the DATA is wrong —
-    so the row is set aside for a person, and the rule stays. Name that contrast out loud.
+    The detonation, on the learner's own 05 model: "how many copies of Dune do we own?" and "who has
+    copy #3?" cannot both be answered by one book table.
+    The three ISBN cases in the data: two editions (different books), one reprint (same book), and
+    two titles with no ISBN at all (the donated local histories).
+    Scenario card: three models (one book table; title + copy; title + edition + copy), and the
+    librarian's questions — each model survives a different set. Title + edition + copy is not
+    automatically right; say when two levels are enough.
 
-    YOUR TURN: draw and build your first library schema, add the four views, load the spreadsheet — and set aside the lent reference-only book.
-    CARDS: wrong rule vs wrong data: which one you change, with examples of each.
+    YOUR TURN: make "how many copies of Dune?" and "who has copy #3?" answerable, and decide whether edition earns its own table.
+    CARDS: a natural key identifies something — which thing?; ISBN as an edition's key; surrogate vs natural.
 
     HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
-      tab:er-diagram
-      check:fits
-      check:refuses
       check:answers
       build:library
       cards
       dataset: library
       check suite: series2/LibraryChecks.groovy — this episode adds its checks there
       cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson
-      NAME THE TAB IN THE PROSE — "er-diagram".
    ========================================================================== */}
 
 ## The situation this lesson prepares you for

@@ -55,6 +55,16 @@ const CONVENTIONS = {
   datamodeling: {
     header: "    HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)",
     koan: (n, ep) => `series${n}/_${ep.n}/${pascal(ep.slug)}Koans.groovy`,
+    // Since 2026-09-14 Data Modeling has no per-episode koans: one check suite per series and
+    // an Anki deck per lesson. `tail` replaces the koan-file line for this track only.
+    tail: (n, ep, hands) => {
+      const suite = { 1: "NorthwindModelChecks", 2: "LibraryChecks", 3: "StarChecks" }[n]
+      const out = [hands.some((h) => h.indexOf("check:") === 0)
+        ? `      check suite: series${n}/${suite}.groovy — this episode adds its checks there`
+        : "      NO CHECK — practised in the working file, the diagram and the cards. See the note above."]
+      if (hands.includes("cards")) out.push("      cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson")
+      return out
+    },
   },
   javagroovy: {
     header: "    ── HANDS-ON (from curriculum.yaml `hands_on`) ──────────────────────────",
@@ -143,7 +153,8 @@ for (const track of TRACKS) {
         const lines = [conv.header]
         hands.forEach((h) => lines.push("      " + h))
         if (ep.dataset) lines.push("      dataset: " + ep.dataset)
-        lines.push(rungs.length
+        if (conv.tail) conv.tail(n, ep, hands).forEach((l) => lines.push(l))
+        else lines.push(rungs.length
           ? "      koan file: " + conv.koan(n, ep)
           : "      NO KOAN — judged by eyes, deliberately. See the note above.")
         if (tabs.length) {

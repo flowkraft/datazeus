@@ -1,11 +1,11 @@
 ---
-title: "Design the Library — Your First Schema, From Nothing"
+title: "Project — Model Northwind's Business: A Schema That Fits, Refuses and Answers"
 description: "TODO — one sentence, written from THE SITUATION beat below, not from the topic."
 topic: "learn-data-modeling"
 tags: []
-level: "intermediate"
-module: "series2-modeling-for-the-real-world"
-order: 5
+level: "beginner"
+module: "series1-modeling-fundamentals"
+order: 60
 published: false
 ---
 
@@ -19,29 +19,33 @@ published: false
     Read that header first — it is the argument this lesson is one instance of.
 
     WHY THIS EPISODE, SPECIFICALLY
-    GOAL: produce a first schema from nothing but a brief and a spreadsheet, and load the spreadsheet into it.
-    MODELS: everything from Series 1, applied with no answer key; set-aside rows.
-    BUILDS ON: all of Series 1; Series 1 · 50 for the opposite of this episode's rule-vs-data case.
+    GOAL: the Series 1 project — model Northwind's business end to end, graded by fits, refuses and answers.
+    MODELS: nothing new: the whole loop, applied without help.
 
-    The acceptance suite (series2/LibraryChecks.groovy) grades through views the learner
-    writes, never through their table names. Any model that passes is correct.
-    FITS: all 26 rows of lending-log.csv must land. One cannot land honestly: "The Illustrated
-    Riverside" is "reference only — do not lend", yet Priya borrowed it (2026-05-05 to 05-12).
-    In Series 1 · 50 the RULE was wrong and changed; here the rule is right and the DATA is wrong —
-    so the row is set aside for a person, and the rule stays. Name that contrast out loud.
+    Grading must never depend on the learner's table names (the rule Series 2 · 05's suite already
+    follows). Use the same device: the learner ends schema.sql with a few views of fixed name and
+    shape — customers, orders, order lines with the money columns, contacts, product suppliers — and
+    every check reads only those views.
+      FITS     counts through the views: 25 customers, 79 orders, 193 order lines, 20 products,
+               6 suppliers, 3 shippers, 3 employees, 8 categories.
+      REFUSES  impossible rows bounce, each paired with a possible row that must still load.
+      ANSWERS  the Learn SQL 50 report over the views: total 58153.31, Cactus Comidas para llevar first.
+      HOLDS    a second contact for a customer and a second supplier for a product insert and read back.
+    COMMIT BEFORE REVEAL: they publish their model, THEN see ours and Northwind's original, and write
+    down the three decisions they made differently and why.
 
-    YOUR TURN: draw and build your first library schema, add the four views, load the spreadsheet — and set aside the lent reference-only book.
-    CARDS: wrong rule vs wrong data: which one you change, with examples of each.
+    YOUR TURN: the whole model alone, ending schema.sql with the views the checks read.
+    CARDS: the Series 1 review deck: every rule from 00 to 57 as a work scenario.
 
     HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
-      tab:er-diagram
       check:fits
       check:refuses
       check:answers
-      build:library
+      tab:er-diagram
+      build:schema.sql
       cards
-      dataset: library
-      check suite: series2/LibraryChecks.groovy — this episode adds its checks there
+      dataset: northwind:model
+      check suite: series1/NorthwindModelChecks.groovy — this episode adds its checks there
       cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson
       NAME THE TAB IN THE PROSE — "er-diagram".
    ========================================================================== */}
@@ -55,7 +59,7 @@ TODO
 
 ## TODO — the decision
 
-{/* BEAT 2 — the modeling choice itself, on the learner's own library schema.
+{/* BEAT 2 — the modeling choice itself, on Northwind — the business, not the tables it happens to ship with.
     NAME THE ALTERNATIVES YOU DID NOT PICK, and why. The alternatives are the lesson;
     a single option presented as obvious teaches a rule instead of judgement. */}
 

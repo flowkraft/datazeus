@@ -1,11 +1,11 @@
 ---
-title: "Design the Library — Your First Schema, From Nothing"
+title: "Rules Across Rows — One Loan per Copy at a Time, and Where a Rule Should Live"
 description: "TODO — one sentence, written from THE SITUATION beat below, not from the topic."
 topic: "learn-data-modeling"
 tags: []
 level: "intermediate"
 module: "series2-modeling-for-the-real-world"
-order: 5
+order: 27
 published: false
 ---
 
@@ -19,31 +19,28 @@ published: false
     Read that header first — it is the argument this lesson is one instance of.
 
     WHY THIS EPISODE, SPECIFICALLY
-    GOAL: produce a first schema from nothing but a brief and a spreadsheet, and load the spreadsheet into it.
-    MODELS: everything from Series 1, applied with no answer key; set-aside rows.
-    BUILDS ON: all of Series 1; Series 1 · 50 for the opposite of this episode's rule-vs-data case.
+    GOAL: enforce rules that span several rows, and decide where each rule should live.
+    MODELS: partial unique index, reshaping for enforceability, rules in the model vs in the application.
+    BUILDS ON: Series 1 · 50 — single-row constraints; these are the rules they cannot express.
 
-    The acceptance suite (series2/LibraryChecks.groovy) grades through views the learner
-    writes, never through their table names. Any model that passes is correct.
-    FITS: all 26 rows of lending-log.csv must land. One cannot land honestly: "The Illustrated
-    Riverside" is "reference only — do not lend", yet Priya borrowed it (2026-05-05 to 05-12).
-    In Series 1 · 50 the RULE was wrong and changed; here the rule is right and the DATA is wrong —
-    so the row is set aside for a person, and the rule stays. Name that contrast out loud.
+    Checks: two open loans on one copy; a loan of a reference-only book; a second renewal
+    while someone is waiting — each with its paired accept.
+    "One open loan per copy" three ways: UNIQUE(copy) WHERE returned IS NULL (PostgreSQL), a separate
+    current-loans table with a plain UNIQUE, and an application check. Say what each costs.
+    The honest ending: some rules belong in the application, and the model's job is to make that
+    decision visible, not to pretend every rule is a constraint.
 
-    YOUR TURN: draw and build your first library schema, add the four views, load the spreadsheet — and set aside the lent reference-only book.
-    CARDS: wrong rule vs wrong data: which one you change, with examples of each.
+    YOUR TURN: enforce "one open loan per copy", and write down where that rule lives and why.
+    CARDS: where a rule should live: reshape the model, a partial unique index, a cross-table check, or the application.
 
     HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
-      tab:er-diagram
-      check:fits
+      cloudbeaver
       check:refuses
-      check:answers
       build:library
       cards
       dataset: library
       check suite: series2/LibraryChecks.groovy — this episode adds its checks there
       cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson
-      NAME THE TAB IN THE PROSE — "er-diagram".
    ========================================================================== */}
 
 ## The situation this lesson prepares you for

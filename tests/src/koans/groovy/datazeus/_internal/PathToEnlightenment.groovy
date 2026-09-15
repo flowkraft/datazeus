@@ -114,9 +114,15 @@ class PathToEnlightenment implements IGlobalExtension {
                 .sort { it.declarationOrder }
                 .collect { it.name }
         String className = ""
+        /* A SUITE WHOSE CHECKS LIVE IN AN ABSTRACT BASE — Data Modeling's NorthwindModelChecks, found
+           by the runner through a one-line NorthwindModelChecksKoans subclass. Spock reports those
+           features under the BASE spec, so progress is keyed by the spec visited here (not
+           feature.spec), and the file to open and the line numbers come from the class that
+           declares the features. For every ordinary koans class the two are the same class. */
+        SpecInfo declaring = (!spec.features && spec.superSpec) ? spec.superSpec : spec
         try {
             specPackages[spec.name] = spec.reflection?.getPackage()?.getName() ?: ""
-            className = spec.reflection?.name ?: ""
+            className = declaring.reflection?.name ?: ""
         } catch (ignored) {
             specPackages[spec.name] = ""
         }
@@ -127,7 +133,7 @@ class PathToEnlightenment implements IGlobalExtension {
             void error(ErrorInfo error) {
                 FeatureInfo f = error.method?.feature
                 if (!f) return
-                String key = "${f.spec.name}::${f.name}"
+                String key = "${spec.name}::${f.name}"
                 failed.add(key)
                 String hint = extractHint(error.exception)
                 if (hint != null) hints[key] = hint
@@ -137,7 +143,7 @@ class PathToEnlightenment implements IGlobalExtension {
 
             @Override
             void afterFeature(FeatureInfo feature) {
-                String key = "${feature.spec.name}::${feature.name}"
+                String key = "${spec.name}::${feature.name}"
                 if (!failed.contains(key)) passed.add(key)
             }
         })

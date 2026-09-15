@@ -13,30 +13,31 @@ published: false
     BOILERPLATE — not written yet. Everything below is the brief for whoever
     writes it. Delete these comments as each beat is filled in.
 
-    The track-level method (why koans are predict-and-decide, which DataPallas
-    tab does what, why Northwind is recovered and the library is invented) lives
-    in courses/datamodeling/curriculum.yaml. Read that header first — it is the
-    argument this lesson is one instance of.
+    The track-level method (the modelling loop, the proofs, how an episode is
+    practised — working file, one check suite per series, Anki cards — and which
+    DataPallas tab does what) lives in courses/datamodeling/curriculum.yaml.
+    Read that header first — it is the argument this lesson is one instance of.
 
     WHY THIS EPISODE, SPECIFICALLY
     GOAL: decide when to stop modelling and store a document.
-    MODELS: JSON/JSONB columns, and the filter-join-aggregate rule for choosing.
+    MODELS: JSON / JSONB columns, the filter-join-aggregate-constrain rule.
+    BUILDS ON: Series 1 · 52 — forty nullable columns is that failure arriving from another direction.
 
-    'How far do you model' has a third answer 35 and 40 do not cover: stop, store a document.
-    THE DECISION RULE, and the episode exists to make it sayable in a review: model it if you
-    will FILTER, JOIN or AGGREGATE on it, or if it must be constrained. Store JSON if it is
-    genuinely shapeless, varies per row, or is only ever read whole. The rest is taste, and
-    taste loses arguments.
-    The library carries it honestly: a title's extra metadata (translator, original language,
-    series position, large-print) differs for nearly every book, and modelling all of it
-    produces forty nullable columns - episode 37's failure mode from another direction.
-    Boundary: Learn SQL S3/30 owns QUERYING JSON. This owns the decision to have it.
+    Material: the `notes` column — translator, original language, large print, board book, series
+    position, reference only. Different for nearly every book that has one.
+    Scenario card: model it all as columns, as JSON, or split — and which of the librarian's
+    questions each version can answer. "Reference only" is a rule (27), so it must NOT hide in JSON.
+
+    YOUR TURN: decide what in `notes` becomes columns and what stays a document.
+    CARDS: model it if you filter, join, aggregate or constrain it — otherwise a document may be right.
 
     HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
-      koan:choose
-      koan:diagnose
+      check:answers
+      build:library
+      cards
       dataset: library
-      koan file: series2/_42/JsonAsAModelingChoiceKoans.groovy
+      check suite: series2/LibraryChecks.groovy — this episode adds its checks there
+      cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson
    ========================================================================== */}
 
 ## The situation this lesson prepares you for
@@ -56,8 +57,16 @@ TODO
 
 ## TODO — see it for yourself
 
-{/* BEAT 3 — NON-NEGOTIABLE. The learner proves it, via the hands_on above.
+{/* BEAT 3 — NON-NEGOTIABLE. The learner proves it: the YOUR TURN decision in their
+    working file, and the checks it adds to the series suite (or the tab, where none).
     If this beat cannot be written, the episode is not ready to be written. */}
+
+TODO
+
+## Your turn
+
+{/* The ONE decision the learner makes in their working file — the YOUR TURN line above.
+    One paragraph and the command that runs the checks. Nothing to install. */}
 
 TODO
 

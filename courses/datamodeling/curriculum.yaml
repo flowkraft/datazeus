@@ -1,195 +1,156 @@
 # The ordered episode list for Data Modeling. Field docs live in courses/learnsql/curriculum.yaml.
 # `short` is omitted until an episode has a video.
 #
-# The job this track teaches: decide what the tables should be, before anyone writes a query
-# against them. Series 1 recovers a model that already exists, Series 2 invents one and then
-# survives the changes, Series 3 reshapes it for analytics.
+# The job this track teaches: turn what a business does into tables that tell the truth — and be
+# able to prove that they do. Series 1 models a business the learner already knows, Series 2
+# designs one from a blank page and keeps it alive through change, Series 3 reshapes a model
+# for analytics.
 #
 # ============================================================================
-# HOW THIS TRACK DELIVERS "HANDS ON" — decided 2026-08-24, do not re-litigate
+# THE COURSE IN ONE PAGE — restructured with the owner, 2026-09-14
 # ============================================================================
-# Learn SQL has a cheap correctness oracle: run the query, the database says yes or no.
-# Modeling looks like it has none — a schema design has no green checkmark — and the gravity
-# of that pulls a modeling course into LECTURING. This track had drifted that way: 31
-# episodes, first hands-on build at episode 21, one project. That is what we are fixing.
+# Until 2026-09-14 Series 1 was "recover Northwind's missing integrity layer". That made the
+# vehicle the goal: "do the real rows load?" can only grade PHYSICAL decisions (keys, NOT NULL,
+# CHECK), so the build episodes drifted to the physical layer and the project had no modelling
+# decision left in it. The rebuild survives as part of the proof; it is no longer the promise.
 #
-# A schema DOES have an oracle, in fact two, and they carry the whole track:
+# THE MODELLING LOOP. Every episode runs it, the way Learn SQL runs its SQL thinking loop:
 #
-#   1. THE INSERTS IT REFUSES. A good model makes bad data impossible; a test that says
-#      "this INSERT must bounce" is therefore a direct test of the model. Pair every
-#      shouldReject with a shouldAccept, or the learner just bolts constraints onto
-#      everything and calls it rigour — the pincer IS the judgement being taught.
+#   LISTEN   say the business in sentences          "a customer places orders"     conceptual
+#   DRAW     entities, relationships, cardinality   Crow's Foot, authored as text  logical
+#   SHAPE    grain, keys, normal forms, time        one row per what?              logical
+#   BUILD    types, constraints, DDL                CREATE TABLE                   physical
+#   PROVE    run the proofs below                   load, bounce, answer
 #
-#   2. REAL DATA LOADING INTO IT. Verified on the shipped 79-row Northwind: declaring
-#      PRIMARY KEY("OrderID") alone on Order Details is REJECTED on load (the grain is
-#      (OrderID, ProductID)); NOT NULL on "Region" is REJECTED (it is genuinely optional);
-#      CHECK("UnitPrice" > 10) is REJECTED (a 4.50 product exists). Every rejection names a
-#      modeling concept, and no answer key is involved. The dataset IS the grader.
+# The three layers are the stations of the loop, not a slide to memorise.
 #
-# WHY THE KOANS ARE PREDICT-AND-DECIDE, NOT TYPE-THE-DDL. If a koan says "write the schema",
-# the learner spends their effort on CREATE TABLE syntax, which is not the subject. So the
-# koans climb a ladder and only the top rung authors anything (see SchemaKoanBase):
-#   rung 1 PREDICT   schema is given — will this INSERT bounce?     (types nothing)
-#   rung 2 DIAGNOSE  what is the grain? can this model answer X?    (types nothing)
-#   rung 3 CHOOSE    three finished models — which survives Y?      (types nothing)
-#   rung 4 COMPLETE  boilerplate given, one blanked line: the decision itself
-#   rung 5 AUTHOR    the whole schema — projects only, where syntax is earned
-# This mirrors KoanBase's own split between a "fragment koan" and a "whole-query koan".
+# THE PROOFS. Machine-checked, and they GROW across the course — one or more per series:
 #
-# WHAT IS *NOT* A KOAN. Anything whose answer needs eyes goes to the DataPallas database
-# connection screen instead, and the episode should say which tab by name:
-#   Database Schema tab        the physical layer, real types, what is actually there
-#   ER Diagram tab             PlantUML/Crow's Foot — and it is TEXT, so the learner can
-#                              AUTHOR a diagram, diff it, and compare it against ours
-#   Domain-Grouped Schema tab  subject areas / bounded contexts (see S1 55)
-#   Ubiquitous Language tab    the glossary behind naming conventions (see S1 45)
-# Neither half is "watch a video". Eyes for the shape, the machine for the correctness.
+#   FITS        the business's real rows load into the model               Series 1
+#   REFUSES     impossible data bounces, and possible data still loads     Series 1
+#   ANSWERS     the business's questions return the right numbers          Series 1
+#   SURVIVES    a change lands as a migration; every earlier test passes   Series 2 (from 50)
+#   RECONCILES  the analytics model's totals equal the source's            Series 3
 #
-# THE `hands_on` FIELD — a track-local convention, and the thing that keeps the promise
-# honest. Every episode carries one, and it is NOT decoration: an episode with no hands_on
-# is an episode that has quietly become a lecture, so the check is "does every episode have
-# at least one entry", and it should stay that way. Values:
-#   koan:predict | koan:diagnose | koan:choose | koan:complete | koan:author
-#                              the rung from the ladder above
-#   koan:migration             apply the change; the WHOLE existing suite must still pass
-#   koan:reconcile             the star's totals must equal the OLTP totals
+# ONE DATASET, ONE VERB, ONE ARTIFACT PER SERIES. Apply this test before adding any episode:
+#
+#   Series 1   Northwind   MODEL it, with the method          -> the learner's Northwind model
+#   Series 2   Library     DESIGN from a blank page, SURVIVE  -> the learner's library schema
+#   Series 3   Northwind   RESHAPE for analytics              -> a star that reconciles
+#
+# Every concept is met more than once, deliberately: first on Northwind (Series 1), deeper on
+# the learner's own library (Series 2), and for analytics (Series 3) — grain 1·15 -> 3·15, keys
+# 1·15 -> 2·10, many-to-many 1·20 -> 2·15, time 1·30 -> 2·25/2·30, subtypes 1·35 -> 2·60,
+# normal forms 1·25 -> 2·35/2·40, NULL 1·52 -> the "Unknown" dimension row. A Series 2 brief
+# names the Series 1 episode it goes past; if it cannot go past it, it is a repeat.
+#
+# Within a series the episodes fall into MOVEMENTS, written out on each series below. An
+# episode that belongs to none of its series' movements is in the wrong series.
+#
+# ============================================================================
+# THE DATA — three schemas, one file
+# ============================================================================
+#   main.*       NORTHWIND AS SHIPPED. Real business data and NO declared keys or constraints.
+#                It is the source of rows the learner loads, and the undeclared schema that
+#                Series 1 · 57 reverse-engineers and judges. Nobody models IN it.
+#   practice.*   THE LEARNER'S. Same database file, their own schema: their Northwind model in
+#                Series 1 (grown as practice/schema.sql) and their library in Series 2.
+#
+# The mechanism is that main and practice sit in the same file, so the load IS the test:
+#     INSERT INTO practice.<their table> SELECT ... FROM main."Order Details";
+# A model that does not match the business cannot accept the business's own rows.
+#
+# Do not add keys to main.*: 57 needs a schema that declares nothing, and the learner's model is
+# where constraints belong. schema.sql REBUILDS rather than ALTERs, because DuckDB (tested,
+# v1.5.4) cannot ADD FOREIGN KEY, ADD UNIQUE or ADD CHECK; it is re-runnable, which is why
+# `zeus practice reset` exists.
+#
+# MEASURED on the shipped northwind.duckdb (DuckDB v1.5.5, 2026-09-14) — use these, not memory:
+#   25 customers, 79 orders, 193 order lines, 20 products, 6 suppliers, 3 shippers, 3 employees,
+#   8 categories; order-line revenue 58153.31. Territories, EmployeeTerritories, Region and
+#   CustomerDemographics hold 0 rows. Customers.Email is NULL on every row; Region on 21 of 25.
+#   main.fact_sales / dim_* are a SEPARATE star ReportBurster generates for pivot-table volume
+#   (NorthwindOlapDataGenerator, seed 42): 30 invented customers, 16 products, net revenue
+#   4354846.73, no order number, a 28-day calendar. Decided 2026-09-14: it is never a reference
+#   answer — Series 3 reconciles against the OLTP tables — and it IS the "star somebody else
+#   built" that Series 3 · 25 and · 30 judge.
+#   THE SERIES 3 SEED (PART 0 of practice-template/star.sql, schema `seed`) adds what Northwind
+#   does not ship: stock movements, monthly sales targets, employee territories. main.* untouched.
+#
+# THE LIBRARY (Series 2) is the model the learner INVENTS: courses/datamodeling/brief/, handed
+# over as the prose brief with its ambiguities left in, the messy lending-log.csv, and an
+# acceptance suite that grades through views the learner writes, never through their table
+# names. It is far from Northwind on purpose — pick e-commerce and they transcribe what they
+# just read. ONE library schema across the whole series: design it at 05, get bitten at 10.
+#
+# ============================================================================
+# HOW THIS TRACK IS PRACTISED — decided with the owner 2026-09-14
+# ============================================================================
+# VIDEO + ARTICLE + THE LEARNER'S WORKING FILE + ONE CHECK SUITE PER SERIES + ANKI CARDS.
+# No per-episode koans. Learn SQL's koans fit SQL: blank a token, run it against real rows,
+# compare — one right answer. A modelling decision has several right answers, and the
+# predict / diagnose / choose "koans" this track used to plan were multiple-choice quizzes
+# dressed as Groovy. They were dropped rather than forced.
+#
+#   THE WORKING FILE   where the practice happens, one per series: practice/schema.sql
+#                      (Series 1), the learner's library schema (Series 2), practice/star.sql
+#                      (Series 3). Every article ends with ONE "your turn" decision made in it.
+#   THE CHECK SUITE    one file per series, growing episode by episode — the way a team's CI
+#                      checks a schema. Each check is named after a BUSINESS RULE, never a
+#                      constraint, and reads only views of fixed name and shape that the learner
+#                      writes, never their table names: any model that passes is a correct
+#                      answer, including ones we did not think of. Pair every "must refuse" with
+#                      a "must still accept", or the learner bolts constraints onto everything.
+#                        tests/src/koans/_todo/datamodeling/series1/NorthwindModelChecks.groovy
+#                        tests/src/koans/_todo/datamodeling/series2/LibraryChecks.groovy
+#                        tests/src/koans/_todo/datamodeling/series3/StarChecks.groovy
+#   THE CARDS          an Anki deck per lesson (cards/cards.yaml, built by tools/build-anki.py,
+#                      Learn SQL's format), written WITH the lesson. The judgement questions live
+#                      here: rules, vocabulary, and "a customer moves city — which SCD type?"
+#                      scenarios. Self-contained: no database, no Northwind recall.
+#   THE TABS           a DataPallas connection tab, named in the prose: Database Schema
+#                      (physical), ER Diagram (PlantUML — text, so it can be authored and diffed),
+#                      Ubiquitous Language (the glossary). Tabs demonstrate the skill; they never
+#                      are the skill.
+#
+# THE `hands_on` FIELD. Every episode carries `cards` AND at least one thing that is practised
+# rather than reviewed (a check, a build, a tab or the brief) — cards alone would be a lecture.
+#   check:fits        the business's real rows load into the learner's model
+#   check:refuses     impossible rows bounce, each paired with a possible row that still loads
+#   check:answers     the business's questions come back with the right numbers
+#   check:survives    after a migration, every earlier check is still green
+#   check:reconciles  the star's totals equal the source's totals
+#   cards             this lesson's Anki deck
 #   tab:er-diagram | tab:database-schema | tab:domain-grouped-schema | tab:ubiquitous-language
-#                              a named tab on the DataPallas connection screen
-#   cloudbeaver                needs Postgres — a feature DuckDB does not have
-#   brief                      works from the library brief in courses/datamodeling/brief/
+#   cloudbeaver       needs PostgreSQL — a feature DuckDB does not have
+#   brief             works from the library brief in courses/datamodeling/brief/
+#   build:schema.sql  Series 1 — the learner's Northwind model, practice/schema.sql
+#   build:library     Series 2 — the learner's library schema
+#   build:star        Series 3 — practice/star.sql
+# Every series has at least one `build:` entry; a series without one produces nothing.
 #
-#   EVERY SERIES LEAVES ONE ARTIFACT BEHIND, and `build:` names which. This was uneven until
-#   2026-08-24: Series 3 declared no build at all, so the only series producing nothing the
-#   learner keeps was the one whose episodes are literally called "build the star schema".
-#     build:schema.sql   Series 1 — the Northwind integrity rebuild, practice/schema.sql
-#     build:library      Series 2 — the schema invented from the brief
-#     build:star         Series 3 — practice/star.sql, grown the same way schema.sql is
-#   If a series ever has no `build:` entries again, it has stopped producing anything.
-#
-# TABS ARE NOT A SERIES 1 FEATURE. They were, briefly, and it was wrong: `tab:` appeared 8
-# times in Series 1 and 3 times in Series 2, when Series 2 is the series where the learner
-# DESIGNS FROM NOTHING and authoring the PlantUML diagram IS the design act. Any Series 2
-# episode that changes the SHAPE of the model should redraw it — the diff between two
-# diagrams is the clearest possible view of what a decision did.
+# THE `dataset` FIELD:
+#   northwind:read   reads main.* only — the data, the diagram, the tabs. Builds nothing.
+#   northwind:model  builds the learner's Northwind model in practice.*, loaded from main.*
+#   northwind:star   builds the star (schema star) from the learner's Series 1 views, plus the seed
+#   library:brief    the brief and the spreadsheet; no database yet
+#   library          the learner's library schema in practice.*
+#   (library+northwind and case-study are still valid values; nothing uses them since 2026-09-14)
 #
 # ============================================================================
 # THE SHAPE OF AN EPISODE — four beats, every time
 # ============================================================================
-# Data Model Patterns already proved a fixed episode shape keeps a modeling track honest.
-# Ours is different because we teach METHOD rather than catalogue, but the discipline is the
-# same: an episode missing beat 3 has become a lecture.
-#
 #   1. THE SITUATION  the concrete moment at work where this bites. Never "normalization is
-#                     the process of…". Always "the report says 3x revenue and nobody knows
-#                     why". The hook in the episode title is the one-line version of this.
-#   2. THE DECISION   the modeling choice itself, shown on Northwind (Series 1) or on the
-#                     learner's own library schema (Series 2). Name the alternatives you did
-#                     NOT pick and why — the alternatives are the lesson.
-#   3. THE PROOF      the learner sees it for themselves: the koan rung or the named tab from
-#                     `hands_on`. This beat is non-negotiable. If you cannot write beat 3,
-#                     the episode is not ready.
-#   4. THE COST       what the decision buys and what it will cost later. Every modeling
-#                     choice is a trade; an episode that presents one as free is teaching a
-#                     rule instead of judgement.
+#                     the process of…". The hook in the title is the one-line version.
+#   2. THE DECISION   the modelling choice itself. Name the alternatives NOT picked, and why —
+#                     the alternatives are the lesson.
+#   3. THE PROOF      the learner sees it for themselves, via `hands_on`. Non-negotiable: if
+#                     beat 3 cannot be written, the episode is not ready.
+#   4. THE COST       what the decision buys and what it will cost later. An episode that
+#                     presents a choice as free is teaching a rule instead of judgement.
 #
-# ============================================================================
-# "HOW CAN YOU TEACH MODELING ON A SCHEMA WITH NO CONSTRAINTS?" — the answer
-# ============================================================================
-# Because the unconstrained Northwind is never the teaching SURFACE. It is the INPUT. There
-# are three schemas in play and confusing them is the easiest way to misread this whole track:
-#
-#   main.*        THE ORIGINAL. Real business data, real relationships, and NOTHING declared.
-#                 It is used for exactly two things: the diagram you READ, and the rows you
-#                 LOAD. You never modify it and you never model *in* it.
-#
-#   practice.*    THE LEARNER'S. Same database file, their own schema. THIS is where the
-#                 constraints live — the ones they decide on and declare. Series 1 grows it
-#                 one episode at a time as practice/schema.sql.
-#
-#   the library   ALSO in practice.*, but invented from the brief rather than recovered.
-#                 Series 2's schema. Nothing to copy from; the brief and the CSV are all
-#                 they get.
-#
-# The mechanism is that main and practice sit in the SAME FILE, so:
-#
-#     INSERT INTO practice."Order Details" SELECT * FROM main."Order Details";
-#
-# The original supplies the DATA. The learner supplies the CONSTRAINTS. The load is the TEST.
-# A model that does not match the business physically cannot accept the business's own rows —
-# which is why no answer key is needed and why the missing constraints are the whole point.
-# If main.* already declared its keys, there would be nothing left for the learner to decide.
-#
-# THE `dataset` FIELD records which of the three each episode uses, so this never has to be
-# reconstructed from memory again:
-#   northwind:read     reads main.* only — the tabs, the diagram, the data. Builds nothing.
-#   northwind:rebuild  reads main.*, BUILDS practice.* — the Series 1 spine, schema.sql
-#   library:brief      the brief and the spreadsheet; no database involved yet
-#   library            the schema the learner invented, in practice.*
-#   library+northwind  library is the subject; Northwind supplies one demonstration
-#   northwind:star     builds the star in practice.* from main.*, reconciled against the
-#                      shipped main.fact_sales / main.dim_* as the reference answer
-#   case-study         a real system examined from the outside, because the decision is too
-#                      big to exercise on a toy. Used once, for multi-tenancy: the library is
-#                      ONE small independent branch with two staff, so asking a learner to
-#                      make it multi-tenant is a contrived exercise, and a contrived exercise
-#                      is the worst failure mode a hands-on track has. DataPallas and
-#                      ReportBurster live that decision for real; teach it from there. The
-#                      choose-koan still works — three GIVEN models, not the learner's own.
-#
-# ============================================================================
-# WHEN IS A PROJECT `core`? — a rule, because this drifted once already
-# ============================================================================
-# A project is the one episode where everything in its series gets applied. So:
-#
-#   IF the core path includes a series at all, it MUST include that series' project.
-#
-# Otherwise the shortest-path-to-productive has no proof point for that series — a learner
-# would have done the whole of Series 2 except the one episode that demonstrates its promise.
-# That is what had happened here: project-survive-the-change was not core, so the core path
-# went through "design for the change that's coming" and never survived a change.
-#
-# The rule is NOT "every project is core". Learn SQL is the counter-example and is correct
-# as it stands: its Series 3 and Series 4 have no core episodes at all, so their projects
-# are rightly non-core — a core project sitting in a non-core series would ask someone to
-# apply eight things they were never told to learn.
-#
-# ============================================================================
-# TWO DATASETS, TWO JOBS — the split that makes the above work
-# ============================================================================
-# NORTHWIND is the model you RECOVER (Series 1). The shipped northwind.duckdb declares NO
-# constraints at all — no PKs, no FKs, nothing (the JPA entities upstream have them; the
-# DuckDB export flattened them away). That absence is the COURSE, not a defect: Series 1 is
-# the learner rebuilding Northwind's integrity layer into their own `practice` schema, one
-# episode at a time, graded by whether the real rows still load. DO NOT "FIX" THE DATASET:
-# adding the constraints back deletes thirteen episodes in one commit.
-#
-#   The script is a REBUILD, never an ALTER: DuckDB supports ALTER TABLE ADD PRIMARY KEY and
-#   ALTER COLUMN SET NOT NULL, but NOT ADD FOREIGN KEY, ADD UNIQUE or ADD CHECK (tested,
-#   v1.5.4). So schema.sql is CREATE TABLE ... with constraints inline, then
-#   INSERT INTO practice.X SELECT ... FROM main.X. It is idempotent and re-runnable, which
-#   is why `zeus practice reset` exists.
-#
-# THE LIBRARY is the model you INVENT (Series 2). You cannot ask someone to design a schema
-# they have spent twelve episodes reading — the answer is already in their head — so the
-# greenfield domain has to be a different one. Library lending was chosen deliberately:
-#   - universally familiar as a business, unfamiliar as a schema
-#   - FAR from Northwind. Pick e-commerce and they will transcribe what they just read.
-#   - it owns the best "aha" in introductory modeling: TITLE vs COPY. Everyone builds one
-#     `book` table, and then "how many copies of Dune do we own?" and "who has copy #3?"
-#     break it at the same moment.
-#   - it contains, without contriving them, every decision Series 2 teaches: 1:M, M:N
-#     (book<->author), M:N-with-attributes (the loan itself), real optionality
-#     (returned_on IS NULL means still out), a category hierarchy, and a natural key that
-#     betrays you (ISBN: reissues get new ones, ISBN-10 vs -13, self-published have none).
-#   - its change requests genuinely hurt: ebooks have no physical copy and detonate the
-#     copy model. See courses/datamodeling/brief/.
-# The brief is handed over as three artifacts, never as a finished schema: the prose brief
-# WITH DELIBERATE AMBIGUITIES LEFT IN, the messy spreadsheet being replaced, and the
-# executable acceptance suite. That last one is a definition of done that is not an answer key.
-#
-# ONE library schema across the whole of Series 2, not one per episode. Design it in episode
-# 05 and get bitten by your own decision in episode 25 — that is the lesson nobody forgets,
-# and it is the only way the series tagline is actually earned.
+# WHEN IS A PROJECT `core`? If the core path includes a series at all, it MUST include that
+# series' project — otherwise the shortest path has no proof point for the series.
 
 course: learn-data-modeling
 track: datamodeling
@@ -198,549 +159,547 @@ title: Data Modeling
 # ============================================================================
 # PREREQUISITES — what you need before episode 1, and why
 # ============================================================================
-# `excludes` says what this track does NOT cover. This says what it ASSUMES, which is a
-# different promise and was missing entirely: two well-bounded courses side by side are not
-# the same thing as a path, and a learner who hits an unexplained statement concludes they
-# are not ready rather than that we forgot to mention it.
-#
 # Kept deliberately SHORT. A long prerequisite list is a wall; the honest answer here is
 # "one series and one statement", so say exactly that.
 prerequisites:
   - course: learn-sql
-    needs: "Series 1 entire, plus INSERT from Series 2 · 40"
+    needs: "Series 1 entire, plus INSERT from Series 2 · 48"
     why: >-
-      In Series 1 you build one file, a few lines at a time, that puts back the keys and
-      rules the shipped Northwind is missing. Each episode adds a table and a line that
-      copies the real rows into it. You should already be comfortable with SELECT, WHERE,
-      JOIN and GROUP BY, so your attention goes on the modelling and not on the SQL.
+      Series 1 models Northwind, the business you queried all through Learn SQL: you decide what
+      its tables should be, load its real rows into them, and run your first report again on
+      your own model. You should already be comfortable with SELECT, WHERE, JOIN and GROUP BY,
+      and able to INSERT rows selected from another table, so your attention goes on the
+      modelling and not on the SQL.
 
 excludes:
   - topic: "Writing queries against these schemas"
     where: "covered in Learn SQL"
   - topic: "Loading the model — pipelines, SCD-2 loads, backfills"
     where: "covered in ETL & Data Pipelines and Analytics Engineering with dbt"
+  - topic: "Loading, querying and running a warehouse at scale, and columnar engine design"
+    where: "covered in Data Warehousing — this course designs the star and proves it on small data"
   - topic: "Running, tuning and migrating the live database"
     where: "covered in Data Ops — this track designs the change, that one ships it safely"
-  # These three were only ever recorded in lesson comments, which is the wrong file: the
-  # excludes block is what the READER sees, and the reader is exactly who needs to know that
-  # a keyword appearing in two tracks is two different subjects rather than a repeat.
+  # Subjects that share a keyword with another track and are two different questions.
   - topic: "EXPLAIN, index internals and making a slow query fast"
-    where: "covered in Learn SQL, Series 3 — here indexing is only the design call, made before the query exists"
+    where: "covered in Learn SQL, Series 3. In this course, Series 2 · 40 makes only the design call, before the query exists"
   - topic: "NULL semantics — three-valued logic, and why `= NULL` never matches"
-    where: "covered in Learn SQL, Series 1 · 45, which is what NULL does to a query. In this course, Series 1 · 37 is whether the column should allow NULL at all — a different question that happens to share the word"
+    where: "covered in Learn SQL, Series 1 · 45, which is what NULL does to a query. In this course, Series 1 · 52 is whether the column should allow NULL at all — a different question that happens to share the word"
   - topic: "Querying JSON once it is in a column"
     where: "covered in Learn SQL, Series 3, which queries JSON once it is there. In this course, Series 2 · 42 asks only whether it should be JSON in the first place"
-  # The three below are NEAR-DUPLICATES with Data Model Patterns, and both tracks used to
-  # stay silent about it — a learner met the same subject twice and could not tell which one
-  # they had needed. The split is real (we teach the TECHNIQUE and how to choose; that track
-  # hands over the pattern the industry already settled on) but it has to be said out loud.
+  # NEAR-DUPLICATES with Data Model Patterns: we teach the TECHNIQUE and how to choose; that
+  # track hands over the pattern the industry already settled on. Said out loud, both ways.
   - topic: "The Party model, order-to-cash, work effort — the patterns themselves"
     where: "covered in Data Model Patterns — here you learn to decide, there you inherit decisions already proven"
+  - topic: "Contact mechanisms, effective dating, type and status tables and hierarchies as ready-made patterns"
+    where: "covered in Data Model Patterns, which hands over the settled pattern. In this course, Series 1 · 05, Series 2 · 20, Series 2 · 25 and Series 2 · 32 teach how to choose"
+  # MOVED OUT 2026-09-14, both to Schema Teardowns: each could only be taught from real systems
+  # much larger than either of this course's datasets.
+  - topic: "Subject areas and bounded contexts — finding your way around a 200-table schema"
+    where: "covered in Schema Teardowns, Series 1 · 00, on real schemas of that size"
+  - topic: "Multi-tenancy — how one product keeps its customers' data apart"
+    where: "covered in Schema Teardowns, Series 2 · 25, from products that live the decision"
   - topic: "How real shipped applications actually modelled it"
     where: "covered in Schema Teardowns — that track is field evidence, this one is method"
 
-# ============================================================================
-# IS EACH SERIES COHERENT? — the test, and the answer
-# ============================================================================
-# A series is coherent when it has ONE dataset, ONE verb and ONE artifact, and when every
-# episode in it serves that verb. Apply that test before adding any episode anywhere.
-#
-#   Series 1   Northwind   RECOVER   -> practice/schema.sql
-#   Series 2   Library     INVENT    -> the learner's own library schema
-#   Series 3   Northwind   RESHAPE   -> fact_sales and its dimensions
-#
-# The old taglines failed that test. "Read and understand a schema" is a COMPREHENSION verb
-# and produced no artifact — it was accurately describing a series that ended with someone
-# who could recognise a model and had never made one. "Design for the change that's coming"
-# named an artifact the series never actually built, because nothing in it designed anything;
-# every episode was a refinement of a model handed over ready-made. Series 3's tagline was
-# the only one already true, and it is unchanged.
-#
-# Within a series the episodes fall into MOVEMENTS. They are written out on each series
-# below. If a new episode does not belong to one of its series' movements, it is in the
-# wrong series — that check is the whole point of writing them down.
-
 series:
-  # MOVEMENTS
-  #   00-05  READ THE BASICS   the vocabulary, and Northwind's diagram
-  #   10-45  REBUILD IT        schema.sql grows one decision at a time; real rows grade it.
-  #                            Naming (45) belongs in THIS movement, not the next one: by then
-  #                            the learner has a schema of their own to name, so it is applied
-  #                            to their file rather than observed on ours. Its `dataset` says
-  #                            northwind:rebuild for exactly that reason.
-  #   50-57  READ ANY SCHEMA   reverse-engineering, subject areas, anti-patterns — advanced
-  #                            READING, which genuinely needs the rebuild behind it: you
-  #                            cannot usefully reverse-engineer before you know what a foreign
-  #                            key is, and you cannot see that EAV destroyed the grain until
-  #                            you know what grain is. That dependency is why this movement
-  #                            sits after the build and not next to episode 05.
-  #   60     PROVE IT          the project runs the whole script against the full dataset
+  # MOVEMENTS — the loop's layers in order, conceptual -> logical -> physical -> proof
+  #   00-10  THE BUSINESS    sentences, entities, relationships. Nothing is built from a
+  #                          table yet; everything is built from what the business SAYS.
+  #   15-35  THE SHAPE       grain & keys, many-to-many, normal forms, copies that are really
+  #                          history, subtypes. schema.sql is born at 15.
+  #   40-55  THE BUILD       types, foreign keys, constraints, what NULL means, the DDL and
+  #                          its names. Relationships drawn at 10/20 get declared at 45.
+  #   57-60  JUDGE & PROVE   someone else's schema, then your own, graded by the proofs.
   #
-  # It is still read -> build -> read, and that is the honest shape rather than an elegant
-  # one. The alternative (all reading up front) was rejected because it front-loads twelve
-  # episodes of looking at things before the learner writes a line, which is the exact failure
-  # this whole redesign exists to undo.
+  # NORTHWIND IS THE BUSINESS, NOT A SET OF TABLES TO RESTORE. The learner knows it from Learn
+  # SQL, which frees their attention for the modelling. Its shipped schema is something to
+  # JUDGE (57) and COMPARE against (60), never the answer being copied — and two requirements
+  # the shipped tables cannot hold (several contacts per customer at 05, several suppliers
+  # per product at 20) make sure the learner's model has to be designed, not transcribed.
   #
-  # Tagline changed from "read and understand a schema": it now names both the reading and the
-  # artifact, so the series can be checked against its own promise.
+  # RESTRUCTURED 2026-09-14 with the owner. Before, the series was "RECOVER Northwind's
+  # missing integrity layer": its build episodes were almost all physical (keys, types,
+  # constraints) because "do the real rows load?" can only grade physical decisions, and its
+  # project had no modelling decision left to make. Merged: layers into 00; entities split
+  # from relationships; reverse-engineering + anti-patterns into 57; DDL + naming into 55.
+  # New: 30 copy-or-reference, 35 supertypes-and-subtypes. Moved out: subject areas, to
+  # Schema Teardowns, Series 1 · 00.
   - slug: series1-modeling-fundamentals
     title: Modeling Fundamentals
-    tagline: read a schema, then design and create tables yourself
+    tagline: model a business you already know, from its sentences to tables that prove themselves
     level: beginner
     episodes:
+      # THE ORIENTATION EPISODE, the counterpart of Learn SQL's "SQL thinking loop". One full
+      # turn of the MODELLING LOOP on something tiny — listen, draw, shape, build, prove — and
+      # the toolchain: the practice schema, the ER Diagram tab, the checks and the cards.
+      # The three layers (conceptual, logical, physical) are taught HERE, as the stations of the
+      # loop, not as a lecture of their own. The hook: Leo has queried Northwind for twelve
+      # lessons and cannot say what the company actually does.
       - n: "00"
-        slug: conceptual-logical-physical
-        title: "Conceptual, Logical & Physical — Which Layer You Are Designing At"
-        hands_on: ["tab:er-diagram", "tab:database-schema"]
-        dataset: northwind:read
+        slug: start-here
+        title: "Start Here: The Modeling Loop — From What a Business Does to Tables That Prove It"
+        short: "Start Here: The Modeling Loop — business to tables"
+        hands_on: ["check:fits", "check:refuses", "tab:er-diagram", "build:schema.sql", "cards"]
+        dataset: northwind:model
         core: true
         status: planned
-      # The DataPallas ER Diagram tab is the logical layer and the Database Schema tab is the
-      # physical one — two tabs, side by side, are the previous episode's three layers made
-      # concrete instead of explained on a slide. Say the tab names out loud.
-      # SOURCE (chen): ENTITIES, ATTRIBUTES and RELATIONSHIPS, and the ER diagram itself.
+      # The first modelling DECISION, and the one every later episode depends on: is this a
+      # thing the business keeps track of, or a fact about such a thing? Northwind's own schema
+      # answers it three different ways, which is what makes it a good teacher here.
       - n: "05"
-        slug: entities-and-relationships
-        title: "Entities, Attributes & Relationships — Reading an ER Diagram"
+        slug: entities-and-attributes
+        title: "Entities & Attributes — Is It a Thing, or a Fact About a Thing?"
+        short: "Entities & Attributes — thing or fact?"
         tags: ["chen"]
         credits:
           - source: chen
-            concept: "ENTITIES, ATTRIBUTES and RELATIONSHIPS, and the ER diagram itself"
-        hands_on: ["tab:er-diagram", "koan:diagnose"]
+            concept: "ENTITIES and ATTRIBUTES — the first half of his entity-relationship model"
+        hands_on: ["tab:er-diagram", "build:schema.sql", "cards"]
         dataset: northwind:read
         core: true
         status: planned
-      # GRAIN, pulled forward from Series 3 where it used to live at 20 as a fact-table
-      # concern only. "One row per WHAT?" is the first question of ANY table and the thing you
-      # answer before you can choose a key, so it cannot wait twenty episodes. Split out of the
-      # old combined keys episode, which was carrying four topics.
-      #
-      # This is where schema.sql starts. The demonstration writes itself: declare
-      # PRIMARY KEY("OrderID") on Order Details, watch the real rows refuse to load, and let
-      # the data tell them the grain is (OrderID, ProductID). Learn SQL collects on grain too
-      # (S2/06 join fan-out), as do Data Warehousing and dbt.
-      # SOURCE (kimball): GRAIN is his word, and step 2 of the four-step design. Here it is OLTP; Series 3 - 02 and 3 - 20 collect on it.
+      # Business rules are SENTENCES before they are lines: "every order is placed by exactly one
+      # customer; a customer may have placed none". This episode is the translation in both
+      # directions, and the diagram is AUTHORED (PlantUML text in the ER Diagram tab), not only
+      # read — authoring it is what Series 2 then asks of a blank page.
       - n: "10"
-        slug: grain-and-primary-keys
-        title: "Grain & Primary Keys — What Is One Row, and What Makes It Unique"
+        slug: relationships-cardinality-optionality
+        title: "Relationships, Cardinality & Optionality — Business Rules as Lines on a Diagram"
+        short: "Relationships & Cardinality — rules as lines"
+        tags: ["chen"]
+        credits:
+          - source: chen
+            concept: "RELATIONSHIPS and the ER diagram — the second half of his entity-relationship model"
+        hands_on: ["tab:er-diagram", "cards"]
+        dataset: northwind:read
+        core: true
+        status: planned
+      # GRAIN, pulled forward from Series 3: "one row per WHAT?" is the first question of ANY
+      # table, answered before a key can be chosen. schema.sql is born here.
+      # The demonstration writes itself, and the data is the grader: declare PRIMARY KEY("OrderID")
+      # on the order lines, load the real rows, and they refuse — the grain is (OrderID, ProductID).
+      # Learn SQL, Series 2 · 15 collects on grain from the query side, as do Data Warehousing and dbt.
+      - n: "15"
+        slug: grain-and-keys
+        title: "Grain & Keys — One Row per What, and What Makes It Unique"
+        short: "Grain & Keys — one row per what?"
+        tags: ["kimball"]
         credits:
           - source: kimball
             concept: "GRAIN is his word, and step 2 of the four-step design"
-        tags: ["kimball"]
-        hands_on: ["koan:diagnose", "koan:predict", "build:schema.sql"]
-        dataset: northwind:rebuild
+        hands_on: ["check:fits", "check:refuses", "build:schema.sql", "cards"]
+        dataset: northwind:model
         core: true
         status: planned
-      - n: "15"
-        slug: foreign-keys-and-referential-integrity
-        title: "Foreign Keys & Referential Integrity — Stopping Rows That Point at Nothing"
-        hands_on: ["koan:predict", "build:schema.sql"]
-        dataset: northwind:rebuild
-        core: true
-        status: planned
+      # 1:M is a foreign key; M:N needs a table of its own. The attributed junction is the COMMON
+      # case, not the exotic one: Northwind's order line carries Quantity, Discount and UnitPrice.
+      # The second requirement of the series lands here: a product can come from several
+      # suppliers, each at its own price — which Products.SupplierID cannot hold.
       - n: "20"
-        slug: one-to-many-and-junction-tables
-        title: "One-to-Many & Many-to-Many — Why You Can't Just Put a List in a Column"
-        hands_on: ["koan:complete", "build:schema.sql"]
-        dataset: northwind:rebuild
+        slug: many-to-many-and-junction-tables
+        title: "Many-to-Many & Junction Tables — When the Link Is the Real Thing"
+        short: "Many-to-Many & Junction Tables — the link is a thing"
+        hands_on: ["check:fits", "check:answers", "build:schema.sql", "cards"]
+        dataset: northwind:model
         core: true
         status: planned
-      # Normalization now comes BEFORE data types. Episode 00 sets up conceptual -> logical ->
-      # physical and the series used to zigzag straight back across it (logical, logical,
-      # physical, logical, physical). Normalization is logical, types are physical; in this
-      # order Series 1 walks the layering it just taught.
-      #
-      # Let the koans carry the argument rather than the definitions: a suite where the
-      # un-normalized version cannot answer question 4 without lying teaches 3NF better than
-      # 1NF/2NF/3NF stated as rules. "3NF-ish, then denormalize where it hurts" is the job.
-      # SOURCE (codd): E. F. Codd's relational model — 1NF, 2NF and 3NF are his normal forms. "A Relational Model of Data for Large Shared Data Banks" (1970).
+      # Let the anomaly carry the argument, not the definitions. And the flat table needs NO new
+      # dataset: it is Learn SQL, Series 1 · 50's own three-table report query, saved as one
+      # table. Rename a customer in it, miss one row, and the report shows two companies.
+      # The job is "3NF-ish, then denormalize where it hurts"; Series 2 · 35 and 40 finish that
+      # sentence. Do not finish it here.
       - n: "25"
         slug: normalization-1nf-3nf
-        title: "Normalization: 1NF, 2NF, 3NF — Removing the Redundancy That Breaks Updates"
+        title: "Normalization: 1NF, 2NF, 3NF — Functional Dependencies and the Update That Goes Half-Wrong"
+        short: "Normalization: 1NF, 2NF, 3NF — updates that go wrong"
+        tags: ["codd"]
         credits:
           - source: codd
             concept: "E. F. Codd's relational model — 1NF, 2NF and 3NF are his normal forms"
-        tags: ["codd"]
-        hands_on: ["koan:diagnose", "koan:choose"]
-        dataset: northwind:rebuild
+        hands_on: ["check:answers", "build:schema.sql", "cards"]
+        dataset: northwind:model
         core: true
         status: planned
-      # DuckDB has no CREATE DOMAIN (tested) though ENUM works and covers much of the ground.
-      # This is one of the five places the track has to step out to CloudBeaver/Postgres —
-      # which is worth naming as a portability lesson rather than hiding.
+      # NEW 2026-09-14. The judgement that stops normalization from becoming dogma: some
+      # duplication is redundancy, and some is HISTORY. Northwind has both cases built in:
+      # "Order Details"."UnitPrice" copies Products."UnitPrice", and Orders.Ship* copies the
+      # customer's address. Remove either "redundancy" and the past rewrites itself.
+      # Series 2 · 25 takes business time further, on the learner's own library.
       - n: "30"
-        slug: data-types-and-domains
-        title: "Data Types & Domains — Choosing the Right Column, and What It Costs Later"
-        hands_on: ["tab:database-schema", "cloudbeaver", "build:schema.sql"]
-        dataset: northwind:rebuild
+        slug: copy-or-reference
+        title: "Copy or Reference — When Duplicated Data Is Really a Point-in-Time Fact"
+        short: "Copy or Reference — copies that are history"
+        hands_on: ["check:answers", "build:schema.sql", "cards"]
+        dataset: northwind:model
         core: true
         status: planned
-      # NOT NULL on "Region" is REJECTED by the real Northwind rows — the learner discovers
-      # optionality from the data instead of being told. Same move for CHECK: a bound that
-      # looks sensible and that reality violates.
+      # NEW 2026-09-14 — generalisation had no episode anywhere in the course. Four Northwind
+      # tables repeat a company or person name, an address and a phone. Are they one kind of
+      # thing in different roles, or four things? The three implementations are the choice:
+      # one table with a type, a table per subtype, or a shared parent with subtype tables.
+      # Series 2 · 60 (ebooks) forces the same choice onto the learner's own model.
+      # Boundary: Data Model Patterns, Series 1 hands over the Party model as the settled answer;
+      # here the learner learns to make the call.
       - n: "35"
-        slug: constraints
-        title: "NOT NULL, UNIQUE, CHECK & DEFAULT — Rules the Database Enforces for You"
-        hands_on: ["koan:predict", "koan:complete", "build:schema.sql"]
-        dataset: northwind:rebuild
+        slug: supertypes-and-subtypes
+        title: "Supertypes & Subtypes — Customers, Suppliers, Shippers, Employees: One Thing or Four?"
+        short: "Supertypes & Subtypes — one thing or four?"
+        hands_on: ["tab:er-diagram", "build:schema.sql", "cards"]
+        dataset: northwind:read
         core: true
         status: planned
-      # NULL as a DECISION, not as a constraint. Episode 35 covers NOT NULL as something you
-      # declare; this covers the question you answer before declaring it, and every table asks
-      # it a dozen times — is this attribute optional, or does its absence mean this row is a
-      # different KIND of thing?
-      #
-      #   nullable column   the value may legitimately be missing     Customers."Region"
-      #   missing row       the fact is not there yet                 a loan with no return date
-      #   separate table    absence means a different kind of thing   the ebook with no copy
-      #
-      # Placed straight after constraints because the learner has JUST been rejected by the
-      # real rows for putting NOT NULL on "Region" — they arrive already holding the question.
-      #
-      # BOUNDARY, and an easy one to get wrong: Learn SQL S1/45 owns NULL SEMANTICS — three
-      # valued logic, why `= NULL` never matches. This owns the DESIGN call. Two different
-      # subjects that share a keyword, which is precisely how they end up conflated. Each
-      # lesson should name the other.
-      #
-      # COST beat: every nullable column is a branch in every query that ever touches it.
-      # "Just make it nullable" is a cost paid by other people, later, forever.
-      - n: "37"
+      # The first physical episode. Types were used as given since 15; now they are decisions.
+      # DuckDB has no CREATE DOMAIN (tested) though ENUM covers much of it — the DOMAIN half is
+      # done in CloudBeaver against PostgreSQL, and "this exists there and not here" is content.
+      - n: "40"
+        slug: data-types-and-domains
+        title: "Data Types & Domains — The Physical Choice That Is Hardest to Undo"
+        short: "Data Types & Domains — hardest to undo"
+        hands_on: ["tab:database-schema", "cloudbeaver", "check:fits", "build:schema.sql", "cards"]
+        dataset: northwind:model
+        core: true
+        status: planned
+      # What 10 and 20 DREW, declared. Northwind's rows are referentially clean (verified: no
+      # orphans), so every correct FK loads — the payoff is the NEXT bad insert, not an old row.
+      # DuckDB has no ON DELETE CASCADE (tested): name it as a portability fact.
+      - n: "45"
+        slug: foreign-keys-and-referential-integrity
+        title: "Foreign Keys & Referential Integrity — Relationships the Database Enforces, Not Just Draws"
+        short: "Foreign Keys & Referential Integrity — enforced"
+        hands_on: ["check:refuses", "build:schema.sql", "cards"]
+        dataset: northwind:model
+        core: true
+        status: planned
+      # The data grades the rules: NOT NULL on "Region" is REJECTED (21 of 25 customers have
+      # none) and CHECK("UnitPrice" > 10) is REJECTED (a 4.50 product exists). A constraint
+      # reality violates is a bug, not rigour. Pair every shouldReject with a shouldAccept, or
+      # the learner learns to over-constrain.
+      - n: "50"
+        slug: constraints
+        title: "NOT NULL, UNIQUE, CHECK & DEFAULT — Rules That Match Reality"
+        short: "NOT NULL, UNIQUE, CHECK & DEFAULT — true rules"
+        hands_on: ["check:fits", "check:refuses", "build:schema.sql", "cards"]
+        dataset: northwind:model
+        core: true
+        status: planned
+      # NULL as a DECISION, answered before NOT NULL is declared: is this value optional, is the
+      # fact simply not there yet, or does its absence mean a different KIND of thing?
+      # Boundary: Learn SQL, Series 1 · 45 owns NULL SEMANTICS (three-valued logic). This owns the
+      # design call. Each lesson names the other.
+      - n: "52"
         slug: null-as-a-design-decision
         title: "Nullable, Missing Row or Separate Table — What an Empty Cell Should Mean"
-        hands_on: ["koan:choose", "koan:predict", "build:schema.sql"]
-        dataset: northwind:rebuild
+        short: "Nullable, Missing Row or Separate Table — empty cells"
+        hands_on: ["check:fits", "build:schema.sql", "cards"]
+        dataset: northwind:model
         core: true
         status: planned
-      # Late on purpose. Every database course opens with CREATE TABLE, which teaches typing,
-      # not modeling; here the syntax arrives as the OUTPUT of nine episodes of decisions.
-      # The round trip is the episode: author the diagram as PlantUML text in the ER Diagram
-      # tab, then write the DDL, then load the rows.
-      - n: "40"
-        slug: diagram-to-ddl
-        title: "CREATE TABLE — From Diagram to DDL, the Standard Way"
-        hands_on: ["tab:er-diagram", "build:schema.sql"]
-        dataset: northwind:rebuild
-        core: true
-        status: planned
-      # Pairs with the Ubiquitous Language tab, which turns "pick good names" from advice into
-      # a persistent glossary built against a real database.
-      - n: "45"
-        slug: naming-conventions
-        title: "Naming Conventions — Names a Colleague Can Read Without You"
-        hands_on: ["tab:ubiquitous-language"]
-        dataset: northwind:rebuild
-        status: planned
-      - n: "50"
-        slug: reverse-engineering-a-schema
-        title: "Reverse-Engineering — Getting an ER Diagram From a Database You Have Never Seen"
-        hands_on: ["tab:er-diagram", "tab:database-schema"]
-        dataset: northwind:read
-        status: planned
-      # NEW. DataPallas ships the Domain-Grouped Schema tab and the curriculum taught nothing
-      # against it. The skill is real and has a name — subject-area modeling (Hoberman);
-      # bounded contexts (DDD) — and it is the actual answer to "I have been handed a
-      # 200-table database, where do I start?". Not core: it only bites on large schemas.
-      # SOURCE (evans): BOUNDED CONTEXT is Eric Evans' term, exactly — "Domain-Driven Design" (2003). Also UBIQUITOUS LANGUAGE, which this track's tab is named after.
+      # The round trip, performed: diagram (logical) -> DDL (physical) -> load (proof). Late on
+      # purpose — CREATE TABLE arrives as the OUTPUT of the decisions, not as the first lesson.
+      # Naming is part of writing the DDL well, so it is here: "Order Details" has a space and
+      # must be quoted forever; ShipVia vs ShipperID is a role name. The Ubiquitous Language tab
+      # turns "pick good names" into a glossary kept against the database.
       - n: "55"
-        slug: subject-area-modeling
-        title: "Subject Areas & Bounded Contexts — Finding Your Way Around 200 Tables"
-        credits:
-          - source: evans
-            concept: "BOUNDED CONTEXT is Eric Evans' term, exactly — 'Domain-Driven Design' (2003)"
-        tags: ["evans"]
-        hands_on: ["tab:domain-grouped-schema"]
-        dataset: northwind:read
+        slug: diagram-to-ddl-and-naming
+        title: "From Diagram to DDL — CREATE TABLE, and Names a Colleague Can Read"
+        short: "From Diagram to DDL — CREATE TABLE and names"
+        hands_on: ["tab:er-diagram", "tab:ubiquitous-language", "build:schema.sql", "cards"]
+        dataset: northwind:model
+        core: true
         status: planned
-      # The catalogue of things that are WRONG, assembled in one place — the track spends
-      # fifty-seven episodes on what to do and never once names the shapes you will actually
-      # inherit. EAV, the God table, comma-separated values in a column, the polymorphic
-      # foreign key, the boolean that should have been a status, the "misc" column.
-      #
-      # Placed last in the reading movement because recognising a smell needs the whole S1
-      # toolkit: you cannot see that EAV has destroyed the grain until you know what grain is.
-      #
-      # TEACH IT FAIRLY OR NOT AT ALL. Every one of these was a REASONABLE decision under some
-      # pressure — a deadline, an unknown requirement, a vendor schema. An episode that sneers
-      # at them teaches contempt, which is useless, instead of diagnosis, which is the job.
-      # For each: what it was solving, what it costs, and what you do when you inherit one and
-      # cannot rewrite it. That last part is the most valuable and the most often omitted.
-      #
-      # Boundary: Data Model Patterns S3/15 ("The Fully Generic Model — Why Everything-Is-a-
-      # Thing Fails") argues the abstraction end of this properly. Point at it, do not re-run
-      # the argument here — here it is one entry in a catalogue.
-      # SOURCE (karwin): ENTITY-ATTRIBUTE-VALUE and JAYWALKING (a comma-separated list in a column) are his named antipatterns.
+      # Reverse-engineering and anti-patterns in one episode, because reading a schema and judging
+      # it are one skill. Placed after the build because judging needs the whole toolkit: you
+      # cannot see that EAV destroyed the grain until you know what grain is.
+      # TEACH IT FAIRLY: every smell was a reasonable decision under some pressure. For each —
+      # what it solved, what it costs, and what you do when you inherit one and cannot rewrite it.
+      # Boundary: Data Model Patterns, Series 3 argues the fully generic model properly; point at it.
       - n: "57"
-        slug: schema-anti-patterns
-        title: "EAV, God Tables & CSV-in-a-Column — Reading a Schema That Went Wrong"
+        slug: judge-a-schema
+        title: "Reading a Schema You Didn't Design — Reverse-Engineer It, Then Judge It Fairly"
+        short: "Reading a Schema You Didn't Design — judge it"
         tags: ["karwin"]
         credits:
           - source: karwin
             concept: "ENTITY-ATTRIBUTE-VALUE and JAYWALKING (a comma-separated list in a column) are his named antipatterns"
-        hands_on: ["koan:diagnose", "tab:er-diagram"]
+        hands_on: ["tab:er-diagram", "cards"]
         dataset: northwind:read
         core: true
         status: planned
-      # THE SERIES 1 PROJECT, and the reason the tagline changed. Not a new exercise — it is
-      # the schema.sql they have been growing since episode 10, finished and run in one go
-      # against the full dataset. Nothing is graded by comparison with our answer; it is
-      # graded by whether 79 rows of real business data fit the model they built.
+      # THE SERIES 1 PROJECT. The whole loop, alone, on Northwind's business as it runs today plus
+      # the two requirements its shipped tables cannot hold (several contacts per customer, from
+      # 05; several suppliers per product, each at its own price, from 20).
+      # Three artifacts, one per layer: the business in sentences, the ER diagram, schema.sql plus
+      # the load from main.*. Graded by the three Series 1 proofs:
+      #   FITS     every real row loads into the learner's model
+      #   REFUSES  a hidden set of impossible inserts bounces, each paired with a possible one
+      #   ANSWERS  Learn SQL, Series 1 · 50's report, run on the learner's model, still totals
+      #            58153.31 with Cactus Comidas para llevar on top
+      # The old "rebuild the integrity layer" is still inside it (FITS + REFUSES); what it adds is
+      # that conceptual and logical decisions are graded too. Commit before reveal, as Series 2 · 05.
       - n: "60"
-        slug: rebuild-northwind
-        title: "Rebuild Northwind's Integrity Layer — Your schema.sql, Graded by Real Data"
-        hands_on: ["koan:author", "build:schema.sql"]
-        dataset: northwind:rebuild
-        core: true
+        slug: project-model-northwind
+        title: "Project — Model Northwind's Business: A Schema That Fits, Refuses and Answers"
+        short: "Project — Model Northwind's Business"
         tags: ["project"]
+        hands_on: ["check:fits", "check:refuses", "check:answers", "tab:er-diagram", "build:schema.sql", "cards"]
+        dataset: northwind:model
+        core: true
         status: planned
 
   # MOVEMENTS
-  #   00-05  ELICIT & DESIGN        brief -> table list -> their first schema, committed to
-  #   10-45  THE BILL COMES DUE     every one of these is a decision made in 05 coming back to
-  #                                 be judged. Design early, get bitten while you can still
-  #                                 remember making the choice.
-  #   50-55  EVOLVE                 changing it on purpose, and the hinge into Series 3
-  #   60     SURVIVE                the project's three change requests
+  #   00-05  ELICIT & DESIGN       brief -> questions -> the learner's first model, loaded from the
+  #                                spreadsheet. Committed to BEFORE they see ours.
+  #   10-32  THE BILL COMES DUE    every episode is a decision made in 05 coming back to be judged,
+  #                                on the learner's own schema, while they still remember making it.
+  #   35-42  HOW FAR TO GO         how normalized, how redundant, how much structure at all.
+  #   50     GO LIVE               the library starts using the model. From here every change is a
+  #                                migration and the whole existing suite must stay green.
+  #   60     SURVIVE               three change requests against the learner's live schema.
   #
-  # Tagline changed from "design for the change that's coming", which promised an artifact the
-  # series never built — every episode refined a model handed over ready-made. It now names
-  # both halves, and episodes 00 and 05 are what make the first half true.
+  # SERIES 1 TAUGHT THE LOOP ON A BUSINESS THE LEARNER KNEW; SERIES 2 TAKES THAT AWAY. It is not
+  # Series 1 again on another dataset: every episode must go past the Series 1 episode it builds
+  # on, and its brief names which.
+  #
+  # THE PROOFS: fits (lending-log.csv loads — rows breaking a CORRECT rule are set aside, never
+  # allowed to weaken it), refuses (the acceptance suite), answers (the librarian's own
+  # questions), and — new in this series — SURVIVES, from 50 on.
+  #
+  # RESTRUCTURED 2026-09-14 with the owner. 10 and 15 reframed (the spreadsheet shows ISBN is
+  # an EDITION's key; the loan is a relationship whose pair repeats). 27 new: rules across rows.
+  # 25 moved off Northwind (its price example is Series 1 · 30 now). 40 denormalization and 45
+  # indexing merged into 40. Moved out: multi-tenancy, to Schema Teardowns, Series 2 · 25;
+  # oltp-vs-olap-models, to Series 3 · 00.
   - slug: series2-modeling-for-the-real-world
     title: Modeling for the Real World
-    tagline: design a schema from a brief, and change it safely later
+    tagline: design a schema from a brief nobody finished writing, then keep it alive as the business changes
     level: intermediate
     episodes:
-      # NEW, and the gap that mattered most: 31 episodes and nobody ever designed anything.
-      # The elicitation half of the job — read the brief, find the nouns and the verbs, and
-      # NOTICE THE AMBIGUITIES the brief deliberately left in. "Can a member borrow two copies
-      # of the same title at once?" is unanswerable from the text; realising you have to ask
-      # IS the skill. The messy spreadsheet does most of the teaching: "Dune" appears three
-      # times and there is a column called author2.
+      # The elicitation half of the job. Read the brief, find the nouns and the verbs — and NOTICE
+      # THE AMBIGUITIES it deliberately leaves in. "Can a member borrow two copies of the same
+      # title at once?" is unanswerable from the text; realising you must ASK is the skill.
+      # The deliverable is three lists: entities, open questions, and the questions the model
+      # must be able to answer (the ANSWERS proof for the rest of the series).
       - n: "00"
         slug: requirements-to-entities
         title: "From a Brief to a Table List — The Nouns, the Verbs and the Questions to Ask"
-        hands_on: ["brief", "koan:diagnose", "tab:ubiquitous-language"]
+        tags: ["evans"]
+        credits:
+          - source: evans
+            concept: "UBIQUITOUS LANGUAGE — the shared vocabulary between the business and the model, 'Domain-Driven Design' (2003)"
+        hands_on: ["brief", "tab:ubiquitous-language", "cards"]
         dataset: library:brief
         core: true
         status: planned
-      # The first cut, deliberately EARLY so the rest of the series has something of the
-      # learner's own to attack. Commit-before-reveal: they publish their model, THEN see ours
-      # and the three decisions we made differently. Same move as Learn SQL lesson 00's
-      # "predict the answer before you run it", applied to judgement instead of results.
-      # Nearly everyone ships one `book` table here. Episode 10 is where that bill comes due.
+      # The first cut, deliberately EARLY so the rest of the series attacks the learner's own model.
+      # COMMIT BEFORE REVEAL: they publish it, THEN see ours and the three decisions we made
+      # differently. Nearly everyone ships one `book` table here — do NOT rescue them; 10 is where
+      # that bill comes due. The spreadsheet is LOADED here (the FITS proof), which is where the
+      # reference-only book that was lent anyway forces the rule-vs-data decision.
       - n: "05"
         slug: design-the-library
         title: "Design the Library — Your First Schema, From Nothing"
-        hands_on: ["tab:er-diagram", "koan:author", "build:library"]
+        hands_on: ["tab:er-diagram", "check:fits", "check:refuses", "check:answers", "build:library", "cards"]
         dataset: library
         core: true
         status: planned
-      # ISBN is the trap and the library was picked partly for it: it looks like a flawless
-      # natural key until reissues get new ones, ISBN-10 meets ISBN-13, and a self-published
-      # title has none at all. This is also where TITLE vs COPY finally detonates — "how many
-      # copies of Dune do we own?" cannot be answered by the model they built in 05.
-      # SOURCE (kimball): SURROGATE KEYS — his argument for them, plus the DURABLE SUPERNATURAL KEY (the business key that survives a Type 2 change).
+      # REFRAMED 2026-09-14. The spreadsheet shows three levels, not two: The Pragmatic Programmer
+      # in two genuinely different editions (ISBN-10 020161622X, 2nd ed. 9780135957059) and Dune's
+      # film tie-in, the SAME book under a different ISBN. So ISBN is not a bad key — it is the key
+      # of an EDITION. The lesson: a natural key identifies SOMETHING; make sure it is the thing
+      # your table is about. Surrogate vs natural follows from that, not the other way round.
       - n: "10"
-        slug: surrogate-vs-natural-keys
-        title: "Surrogate vs Natural Keys — Choosing a Key That Survives a Change"
+        slug: title-edition-copy-and-keys
+        title: "Title, Edition, Copy & Keys — Choosing What a Key Identifies"
+        tags: ["kimball"]
         credits:
           - source: kimball
             concept: "SURROGATE KEYS — his argument for them, plus the DURABLE SUPERNATURAL KEY (the business key that survives a Type 2 change)"
-        tags: ["kimball"]
-        hands_on: ["koan:choose", "koan:predict", "tab:er-diagram", "build:library"]
+        hands_on: ["check:answers", "build:library", "cards"]
         dataset: library
         core: true
         status: planned
+      # REFRAMED 2026-09-14. Series 1 · 20 already teaches the junction that carries facts, and
+      # there the pair of foreign keys WAS the key. A loan is different: the same member can
+      # borrow the same copy again next month, so (member, copy) cannot be the key — the
+      # relationship is an EVENT with an identity of its own. The old brief's "composite PK" is
+      # exactly the bug this episode teaches.
       - n: "15"
-        slug: many-to-many-with-attributes
-        title: "Many-to-Many With Attributes — When the Junction Has Facts of Its Own"
-        hands_on: ["koan:complete", "tab:er-diagram", "build:library"]
+        slug: relationships-that-are-events
+        title: "Relationships That Are Events — Loans, Repeats and Their Own Identity"
+        hands_on: ["check:refuses", "build:library", "cards"]
         dataset: library
+        core: true
         status: planned
-      # SOURCE (celko): The NESTED SETS model specifically — adjacency list and path enumeration are older and unowned.
+      # Three techniques, one decision: choose by the QUESTION asked most often (one level up?
+      # the whole subtree? reparenting often?), never by elegance. The library adds a second axis
+      # the category tree cannot hold: children's books are shelved by AGE BAND, the rest by
+      # subject — a classification that is not one tree.
+      # Boundary: Data Model Patterns, Series 3 hands over hierarchy patterns; this teaches the choice.
       - n: "20"
         slug: modeling-hierarchies
-        title: "Hierarchies: Adjacency List, Path Enumeration & Nested Sets — Three Ways to Ask What's Underneath"
+        title: "Hierarchies & Classification — Adjacency List, Path Enumeration, Nested Sets, and a Second Axis"
         tags: ["celko"]
         credits:
           - source: celko
             concept: "The NESTED SETS model specifically — adjacency list and path enumeration are older and unowned"
-        hands_on: ["koan:choose", "koan:diagnose", "tab:er-diagram", "build:library"]
+        hands_on: ["check:answers", "build:library", "cards"]
         dataset: library
         status: planned
-      # Business time, not system time — the two are different axes and both are needed.
-      # Northwind carries the demonstration: "Order Details"."UnitPrice" is duplicated from
-      # "Products"."UnitPrice", which reads as sloppy denormalization until you see it is
-      # price history. The shipped rows do not show it (0 of 193 differ), so DO NOT seed a
-      # difference — have the learner UPDATE a price in their practice schema and watch the
-      # historical line hold. Better lesson, and it needs no dataset change.
-      # SOURCE (snodgrass): VALID TIME vs TRANSACTION TIME, and bitemporal tables.
+      # BUSINESS time: when a fact was TRUE. Moved off Northwind 2026-09-14 — its price example is
+      # Series 1 · 30 now, and this episode is library-only: memberships that lapse and restart,
+      # a fee that changes, "was Danny a member on 1 June?". System time (when a ROW changed) is
+      # 30; together they are bitemporal — name the pair once, here.
+      # Boundary: Data Model Patterns, Series 1 owns effective dating as a pattern; this is the technique.
       - n: "25"
         slug: temporal-data
-        title: "Temporal Data — Answering Questions About a Date in the Past"
+        title: "Temporal Data — Business Time, and What Was True on a Date in the Past"
         tags: ["snodgrass"]
         credits:
           - source: snodgrass
             concept: "VALID TIME vs TRANSACTION TIME, and bitemporal tables"
-        hands_on: ["koan:diagnose", "tab:er-diagram", "build:library"]
-        dataset: library+northwind
+        hands_on: ["check:answers", "build:library", "cards"]
+        dataset: library
         core: true
         status: planned
-      # SYSTEM time, the other axis — and deliberately adjacent to episode 25 so the pair is
-      # obvious. Business time is when the FACT was true; system time is when the ROW was
-      # written, changed or hidden. Both together is bitemporal, and naming that once here
-      # saves a reader a lot of confusion later.
-      #
-      # Every production table ends up with created_at, updated_at, created_by and some form
-      # of deleted_at, and nearly every course leaves the learner to discover the consequences
-      # in production. They are not free:
-      #   - a soft delete breaks UNIQUE: the "deleted" row still occupies the email address.
-      #     The fix is a partial unique index, which DuckDB does not have (tested) - so this
-      #     is a CloudBeaver/Postgres episode, and that is worth saying out loud.
-      #   - it breaks foreign keys: children still point at a parent that is "gone".
-      #   - it poisons every query written afterwards, forever, by everyone.
-      # The honest conclusion is that soft delete is a real technique with a real price, and
-      # "we might need it back" is not by itself a reason to pay it.
-      # ALSO OWNS CLASSIFYING PERSONAL DATA, folded in here because it is the same act as the
-      # other columns every production table gets: a decision made once, at design time, and
-      # written down where the next person finds it.
-      #   THE POINT: "which columns are personal data" is a MODELLING decision, not something
-      #   discovered later by grepping. Record it — a comment on the column, a naming
-      #   convention, or a tag in the catalogue — so a pipeline can act on it mechanically.
-      #   THE ONES PEOPLE MISS: free-text notes fields (someone always pastes an email in
-      #   there), IP addresses, and an "ID" column that is really a national identifier.
-      #   WHERE IT GETS USED: ETL & Data Pipelines, Series 2 - 22 masks these columns to make a
-      #   safe copy of production, and Data Ops, Series 3 - 35 deletes them on request. Neither
-      #   can act without this classification existing first.
+      # NEW 2026-09-14. The brief is full of rules no column constraint can hold: a copy can be out
+      # only once at a time; renew once if nobody is waiting; reference-only books are never lent.
+      # The choice is WHERE each rule lives — reshape the model so a plain constraint holds it, a
+      # partial unique index (PostgreSQL only; DuckDB has none), a check across tables, or the
+      # application, said out loud. Reservations in the project (60) bring this back.
       - n: "27"
+        slug: rules-across-rows
+        title: "Rules Across Rows — One Loan per Copy at a Time, and Where a Rule Should Live"
+        hands_on: ["cloudbeaver", "check:refuses", "build:library", "cards"]
+        dataset: library
+        core: true
+        status: planned
+      # SYSTEM time, the other axis next to 25: when a ROW was written, changed or hidden.
+      # Soft delete is not free: it breaks UNIQUE (the fix, a partial unique index, is PostgreSQL
+      # only), it leaves children pointing at a "gone" parent, and it poisons every later query.
+      # ALSO OWNS CLASSIFYING PERSONAL DATA, decided at design time and written down where a
+      # pipeline can act on it: ETL & Data Pipelines, Series 2 · 22 masks those columns and Data
+      # Ops, Series 3 · 35 deletes them on request.
+      - n: "30"
         slug: soft-deletes-and-audit-columns
-        title: "created_at, updated_by & deleted_at — The Columns Every Production Table Gets"
-        hands_on: ["koan:predict", "cloudbeaver", "build:library"]
+        title: "created_at, updated_by & deleted_at — System Time, and What Soft Deletes Cost"
+        hands_on: ["cloudbeaver", "check:refuses", "build:library", "cards"]
         dataset: library
         status: planned
-      - n: "30"
+      # ENUM type vs lookup table vs CHECK — decided by who adds a value and how often. If a
+      # business user must add one without a deploy, it is a table. That is the whole rule.
+      # Boundary: Data Model Patterns, Series 1 owns type and status tables as a pattern.
+      - n: "32"
         slug: lookups-and-reference-data
         title: "Lookups, Enums & Reference Data — Where Constants Should Live"
-        hands_on: ["koan:choose"]
+        hands_on: ["build:library", "cards"]
         dataset: library
         status: planned
-      # SOURCE (codd): BOYCE-CODD NORMAL FORM — Raymond Boyce and E. F. Codd. Use the name; it is why BCNF is not just "3.5NF".
+      # A DECISION episode, not a proof episode: the learner leaves able to say "far enough" in a
+      # review and defend it. It NEEDS a genuine BCNF case from the library itself — if none can
+      # be found when the episode is written, merge it into 40 as "how far to normalize".
       - n: "35"
         slug: bcnf-and-when-to-stop
-        title: "BCNF & When to Stop Normalizing — Deciding When a Model Is Normalised Enough"
+        title: "BCNF & When to Stop Normalizing — Saying Far Enough in Review"
+        tags: ["codd"]
         credits:
           - source: codd
-            concept: "BOYCE-CODD NORMAL FORM — Raymond Boyce and E"
-        tags: ["codd"]
-        hands_on: ["koan:choose"]
+            concept: "BOYCE-CODD NORMAL FORM — Raymond Boyce and E. F. Codd"
+        hands_on: ["build:library", "cards"]
         dataset: library
         status: planned
+      # MERGED 2026-09-14 from 40 denormalization and 45 indexing. The decision is the ORDER of
+      # escalation: the right index first, then a summary, then deliberate duplication — and
+      # every copy names who keeps it in sync. Finishes the sentence Series 1 · 25 left open.
+      # Needs a larger generated lending log to show a measurable plan difference; 26 rows cannot.
+      # Boundary: Learn SQL, Series 3 owns EXPLAIN and index mechanics; this is the design call.
       - n: "40"
-        slug: denormalization
-        title: "Denormalization — Adding Redundancy Deliberately, and Keeping It in Sync"
-        hands_on: ["koan:choose"]
+        slug: indexes-and-denormalization
+        title: "Indexes & Denormalization — Designing for the Reads You Expect, in That Order"
+        hands_on: ["cloudbeaver", "check:answers", "build:library", "cards"]
         dataset: library
         status: planned
-      # "How far do you model?" has a third answer the previous two episodes do not cover:
-      # you stop, and store a document. Sits after denormalization because it is the same
-      # question — how much structure is worth its cost — one step further along.
-      #
-      # The decision rule, and the episode exists to make it sayable in a review: model it if
-      # you will FILTER, JOIN or AGGREGATE on it, or if it must be constrained. Store it as
-      # JSON if it is genuinely shapeless, varies per row, or is only ever read whole.
-      # Everything else is taste, and taste loses arguments.
-      #
-      # The library carries it honestly: a title's extra metadata (translator, original
-      # language, series position, "large print") is different for almost every book, and
-      # modelling all of it produces forty nullable columns — which is episode 37's failure
-      # mode arriving from a different direction.
-      #
-      # Boundary: Learn SQL S3/30 owns QUERYING JSON. This owns the decision to have it. Same
-      # split as NULL: one track does the mechanics, this one does the choice.
+      # The third answer to "how far do you model": stop, and store a document. Model it if you
+      # will FILTER, JOIN or AGGREGATE on it, or it must be constrained; store JSON if it is
+      # shapeless, varies per row, or is only read whole.
+      # Boundary: Learn SQL, Series 3 queries JSON once it is there; this decides to have it.
       - n: "42"
         slug: json-as-a-modeling-choice
         title: "JSON Columns — When to Stop Modelling and Store the Document"
-        hands_on: ["koan:choose", "koan:diagnose"]
+        hands_on: ["check:answers", "build:library", "cards"]
         dataset: library
         status: planned
-      - n: "45"
-        slug: indexing-as-a-modeling-decision
-        title: "Indexing as a Modeling Decision — Design for the Reads You Expect"
-        hands_on: ["cloudbeaver"]
-        dataset: library
-        status: planned
-      # The episode most courses skip and every job needs. Its koan is the strongest in the
-      # track: apply the migration, and THE ENTIRE EXISTING SUITE MUST STILL PASS, plus the
-      # new tests. That is an automatable test of "designed for change" — a model that needs
-      # its queries rewritten goes red on tests written eight episodes ago.
-      # SOURCE (ambler): Scott Ambler & Pramod Sadalage, "Refactoring Databases" (2006) — the canonical source for these change patterns and their names.
+      # THE LIBRARY GOES LIVE HERE. Until now the model was in design and rebuilt freely; from
+      # this episode every change is a migration, and its check is the strongest in the track:
+      # apply it, and the ENTIRE existing suite must still pass, plus the new tests.
+      # Additive vs breaking is the frame: expand, backfill, switch reads, contract.
       - n: "50"
         slug: schema-evolution
-        title: "Schema Evolution — Add, Rename and Split Without Breaking Downstream"
+        title: "Schema Evolution — The Library Goes Live: Add, Rename and Split Without Breaking Anyone"
+        tags: ["ambler"]
         credits:
           - source: ambler
             concept: "Scott Ambler & Pramod Sadalage, 'Refactoring Databases' (2006) — the canonical source for these change patterns and their names"
-        tags: ["ambler"]
-        hands_on: ["koan:migration", "tab:er-diagram", "build:library"]
+        hands_on: ["tab:er-diagram", "check:survives", "build:library", "cards"]
         dataset: library
         core: true
         status: planned
-      # The one modeling decision that is made once and is nearly impossible to reverse, which
-      # is exactly why it belongs next to schema-evolution: episode 50 is about changes you
-      # CAN make additively, and this is the change you cannot.
-      #
-      #   shared schema + tenant_id   cheapest, one migration for everyone, and every single
-      #                               query is now one forgotten WHERE away from a data breach
-      #   schema per tenant           real isolation, migrations multiply by tenant count
-      #   database per tenant         strongest isolation and the biggest operational bill
-      #
-      # `dataset: case-study`, NOT `library` — corrected 2026-08-24. The brief describes one
-      # small independent branch with two staff and six hundred members; there is no second
-      # tenant anywhere in it, and asking the learner to make it multi-tenant would be a
-      # contrived exercise dressed as a real one. A hands-on track cannot afford that.
-      #
-      # So teach it from a system that genuinely lives the decision: DataPallas and
-      # ReportBurster do. The choose-koan still works — three GIVEN schemas to probe, not the
-      # learner's own — which is why this stays hands-on rather than becoming a lecture.
-      #
-      # The interesting part is not the three options; every blog post has those. It is that
-      # the choice is driven by who your customers are (one enterprise vs ten thousand
-      # self-serve) and by what your compliance story must survive, NOT by build cost.
-      #
-      # Boundary: Data Ops owns running and migrating whichever one you picked. This picks it.
-      - n: "52"
-        slug: multi-tenancy
-        title: "Multi-Tenancy — Modelling for More Than One Customer"
-        hands_on: ["koan:choose", "tab:er-diagram"]
-        dataset: case-study
-        status: planned
-      - n: "55"
-        slug: oltp-vs-olap-models
-        title: "OLTP vs OLAP Models — Why One Schema Can't Serve Both"
-        hands_on: ["tab:er-diagram"]
-        dataset: northwind:read
-        status: planned
-      # THE SERIES 2 PROJECT. Six months on, the business wants three things — and one of
-      # them is EBOOKS, which have no physical copy and detonate the copy model the learner
-      # spent the whole series getting right. That is deliberate: the lesson is not "avoid the
-      # mistake", it is "here is what an additive migration looks like versus a rewrite".
+      # THE SERIES 2 PROJECT: three change requests against the learner's live schema.
+      #   EBOOKS           no physical copy, so the copy model breaks — the SUPERTYPE/SUBTYPE choice
+      #                    from Series 1 · 35, now paid for on the learner's own model
+      #   A SECOND BRANCH  copies gain a location — additive, if the model was right
+      #   RESERVATIONS     a new entity competing with loans for the same copy — Series 2 · 27 again
+      # The lesson is not "avoid the mistake" (no model survives every change); it is telling an
+      # additive migration from a rewrite, and the old suite staying green is how they know.
       - n: "60"
         slug: project-survive-the-change
         title: "Project — Six Months Later: Ebooks, a Second Branch, and Reservations"
-        hands_on: ["koan:migration", "koan:author", "tab:er-diagram", "build:library"]
+        tags: ["project"]
+        hands_on: ["tab:er-diagram", "check:survives", "check:refuses", "check:answers", "build:library", "cards"]
         dataset: library
         core: true
-        tags: ["project"]
         status: planned
 
   # MOVEMENTS
-  #   00-32  THE STANDARD METHOD  Kimball, in order, ending with the star actually built
-  #   35-45  THE ALTERNATIVES     Data Vault, One Big Table, columnar — deliberately AFTER
-  #                             the standard method, because you cannot judge Data Vault
-  #                             without knowing star. Never reorder these two movements.
-  #   50     BUILD IT           the OLTP -> star project, graded by reconciliation
+  #   00-10  THE STANDARD METHOD, BUILT AT ONCE   why a second shape, Kimball's four steps, and the
+  #                                              star BUILT and RECONCILED at 10 — not at 30.
+  #   15-40  THE DECISIONS INSIDE A STAR          grain & additivity, fact types, the date and its
+  #                                              roles, small dimensions, snowflaking, history (SCD),
+  #                                              multi-valued dimensions. Each one changes star.sql.
+  #   45     MORE THAN ONE PROCESS                conformed dimensions, the bus matrix, drill-across,
+  #                                              budget vs actual.
+  #   50-55  THE ALTERNATIVES                     Data Vault, one big table — AFTER the standard method,
+  #                                              because you cannot judge them without it.
+  #   60     PROVE IT                             your Series 1 model becomes a star that reconciles.
   #
-  # The only tagline that survived the 2026-08-24 pass unchanged: it already named a verb and
-  # an artifact, and every episode already served it.
+  # THE SOURCE IS THE LEARNER'S OWN SERIES 1 MODEL. The star is loaded through the fixed views the
+  # Series 1 project ends with (customers, orders, order lines, contacts, product suppliers), so
+  # this series genuinely reshapes what the learner built — and, because the views are fixed,
+  # every learner's star can still be graded. RECONCILES: the star's totals equal the source's
+  # (58153.31 for the order lines), checked from episode 10 onward, never only at the end.
+  #
+  # THE SHIPPED main.fact_sales / dim_* IS NOT THE ANSWER. ReportBurster generates it separately
+  # (NorthwindOlapDataGenerator, seed 42) for pivot-table volume: 30 invented customers, 16
+  # products, 2023-2024, no order number, one date per sale, a 28-day calendar. It does that job
+  # well, and it cannot reconcile with Northwind. Here it is the star SOMEBODY ELSE BUILT, judged
+  # at 25 (the calendar) and 30 (the missing order number) — which is a real work situation.
+  #
+  # THE SERIES 3 SEED. Northwind ships one process; three lessons need more. PART 0 of
+  # practice-template/star.sql generates, from the Northwind rows, into schema `seed`: stock
+  # movements (a second process, and a semi-additive month-end stock that reconciles with
+  # Products.UnitsInStock), monthly sales targets per category (budget vs actual), and employee
+  # territories with allocation weights (a multi-valued dimension). main.* is never touched.
+  #
+  # THE SPLIT WITH NEIGHBOURING COURSES. This series DESIGNS the star and proves it on small data.
+  # Data Warehousing loads, queries and runs it at scale; its Series 2 owns columnar engines
+  # (sort keys, partitions, star vs one big table measured). Analytics Engineering with dbt builds
+  # it as code. Each episode below that meets one of those says so in one line.
+  #
+  # RESTRUCTURED 2026-09-14 with the owner. The star used to be built first at 30 and again in the
+  # project; SCD came before grain and fact types; snowflake-vs-star came before any star existed;
+  # six lesson briefs carried another episode's text. Merged: facts-and-dimensions + four-step
+  # (05), the star + building it (10), the date dimension + role-playing (25). Removed:
+  # modeling-for-columnar-engines (Data Warehousing, Series 2 owns it).
   # ╔══════════════════════════════════════════════════════════════════════════════════╗
   # ║  THIS SERIES TEACHES KIMBALL. WRITE IT IN HIS VOCABULARY.                        ║
   # ╚══════════════════════════════════════════════════════════════════════════════════╝
@@ -768,329 +727,230 @@ series:
   # AND SAY WHERE HE IS NO LONGER THE ANSWER. 35-45 are the alternatives on purpose. Columnar
   # storage genuinely weakened some of his advice — that is honest, and an episode that
   # pretends 1996 rules still hold everywhere is worse than one that never cited him.
-
   - slug: series3-dimensional-modeling
     title: Dimensional Modeling
-    tagline: design star schemas for reporting, not for transactions
+    tagline: reshape your own model into star schemas for reporting, and prove every total
     level: advanced
     episodes:
-      # SOURCE (kimball): FACTS and DIMENSIONS — the core distinction the whole Toolkit is built on.
+      # Moved here from Series 2 on 2026-09-14: it OPENS analytics modelling. The same business,
+      # two shapes, side by side in the ER Diagram tab: the learner's normalised Series 1 model,
+      # and a star. The learner's own Learn SQL · 50 report is the argument — count the joins it
+      # needed, then count them against a star.
+      # Boundary: Data Warehousing, Series 1 · 00 covers the same split from the WORKLOAD side.
       - n: "00"
-        slug: facts-and-dimensions
-        title: "Facts & Dimensions — Why the Reporting Database Looks Nothing Like the App's"
-        credits:
-          - source: kimball
-            concept: "FACTS and DIMENSIONS — the core distinction the whole Toolkit is built on"
-        tags: ["kimball"]
-        hands_on: ["koan:diagnose"]
+        slug: oltp-vs-olap-models
+        title: "OLTP vs OLAP Models — Why One Schema Can't Serve Both"
+        hands_on: ["tab:er-diagram", "cards"]
         dataset: northwind:read
         core: true
         status: planned
-      # The ER Diagram tab earns its keep here: SEEING the star is most of the lesson, and no
-      # amount of prose substitutes for the shape.
-      # KIMBALL'S PROCEDURE, and the single most transferable thing in the Toolkit: it is repeated
-      # at the head of every chapter and it is what a person actually runs in a meeting.
-      #   1. select the BUSINESS PROCESS   — orders, shipments, returns. Not a department, not
-      #      a report. Picking a department is the classic first mistake and it produces a mart
-      #      nobody else can join to.
-      #   2. declare the GRAIN             — one row per WHAT. Series 1 · 10 taught this for
-      #      OLTP; here it is the second step and everything downstream depends on it.
-      #   3. identify the DIMENSIONS       — falls out of the grain, almost mechanically.
-      #   4. identify the FACTS            — must be true at the declared grain, or you have
-      #      the wrong grain.
-      # WHY IT NEEDS ITS OWN EPISODE: 00 says WHY the reporting schema differs and 05 shows
-      # WHAT a star looks like. Neither gives a repeatable METHOD, and without one every later
-      # episode reads as a collection of tricks. Placed at 02 so it frames the whole series.
-      # The koan is `choose`: same brief, two candidate grains, one of which cannot answer the
-      # question that was asked.
-      # SOURCE (kimball): THE FOUR-STEP DIMENSIONAL DESIGN PROCESS — repeated at the head of every chapter of the Toolkit. His numbering, his words.
-      - n: "02"
-        slug: four-step-design
-        title: "The Four-Step Design — Pick the Process, Declare the Grain, Then Dimensions and Facts"
+      # Kimball's procedure, and the most transferable thing in the Toolkit: 1. select the BUSINESS
+      # PROCESS (not a department, not a report), 2. declare the GRAIN, 3. identify the DIMENSIONS,
+      # 4. identify the FACTS. Merged with facts-and-dimensions on 2026-09-14 — the vocabulary and
+      # the method are one lesson, and on Northwind rather than the library brief, so the series
+      # keeps one dataset.
+      - n: "05"
+        slug: facts-dimensions-and-the-four-step-design
+        title: "Facts, Dimensions & the Four-Step Design — Process, Grain, Then Dimensions and Facts"
+        tags: ["kimball"]
         credits:
           - source: kimball
-            concept: "THE FOUR-STEP DIMENSIONAL DESIGN PROCESS — repeated at the head of every chapter of the Toolkit"
-        tags: ["kimball"]
-        hands_on: ["koan:choose", "brief"]
-        dataset: library:brief
+            concept: "FACTS and DIMENSIONS, and THE FOUR-STEP DIMENSIONAL DESIGN PROCESS — his vocabulary and his numbering"
+        hands_on: ["build:star", "cards"]
+        dataset: northwind:read
         core: true
         status: planned
-      # SOURCE (kimball): THE STAR SCHEMA — his central artifact. Say 'dimensional model' and 'star schema' as he does.
-      - n: "05"
+      # The star is BUILT here, the first time it is shown — not described for six episodes first.
+      # Dimensions first, then the fact; loaded through the learner's Series 1 views; and the
+      # reconciliation query is written in the same sitting and kept forever after.
+      # Boundary: Data Warehousing, Series 1 reads the star from the query side and loads it at scale.
+      - n: "10"
         slug: the-star-schema
-        title: "The Star Schema — fact_sales Plus Customer, Product and Date"
+        title: "The Star Schema — Build fact_sales From Your Own Model, and Reconcile It"
+        tags: ["kimball"]
         credits:
           - source: kimball
             concept: "THE STAR SCHEMA — his central artifact"
-        tags: ["kimball"]
-        hands_on: ["tab:er-diagram"]
-        dataset: northwind:read
-        core: true
-        status: planned
-      # SOURCE (kimball): SNOWFLAKING — and his position, which is 'generally don't'. Give his reasoning, then the columnar-era caveat.
-      - n: "10"
-        slug: snowflake-vs-star
-        title: "Snowflake vs Star — Normalizing Dimensions, and What It Costs You"
-        credits:
-          - source: kimball
-            concept: "SNOWFLAKING — and his position, which is 'generally don't'"
-        tags: ["kimball"]
-        hands_on: ["koan:choose", "tab:er-diagram"]
-        dataset: northwind:read
-        status: planned
-      # SOURCE (kimball): SLOWLY CHANGING DIMENSIONS, Types 1/2/3 — his numbering exactly. Name that 0 and 4-7 exist and where to read them.
-      - n: "15"
-        slug: slowly-changing-dimensions
-        title: "Slowly Changing Dimensions — Type 1, 2 and 3, and Which to Pick"
-        credits:
-          - source: kimball
-            concept: "SLOWLY CHANGING DIMENSIONS, Types 1/2/3 — his numbering exactly"
-        tags: ["kimball"]
-        hands_on: ["koan:choose", "koan:diagnose", "build:star"]
+        hands_on: ["tab:er-diagram", "check:reconciles", "build:star", "cards"]
         dataset: northwind:star
         core: true
         status: planned
-      # Retitled: grain itself moved to S1/10, where it belongs as a property of any table.
-      # What is left here is the FACT-TABLE-specific half — additivity, and the semi-additive
-      # measures that make SUM quietly wrong.
-      # SOURCE (kimball): DECLARE THE GRAIN, and ADDITIVE / SEMI-ADDITIVE / NON-ADDITIVE facts — all three terms are his.
-      - n: "20"
+      # The fact-table half of grain: which measures add up across which dimensions. A price or a
+      # discount rate is non-additive; a month-end balance is semi-additive — SUM across products,
+      # never across time. Both are silent: SUM runs and returns a plausible, wrong number.
+      - n: "15"
         slug: grain-and-additivity
         title: "Fact Grain & Additivity — The Measures You Must Not SUM"
+        tags: ["kimball"]
         credits:
           - source: kimball
             concept: "DECLARE THE GRAIN, and ADDITIVE / SEMI-ADDITIVE / NON-ADDITIVE facts — all three terms are his"
-        tags: ["kimball"]
-        hands_on: ["koan:predict", "koan:diagnose", "build:star"]
+        hands_on: ["check:reconciles", "build:star", "cards"]
         dataset: northwind:star
         core: true
         status: planned
-      # THE BIGGEST GAP IN THE SERIES, and pure daily work. Kimball's three fact grains plus the
-      # fourth kind, none of which was anywhere in the academy:
-      #   TRANSACTION           one row per event. The default, and what Series 3 · 05 built.
-      #   PERIODIC SNAPSHOT     one row per entity per period — daily balance, month-end stock.
-      #                         This is where SEMI-ADDITIVE bites: you may SUM across product
-      #                         but never across time. Series 3 · 20 named the rule; this is
-      #                         the table shape that forces you to obey it.
-      #   ACCUMULATING SNAPSHOT one row per pipeline instance, UPDATED as it progresses —
-      #                         ordered, shipped, delivered, invoiced, paid, each with its own
-      #                         date column and its own lag. The only fact table you update in
-      #                         place, and the answer to "how long does an order take?".
-      #   FACTLESS              rows for events with no measure, and the coverage table for
-      #                         things that did NOT happen. "Which products had no sales in
-      #                         March" cannot be answered from a transaction fact at all.
-      # NORTHWIND HAS ALL FOUR sitting in it: Orders is transactional, order-to-ship-to-deliver
-      # is an accumulating snapshot waiting to be built, month-end stock is a periodic one, and
-      # the promotion-with-no-sales question is factless.
-      # Placed at 22, immediately after grain and additivity (20), because the fact type FOLLOWS
-      # from the grain — it is step 2 of the four-step method paying out.
-      # ALSO OWNS THE NO-NULL-FOREIGN-KEY RULE, folded in here rather than given an episode
-      # because it is one paragraph and one habit — but it is universal, and a fact table with
-      # NULL keys silently drops rows from every report that joins them.
-      #   THE RULE: a fact's dimension key is NEVER NULL. If the value is missing, point it at
-      #   a real dimension row that MEANS missing.
-      #   THE ROWS EVERY DIMENSION NEEDS: an "Unknown" member (we do not know yet) and a
-      #   "Not Applicable" member (there will never be one). Different meanings; collapsing
-      #   them loses something a business user will eventually ask about. Give them fixed
-      #   surrogate keys (conventionally 0 and -1) so they survive a reload.
-      #   WHY IT BELONGS WITH FACT TYPES: an accumulating snapshot spends most of its life
-      #   half-populated — an order placed but not shipped has no ship date and no shipper.
-      #   That is where a reader first meets the problem.
-      # SOURCE (kimball): TRANSACTION, PERIODIC SNAPSHOT and ACCUMULATING SNAPSHOT fact tables, plus FACTLESS FACT TABLES. His four shapes, his names.
-      - n: "22"
+      # Kimball's shapes, all of them available here with measured data:
+      #   TRANSACTION           the order-line fact from 10.
+      #   PERIODIC SNAPSHOT     month-end stock per product, from seed.stock_movements — it must end
+      #                         at Products.UnitsInStock, which is its reconciliation.
+      #   ACCUMULATING SNAPSHOT one row per order, updated as it moves: ordered, required, shipped,
+      #                         with lags. Northwind's lags are 3 to 9 days and exactly ONE order
+      #                         shipped late — finding it is the exercise.
+      #   FACTLESS              coverage: 190 of 380 product-months had no sales, which a
+      #                         transaction fact cannot even list.
+      # ALSO OWNS THE NO-NULL-FOREIGN-KEY RULE: an unshipped order has no ship date and no shipper,
+      # so point it at "Unknown" / "Not Applicable" dimension rows (fixed keys 0 and -1).
+      - n: "20"
         slug: fact-table-types
         title: "Fact Table Types — One Row per Event, per Period, or per Pipeline"
+        tags: ["kimball"]
         credits:
           - source: kimball
             concept: "TRANSACTION, PERIODIC SNAPSHOT and ACCUMULATING SNAPSHOT fact tables, plus FACTLESS FACT TABLES"
-        tags: ["kimball"]
-        hands_on: ["koan:choose", "koan:predict", "cloudbeaver"]
+        hands_on: ["check:reconciles", "check:answers", "build:star", "cards"]
         dataset: northwind:star
         core: true
         status: planned
-      # ALSO ANSWER "WHAT ABOUT THE TIME OF DAY", in a paragraph, because it is the first
-      # question anyone asks about a date dimension and the wrong answer is expensive.
-      #   DO NOT put hours and minutes in the date dimension. One row per day over twenty
-      #   years is ~7,300 rows; one row per minute is ~10.5 million, and every join to it gets
-      #   slower for a precision most reports never use.
-      #   INSTEAD: either a SEPARATE time-of-day dimension (1,440 rows, one per minute, with
-      #   attributes like shift, peak/off-peak, business hours) joined by its own key — or,
-      #   for most cases, just keep the raw timestamp as a column ON the fact and use the date
-      #   key for the day. Kimball allows both, and the timestamp is fine unless you need to
-      #   GROUP BY something like "shift" that only a dimension can name.
-      #   WHO ACTUALLY NEEDS THE DIMENSION: call centres, manufacturing, trading, web
-      #   analytics, IoT — anywhere "which hour" is a real business question. Say that, so a
-      #   reader in a monthly-reporting job knows they can skip it.
-      # SOURCE (kimball): THE DATE DIMENSION, and the separate TIME-OF-DAY DIMENSION. He insists on an explicit table; say why.
+      # A generated calendar table beats date_trunc: fiscal periods, week numbering, holidays, and
+      # attributes a report can GROUP BY. Merged with role-playing on 2026-09-14 because
+      # role-playing IS the date dimension used several ways: OrderDate, RequiredDate, ShippedDate.
+      # The shipped main.dim_time has one row per day for days 1-28 only — a calendar with holes,
+      # judged here as somebody else's work. Time of day: a separate dimension or a timestamp on
+      # the fact, never minutes in dim_date.
       - n: "25"
-        slug: the-date-dimension
-        title: "The Date Dimension — Why a Calendar Table Beats date_trunc"
+        slug: the-date-dimension-and-role-playing
+        title: "The Date Dimension & Role-Playing — One Calendar Table, Used Three Ways"
+        tags: ["kimball"]
         credits:
           - source: kimball
-            concept: "THE DATE DIMENSION, and the separate TIME-OF-DAY DIMENSION"
-        tags: ["kimball"]
-        hands_on: ["koan:diagnose", "build:star"]
-        dataset: northwind:star
-        status: planned
-      # THREE SMALL PATTERNS, universal, and cheap to teach — which is why leaving them out was
-      # indefensible rather than a judgement call.
-      #   ROLE-PLAYING   one Date dimension joined three times under three names. NORTHWIND HAS
-      #                  THE EXAMPLE BUILT IN: OrderDate, RequiredDate, ShippedDate. A reader
-      #                  who has not met this builds three date tables, and then cannot compare
-      #                  "ordered in March" with "shipped in March".
-      #   DEGENERATE     the order number that lives IN the fact with no dimension table of its
-      #                  own. Northwind's OrderID, exactly. People invent a dim_order for it.
-      #   JUNK           a handful of low-cardinality flags collapsed into one small dimension
-      #                  instead of five columns on a hundred-million-row fact.
-      # Placed at 27, right after the date dimension (25), because role-playing IS the date
-      # dimension used three ways and reads as one lesson with it.
-      # SOURCE (kimball): ROLE-PLAYING, DEGENERATE and JUNK DIMENSIONS — three of his terms in one episode. All three are worth knowing by name.
-      - n: "27"
-        slug: role-playing-and-small-dimensions
-        title: "Role-Playing, Degenerate & Junk Dimensions — One Date Table Used Three Ways"
-        credits:
-          - source: kimball
-            concept: "ROLE-PLAYING, DEGENERATE and JUNK DIMENSIONS — three of his terms in one episode"
-        tags: ["kimball"]
-        hands_on: ["koan:complete", "koan:predict", "tab:er-diagram"]
+            concept: "THE DATE DIMENSION, and ROLE-PLAYING DIMENSIONS"
+        hands_on: ["check:answers", "build:star", "cards"]
         dataset: northwind:star
         core: true
         status: planned
-      # ADDED 2026-08-24 to close the last real Kimball gap in this series. Bridge tables are
-      # the answer to the one case a star schema cannot express directly: a fact row that
-      # belongs to SEVERAL rows of one dimension.
-      # NOT core, deliberately — common enough to meet, not common enough to block anyone.
-      # SCD types 4-7, outriggers and audit dimensions were left out on the same test.
-      #
-      # THE PROBLEM: a star assumes one fact row -> one dimension row. Real domains break that
-      # constantly. A book with three authors. A patient with four diagnoses. A sale credited
-      # to two salespeople. Put the dimension key straight in the fact and you can record only
-      # one of them; duplicate the fact row per member and every measure double-counts.
-      #
-      # NORTHWIND HAS THE EXAMPLE: EmployeeTerritories. An employee covers MANY territories,
-      # so "revenue by territory" cannot be answered from a fact keyed on employee — the
-      # revenue has to be spread across the territories that employee covers.
-      #
-      # THE THREE MOVES, and the third IS the lesson:
-      #   1. a BRIDGE table between fact and dimension (fact -> bridge -> dimension)
-      #   2. joining through it, and watching the row count multiply exactly as Learn SQL
-      #      Series 2 - 06 warned — this is join fan-out, deliberately this time
-      #   3. an ALLOCATION FACTOR on the bridge (weights summing to 1.0) so the multiplied rows
-      #      still sum to the true total. Without it the numbers are wrong; with it they
-      #      reconcile. Hence the koan: `predict` the inflated total, then `diagnose` which
-      #      column fixes it.
-      #
-      # ALSO NAME IN ONE LINE: the same technique carries RAGGED / VARIABLE-DEPTH HIERARCHIES
-      # (a hierarchy bridge with a depth column) — the dimensional cousin of Series 2 - 20's
-      # adjacency list and nested sets.
-      # SOURCE (kimball): BRIDGE TABLES for MULTI-VALUED DIMENSIONS, and the ALLOCATION FACTOR that keeps the total right.
-      - n: "28"
+      # DEGENERATE: the order number lives IN the fact with no table of its own — people invent a
+      # dim_order for it. JUNK: a handful of low-cardinality flags (shipped?, discounted?,
+      # discontinued product?) collapsed into one small dimension instead of columns on the fact.
+      # The shipped main.fact_sales has NO order number at all: "how many orders?" is unanswerable
+      # there. That is the missing degenerate dimension, found in somebody else's star.
+      - n: "30"
+        slug: degenerate-and-junk-dimensions
+        title: "Degenerate & Junk Dimensions — The Order Number With No Table, and the Flags With No Home"
+        tags: ["kimball"]
+        credits:
+          - source: kimball
+            concept: "DEGENERATE and JUNK DIMENSIONS"
+        hands_on: ["check:answers", "build:star", "cards"]
+        dataset: northwind:star
+        core: true
+        status: planned
+      # Moved AFTER the star exists (2026-09-14): you cannot weigh normalizing a dimension before
+      # you have one. Product -> Category and Product -> Supplier are the natural snowflake.
+      # Give Kimball's reasoning, then the columnar-era caveat. Boundary: Data Warehousing,
+      # Series 2 measures what the extra joins cost on a columnar engine.
+      - n: "32"
+        slug: snowflake-vs-star
+        title: "Snowflake vs Star — Normalizing Dimensions, and What It Costs You"
+        tags: ["kimball"]
+        credits:
+          - source: kimball
+            concept: "SNOWFLAKING — and his position, which is 'generally don't'"
+        hands_on: ["tab:er-diagram", "cards"]
+        dataset: northwind:star
+        status: planned
+      # Moved after grain, fact types and the date dimension (2026-09-14): SCD Type 2 needs all
+      # three. Northwind has NO change history — every product has one price, no customer moves —
+      # so the learner makes the change in their own copy (a customer moves city), exactly as in
+      # Series 1 · 30, and watches last year's revenue-by-city stay put or rewrite itself.
+      # Name that Types 0 and 4-7 exist. Boundary: Data Warehousing, Series 3 queries SCD history;
+      # dbt snapshots load it.
+      - n: "35"
+        slug: slowly-changing-dimensions
+        title: "Slowly Changing Dimensions — Type 1, 2 and 3, and Which to Pick"
+        tags: ["kimball"]
+        credits:
+          - source: kimball
+            concept: "SLOWLY CHANGING DIMENSIONS, Types 1/2/3 — his numbering exactly"
+        hands_on: ["check:answers", "build:star", "cards"]
+        dataset: northwind:star
+        core: true
+        status: planned
+      # An employee covers several territories, so "revenue by territory" cannot come from a fact
+      # keyed on employee. The data is the seed (seed.employee_territories) because Northwind's own
+      # EmployeeTerritories ships empty: three employees, eight territories, New York shared.
+      # The three moves: the bridge; joining through it and watching the total inflate (join
+      # fan-out, deliberately this time); an ALLOCATION FACTOR so the total reconciles again.
+      - n: "40"
         slug: bridge-tables
         title: "Bridge Tables — When One Fact Row Belongs to Several Dimension Rows"
+        tags: ["kimball"]
         credits:
           - source: kimball
             concept: "BRIDGE TABLES for MULTI-VALUED DIMENSIONS, and the ALLOCATION FACTOR that keeps the total right"
-        tags: ["kimball"]
-        hands_on: ["koan:predict", "koan:diagnose", "tab:er-diagram"]
+        hands_on: ["check:reconciles", "build:star", "cards"]
         dataset: northwind:star
         status: planned
-      # SOURCE (kimball): The four-step process applied end to end. Walk his steps out loud as you build.
-      - n: "30"
-        slug: build-northwinds-star-schema
-        title: "Build Northwind's Star Schema — Hands-On in DuckDB"
-        credits:
-          - source: kimball
-            concept: "The four-step process applied end to end"
+      # Kimball's enterprise argument, and the reason the method scales past one star. Northwind
+      # now has three processes: orders, stock movements and sales targets (the last two from the
+      # seed). Conformed product and date dimensions let them sit on one page.
+      #   BUS MATRIX      processes down the side, conformed dimensions across the top.
+      #   DRILL-ACROSS    query each fact at a common grain, then join the RESULTS — never two facts.
+      #   CONSOLIDATED    budget vs actual: targets are one row per CATEGORY per MONTH, a different
+      #                   grain from the order lines, so the consolidated fact needs a shrunken
+      #                   (category-level) product dimension.
+      # Months with a target and no sales exist, which is why the drill-across join is a full join.
+      - n: "45"
+        slug: conformed-dimensions-and-the-bus-matrix
+        title: "Conformed Dimensions & the Bus Matrix — Sales, Stock and Targets on One Product Table"
         tags: ["kimball"]
-        hands_on: ["koan:author", "tab:er-diagram", "build:star"]
-        dataset: northwind:star
-        status: planned
-      # KIMBALL'S ENTERPRISE ARGUMENT, and the reason his method scales past one mart. Without it
-      # a team builds a sales star and an inventory star, each correct, and then discovers that
-      # nobody can put the two numbers on one page because "Product" means something slightly
-      # different in each.
-      #   CONFORMED DIMENSION   the same Product/Customer/Date table shared by several facts —
-      #                         or a strict subset of one (a "shrunken" dimension).
-      #   THE BUS MATRIX        business processes down the side, conformed dimensions across
-      #                         the top. One page that shows what can be compared with what,
-      #                         and it doubles as the build order for the whole warehouse.
-      #   DRILL-ACROSS          the payoff: query two facts separately at a common grain, then
-      #                         join the RESULTS. Never join two fact tables directly.
-      # Placed at 32, AFTER the star is actually built at 30 — you cannot argue about two marts
-      # agreeing until you have made one. The koan is `reconcile`, because drill-across either
-      # produces two columns that line up or it does not, and that is the whole assertion.
-      # ALSO OWNS CONSOLIDATED FACT TABLES, and this is the natural next question after
-      # drill-across rather than a separate subject: if two processes share a grain AND you
-      # compare them constantly, stop drilling across and merge them into one fact table.
-      #   THE EVERYDAY CASE is budget vs actual — or forecast vs actual, plan vs actual. One
-      #   row per month per product carrying BOTH measures makes variance a subtraction
-      #   instead of a two-query join, and it makes "variance" a column the whole business
-      #   agrees on rather than something each report recomputes.
-      #   THE RULE FOR WHICH: drill-across when the grains differ or the comparison is
-      #   occasional; consolidate when the grains already match and the comparison is the
-      #   point. Consolidating mismatched grains is just fan-out with extra steps.
-      #   THE COST, say it: the consolidated table can only be loaded when BOTH sources have
-      #   arrived, so it inherits the slower one's schedule.
-      # ALSO NAME THE VALUE CHAIN here, in one line — Kimball's term for the sequence of
-      # business processes (order -> shipment -> invoice -> payment) that the bus matrix is
-      # drawn from. Data Model Patterns, Series 2 - 10 walks that chain as a model; here it is
-      # just the reason the matrix has the rows it has.
-      # SOURCE (kimball): CONFORMED DIMENSIONS, the ENTERPRISE DATA WAREHOUSE BUS MATRIX, DRILL-ACROSS, CONSOLIDATED FACT TABLES and the VALUE CHAIN.
-      - n: "32"
-        slug: conformed-dimensions
-        title: "Conformed Dimensions — Comparing Sales and Inventory on the Same Product Table"
         credits:
           - source: kimball
             concept: "CONFORMED DIMENSIONS, the ENTERPRISE DATA WAREHOUSE BUS MATRIX, DRILL-ACROSS, CONSOLIDATED FACT TABLES and the VALUE CHAIN"
-        tags: ["kimball"]
-        hands_on: ["koan:diagnose", "koan:reconcile", "brief"]
+        hands_on: ["check:reconciles", "build:star", "cards"]
         dataset: northwind:star
         core: true
         status: planned
-      # SOURCE (linstedt): DATA VAULT 2.0 — Dan Linstedt. HUBS, LINKS and SATELLITES are
-      #   his terms. "Building a Scalable Data Warehouse with Data Vault 2.0" (Morgan
-      #   Kaufmann, 2015). NOT Kimball — say whose alternative this is, out loud.
-      # TRADEMARK, and this is the one episode in the academy where it genuinely bites:
-      #   Linstedt asserts a mark on "Data Vault 2.0" and runs a certification programme
-      #   around it. So the episode must read as "here is Linstedt's Data Vault 2.0
-      #   method" and never as anything we are licensed, certified or partnered to
-      #   deliver. No "DataPallas Data Vault Edition", no implied certification, and the
-      #   standard disclaimer line from the field docs goes in the article template.
-      #   Check the current position before publishing; marks change.
-      - n: "35"
+      # NOT Kimball — say whose alternative this is, out loud. When auditability and many changing
+      # sources demand hubs, links and satellites, and when they only add machinery.
+      # TRADEMARK: Linstedt asserts a mark on "Data Vault 2.0" and runs a certification programme;
+      # the episode reads as "here is Linstedt's method", never as anything we are licensed or
+      # certified to deliver. Check the current position before publishing.
+      - n: "50"
         slug: data-vault
         title: "Data Vault 2.0 — Hubs, Links & Satellites, and When Scale Demands Them"
+        tags: ["linstedt"]
         credits:
           - source: linstedt
             concept: "DATA VAULT 2.0 — Dan Linstedt"
-        tags: ["linstedt"]
-        hands_on: ["koan:choose"]
+        hands_on: ["tab:er-diagram", "cards"]
         dataset: northwind:star
         status: planned
-      - n: "40"
-        slug: wide-tables-and-one-big-table
-        title: "Wide Tables & One Big Table — Why Columnar Storage Changed the Advice"
-        hands_on: ["koan:choose"]
+      # The analytics-engineering shift, judged honestly: on a columnar engine a wide, denormalised
+      # table is often fine and sometimes best. The shipped main.vw_sales_detail already is one.
+      # What columnar storage did NOT change: grain, additivity, history — a wide table still needs
+      # all of them. Engine mechanics (sort keys, partitions, measured star vs one big table) belong
+      # to Data Warehousing, Series 2; this is the modelling decision only. Merged 2026-09-14 with
+      # the removed modeling-for-columnar-engines.
+      - n: "55"
+        slug: one-big-table-and-wide-tables
+        title: "One Big Table & Wide Tables — What Columnar Storage Changed, and What It Didn't"
+        hands_on: ["check:reconciles", "build:star", "cards"]
         dataset: northwind:star
         status: planned
-      - n: "45"
-        slug: modeling-for-columnar-engines
-        title: "Modelling for Columnar Engines — Designing for a Store That Reads by Column"
-        hands_on: ["cloudbeaver"]
-        dataset: northwind:star
-        status: planned
-      # Oracle: RECONCILIATION. SUM(fact_sales) must equal the OLTP total, plus grain
-      # assertions on the fact table. That is exactly what dbt's unique/not_null tests are,
-      # so this project sets up the Analytics Engineering track for free.
-      # SOURCE (kimball): The whole method, once. Reconciliation is the grade, which is his own test for a correct dimensional model.
-      - n: "50"
-        slug: project-oltp-to-star
-        title: "Project — From Northwind OLTP to a Clean Star Schema"
+      # THE SERIES 3 PROJECT, and the course's last proof. The learner's Series 1 model, through its
+      # views, becomes: the order-line star, the accumulating snapshot, the month-end stock
+      # snapshot, and budget vs actual — on conformed dimensions, with at least one Type 2 dimension.
+      # Graded by RECONCILES (58153.31 for revenue, Products.UnitsInStock for stock, the order count
+      # for the snapshot) plus grain assertions — which is what dbt's unique / not_null tests do, so
+      # this is the bridge into Analytics Engineering with dbt.
+      - n: "60"
+        slug: project-your-model-becomes-a-star
+        title: "Project — From Your Northwind Model to a Star Schema That Reconciles"
+        tags: ["project", "kimball"]
         credits:
           - source: kimball
-            concept: "The whole method, once"
-        hands_on: ["koan:reconcile", "koan:author", "tab:er-diagram", "build:star"]
+            concept: "The whole four-step method, once, graded by reconciliation — his own test for a dimensional model"
+        hands_on: ["tab:er-diagram", "check:reconciles", "check:answers", "build:star", "cards"]
         dataset: northwind:star
         core: true
-        tags: ["project", "kimball"]
         status: planned

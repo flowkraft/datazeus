@@ -13,31 +13,34 @@ published: false
     BOILERPLATE — not written yet. Everything below is the brief for whoever
     writes it. Delete these comments as each beat is filled in.
 
-    The track-level method (why koans are predict-and-decide, which DataPallas
-    tab does what, why Northwind is recovered and the library is invented) lives
-    in courses/datamodeling/curriculum.yaml. Read that header first — it is the
-    argument this lesson is one instance of.
+    The track-level method (the modelling loop, the proofs, how an episode is
+    practised — working file, one check suite per series, Anki cards — and which
+    DataPallas tab does what) lives in courses/datamodeling/curriculum.yaml.
+    Read that header first — it is the argument this lesson is one instance of.
 
     WHY THIS EPISODE, SPECIFICALLY
-    GOAL: the Series 2 project — three change requests against your own schema.
-    MODELS: migrations that are additive, and the suite that proves they were.
+    GOAL: the Series 2 project — three change requests against your own live schema.
+    MODELS: nothing new: migrations, subtypes, rules across rows, under pressure.
+    BUILDS ON: Series 1 · 35, Series 2 · 27 and 50.
 
-    SERIES 2 PROJECT. Six months on, the business wants three things — and one of them is
-    EBOOKS, which have no physical copy and detonate the copy model the learner spent the whole
-    series getting right.
-    That is deliberate and must not be softened. The lesson is NOT 'avoid the mistake' — no
-    model survives every change. It is 'here is what an additive migration looks like versus a
-    rewrite', and the old suite still passing is how they know which one they wrote.
-    The other two: a second branch (copies gain a location) and reservations (a new entity that
-    competes with loans for the same copy).
+    Each change request is a migration graded by check:survives: every earlier check stays green.
+    Ebooks must not be softened — the detonation is the point. Ask the learner to write, before
+    migrating, whether each change will be additive or a rewrite, and to check it afterwards.
+    Redraw the diagram once per change request.
+
+    YOUR TURN: three change requests against your live schema, each written down first as additive or a rewrite.
+    CARDS: the Series 2 review deck: every decision from 00 to 50 as a change request.
 
     HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
-      koan:migration
-      koan:author
       tab:er-diagram
+      check:survives
+      check:refuses
+      check:answers
       build:library
+      cards
       dataset: library
-      koan file: series2/_60/ProjectSurviveTheChangeKoans.groovy
+      check suite: series2/LibraryChecks.groovy — this episode adds its checks there
+      cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson
       NAME THE TAB IN THE PROSE — "er-diagram".
    ========================================================================== */}
 
@@ -58,8 +61,16 @@ TODO
 
 ## TODO — see it for yourself
 
-{/* BEAT 3 — NON-NEGOTIABLE. The learner proves it, via the hands_on above.
+{/* BEAT 3 — NON-NEGOTIABLE. The learner proves it: the YOUR TURN decision in their
+    working file, and the checks it adds to the series suite (or the tab, where none).
     If this beat cannot be written, the episode is not ready to be written. */}
+
+TODO
+
+## Your turn
+
+{/* The ONE decision the learner makes in their working file — the YOUR TURN line above.
+    One paragraph and the command that runs the checks. Nothing to install. */}
 
 TODO
 

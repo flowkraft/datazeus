@@ -13,29 +13,34 @@ published: false
     BOILERPLATE — not written yet. Everything below is the brief for whoever
     writes it. Delete these comments as each beat is filled in.
 
-    The track-level method (why koans are predict-and-decide, which DataPallas
-    tab does what, why Northwind is recovered and the library is invented) lives
-    in courses/datamodeling/curriculum.yaml. Read that header first — it is the
-    argument this lesson is one instance of.
+    The track-level method (the modelling loop, the proofs, how an episode is
+    practised — working file, one check suite per series, Anki cards — and which
+    DataPallas tab does what) lives in courses/datamodeling/curriculum.yaml.
+    Read that header first — it is the argument this lesson is one instance of.
 
     WHY THIS EPISODE, SPECIFICALLY
-    GOAL: get a table list out of a written brief, and notice what the brief does not say.
-    MODELS: the noun/verb pass, cardinality questions, and writing down the ambiguities.
+    GOAL: get entities out of a written brief, write the ambiguities down as questions, and list what the model must answer.
+    MODELS: the noun/verb pass, business rules as sentences, open questions, the questions a model must answer.
+    BUILDS ON: Series 1 · 05 and 10 — the same moves, with no schema to lean on.
 
-    THE GAP THAT MATTERED MOST: 31 episodes and nobody ever designed anything. This is the
-    elicitation half of the job and it had no episode at all.
-    Read the brief, find the nouns and the verbs — but the real skill is NOTICING THE
-    AMBIGUITIES the brief deliberately leaves in. 'Can a member borrow two copies of the same
-    title at once?' is unanswerable from the text. Realising you must ASK is the lesson.
-    The messy spreadsheet does most of the teaching: "Dune" appears three times (title vs copy)
-    and there is a column called author2 (a repeating group). Let them find it.
+    Material: brief/README.md (the six planted ambiguities — leave them planted) and lending-log.csv:
+    Dune on several rows with copy 1..5, a column called author2, blank `returned` values, two books
+    with no ISBN, a member who `left`.
+    The ANSWERS list comes from the librarian: how many copies of Dune do we own, who has copy #3,
+    what is overdue, who has lapsed, what fines are owed. It is reused by every later episode.
+    Grade the questions, not guesses: a learner who silently picks an answer to an ambiguity has done
+    the thing this episode exists to prevent.
+
+    YOUR TURN: write three lists from the brief: the entities, the open questions, and the questions the model must answer.
+    CARDS: spotting what a brief does not say; turning a noun and a verb into an entity and a relationship.
 
     HANDS-ON FOR THIS EPISODE (from curriculum.yaml — re-synced, never hand-edited)
       brief
-      koan:diagnose
       tab:ubiquitous-language
+      cards
       dataset: library:brief
-      koan file: series2/_00/RequirementsToEntitiesKoans.groovy
+      NO CHECK — practised in the working file, the diagram and the cards. See the note above.
+      cards: cards/cards.yaml — this lesson's Anki deck, written with the lesson
       NAME THE TAB IN THE PROSE — "ubiquitous-language".
    ========================================================================== */}
 
@@ -56,8 +61,16 @@ TODO
 
 ## TODO — see it for yourself
 
-{/* BEAT 3 — NON-NEGOTIABLE. The learner proves it, via the hands_on above.
+{/* BEAT 3 — NON-NEGOTIABLE. The learner proves it: the YOUR TURN decision in their
+    working file, and the checks it adds to the series suite (or the tab, where none).
     If this beat cannot be written, the episode is not ready to be written. */}
+
+TODO
+
+## Your turn
+
+{/* The ONE decision the learner makes in their working file — the YOUR TURN line above.
+    One paragraph and the command that runs the checks. Nothing to install. */}
 
 TODO
 

@@ -40,7 +40,9 @@ class CurriculumSpec extends Specification {
             ["predict", "diagnose", "choose", "complete", "author", "migration", "reconcile"]
     static final List<String> TABS =
             ["er-diagram", "database-schema", "domain-grouped-schema", "ubiquitous-language"]
-    static final List<String> DATASETS = ["northwind:read", "northwind:rebuild", "northwind:star",
+    /** Data Modeling is practised through one check suite per series, not koans (2026-09-14). */
+    static final List<String> CHECKS = ["fits", "refuses", "answers", "survives", "reconciles"]
+    static final List<String> DATASETS = ["northwind:read", "northwind:model", "northwind:star",
                                           "library", "library:brief", "library+northwind", "case-study"]
 
     /**
@@ -402,7 +404,7 @@ class CurriculumSpec extends Specification {
 
     static final Map<String, Closure<Boolean>> HANDS_ON_VOCAB = [
         datamodeling: { String h ->
-            (h.startsWith("koan:") && h.substring(5) in KOAN_RUNGS) ||
+            (h.startsWith("check:") && h.substring(6) in CHECKS) || h == "cards" ||
             (h.startsWith("tab:") && h.substring(4) in TABS) ||
             h.startsWith("build:") || h in ["cloudbeaver", "brief"]
         },
@@ -497,7 +499,7 @@ class CurriculumSpec extends Specification {
         def bad = []
         episodesOf(doc).each { ep ->
             ep.hands_on.each { h ->
-                def ok = (h.startsWith("koan:") && h.substring(5) in KOAN_RUNGS) ||
+                def ok = (h.startsWith("check:") && h.substring(6) in CHECKS) || h == "cards" ||
                          (h.startsWith("tab:") && h.substring(4) in TABS) ||
                          h.startsWith("build:") || h in ["cloudbeaver", "brief"]
                 if (!ok) bad << "${ep.slug}: unknown hands_on '${h}'"
@@ -507,6 +509,22 @@ class CurriculumSpec extends Specification {
 
         expect:
         bad.isEmpty()
+    }
+
+    def "data modeling: every episode has its cards, and something practised besides them"() {
+        // Decided 2026-09-14: this track is video + article + working file + one check suite
+        // per series + Anki cards. Cards are review, not practice — an episode whose only
+        // hands_on is `cards` has become a lecture with flashcards attached.
+        given:
+        def doc = load(new File(COURSES, "datamodeling"))
+        def noCards = episodesOf(doc).findAll { !("cards" in it.hands_on) }*.slug
+        def onlyCards = episodesOf(doc).findAll { ep ->
+            !ep.hands_on.any { h -> h.startsWith("check:") || h.startsWith("build:") || h.startsWith("tab:") || h == "brief" }
+        }*.slug
+
+        expect:
+        noCards.isEmpty()
+        onlyCards.isEmpty()
     }
 
     def "data modeling: every series leaves an artifact behind"() {

@@ -1,7 +1,7 @@
 # The Riverside Library — the brief
 
 > **This is the greenfield domain for Data Modeling Series 2.** You design this one from
-> nothing. Northwind was the model you *recovered*; this is the model you *invent*.
+> nothing. In Series 1 you modelled Northwind, a business you already knew; this one you have never seen.
 
 ---
 
@@ -34,7 +34,7 @@ That last sentence is the most expensive thing in the document. Do not act on it
 
 1. **An ER diagram**, authored as PlantUML in the DataPallas **ER Diagram** tab.
 2. **A `schema.sql`** in your practice schema, with the constraints declared inline.
-3. **A green acceptance suite** — `zeus koans datamodeling series2 _05`.
+3. **A green check suite** — `zeus koans datamodeling series2` (its episode 05 section).
 
 Write the diagram *before* the DDL, and commit to it before you look at ours. Seeing our
 answer first costs you the entire exercise; there is no way to un-see a model.
@@ -76,19 +76,27 @@ an answer has done the thing this episode exists to prevent.
   argument for surrogate keys that exists, and the library was chosen partly to get it.
 - **`author2` (episode 00).** A repeating group, visible in the data, discovered rather than
   taught. Leave the column named exactly that.
-- **The blank `returned` column (episode 00 / 25).** Blank means *still out*, not *unknown*.
+- **The blank `returned` column (episode 00 / 15).** Blank means *still out*, not *unknown*.
   Real optionality with real meaning — the counter-example to "NULL is always a smell".
 - **`notes` (episode 42).** Free text, and different for almost every row that has it —
   translator, original language, "large print", "board book", "reference only", series
   position. Model every one of those as a column and you get a table that is mostly NULL,
-  which is episode 37's failure arriving from the other direction. This column is the
+  which is Series 1 · 52's failure arriving from the other direction. This column is the
   argument for a JSON blob, and it is in the data rather than in the prose on purpose.
-- **`member_status` = `left`, and `last_edited` / `edited_by` (episode 27).** Jonah
+- **`member_status` = `left`, and `last_edited` / `edited_by` (episode 30).** Jonah
   Whitfield left the library, and his two loans are still in the file. That is a soft delete
   performed by hand in a spreadsheet: the row is still there, and every count of "our
   members" is now wrong unless you remember to filter. `edited_by` holds initials — audit
   columns as they actually appear in the wild, added by someone who needed them, never
   designed.
+- **The Pragmatic Programmer, twice (episode 10).** A 1st edition (ISBN-10 `020161622X`) and a
+  2nd edition (`9780135957059`): genuinely different books. Together with the Dune reprint below,
+  it shows that an ISBN is the key of an EDITION, not of a title — ISBN is not a bad key, it is
+  the key of a different thing. Title, edition, copy.
+- **"The Illustrated Riverside" was lent (episode 05 / 27).** It is "reference only — do not
+  lend", and Priya borrowed it anyway. Loading the spreadsheet forces the decision Series 1 · 50
+  meets from the other side: there the RULE was wrong; here the rule is right and the DATA is
+  wrong, so the row is set aside and the rule stays.
 - **The film tie-in `Dune` (episode 10).** ISBN `9780593099322` on the last row, against
   `9780441013593` everywhere else. Same book, same author, different ISBN, and it is copy 5
   of the same four-copy set the library already owns. If ISBN is the primary key, the library
@@ -101,11 +109,11 @@ an answer has done the thing this episode exists to prevent.
 
 ### The third artifact
 
-The acceptance suite (`DesignTheLibraryKoans`) is the part that makes this a design exercise
+The acceptance checks (`LibraryChecks`, episode 05) are the part that makes this a design exercise
 rather than an essay. It is a definition of done that is **not** an answer key: it says what
 must be impossible, what must stay possible, and which questions the model must be able to
 answer — and says nothing at all about how many tables to use or what to call them.
 
 Any model that passes it is a correct answer, including ones we did not think of. That is the
-property to protect when adding to it: if a new koan can only pass on *our* table names, it is
+property to protect when adding to it: if a new check can only pass on *our* table names, it is
 testing conformance rather than modeling, and it should be rewritten or dropped.
