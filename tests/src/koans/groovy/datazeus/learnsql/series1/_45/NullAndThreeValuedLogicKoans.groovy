@@ -73,7 +73,7 @@ import spock.lang.Stepwise
  * of the lesson — you cannot reason about a filter until you know how many rows have
  * nothing in the column it tests.
  *
- *   "Suppliers" — 6 rows, 12 columns. "Region" is EMPTY on 3 of the 6 and filled on
+ *   "Suppliers" — 6 rows, 13 columns. "Region" is EMPTY on 3 of the 6 and filled on
  *   the other 3 ('LA', 'MI', 'Victoria'). "PostalCode" is empty on 3. "Fax" and
  *   "HomePage" are empty on ALL SIX — not one supplier has given us either.
  *     "SupplierID"      INTEGER        "CompanyName"     VARCHAR
@@ -83,7 +83,7 @@ import spock.lang.Stepwise
  *     "Country"         VARCHAR        "Phone"           VARCHAR
  *     "Fax"             VARCHAR        "HomePage"        VARCHAR
  *
- *   "Employees" — 3 rows, 18 columns. Only the ones you need are listed. "ReportsTo"
+ *   "Employees" — 3 rows, 20 columns. Only the ones you need are listed. "ReportsTo"
  *   holds the "EmployeeID" of that person's manager, and it is EMPTY on exactly one
  *   row — because that person is the boss and reports to nobody.
  *     "EmployeeID"      INTEGER        "FirstName"       VARCHAR

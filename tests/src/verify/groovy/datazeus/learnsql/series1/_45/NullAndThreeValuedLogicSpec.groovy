@@ -56,7 +56,7 @@ import spock.lang.Unroll
  * Convention: the spec runs the SAME *.sql files the lesson and the video show, so the SQL is
  * authored in exactly one place (the lesson's scripts/) and verified here — no drift.
  *
- * AND THEN THE KOANS, ALL TEN, in their own section at the bottom. They deliberately do NOT
+ * AND THEN THE KOANS, ALL FIFTEEN, in their own section at the bottom. They deliberately do NOT
  * reuse the lesson's queries — the lesson works on ORDERS that never shipped and CUSTOMERS
  * with no region, the koans work on the SUPPLIER list, the staff list and the shelf — so none
  * of the assertions above touches the data they stand on. Every koan is checked in its solved
@@ -318,6 +318,34 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
         and: "IDENTICAL to the plain less-than, which is the thing that surprises people"
         sqlFor(engine).firstRow(script("shipped-not-2024")).Orders ==
                 sqlFor(engine).firstRow(script("shipped-before-2024")).Orders
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] GROUP BY on the shipped year makes FOUR piles, not three: 2, 32, 18 and 27 empty"() {
+        // The video's ask-the-column slide. Leo predicts three piles (2022, 2023, 2024); the
+        // empty dates come back as a fourth, and its 27 is the backlog from the opening. The
+        // SQL is the slide's own, character for character.
+        given:
+        def rows = sqlFor(engine).rows('''SELECT EXTRACT(YEAR FROM "ShippedDate") AS "ShippedYear",
+                                                count(*) AS "Orders"
+                                         FROM "Orders"
+                                         GROUP BY EXTRACT(YEAR FROM "ShippedDate")
+                                         ORDER BY "ShippedYear" NULLS LAST''')
+
+        expect: "four rows, the empty pile last"
+        rows.size() == 4
+        rows[0..2].collect { it.ShippedYear as int } == [2022, 2023, 2024]
+        rows[3].ShippedYear == null
+
+        and: "the counts the result card prints"
+        rows.collect { it.Orders as int } == [2, 32, 18, 27]
+
+        and: "2 + 32 is the 34 before 2024, and the piles add back up to all 79"
+        (rows[0].Orders as int) + (rows[1].Orders as int) == 34
+        rows.sum { it.Orders as int } == 79
 
         where:
         engine << ENGINES
@@ -621,8 +649,8 @@ class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
     //
     // THE KOANS DO NOT REUSE THE LESSON'S QUERIES. The lesson works on ORDERS that never
     // shipped and CUSTOMERS with no region; the koans work on the SUPPLIER list (3 of 6 with
-    // no region), the staff list (1 of 3 with no manager) and the shelf. THIRTEEN of them from
-    // 2026-09-09, grouped by the four places the lesson ends on. That is the house
+    // no region), the staff list (1 of 3 with no manager) and the shelf. FIFTEEN of them,
+    // grouped by the four places the lesson ends on. That is the house
     // convention — pom.xml states it as "the koans are related practice, not a blanked copy
     // of the gate" — and it exists so a learner applies the idea somewhere new instead of
     // retyping a query they just watched.
