@@ -20,8 +20,6 @@ Two commands get you from there to understanding the data:
 - `SELECT *` — asks for **every column**: to see what a table holds.
 - `SELECT "Col1", "Col2"` — asks for **only those columns**: to read the data.
 
-You will also learn to read what type each column is, because that explains results that otherwise look wrong.
-
 Every query below runs on the Northwind database on PostgreSQL. Type each one into CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
 
 ## Ask a table for everything
@@ -33,22 +31,22 @@ SELECT *
 FROM "Categories";
 ```
 
+Type it into CloudBeaver yourself and hit Run — resist the copy-paste, typing is part of how it sticks. You should get this:
+
 | CategoryID | CategoryName | Description | Picture |
 | ---------: | ------------ | ----------- | ------- |
-| 1 | Beverages | Soft drinks, coffees, teas, beers, and ales | NULL |
-| 2 | Condiments | Sweet and savory sauces, relishes, spreads, and seasonings | NULL |
-| 3 | Confections | Desserts, candies, and sweet breads | NULL |
-| 4 | Dairy Products | Cheeses | NULL |
-| 5 | Grains/Cereals | Breads, crackers, pasta, and cereal | NULL |
-| 6 | Meat/Poultry | Prepared meats | NULL |
-| 7 | Produce | Dried fruit and bean curd | NULL |
-| 8 | Seafood | Seaweed and fish | NULL |
-
-Type it into CloudBeaver yourself and hit Run — resist the copy-paste, typing is part of how it sticks. You should get this:
+| 1 | Beverages | Soft drinks, coffees, teas, beers, and ales | `[NULL]` |
+| 2 | Condiments | Sweet and savory sauces, relishes, spreads, and seasonings | `[NULL]` |
+| 3 | Confections | Desserts, candies, and sweet breads | `[NULL]` |
+| 4 | Dairy Products | Cheeses | `[NULL]` |
+| 5 | Grains/Cereals | Breads, crackers, pasta, and cereal | `[NULL]` |
+| 6 | Meat/Poultry | Prepared meats | `[NULL]` |
+| 7 | Produce | Dried fruit and bean curd | `[NULL]` |
+| 8 | Seafood | Seaweed and fish | `[NULL]` |
 
 That is the entire table: eight rows, four columns. Nothing is hidden, and now you know what this business means by a "category".
 
-`Picture` is empty for every row, and that is perfectly normal — a column exists whether or not anybody has filled it in. An empty cell like this is called `NULL`, which is how CloudBeaver and most other tools show it.
+`Picture` is empty for every row, and that is perfectly normal — a column exists whether or not anybody has filled it in. An empty cell like this is called `NULL`, and CloudBeaver writes it in the cell as `[NULL]`, so you can tell a missing value from empty text.
 
 Three words for what you are looking at, because you will use them constantly:
 
@@ -152,7 +150,6 @@ Someone hands you a database and asks you to have a look at the products. You wo
 
 1. `SELECT * FROM "TheTable" LIMIT 5;` to see what it holds.
 2. `SELECT "the", "columns", "you", "want" FROM "TheTable";` to read the data you actually need.
-Next lesson: **data types** — what each column can actually hold, and why a result sometimes surprises you.
 
 ## The koans: now you write the queries
 
@@ -176,3 +173,7 @@ c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_05\S
 Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
 
 Six koans, one per idea in this lesson and in the same order: ask for every column, name one, name two, choose their order, limit the rows, then write a whole query from scratch. They run on DuckDB — a single file, no server to start.
+
+## What's next
+
+Look back at the tables on this page: the ids came back as whole numbers, the prices with decimals, and `"Picture"` was empty on every row — somebody decided those rules once, for each column, and the next lesson, **Data Types**, is about what a column is allowed to hold and why a result can look right and still be wrong. (The rest of the series lives on the [Learn SQL](/academy/learn-sql) course page.)
