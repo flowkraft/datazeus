@@ -1,4 +1,4 @@
-SELECT "CompanyName",
+SELECT "CompanyName", "Country",
        COALESCE("Region", '(none)')
          AS "With COALESCE",
        CASE
@@ -6,5 +6,5 @@ SELECT "CompanyName",
          ELSE "Region"
        END AS "With CASE"
 FROM "Customers"
-ORDER BY "CustomerID"
-LIMIT 4;
+WHERE "Country" IN ('Canada', 'Poland')
+ORDER BY "CustomerID";

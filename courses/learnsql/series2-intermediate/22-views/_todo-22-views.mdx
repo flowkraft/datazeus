@@ -1,0 +1,100 @@
+---
+title: "VIEWs — Naming a Query So You Can Reuse It"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
+topic: "learn-sql"
+tags: []
+level: "intermediate"
+module: "series2-intermediate"
+order: 22
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. This file is a brief for whoever writes it, not
+    teaching material. It is named _todo-* so it stays out of the site build.
+    Drop the _todo- prefix when it becomes a real lesson.
+
+    READ FIRST: courses/learnsql/curriculum.yaml's header — it is the field
+    documentation the whole academy points at, and it carries the title, short
+    and core conventions this episode has to follow.
+
+    THE HOUSE METHOD, from the Series 1 lessons already written:
+      - type the query yourself; copy-paste teaches your eyes only
+      - PREDICT the answer before running it, out loud, then run it
+      - every query runs on the Northwind that ships with DataPallas
+      - the koans mirror the lesson beat for beat
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: name a query once and reuse it.
+    SQL: CREATE VIEW, querying a view, when a view is a good idea and when it hides a problem.
+    Materialized views are Data Warehousing — say so rather than half-teaching them.
+
+    ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
+    Save a query as a named, reusable object (CREATE VIEW, querying it, replacing it); know the grain of a
+    view before summing from it; what a view does NOT do (store data, speed things up); materialized views
+    are Data Warehousing's — name them, do not teach them.
+
+    ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
+    No case in this episode. The trap keeps its own example: a view built on order lines, summed again by
+    somebody who cannot see inside it — Series 2 · 15's fan-out one layer removed.
+    CLOSING: this episode owns the hand-over to EXISTS (Series 2 · 25), where the case's second question opens
+    ("were those orders delivered?") — asked in one line, nothing claimed.
+
+    DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
+    academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
+    came from the frozen Northwind is to be RE-FOUND on it: the lesson beat stays, the numbers move. First
+    measurements are DuckDB only (stories sheet §3.2.2); every figure is re-asserted on PostgreSQL in the spec.
+
+    ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
+    Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
+    KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
+    WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
+    repeats itself does the opposite. Checking in the brief is cheaper than re-cutting a published video.
+
+    ── PLACE IN THE SERIES ─────────────────────────────────────────────────
+    LEVEL ●● of ●●●●. DIRECTLY AFTER CTEs (Series 2 · 20) — MOVED FROM 52 TO 22 (owner, 2026-09-16).
+    A view is a CTE that outlives the query: the learner has just named steps with WITH, and the
+    next idea is keeping a step in the database so the whole team can read it. At 52 that link was
+    thirty episodes cold. It needs nothing taught after 20 (its trap is Series 2 · 15's fan-out).
+    THE HAND-OVERS CHANGED WITH IT:
+      - Series 2 · 20 now ends "next: views" (open_orders as a step that could live in the database),
+        instead of handing over to EXISTS.
+      - THIS EPISODE'S CLOSING OWNS THE HAND-OVER TO EXISTS (Series 2 · 25), which opens the case's
+        SECOND question: which customers waited on an order with no ship date, and did they keep
+        ordering? Leo asks it; nothing is claimed about the answer. "When it hides a problem" has a concrete answer by now — a view that
+    already joined the order lines, summed again by somebody who cannot see inside it: Series 2 · 15's
+    fan-out, one layer of abstraction away from the person who pays for it.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:equivalent
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_22/ViewsKoans.groovy
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. The published lessons all open this way;
+    keep it. Never "SELECT is used to…". Always "your boss asks…". */}
+
+TODO
+
+## TODO — the SQL
+
+{/* BEAT 2 — the keywords, one at a time, each with a query the reader types.
+    Every query runs on Northwind. Predict, then run. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — point at the koans, and say what they cover. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns its
+    place by preventing a number that is wrong and looks right. */}
+
+TODO

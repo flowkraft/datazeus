@@ -33,6 +33,19 @@ course: learn-data-warehousing
 track: datawarehousing
 title: Data Warehousing
 
+# DATASET IMPLEMENTATION NOTE (2026-09-17): northwind_co_dw_s, _m, and _l are planned D5 derived
+# warehouses, not schemas currently created by academy-northwind-co-install.groovy. The comment-only
+# draft at C:\Projects\reportburster\asbl\src\main\external-resources\db-template\db\scripts\academy-northwind-co-dw-install.groovy
+# describes the intended on-demand build from northwind_co_<scale>. Keep D5-referencing episodes
+# MISSING until that installer and its verification tests exist; the legacy fact_sales star is not D5.
+# The same installer currently implements only D1 Company S; northwind_co_m and northwind_co_l are planned
+# scales and remain MISSING wherever volume is required. The curriculum does not claim those schemas exist.
+# Related derived-dataset drafts are comment-only at:
+# C:\Projects\reportburster\asbl\src\main\external-resources\db-template\db\scripts\academy-northwind-co-changes.groovy (D2)
+# C:\Projects\reportburster\asbl\src\main\external-resources\db-template\db\scripts\academy-crm-export-install.groovy (D3)
+# C:\Projects\reportburster\asbl\src\main\external-resources\db-template\db\scripts\academy-files-export.groovy (D4)
+# They remain planned inputs; do not mark related sources good until their generators and verifiers exist.
+
 # Assumes Learn SQL, and assumes Data Modeling's dimensional series for anyone who wants to
 # DESIGN rather than query — which is why that one is listed as helpful, not required. This
 # track reads and builds a model; that one decides what the model should be.
@@ -81,6 +94,11 @@ series:
         tags: ["kimball"]
         hands_on: ["koan:choose"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Customers", "Products", "Categories"]
+          fit: good
+          reason: "The OLTP half is real and big enough to feel: one order is a point lookup on Orders by OrderID, while 'revenue by category by month, five years' joins Orders, Order Details, Products and Categories and scans all 25,233 lines. The differently-shaped copy it argues for is the star of S1 · 10 (northwind_co_dw_s); this episode only needs the source shape."
         status: planned
       # ALSO NAME KIMBALL vs INMON HERE, in a paragraph. It is vocabulary a reader will be
       # asked about in an interview and will otherwise meet as an argument with no context.
@@ -113,6 +131,11 @@ series:
         tags: ["kimball", "inmon"]
         hands_on: ["koan:choose"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "WebOrders.Payload"]
+          fit: good
+          reason: "The three words map onto rows that exist: WebOrders.Payload is lake-shaped data (raw JSON, read with a schema at query time, planted defects included) and Orders/Order Details are the modelled, typed tables a warehouse holds. Files for the lakehouse are one COPY ... TO away; the real file exports (northwind_co_files) are S3 · 20's."
         status: planned
       # SOURCE (kimball): THE STAR SCHEMA from the query side — designed in Data Modeling, Series 3 - 10; read here.
       - n: "10"
@@ -124,6 +147,11 @@ series:
         tags: ["kimball"]
         hands_on: ["koan:complete", "cloudbeaver"]
         core: true
+        data:
+          source: northwind_co_dw_s
+          tables: ["fact_order_line", "dim_customer", "dim_product", "dim_date", "dim_employee", "dim_shipper"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: northwind_co_dw_s is the planned Warehouse S derived from northwind_co_s, but no warehouse installer currently creates it. academy-northwind-co-install.groovy creates only the operational Company S schema, and DuckDBDataWarehouseCreator's disconnected fact_sales star is not a substitute. Build D5-S with fact_order_line and the listed dimensions from Company S; minimum: 10,000 orders and about 25,000 lines."
         status: planned
       # SOURCE (kimball): FACTS, DIMENSIONS and GRAIN — his vocabulary, applied to a warehouse somebody else built.
       - n: "15"
@@ -135,6 +163,11 @@ series:
         tags: ["kimball"]
         hands_on: ["koan:diagnose"]
         core: true
+        data:
+          source: northwind_co_dw_s
+          tables: ["fact_order_line", "fact_order", "fact_inventory_monthly", "fact_sales_target", "dim_date", "dim_product"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: D5-S is the planned warehouse derived from Company S, but no warehouse installer currently creates it. Once built, its distinct order-line, order, inventory-snapshot, and category-month target grains will support this lesson. Minimum: 100 orders, 20 products, 12 months, and one target-only month."
         status: planned
       # SOURCE (kimball): The load his method implies: dimensions first, surrogate keys assigned, then facts.
       - n: "20"
@@ -146,6 +179,11 @@ series:
         tags: ["kimball"]
         hands_on: ["koan:author", "koan:rerun"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Customers", "Products", "Categories", "Employees", "Shippers", "Orders", "Order Details"]
+          fit: good
+          reason: "Everything the load reads exists: natural keys to map to surrogate keys (CustomerID, ProductID, EmployeeID, ShipVia), a line price already fixed as of the order date in Order Details.UnitPrice, and 10,000 orders so a re-run that duplicates rows is visible in the count. The expected star is D5-S (not built), but the koans can check the learner's load against counts taken straight from these tables."
         status: planned
       # SOURCE (kimball): SLICE, DICE, DRILL DOWN and DRILL UP — the analytical moves a star exists to make cheap.
       # ADDED 2026-08-24. THE most repeated conversation anyone who owns a warehouse has, and it
@@ -171,6 +209,11 @@ series:
         title: "Reconciling With the Source — Proving the Warehouse Agrees With the App"
         hands_on: ["koan:equivalent", "koan:diagnose", "cloudbeaver"]
         core: true
+        data:
+          source: [northwind_co_s, northwind_co_dw_s]
+          tables: ["Orders.Status", "Orders.CreatedAt", "Orders.UpdatedAt", "Order Details", "Invoices", "fact_order_line"]
+          fit: MISSING
+          reason: "This lesson intentionally joins two datasets: northwind_co_s is the operational source (Orders, Order Details, Invoices), while northwind_co_dw_s is the planned derived Warehouse S target (fact_order_line). In the current repository northwind_co_dw_s does not yet exist: academy-northwind-co-install.groovy creates only northwind_co_s, and DuckDBDataWarehouseCreator's unrelated fact_sales is not a substitute. Even after D5-S exists, add the remaining reconciliation fixtures: test orders, OrderStatusHistory for cancelled-then-reinstated orders, and a _load_audit cutoff."
         status: planned
       - n: "25"
         slug: slice-dice-rollup-drilldown
@@ -181,6 +224,11 @@ series:
         tags: ["kimball"]
         hands_on: ["koan:complete"]
         core: true
+        data:
+          source: northwind_co_dw_s
+          tables: ["fact_order_line", "dim_date", "dim_customer", "dim_product"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: D5-S is not currently generated. When built from Company S, it must supply date, customer, and product drill paths: year > quarter > month > day, country > city, and category > product, including ragged customer regions. Minimum: 100 lines across two years, two countries, two categories, and one NULL region."
         status: planned
       # SEAM ADDED 2026-09-07, when Learn SQL gained its own GROUPING SETS episode at its
       # Series 2 · 50 (38 until the 2026-09-15 reorder). The two are not redundant and the split is by READER:
@@ -194,6 +242,11 @@ series:
         title: "ROLLUP, CUBE & GROUPING SETS — Subtotals the Standard Way"
         hands_on: ["koan:predict", "koan:complete"]
         core: true
+        data:
+          source: northwind_co_dw_s
+          tables: ["fact_order_line", "dim_date", "dim_customer", "dim_product"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: D5-S is not currently generated. Its build must preserve real NULL customer regions beside subtotal NULLs, so ROLLUP/CUBE/GROUPING() has a meaningful distinction. Minimum: two categories, two countries, one real NULL region, and enough lines for detail, subtotal, and grand-total rows."
         status: planned
       # SOURCE (kimball): AGGREGATE FACT TABLES and SHRUNKEN DIMENSIONS — his terms for summary tables done correctly.
       - n: "35"
@@ -205,6 +258,11 @@ series:
         tags: ["kimball"]
         hands_on: ["koan:equivalent", "koan:count:scanned"]
         core: true
+        data:
+          source: northwind_co_dw_s
+          tables: ["fact_order_line", "fact_sales_target", "dim_date", "dim_product"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: D5-S is not currently generated. Its approximately 25,000 line rows and category-month targets will support a learner-built aggregate fact and shrunken dimensions once the warehouse installer exists. Minimum: 24 months, four categories, and 100 lines."
         status: planned
       # SOURCE (kimball): THE DATE DIMENSION doing real work — the attributes he argues for (fiscal periods, holiday flags, day-of-week names).
       - n: "40"
@@ -216,6 +274,11 @@ series:
         tags: ["kimball"]
         hands_on: ["koan:complete"]
         core: true
+        data:
+          source: northwind_co_dw_s
+          tables: ["dim_date", "fact_order_line", "Orders.OrderDate", "Orders.ShippedDate"]
+          fit: partial
+          reason: "D5-S can demonstrate fiscal periods, weekdays, and role-playing dates over five years, but the current Company seed does not plant realistic working-day/holiday behavior or a holiday table for all countries. Add a calendar/holiday fixture for a fully realistic lesson; minimum: 24 months and order/required/shipped roles."
         status: planned
       # PROJECT, tagged 2026-08-24. Was "Your First Warehouse — Build It, Load It, Query It": already the series project in
       # everything but the tag, so it got the tag and the academy's title shape.
@@ -225,6 +288,11 @@ series:
         hands_on: ["koan:author", "duckdb"]
         core: true
         tags: ["project"]
+        data:
+          source: [northwind_co_s, northwind_co_dw_s]
+          tables: ["Orders", "Order Details", "Customers", "Products", "Invoices", "fact_order_line"]
+          fit: partial
+          reason: "The source for the learner's own star is built and complete, so the build-load-query part works today. What is missing is the series' planted incident (the six reconciliation causes, see S1 · 22: test orders and a status history with reinstated orders) and D5-S as the answer key the koans compare the learner's star to."
         status: planned
   - slug: series2-columnar-engines-and-cubes
     title: Columnar Engines & Cubes
@@ -241,6 +309,11 @@ series:
             concept: "The C-Store argument for column-oriented storage, which DuckDB and ClickHouse both descend from"
         hands_on: ["koan:count:scanned"]
         core: true
+        data:
+          source: northwind_co_m
+          tables: ["Orders", "Order Details"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: academy-northwind-co-install.groovy currently implements only Company S, not northwind_co_m. Once M exists with 500,000 orders and about 1.25 million lines, it will provide enough row groups to compare column projection and scan work. Minimum: about 100,000 orders with repeated low-cardinality status/channel values."
         status: planned
       # ADDED 2026-09-07, and it is the one gap in this academy's lineage table that was a
       # CONTENT gap rather than an attribution one. TEN COURSES mention Parquet — Java & Groovy,
@@ -293,24 +366,44 @@ series:
             concept: "Repetition and definition levels — the columnar encoding for nested data that Parquet took directly from Dremel"
         hands_on: ["koan:count:scanned", "koan:predict"]
         core: true
+        data:
+          source: northwind_co_files
+          tables: ["order_lines/*.parquet (sorted and unsorted)", "web_orders.parquet"]
+          fit: MISSING
+          reason: "D4's Parquet export of D1-M order lines (~1.25M rows) in a sorted and an unsorted copy with a fixed row-group size, so min/max statistics skip row groups in one copy and none in the other. For the nested-data beat, add a web_orders.parquet with items as LIST<STRUCT<sku, qty, unit_price, discount>> parsed from WebOrders.Payload (built at S), so repetition and definition levels are shown on the company's own records."
         status: planned
       - n: "05"
         slug: duckdb
         title: "DuckDB — An Analytical Warehouse That Runs Inside Your Process"
         hands_on: ["koan:complete", "duckdb"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Products", "Customers"]
+          fit: good
+          reason: "datasets/northwind-co/northwind_co.duckdb is the install script's own DuckDB output, so the in-process story is literal: open one file from Python or the CLI and query 10,000 orders with no server. Querying Parquet in place belongs to S2 · 02 and S3 · 20."
         status: planned
       - n: "10"
         slug: clickhouse-mergetree
         title: "ClickHouse & MergeTree — Columnar Storage on a Server, at Scale"
         hands_on: ["koan:complete", "clickhouse"]
         core: true
+        data:
+          source: northwind_co_m
+          tables: ["Orders", "Order Details"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: academy-northwind-co-install.groovy currently implements only Company S, and no Company M source is available for the ClickHouse load. Once M exists, its 500,000 orders inserted in batches will make MergeTree parts, merges, and ORDER BY behavior visible. Minimum: 100,000 orders in multiple batches."
         status: planned
       - n: "15"
         slug: partitioning-and-sort-keys
         title: "Partitioning, Sort Keys & Data Skipping — Read Less, Answer Sooner"
         hands_on: ["koan:count:scanned", "koan:diagnose"]
         core: true
+        data:
+          source: northwind_co_dw_m
+          tables: ["fact_order_line", "dim_date"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: D5-M is not currently generated. Its planned approximately 1.25 million lines over 60 months would make month partitioning, date sort keys, and data skipping measurable. Minimum: 100,000 lines over 24 months plus one deliberately mispartitioned comparison table."
         status: planned
       # THE SKILL: name the business's metrics ONCE, in one reviewed place, instead of
       # re-deriving them in every query. That is what a semantic layer is, and it is the same
@@ -417,12 +510,22 @@ series:
         title: "Storage and Compute, Separated — Reads Cross a Network, Compute Can Sleep"
         hands_on: ["koan:choose", "koan:predict"]
         core: true
+        data:
+          source: northwind_co_files
+          tables: ["order_lines/*.parquet (monthly)", "order_lines_daily/*.parquet"]
+          fit: MISSING
+          reason: "The cold-cache and small-files costs show when DuckDB reads D4's Parquet from object storage (a local MinIO bucket) instead of a local disk: first query vs second, 60 monthly files vs ~1,800 daily files of the same D1-M rows. Needs D4 with a daily-partitioned copy added and an object-storage setup; nothing is planted in the rows."
         status: planned
       - n: "20"
         slug: olap-cubes
         title: "The Semantic Layer — Dimensions, Measures and Hierarchies, Declared Once"
         hands_on: ["koan:complete", "cube"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Customers", "Products", "Categories", "Employees"]
+          fit: good
+          reason: "A cube over the company's own tables covers all five DSL parts: joins (Orders to Customers, Order Details, Products, Categories), measures (revenue from UnitPrice x Quantity x (1 - Discount)), dimensions, segments relative to 2024-12-31, and hierarchies Country > City and Category > Product. S is enough; volume is not the point."
         status: planned
       # ADDED 2026-09-07. 20 defines what a semantic layer IS and 25 reads cubes somebody else
       # built. Between those two sits a question neither answers and every team has to: WHERE
@@ -469,11 +572,21 @@ series:
         slug: kinds-of-semantic-layer
         title: "Kinds of Semantic Layer — In the BI Tool, Standalone, or in Your Project"
         hands_on: ["koan:choose", "koan:capture"]
+        data:
+          source: northwind_co_s
+          tables: ["Order Details", "Orders.Status", "Invoices.Amount"]
+          fit: good
+          reason: "The case for one definition is already in the data: 'revenue' as ordered (Order Details, every status), as net of cancelled orders (Orders.Status), and as invoiced (Invoices, only for recorded ship dates) are three different 2024 numbers. The same metric defined in a BI tool, a cube, dbt and a view can disagree on exactly these filters."
         status: planned
       - n: "25"
         slug: the-northwind-cubes
         title: "Reading Cubes Somebody Else Built — Sales, Inventory, Customers and HR"
         hands_on: ["koan:author", "cube"]
+        data:
+          source: northwind
+          tables: ["Customers", "Employees", "Orders", "Products", "vw_sales_detail"]
+          fit: partial
+          reason: "The five sample cubes the episode reads ship with DataPallas on the frozen northwind DuckDB file: four on its OLTP tables (3 employees, 79 orders) and 'Sales Warehouse' on vw_sales_detail, the random star that reconciles with nothing. Reading their definitions works; running them teaches little. Add academy copies of the five cubes on Northwind Company (Inventory on StockMovements, HR on the 12 employees in 3 levels with EmployeeTerritories, Sales Warehouse on D5-S) rather than changing the product's samples."
         status: planned
       # WAS "MDX & Pivot Analysis" until 2026-08-24, and MDX was simply wrong: it is
       # Microsoft SSAS / Mondrian's query language, nothing here uses it, and no current
@@ -488,22 +601,42 @@ series:
         slug: querying-a-cube
         title: "Querying a Cube — Pick the Fields, Then Read the SQL It Wrote for You"
         hands_on: ["koan:equivalent", "cube"]
+        data:
+          source: northwind_co_s
+          tables: ["Orders.Freight", "Order Details", "Customers", "Products"]
+          fit: good
+          reason: "The double count the generated SQL must be checked for is naturally present: Freight is stored once per order on Orders, so a cube that joins Order Details and sums Freight counts it once per line (orders average about 2.5 lines). The cube's answer and a hand-written query can be compared on 10,000 orders."
         status: planned
       - n: "35"
         slug: materialized-views
         title: "Materialized Views & Incremental Aggregation — Compute Once, Read Often"
         hands_on: ["koan:rerun", "koan:count:scanned"]
         core: true
+        data:
+          source: [northwind_co_dw_s, northwind_co_changes]
+          tables: ["fact_order_line", "dim_date", "D2 daily new orders and updates"]
+          fit: MISSING
+          reason: "Incremental aggregation is only tested when new and CHANGED rows arrive after the first build: D2's days (new orders, ship dates filled in, cancellations, late and doubled orders) applied to D5-S, so an insert-only incremental view visibly drifts from a full refresh. Needs D5-S and D2; S is enough, since the koan counts rows scanned per refresh."
         status: planned
       - n: "40"
         slug: star-vs-one-big-table
         title: "Star vs One Big Table on Columnar Engines — Measured on the Same Data"
         hands_on: ["koan:count:scanned", "koan:choose"]
+        data:
+          source: northwind_co_dw_m
+          tables: ["fact_order_line", "dim_customer", "dim_product", "dim_date"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: D5-M is not currently generated, and the one-big-table comparison copy is also not present. Together they would support a fair scanned-row comparison over approximately 1.25 million lines. Minimum: 100,000 lines and two dimensions."
         status: planned
       - n: "45"
         slug: compression-and-encoding
         title: "Compression & Encoding — Why the Same Table Is Ten Times Smaller Here"
         hands_on: ["koan:count:scanned"]
+        data:
+          source: [northwind_co_m, northwind_co_dw_m]
+          tables: ["Orders", "Order Details", "fact_order_line"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: Company M is planned, but Warehouse M is not currently generated. Once both exist, their realistic low-cardinality status/channel/shipper values and about 1.25 million lines can support PostgreSQL, DuckDB, and ClickHouse size/compression comparisons. Minimum: 100,000 lines with repeated dimensions and sorted date groups."
         status: planned
 
       # SERIES 2 PROJECT, added 2026-08-24. The series had none: the core path
@@ -516,6 +649,11 @@ series:
         hands_on: ["koan:author", "koan:count:scanned"]
         core: true
         tags: ["project"]
+        data:
+          source: [northwind_co_dw_m, northwind_co_files]
+          tables: ["fact_order_line", "dim_date", "order_lines/*.parquet"]
+          fit: MISSING
+          reason: "The series project grades rows scanned before and after partitioning, sorting and pre-aggregating the same question, which needs D5-M and D4's Parquet copies. Nothing new to plant beyond S2 · 02 and S2 · 15."
         status: planned
   - slug: series3-advanced-warehousing
     title: Advanced Warehousing
@@ -527,11 +665,21 @@ series:
         title: "Query Performance on Columnar Engines — Reading the Plan Again"
         hands_on: ["koan:count:scanned", "koan:diagnose"]
         core: true
+        data:
+          source: northwind_co_dw_m
+          tables: ["fact_order_line", "dim_date", "dim_customer", "dim_product"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: D5-M is not currently generated. Its planned approximately 1.25 million lines would provide enough volume for plans showing pruning, join order, and rows read. Minimum: 100,000 lines over 24 months."
         status: planned
       - n: "05"
         slug: clickhouse-matviews-and-projections
         title: "Aggregating Materialized Views & Projections — ClickHouse Computing the Total at Insert Time"
         hands_on: ["koan:count:scanned", "clickhouse"]
+        data:
+          source: [northwind_co_dw_m, northwind_co_changes]
+          tables: ["fact_order_line", "D2 daily inserts"]
+          fit: MISSING
+          reason: "An aggregating materialized view computes at insert time, so it needs inserts after it exists: D2's days loaded into D5-M on ClickHouse, including D2's doubled orders, which a SummingMergeTree view counts twice. Needs D5-M, the ClickHouse install path and D2 at M."
         status: planned
       # SOURCE (kimball): Querying SLOWLY CHANGING DIMENSIONS correctly — the Type 2 as-of join his design implies.
       - n: "10"
@@ -543,11 +691,21 @@ series:
         tags: ["kimball"]
         hands_on: ["koan:predict"]
         core: true
+        data:
+          source: northwind_co_dw_s
+          tables: ["dim_customer", "dim_product", "fact_order_line", "CustomerChanges", "PriceChanges"]
+          fit: MISSING
+          reason: "The as-of join needs D5-S's SCD2 dim_customer and dim_product built from CustomerChanges (154 rows) and PriceChanges (255). CustomerChanges is not usable yet: for 28 of the 53 customers with two changes the second change is dated before the first, and in 7 of the 15 where both touch the same attribute the OldValue/NewValue chain runs backwards in time; the design's attributes (Country, Segment, assigned rep) are Segment, City and ContactName, and Orders.ShipCity already carries the final city on orders placed before a City change. Fix the dates to ascend per customer, add Customers.AccountManagerID with dated changes (so 'sales by account manager, as of the order' differs from 'as of today'), and plant one large customer's Segment change in mid-2023 so the as-of and current answers differ by a visible amount."
         status: planned
       - n: "15"
         slug: billions-of-rows
         title: "Billions of Rows — Partitions, Sharding & Distribution"
         hands_on: ["koan:count:scanned"]
+        data:
+          source: northwind_co_dw_l
+          tables: ["fact_order_line", "dim_customer", "dim_product", "dim_date"]
+          fit: MISSING
+          reason: "Partitions, sharding and distribution need a fact at ~1 billion rows; the design generates it inside ClickHouse at lesson time (not shipped), keyed to D5-L's dimensions so it still joins. Needs D5-L on ClickHouse, a deterministic generation SQL (numbers() with a fixed seed) and a two-shard ClickHouse setup."
         status: planned
       # HAD NO COVER COMMENT AT ALL until 2026-09-07, which an audit caught while asking a
       # different question: the word appears in five curricula and the ARCHITECTURE is explained
@@ -593,6 +751,11 @@ series:
           - source: armbrust-lakehouse
             concept: "The LAKEHOUSE as a named architecture — warehouse behaviour over open files on object storage, with no copy into a warehouse"
         hands_on: ["koan:complete", "duckdb"]
+        data:
+          source: northwind_co_files
+          tables: ["order_lines/*.parquet", "Iceberg table order_lines"]
+          fit: MISSING
+          reason: "Warehouse behaviour over files needs D4's monthly Parquet of D1-M order lines plus the same rows as an Iceberg table with at least two snapshots (before and after one D2 day), so DuckDB can show a snapshot read and why the manifest matters. Add the Iceberg copy to D4."
         status: planned
       # ADDED 2026-09-07. An audit found federation present ONLY as engine mechanics — DuckDB's
       # ATTACH and its scanners, ClickHouse's table functions, PostgreSQL's foreign data
@@ -632,26 +795,51 @@ series:
         slug: querying-across-databases
         title: "Querying Across Databases — Federation, and Where the Join Actually Runs"
         hands_on: ["koan:choose", "koan:diagnose"]
+        data:
+          source: [crm_export, northwind_co_m]
+          tables: ["crm_customers", "Orders", "Order Details"]
+          fit: MISSING
+          reason: "The rule 'federate the small, copy the large' needs one of each: D3's 135-row CRM export in a second database (federate) and D1-M's 500,000 orders in PostgreSQL (copy), queried from DuckDB so pushdown vs a full transfer shows in rows moved. M shows the difference in rows transferred; L adds only waiting time. Needs D3 and M."
         status: planned
       - n: "25"
         slug: streaming-ingestion
         title: "Streaming Ingestion — Minutes Behind Instead of a Day"
         hands_on: ["koan:rerun"]
+        data:
+          source: northwind_co_changes
+          tables: ["D2 JSONL event log", "fact_order_line"]
+          fit: MISSING
+          reason: "Minutes-behind loading needs D2 as a replayable event log with an event time and an arrival time per event: intra-day timestamps, a share arriving minutes to days late and 0.5% sent twice (the design has the day-level lateness and duplicates; the minute-level arrival time must be added). The rerun koan replays it twice and must land the same rows."
         status: planned
       - n: "30"
         slug: cost-storage-and-tiering
         title: "Cost & Storage — Compression, TTL and Tiering"
         hands_on: ["koan:count:scanned"]
+        data:
+          source: northwind_co_dw_m
+          tables: ["fact_order_line", "dim_date"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: D5-M is not currently generated. Its planned five years of approximately 1.25 million order lines would make hot/cold tiering, TTL expiry, partition movement, and bytes per tier measurable. Minimum: 100,000 dated lines spanning at least three retention periods."
         status: planned
       - n: "35"
         slug: benchmark-duckdb-vs-clickhouse
         title: "Benchmark — The Same Star Schema on DuckDB vs ClickHouse"
         hands_on: ["koan:count:scanned", "koan:equivalent"]
+        data:
+          source: northwind_co_dw_l
+          tables: ["fact_order_line", "fact_order", "dim_customer", "dim_product", "dim_date"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: D5-L is not currently generated, so the intended approximately 12.5 million-line identical-star benchmark cannot run yet. Build D5-L for DuckDB and ClickHouse, then assert equivalent results before timing. Minimum: 1 million lines."
         status: planned
       - n: "40"
         slug: warehouse-to-bi
         title: "From Warehouse to BI — Feeding Dashboards, Cubes and Extracts"
         hands_on: ["koan:complete", "canvas"]
+        data:
+          source: northwind_co_dw_s
+          tables: ["fact_order_line", "fact_sales_target", "dim_date", "dim_customer", "dim_product"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: D5-S is not currently generated. Once built, it can supply one star for dashboards, cubes, and extracts, including actual-versus-target and January 2025 target-only rows. Minimum: 100 lines, 12 months, two dimensions, and one target period with no sales."
         status: planned
       - n: "45"
         slug: project-full-warehouse
@@ -659,4 +847,9 @@ series:
         hands_on: ["koan:author", "koan:equivalent"]
         core: true
         tags: ["project"]
+        data:
+          source: [northwind_co_s, northwind_co_dw_s, northwind_co_changes]
+          tables: ["Orders", "Order Details", "Invoices", "CustomerChanges", "PriceChanges", "fact_order_line", "dim_customer"]
+          fit: MISSING
+          reason: "The whole warehouse on DuckDB and ClickHouse, reconciled to the source: D5-S built on both engines with SCD2 dimensions, then D2 days applied and the two engines reconciled again. S is enough for reconciliation; needs D5-S, D2, the ClickHouse install path, and the CustomerChanges fix from S3 · 10."
         status: planned

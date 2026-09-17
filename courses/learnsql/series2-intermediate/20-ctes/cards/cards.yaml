@@ -16,13 +16,13 @@
 # FILE ORDER IS THE CURRICULUM, in the lesson's order: what a CTE is and its scope, using a step twice,
 # steps that read steps, checking a rewrite, the moved filter, looking inside a step, readability,
 # and last the production card.
-# 13 basic, 4 cloze — about the 3:1 the existing decks run.
+# 15 basic, 4 cloze — about the 3:1 the existing decks run.
 #
 # WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
 #   - Series 2 · 00 owns subqueries; the cards here are about naming one.
 #   - Series 1 · 40 / Series 2 · 15 own the WHERE-on-a-LEFT-JOIN problem; the card here is the rewrite
 #     that brings it back.
-#   - Recursive CTEs belong to Series 3 · 10, views to Series 2 · 52, performance to Series 3.
+#   - Recursive CTEs belong to Series 3 · 10, views to Series 2 · 22, performance to Series 3.
 
 deck: "DataZeus::Learn SQL::Series 2::20 CTEs (WITH)"
 guid: "datazeus-learn-sql-series2-20-ctes"
@@ -48,6 +48,16 @@ cards:
   - basic:
       front: "A query lists the customers whose total is above the average customer total. Nested, it builds the per-customer totals twice. How does a CTE avoid that?"
       back: "Define the totals once as a named step, then use the name twice: <code>FROM customer_totals</code> for the list, and <code>(SELECT AVG(total) FROM customer_totals)</code> for the comparison."
+
+  # ── 2b. ONE FILTER, EVERY USE SEES IT (the case file: the nine re-run on delivered sales; moved from
+  #     Series 2 · 00 on 2026-09-16 with the re-run itself) ──
+  - basic:
+      front: "A report keeps only shipped orders with <code>WHERE shipped_date IS NOT NULL</code>, and its HAVING compares each customer's total with <code>(SELECT AVG(t.total) FROM (SELECT customer_id, SUM(amount) AS total FROM … GROUP BY customer_id) AS t)</code>. The shipped filter is written only in the outer query. What goes wrong?"
+      back: "The subquery is a query of its own and does not see the outer query's WHERE, so it still averages every order, shipped or not. Shipped totals get compared with an all-orders average: a plausible, wrong list with no error. Nested, the filter must be written twice."
+
+  - basic:
+      front: "The same report as a CTE: <code>WITH shipped_totals AS (… WHERE shipped_date IS NOT NULL GROUP BY customer_id)</code>, then the list <code>FROM shipped_totals</code> and the average <code>(SELECT AVG(total) FROM shipped_totals)</code>. How many times is the filter written, and why is that safer?"
+      back: "Once, inside the step. Both the list and the average read the step, so both see the filter, and there is no second copy to forget."
 
   # ── 3. STEPS THAT READ STEPS ──
   - cloze: "Several CTEs in one WITH are separated by {{c1::commas}}, and each step can read the steps {{c2::above}} it."

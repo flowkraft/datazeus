@@ -59,6 +59,36 @@ course: learn-etl-pipelines
 track: etlpipelines
 title: ETL & Data Pipelines
 
+# DATASET DEPENDENCY NOTE (2026-09-17): This course already has a data block for every episode.
+# Its complete dependency chain is:
+#   D1 northwind_co_<scale>       operational Company source (S for Series 1-2, M/L for Series 3)
+#   D2 northwind_co_changes       replayable JSONL changes/event log for incremental and streaming lessons
+#   D3 crm_export                 separate 135-row messy CRM source for matching/conformance
+#   D4 northwind_co_files         CSV/XLSX/Parquet files for first loads, drift, and file-based throughput
+#   D5 northwind_co_dw_<scale>    derived star target for star/SCD2/backfill/warehouse loads
+#   D6 northwind_co_raw_<scale>   learner-produced raw landed copy, especially the Series 1 project and dbt seam
+#
+# D1-D5 are source/target contracts, not all currently implemented generators. The D2/D3/D4 comment-only
+# drafts are under C:\Projects\reportburster\asbl\src\main\external-resources\db-template\db\scripts\:
+# academy-northwind-co-changes.groovy, academy-crm-export-install.groovy, and academy-files-export.groovy.
+# D5's comment-only draft is academy-northwind-co-dw-install.groovy. D6 should be produced by the learner's
+# ETL project, not pre-seeded, so checksums can prove that the pipeline made the raw copy correctly.
+#
+# REQUIRED EXTENSIONS BEFORE MARKING THE REMAINING MISSING/PARTIAL SOURCES GOOD:
+# - D2 must include hard deletes, new-customer events, control totals, poison records, redeliveries, and
+#   stable offsets/event_time/arrival_time. The planted day 45 remains the shared bad-load fixture.
+# - D3 must preserve the documented 120 matches, 12 duplicate identities, 3 CRM-only prospects, and mixed
+#   active/phone/date/credit-limit representations.
+# - D4 must include clean daily CSVs, four schema drifts, the row-4 workbook header, sorted/unsorted Parquet,
+#   and an API-shaped paginated JSON fixture if Series 1 · 10 remains explicitly hands-on with an API.
+# - D1 needs a dated customer-entry extension (or equivalent D2 new-customer events) for inferred-member and
+#   late-dimension lessons, plus the PII extension fields documented in Series 2 · 27.
+# - D5 must be generated from D1, not substituted with the legacy disconnected fact_sales Java demo.
+# - The Series 3 · 05 title says SQLite, but the Company installer supports PostgreSQL and DuckDB. Retitle it
+#   to the actual source or add a deliberate SQLite export; do not imply a source engine that is absent.
+#
+# Keep fit: MISSING/PARTIAL until the relevant generator, manifest/checksum contract, and verifier exist.
+
 # Assumes Learn SQL, and always has without saying so: Series 1 · 20 is "Transform with SQL",
 # and every load in the track is checked by counting rows. Data Modeling is NOT required — you
 # load into a schema somebody else designed, which is the normal case.
@@ -130,12 +160,22 @@ series:
         title: "What a Pipeline Is — Extract, Transform, Load, and Where Each One Happens"
         hands_on: ["koan:predict"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["WebOrders", "WebOrders.Payload", "Orders", "Order Details"]
+          fit: good
+          reason: "The whole shape fits in one company: the web shop's raw JSON (WebOrders.Payload) is extracted, reshaped into order rows, and loaded where Orders and Order Details already hold the cleaned truth to compare against. Enough to show where the T can sit without asking anyone to choose."
         status: planned
       - n: "05"
         slug: your-first-pipeline
         title: "Your First Pipeline — Load a CSV into a Table"
         hands_on: ["koan:author", "cloudbeaver"]
         core: true
+        data:
+          source: northwind_co_files
+          tables: ["orders_YYYY-MM-DD.csv", "Orders", "Order Details"]
+          fit: MISSING
+          reason: "A first load needs a clean CSV that ARRIVES from somewhere, and D4 (northwind_co_files) is not built; messy/orders-export.csv is classic-Northwind rows with eight defects, wrong for a first pipeline and not the one company. Build D4's daily order CSVs cut from D1-S Orders (one file per day, header row, comma-delimited, UTF-8), days 1-10 clean before the planned drift starts on day 11, so the loaded rows reconcile to Orders by OrderID; the same files serve Data Warehousing S2 and dbt sources."
         status: planned
       # ALSO NAME THE SPREADSHEET, because a surprising share of real pipelines start with one
       # and this episode is the catalogue of what a source can be.
@@ -151,6 +191,11 @@ series:
         title: "Sources & Sinks — Files, APIs and Databases as Connections"
         hands_on: ["koan:complete"]
         core: true
+        data:
+          source: [northwind_co_s, northwind_co_files]
+          tables: ["Orders", "WebOrders.Payload", "order-summary.xlsx"]
+          fit: partial
+          reason: "The database source (Orders on PostgreSQL) and a JSON source (WebOrders.Payload) exist today. Missing: a spreadsheet and an API. Add to D4 the planned Excel workbook with its header on row 4 (plus a second month where a column has moved, for the validate-the-header rule), and serve WebOrders as paginated JSON pages with a next-page cursor, so an API extract is real; both are cut from D1-S so every source reconciles to the same orders."
         status: planned
       - n: "15"
         slug: staging
@@ -159,42 +204,77 @@ series:
         # Analytics Engineering with dbt, Series 2 · 40 owns the full bronze/silver/gold mapping.
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["WebOrders", "WebOrders.Payload", "WebOrders.ReceivedAt", "Orders"]
+          fit: good
+          reason: "WebOrders.Payload is genuinely raw input with planted defects (quantity sent as text, decimal-comma prices, missing ship_to), so a transform-on-the-way-in load fails or mangles rows while landing it as text first loses nothing and can be re-read; Orders is the cleaned truth to diff the staged result against. The staging shape the learner builds is the planned raw copy (northwind_co_raw_s)."
         status: planned
       - n: "20"
         slug: types-and-casting-across-sources
         title: "Types & Casting Across Sources — When 'Y', 'yes' and 1 All Mean True"
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
+        data:
+          source: [northwind_co_s, crm_export]
+          tables: ["WebOrders.Payload", "Order Details.Quantity", "Order Details.UnitPrice", "crm_customers.active"]
+          fit: partial
+          reason: "Across-source type clashes exist today: WebOrders.Payload sends qty as text and unit_price as '12,50' where Order Details holds SMALLINT and DECIMAL(19,4). Missing is the episode's own title case, a boolean spelled Y/yes/1/true: build D3 (crm_export) with its planned 'active' flag in those spellings, plus dates in two formats (dd/mm/yyyy and ISO) and a credit limit as text with thousands separators, keyed CRM-000001 and matching D1-S Customers, so the same file serves 2 · 15 dedup, Data Warehousing S3 federation and dbt sources."
         status: planned
       - n: "25"
         slug: transform-with-sql
         title: "Transform with SQL — Reshaping the Data on Its Way In"
         hands_on: ["koan:complete"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["WebOrders.Payload", "Orders", "Order Details", "Customers.City", "Customers.Phone"]
+          fit: good
+          reason: "Reshaping the web shop JSON into order and line rows is a real SELECT-driven transform, and Orders/Order Details are the answer it must reconcile to; Customers carries the planted stray spaces, capitalised cities and mixed phone formats a transform normalises on the way in."
         status: planned
       - n: "30"
         slug: idempotency
         title: "Idempotency — Re-Runnable Loads with TRUNCATE+INSERT and MERGE"
         hands_on: ["koan:rerun"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Orders.Status", "Orders.ShippedDate"]
+          fit: good
+          reason: "Loading Orders (key OrderID) and Order Details (composite key OrderID+ProductID) twice shows the doubled rows of plain INSERT against TRUNCATE+INSERT and MERGE, with row counts to prove it. A second extract with changed rows would sharpen MERGE; that comes with D2 (see 1 · 35), but the property is fully demonstrable on the S snapshot."
         status: planned
       - n: "35"
         slug: incremental-loads-and-watermarks
         title: "Incremental Loads & Watermarks — Only What Changed"
         hands_on: ["koan:rerun", "koan:diagnose"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders.UpdatedAt", "Orders.CreatedAt", "Orders.OrderDate", "Order Details"]
+          fit: partial
+          reason: "The planted trap exists: ~1.5% of orders are keyed 1-10 days after their OrderDate (Orders.CreatedAt), so a watermark on OrderDate silently misses them, and Order Details has no change column of its own. Too weak: S is one snapshot holding only each order's FINAL UpdatedAt, so a second run never sees a row change after the first; needs D2 (northwind_co_changes) applied day by day (ship dates filled, statuses changed, UpdatedAt bumped), including cancellations that bump UpdatedAt and a few rows whose UpdatedAt equals the previous watermark to the minute (the > vs >= boundary)."
         status: planned
       - n: "40"
         slug: row-counts-and-logging
         title: "Row Counts & Logging — Proving the Load Did What You Think"
         hands_on: ["koan:capture"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "WebOrders", "WebOrders.Payload"]
+          fit: good
+          reason: "Source and target counts reconcile exactly per table, and WebOrders gives a real in-is-not-out case: payloads with a missing ship_to or unparseable numbers are rejected or defaulted, and the log must say how many. Counts are asserted by the lesson's spec, not quoted here."
         status: planned
       - n: "45"
         slug: from-script-to-scheduled-job
         title: "From Script to Scheduled Job — Hand a Pipeline to the Scheduler"
         hands_on: ["koan:process:tool", "rundeck"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Orders.UpdatedAt"]
+          fit: partial
+          reason: "The S load can be handed to Rundeck as it is. Too weak for a nightly job: every run reads the same snapshot, so nothing shows the job picking up the new day; needs D2 (northwind_co_changes) delivered as 'apply day N', so each scheduled run has one more day of orders and updates to load and log."
         status: planned
 
       # SERIES 1 PROJECT, added 2026-08-24. The series had none: the core path
@@ -208,6 +288,11 @@ series:
         hands_on: ["koan:author", "koan:rerun"]
         core: true
         tags: ["project"]
+        data:
+          source: [northwind_co_s, northwind_co_files, crm_export]
+          tables: ["Orders", "Order Details", "Customers", "WebOrders", "orders_YYYY-MM-DD.csv", "crm_customers"]
+          fit: partial
+          reason: "The database half runs today: stage Orders, Order Details, Customers and WebOrders, transform, count, re-run, prove nothing moved. The series' artefact is designed as a nightly load from files, the CRM export and the database whose output IS the raw copy; missing are D4's daily CSVs, D3's CRM export and D6 (northwind_co_raw_s) as the checksummed reference the learner's output must match."
         status: planned
   - slug: series2-maintainable-pipelines
     title: Pipelines You Can Maintain
@@ -218,11 +303,21 @@ series:
         slug: scripted-pipelines
         title: "Scripting a Pipeline — When a Script Beats a Chain of SQL Files"
         hands_on: ["koan:author"]
+        data:
+          source: northwind_co_s
+          tables: ["WebOrders.Payload", "Orders", "Order Details"]
+          fit: good
+          reason: "Parsing WebOrders.Payload item arrays with defensive casting (text quantities, decimal commas, a missing ship_to) is where a Groovy script clearly beats a chain of SQL files, and Orders/Order Details check the script's output."
         status: planned
       - n: "05"
         slug: parameterized-and-reusable-jobs
         title: "Parameterized & Reusable Jobs — One Script, Many Tables"
         hands_on: ["koan:complete"]
+        data:
+          source: northwind_co_s
+          tables: ["Customers", "Products", "Suppliers", "Employees", "Shippers", "Orders", "Orders.UpdatedAt"]
+          fit: good
+          reason: "Eighteen tables with Northwind's names give one job many real targets, and they differ where a parameter must cope: only Orders has UpdatedAt/CreatedAt so the rest need a full reload, and 'Order Details' has a space in its name and a composite key."
         status: planned
       # ADDED 2026-09-02, and it closes the gap a working engineer hits most often. A coverage
       # audit found ZERO mentions of schema drift anywhere in the academy, and it was not in the
@@ -262,12 +357,22 @@ series:
         title: "Schema Drift — When the Source Changes Shape and Every Row Still Loads"
         hands_on: ["koan:diagnose", "koan:predict"]
         core: true
+        data:
+          source: northwind_co_files
+          tables: ["orders_YYYY-MM-DD.csv"]
+          fit: MISSING
+          reason: "Needs the four drifts on one feed, and D4 (northwind_co_files) is not built. Build its 30 daily order CSVs as designed: day 11 a column ADDED (Channel, from Orders.Channel), day 18 one RENAMED (ShipVia to ShipperID), day 24 one RETYPED (Freight with a decimal comma), day 27 one REORDERED (a column inserted mid-file, the read-by-position trap); noise: normal daily volume swings and a quoted field containing a comma on days that did not drift. Rows stay D1's, so a drifted load is caught by reconciling to Orders; Data Warehousing and dbt contract lessons can reuse the feed."
         status: planned
       - n: "10"
         slug: data-quality-gates
         title: "Data Quality Gates — Nulls, Ranges and Referential Gaps, Before They Land"
         hands_on: ["koan:diagnose", "koan:complete"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders.ShippedDate", "Orders.Status", "Invoices", "CourierConfirmations", "Customers.Region"]
+          fit: partial
+          reason: "Nulls are real and planted: Speedy Express orders marked Shipped with no ShippedDate (the Learn SQL S2 outage, the cross-course 'check that would have caught it'), beside a legitimate NULL in Customers.Region. Missing: range and referential violations, since S has no negative quantities and no orphan keys; those arrive with D2 (northwind_co_changes) day 45 as designed (a duplicate OrderID, a negative Quantity, an order for a CustomerID that does not exist), surrounded by normal days."
         status: planned
       # ADDED 2026-09-02, and it is the gap a working engineer hits WEEKLY. A coverage audit
       # found no episode anywhere on testing a pipeline, and the excludes hand "tested models"
@@ -307,12 +412,22 @@ series:
         title: "Testing a Pipeline — Catching a Bad Change Before Tonight's Run Does"
         hands_on: ["koan:author", "koan:rerun"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["WebOrders.Payload", "Orders", "Order Details"]
+          fit: good
+          reason: "Fixtures are hand-written, but their cases come from real planted defects (a qty as text, a decimal-comma price, a missing ship_to), and S is the fixed input for the old-vs-new diff and the run-twice idempotency test; Orders/Order Details give the round trip an exact expected result."
         status: planned
       - n: "15"
         slug: deduplication-and-conformance
         title: "Deduplication & Conformance — One Customer, One Row"
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
+        data:
+          source: [crm_export, northwind_co_s]
+          tables: ["crm_customers", "Customers", "Customers.CompanyName", "Customers.Phone"]
+          fit: MISSING
+          reason: "S has no duplicate customers (company names are unique) and only one exact duplicate row, in CourierConfirmations; the lesson needs D3 (crm_export), not built. Build it as designed: 120 customers matching D1-S plus 12 duplicated under other spellings (legal suffix added, capitals, stray spaces, phone in another format, one still on a City that CustomerChanges later replaced) and 3 CRM-only prospects, keyed CRM-000001; plant as noise two DIFFERENT customers with near names (same first word, one Foods, one Food Hall) so a loose fuzzy match over-merges. Serves Data Warehousing S3 federation and dbt source conformance."
         status: planned
       # ALSO OWNS LATE-ARRIVING DIMENSIONS, a DIFFERENT problem from late-arriving facts with
       # a different fix. Both belong in this episode; do not split them.
@@ -350,12 +465,22 @@ series:
         tags: ["kimball"]
         hands_on: ["koan:rerun", "koan:predict"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders.CreatedAt", "Orders.OrderDate", "Customers"]
+          fit: partial
+          reason: "Late facts are planted: ~1.5% of orders carry a CreatedAt 1-10 days after OrderDate, so Monday's run is followed by Monday rows turning up later. Missing is the late DIMENSION: Customers has no entry time, so no order can predate its customer; add EXTENSION Customers.CreatedAt on its own stream (joiners keyed on or before their first order) with a handful planted where the first order was keyed 1-3 days BEFORE the customer record, forcing an inferred member. Also serves Data Warehousing S1 (late-arriving dimensions) and dbt snapshots."
         status: planned
       - n: "25"
         slug: errors-retries-dead-letters
         title: "Errors, Retries & Dead Letters — Fail Without Losing Rows"
         hands_on: ["koan:capture", "koan:diagnose"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["WebOrders", "WebOrders.Payload", "Orders"]
+          fit: good
+          reason: "WebOrders.Payload has row-level failures that must not stop the load: quantities as text, decimal-comma prices and missing ship_to keys, roughly 1 in 25 each, so a dead-letter table with the payload and the reason sits beside thousands of good rows; Orders proves nothing was lost (loaded plus dead-lettered equals received). Retries are simulated connection failures and need no data."
         status: planned
       # ADDED 2026-08-24, and it closes the one genuine mainstream gap a full sweep of all twelve
       # tracks found: NOTHING anywhere mentioned PII, masking, anonymisation, retention or
@@ -392,6 +517,11 @@ series:
         slug: personal-data-and-masking
         title: "Personal Data — Masking, Synthetic Rows and a Safe Copy of Production"
         hands_on: ["koan:diagnose", "koan:rerun", "koan:count:queries"]
+        data:
+          source: northwind_co_s
+          tables: ["Customers.ContactName", "Customers.Phone", "Customers.Email", "Customers.Address", "Employees.BirthDate", "Employees.HomePhone", "Orders.ShipAddress", "WebOrders.Payload", "CustomerChanges.NewValue"]
+          fit: partial
+          reason: "The obvious personal columns exist, and CustomerID recurs in Orders, WebOrders.Payload and CustomerChanges, so a random mask visibly breaks the joins while a deterministic one keeps them; CustomerChanges.OldValue/NewValue also hold contact names, a history table leaking PII. Missing are the ones people miss that the brief names: Employees.Notes is NULL on every row and there is no IP address or free text; add EXTENSION Orders.DeliveryNotes (free text on a few % of orders, some carrying a contact name or phone) and WebOrders.ClientIP, each on its own stream."
         status: planned
       # SOURCE (kimball): THE SURROGATE KEY PIPELINE — his name for swapping business keys to warehouse keys at load.
       # CORE, added 2026-08-24: Series 2 - 35 (load order) is core and depends on
@@ -408,6 +538,11 @@ series:
             concept: "THE SURROGATE KEY PIPELINE — his name for swapping business keys to warehouse keys at load"
         tags: ["kimball"]
         hands_on: ["koan:complete"]
+        data:
+          source: northwind_co_s
+          tables: ["Customers.CustomerID", "Products.ProductID", "Employees.EmployeeID", "Shippers.ShipperID", "Orders", "Order Details"]
+          fit: good
+          reason: "Real business keys of different kinds (text CustomerID, integer ProductID/EmployeeID) are swapped for warehouse keys while loading Orders and Order Details; the target shape is the planned D5 star (dim_customer, fact_order_line). The unknown-member lookup gets its miss from the Customers.CreatedAt extension proposed at 2 · 20."
         status: planned
       # SOURCE (kimball): Dimensions before facts, and why. A direct consequence of the surrogate key pipeline.
       - n: "35"
@@ -419,17 +554,32 @@ series:
         tags: ["kimball"]
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Region", "Territories", "Customers", "Products", "Employees", "Shippers", "Orders", "Order Details", "Invoices"]
+          fit: good
+          reason: "Declared keys in a target built from these tables make facts-first fail on the foreign keys (or, without constraints, load orphans that lookups turn into NULL keys), and the dependency chain is real: Region to Territories, Categories/Suppliers to Products, Customers to Orders to Order Details and Invoices."
         status: planned
       - n: "40"
         slug: cross-database-pipelines
         title: "Cross-Database Pipelines — Northwind PostgreSQL → ClickHouse"
         hands_on: ["koan:equivalent", "clickhouse"]
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Products.UnitPrice", "Orders.UpdatedAt", "Customers.Region"]
+          fit: good
+          reason: "Northwind Company S installs on PostgreSQL today and the pipeline is what moves it to ClickHouse, so no ClickHouse install of the dataset is needed. The type seams are real: DECIMAL(19,4) money, TIMESTAMP, nullable columns (Region, ShippedDate) against ClickHouse's Nullable, and a table name with a space; _dataset_info's checksums prove the copy. The title's 'Northwind PostgreSQL' should say Northwind Company."
         status: planned
       - n: "45"
         slug: orchestration-and-dags
         title: "Orchestration & DAGs — Expressing Dependencies Instead of Chaining Cron Jobs"
         hands_on: ["koan:process:tool", "rundeck"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Region", "Territories", "EmployeeTerritories", "Categories", "Suppliers", "Products", "Customers", "Orders", "Order Details", "Invoices", "CourierConfirmations"]
+          fit: good
+          reason: "The tables form a genuine dependency graph with parallel branches (reference data, products, customers) joining at Orders and fanning out to Order Details, Invoices, StockMovements and CourierConfirmations: a DAG, not a chain."
         status: planned
 
       # SERIES 2 PROJECT, added 2026-08-24. The series had none: the core path
@@ -442,6 +592,11 @@ series:
         hands_on: ["koan:author", "koan:rerun"]
         core: true
         tags: ["project"]
+        data:
+          source: northwind_co_s
+          tables: ["Customers", "Products", "Employees", "Orders", "Order Details", "WebOrders.Payload"]
+          fit: partial
+          reason: "Five tables in order, gated, run on S: dimensions Customers/Products/Employees, then Orders and Order Details, with WebOrders' malformed payloads as dead-lettered rows. Too weak for the gate: S has no negative quantities, unknown customers or duplicate order IDs to route; D2 (northwind_co_changes) day 45's planted bad load supplies all three, which makes the gate and the dead-letter path both fire in one run."
         status: planned
   # RENAMED TWICE ON 2026-09-02, and the second rename corrects the first. Both attempts are
   # recorded because the pair is more instructive than either.
@@ -546,6 +701,11 @@ series:
         title: "ETL vs ELT — Where the Transform Should Run, Now That You Have Done Both"
         hands_on: ["koan:choose", "koan:count:scanned"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["WebOrders.Payload", "Orders", "Order Details"]
+          fit: good
+          reason: "The same WebOrders-to-order-lines transform can run in the pipeline or be pushed down as SQL after landing raw, and rows scanned and moved differ visibly even at S; the decision needs no volume. The landed side is the learner's own raw copy from Series 1 (northwind_co_raw_s when built)."
         status: planned
       # SOURCE (kimball): Loading a star designed by Kimball's method — see Data Modeling, Series 3.
       - n: "05"
@@ -557,6 +717,11 @@ series:
         tags: ["kimball"]
         hands_on: ["koan:author", "duckdb"]
         core: true
+        data:
+          source: [northwind_co_s, northwind_co_dw_s]
+          tables: ["Orders", "Order Details", "Customers", "Products", "fact_order_line", "fact_order", "dim_customer", "dim_product", "dim_date"]
+          fit: partial
+          reason: "The source is built: D1-S's orders, lines, customers and products are what the star is loaded from. Missing is the star somebody else designed that this episode loads into and checks against: build D5-S (northwind_co_dw_s) as designed (fact_order_line keeping the order number, dim_date 2020-2025 with ISO week and a July fiscal year) as DDL plus a reference load, so the learner's load reconciles row for row. The title's SQLite source does not exist for Northwind Company (the install supports PostgreSQL and DuckDB only); retitle, or add SQLite to the install."
         status: planned
       # SOURCE (kimball): The TYPE 2 load: close the current row, open a new one, keep the durable key stable.
       - n: "10"
@@ -568,6 +733,11 @@ series:
         tags: ["kimball"]
         hands_on: ["koan:rerun", "koan:predict"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["CustomerChanges", "Customers", "PriceChanges", "Products"]
+          fit: good
+          reason: "CustomerChanges holds dated Segment, City and ContactName changes (some customers change twice) and PriceChanges dated price steps, so a Type 2 dim_customer/dim_product can be loaded change by change and re-run without opening duplicate versions; Customers/Products hold the final state to reconcile. The design sheet promised country and assigned-rep changes instead; the built attributes carry the lesson as well."
         status: planned
       # RETITLED 2026-09-02, and for two reasons rather than one. It was "Change Data Capture —
       # Stream the Deltas Instead of Reloading".
@@ -610,6 +780,11 @@ series:
         slug: change-data-capture
         title: "Change Data Capture — Reading the Database's Own Log, Deletes Included"
         hands_on: ["koan:predict"]
+        data:
+          source: northwind_co_changes
+          tables: ["events: orders", "events: order_details", "events: customers"]
+          fit: MISSING
+          reason: "The point is that a log sees deletes a watermark cannot, and D2 is not built. Build D2 as a log-shaped feed (op c/u/d, before and after images, event_time, arrival_time, offset) with hard deletes, an order line removed from an open order, and an order keyed in error and deleted the same day, among normal inserts and updates. Order Details has no UpdatedAt, so line deletes are exactly what polling Orders.UpdatedAt misses; the same feed serves dbt incremental models and Data Warehousing S3."
         status: planned
       # ADDED 2026-09-02, into a slot that was already EMPTY — this series ran 15 then 25 with
       # no comment explaining the gap. It fills it because TWO EPISODES ALREADY LEAN ON A
@@ -687,11 +862,21 @@ series:
         title: "Backfills & Reprocessing — Rewrite History Without Breaking Downstream"
         hands_on: ["koan:rerun", "koan:diagnose"]
         core: true
+        data:
+          source: [northwind_co_m, northwind_co_s]
+          tables: ["Orders", "Order Details", "Invoices", "CourierConfirmations", "Orders.ShippedDate"]
+          fit: MISSING
+          reason: "A backfill is a volume lesson (a month at M is ~8,300 orders by design, against ~200 at S) and scale M is not built: extend the install to SCALE M with the same rules and rates. The reason to backfill already exists and must stay proportional at M: the Speedy Express outage (ShippedDate lost for 20% of its orders placed 2024-03-04..08-30) repaired from CourierConfirmations, after which six months of Invoices and every downstream total are rewritten without double-counting."
         status: planned
       - n: "30"
         slug: idempotent-merge-at-scale
         title: "Idempotent MERGE at Scale — and the Vendor Differences That Break It"
         hands_on: ["koan:rerun", "koan:count:scanned"]
+        data:
+          source: [northwind_co_m, northwind_co_changes]
+          tables: ["Order Details", "Orders", "Orders.UpdatedAt", "events: orders"]
+          fit: MISSING
+          reason: "Needs volume for MERGE's scan cost to matter and a delta batch to merge, and neither M nor D2 is built. Build M (~1.25M order lines, composite key OrderID+ProductID) and D2 with its planned 0.5% of orders sent twice, so one batch holds two source rows for one target key: PostgreSQL MERGE errors, INSERT ... ON CONFLICT cannot touch a row twice in one statement, ClickHouse ReplacingMergeTree dedups only eventually. The design sheet names L for MERGE; M is the smallest scale that shows it."
         status: planned
       # ALSO OWNS THE AUDIT DIMENSION, folded in because the SKILL is daily even though
       # Kimball's particular implementation is only one way to get it.
@@ -715,11 +900,21 @@ series:
             concept: "THE AUDIT DIMENSION — his answer to 'which run produced this row?'"
         tags: ["kimball"]
         hands_on: ["koan:diagnose", "koan:capture"]
+        data:
+          source: northwind_co_s
+          tables: ["WebOrders.Payload", "Orders", "Order Details"]
+          fit: partial
+          reason: "A contract on WebOrders.Payload (keys, types) is broken today by the planted missing ship_to and text quantities, and audit columns (_loaded_at, _batch_id, _source_file) go on the learner's own load. Too weak for 'which run produced this row?': one snapshot is one run; needs D2 (northwind_co_changes) applied over many days, with day 45's bad load as the run a wrong report traces back to and a daily volume history that makes the anomaly visible."
         status: planned
       - n: "40"
         slug: bulk-loading-and-parallelism
         title: "Bulk Loading & Parallelism — COPY, Partitions and Throughput"
         hands_on: ["koan:count:scanned"]
+        data:
+          source: [northwind_co_l, northwind_co_files]
+          tables: ["Order Details", "Orders", "StockMovements", "order_lines/month=YYYY-MM"]
+          fit: MISSING
+          reason: "Throughput is the lesson, so it needs L (~12.5M order lines by design), and neither L nor D4's file exports is built. Build L via the planned bulk path (write CSV, then COPY), and D4's order lines as month-partitioned files (CSV and Parquet, 60 months) so JDBC batches vs COPY and one loader vs one per partition can be timed; the same files serve Data Warehousing S2 and Learn SQL S3 Block B."
         status: planned
       # MOVED HERE FROM 20 ON 2026-09-02. IT IS THE GATE, AND A GATE BELONGS NEXT TO THE DOOR
       # IT GATES — Series 4 begins immediately after the project, and this is the episode that
@@ -750,6 +945,11 @@ series:
         title: "Streaming vs Batch — Is Your Data Bounded, and Do You Need a Stream?"
         hands_on: ["koan:choose"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders.CreatedAt", "Orders.OrderDate", "WebOrders.ReceivedAt"]
+          fit: good
+          reason: "The honest answer to 'do we need real time' comes from the arrival rhythm: Orders.CreatedAt and WebOrders.ReceivedAt show a handful of orders a day, and the late-keyed CreatedAt answers 'when is Monday's batch complete'. The decision needs no event log; Series 4 does."
         status: planned
       - n: "45"
         slug: project-orchestrate-northwind
@@ -757,6 +957,11 @@ series:
         hands_on: ["koan:author", "koan:rerun", "rundeck"]
         core: true
         tags: ["project"]
+        data:
+          source: [northwind_co_s, northwind_co_changes, northwind_co_dw_s]
+          tables: ["Orders", "Order Details", "CustomerChanges", "PriceChanges", "events: orders", "fact_order_line", "dim_customer"]
+          fit: partial
+          reason: "On S today the pipeline can load the star with SCD2 from CustomerChanges/PriceChanges and backfill the outage months from CourierConfirmations. Missing for end to end: D2's daily change feed for the CDC and incremental steps, and D5-S as the reference star the orchestrated result reconciles to (row counts and checksums). Volume is not this project's point, so S is kept."
         status: planned
 
   # ============================================================================
@@ -856,6 +1061,11 @@ series:
         slug: event-time-and-watermarks
         title: "Event Time, Windows and Watermarks — Deciding When an Answer Is Final"
         hands_on: ["koan:predict", "koan:diagnose"]
+        data:
+          source: northwind_co_changes
+          tables: ["events: orders", "event_time", "arrival_time"]
+          fit: MISSING
+          reason: "Needs events carrying both an event time and an arrival time, and D2's event log is not built. Build D2's JSONL log for Jan-Mar 2025 with event_time (order placed), arrival_time (reached the log), and offset, keeping the planned 3% arriving 1-5 days late plus some out of order within the hour, so windows by event time and by processing time give different totals. For session windows, keep a few customers placing web orders minutes apart (the Channel=Web share)."
         status: planned
       # COUNTERPART: Series 1 · 15, Staging.
       # COVER: where "raw" lives when there is no landing table. THE LOG IS YOUR STAGING AREA —
@@ -868,6 +1078,11 @@ series:
         slug: staging-in-a-stream
         title: "Staging in a Stream — The Log Is Your Raw Layer, and It Expires"
         hands_on: ["koan:choose", "koan:predict"]
+        data:
+          source: northwind_co_changes
+          tables: ["events: orders", "offset"]
+          fit: MISSING
+          reason: "Needs a replayable log with offsets over enough days to make retention a decision, and D2 is not built. The designed 90-day JSONL log does it; plant one transform bug whose effect is noticed only ~10 days in, so a 7-day retention can no longer re-derive it and a 30-day one can."
         status: planned
       # COUNTERPART: Series 2 · 10 (Data Quality Gates) and 2 · 25 (Errors, Retries & Dead
       # Letters).
@@ -881,6 +1096,11 @@ series:
         slug: bad-records-without-a-human
         title: "Bad Records Without a Human — Quarantine Instead of Stopping the Pipeline"
         hands_on: ["koan:diagnose", "koan:capture"]
+        data:
+          source: northwind_co_changes
+          tables: ["events: orders", "events: order_details"]
+          fit: MISSING
+          reason: "D2 is not built. Its planned day 45 bad load supplies the rejects (duplicate OrderID, negative Quantity, unknown CustomerID); add one POISON record (truncated, unparseable JSON) that stops a naive consumer, and a short burst where the rejected share jumps, so a gate on the proportion has something to catch. The same day serves dbt S2's bad-load project."
         status: planned
       # COUNTERPART: Series 2 · 15, Deduplication & Conformance.
       # COVER: batch dedup scans the table. A stream cannot, so dedup becomes KEYED STATE plus
@@ -892,6 +1112,11 @@ series:
         slug: deduplication-with-state
         title: "Deduplication With State — One Customer, One Row, Within Seven Days"
         hands_on: ["koan:count:rows-held", "koan:predict"]
+        data:
+          source: northwind_co_changes
+          tables: ["events: orders", "OrderID"]
+          fit: MISSING
+          reason: "D2 is not built. Its planned 0.5% of orders sent twice gives duplicates inside a window; also plant a few re-sent 8-10 days later, outside a 7-day dedup window, so the window's size visibly becomes a business decision (those slip through)."
         status: planned
       # COUNTERPART: Series 2 · 35, Load Order — Dimensions First, Then Facts.
       # COVER: in batch you control the order and load dimensions first. In a stream YOU DO NOT
@@ -904,6 +1129,11 @@ series:
         slug: fact-before-dimension
         title: "The Fact That Arrived Before Its Dimension — Load Order You Do Not Control"
         hands_on: ["koan:predict", "koan:choose"]
+        data:
+          source: northwind_co_changes
+          tables: ["events: customers", "events: orders"]
+          fit: MISSING
+          reason: "D2 is not built, and its design has customer CHANGES but no NEW customers. Add a few new-customer events in Jan-Mar 2025 (continuing D1's joiners) whose first order event reaches the log minutes to hours before the customer event, and one whose customer event never arrives, so buffer-with-timeout, placeholder-then-correct and reject each give a different result."
         status: planned
       # COUNTERPART: Series 2 · 30, Surrogate Keys & Dimension Lookups.
       # COVER: a batch lookup joins against a dimension that is standing still. A streaming
@@ -917,6 +1147,11 @@ series:
         slug: dimension-lookups-in-flight
         title: "Dimension Lookups in Flight — Joining to a Table That Is Changing Under You"
         hands_on: ["koan:predict", "koan:diagnose"]
+        data:
+          source: northwind_co_changes
+          tables: ["events: customers", "events: price_changes", "events: orders"]
+          fit: MISSING
+          reason: "D2 is not built. Its customer changes and weekly price changes are the changing dimension; plant orders whose event_time precedes a segment or price change but which arrive after it, so a processing-time lookup picks the wrong version and an as-of-event-time join the right one. Continues D1's CustomerChanges and PriceChanges, so versions line up with ETL 3 · 10's SCD2 dimension."
         status: planned
       # COUNTERPART: Series 1 · 30, Idempotency — Re-Runnable Loads.
       # COVER: exactly-once inside an engine is real; EXACTLY-ONCE ENDS AT THE EDGE. The moment
@@ -930,6 +1165,11 @@ series:
         slug: idempotent-sinks
         title: "Idempotent Sinks — Why Exactly-Once Stops at the Edge of the Stream"
         hands_on: ["koan:predict", "koan:diagnose"]
+        data:
+          source: northwind_co_changes
+          tables: ["events: orders", "OrderID", "offset"]
+          fit: MISSING
+          reason: "D2 is not built. Beyond its 0.5% sent twice by the source, plant a redelivery: a stretch of offsets delivered again, as a consumer restart would, so an append-only sink double-counts and an upsert on OrderID does not."
         status: planned
       # COUNTERPART: Series 1 · 40, Row Counts & Logging — Proving the Load Did What You Think.
       # COVER: you cannot count the rows of a thing with no end. So reconciliation becomes
@@ -941,6 +1181,11 @@ series:
         slug: reconciling-a-stream
         title: "Reconciling a Stream — Counting Something That Has No End"
         hands_on: ["koan:capture", "koan:count:rows-held"]
+        data:
+          source: [northwind_co_changes, northwind_co_s]
+          tables: ["events: orders", "Orders"]
+          fit: MISSING
+          reason: "Needs a source-side count for a closed window, and D2 is not built. Add to D2 a daily control-total event (orders and amount per event-time day, as the source system reports it) and keep the late arrivals, so a window reconciled before its watermark passes comes up short; D1-S Orders anchors the totals up to 2024-12-31."
         status: planned
       # COUNTERPART: Series 3 · 25, Backfills & Reprocessing.
       # COVER: replay from an offset or a savepoint instead of re-running a date range. What
@@ -953,6 +1198,11 @@ series:
         slug: replay-and-reprocessing
         title: "Replay and Reprocessing — Rewriting History Without Double-Counting It"
         hands_on: ["koan:rerun", "koan:diagnose"]
+        data:
+          source: northwind_co_changes
+          tables: ["events: orders", "offset"]
+          fit: MISSING
+          reason: "D2 is not built. A replayable JSONL log with offsets, starting from the D1-S snapshot, is what replay from an offset needs; reuse the transform bug planted for 4 · 05 as the reason to reprocess into a parallel output and switch over, with the redelivered offsets from 4 · 30 as the double-count risk."
         status: planned
       # THE PROJECT, and it deliberately mirrors Series 1 · 50 ("A Load That Is Safe to Run
       # Twice") so the series closes on the same promise as the batch one.
@@ -961,4 +1211,9 @@ series:
         title: "Project — A Streaming Pipeline That Is Safe to Replay"
         hands_on: ["koan:author", "koan:rerun"]
         tags: ["project"]
+        data:
+          source: northwind_co_changes
+          tables: ["events: orders", "events: order_details", "events: customers", "events: price_changes"]
+          fit: MISSING
+          reason: "The whole series on one feed, and D2 is not built. Everything planted for 4 · 00-40 in the one 90-day log (late and out-of-order events, a poison record, duplicates and a redelivery, facts before their customer, control totals), so the pipeline is proved safe to replay by reconciling to the same totals twice."
         status: planned

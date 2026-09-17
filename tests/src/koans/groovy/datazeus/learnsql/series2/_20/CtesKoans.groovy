@@ -1,6 +1,6 @@
 package datazeus.learnsql.series2._20
 
-import datazeus._internal.KoanBase
+import datazeus._internal.NorthwindCoKoanBase
 import spock.lang.Stepwise
 
 /**
@@ -38,49 +38,52 @@ import spock.lang.Stepwise
  * ── THESE ARE NOT THE LESSON'S QUERIES ──────────────────────────────────────
  *
  * The same ideas, in the same order, on DIFFERENT QUESTIONS. The lesson names the steps
- * of the customer report, the June product report and the orders with no ship date by rep
- * and courier. Here you name steps over categories, suppliers, countries, and employees
- * and shippers across every order.
+ * of the customers above the average customer, the Dairy products' May units and the
+ * sales and freight per customer for one month. Here you name steps over categories,
+ * sales reps, order channels, products, couriers, countries and customer segments.
  *
  * TEN KOANS, EASIEST FIRST:
  *   1    name it, then use the name: the three biggest categories
  *   2    use a step twice: categories above the average category
- *   3    one step reads another: sales per order, per employee
- *   4    a total of totals: each supplier's share of all sales
- *   5    equivalent: rewrite the nested supplier query with WITH
+ *   3    one step reads another: sales per order, per sales rep
+ *   4    a total of totals: each channel's share of all sales
+ *   5    equivalent: rewrite the nested product query with WITH
  *   6    diagnose: the tidy-up that dropped two categories
  *   7    run one step on its own
- *   8    equivalent: rewrite the shipper report with WITH
+ *   8    equivalent: rewrite the courier report with WITH
  *   9    write the whole query: countries above the average country
- *  10    write the whole query: products and August 2023 units per supplier
+ *  10    write the whole query: customers and August 2023 units per segment
  *
- * These run on DuckDB, and every one returns the SAME answer on the PostgreSQL in
- * CloudBeaver. KEEP THE DOUBLE QUOTES on every name, spelled as the schema spells them:
- * DuckDB forgives a wrong capital letter and PostgreSQL does not.
+ * These run on DuckDB, on schema northwind_co_s, and every one returns the SAME answer on
+ * the PostgreSQL in CloudBeaver once `SET search_path TO northwind_co_s;` has been run. KEEP
+ * THE DOUBLE QUOTES on every name, spelled as the schema spells them: DuckDB forgives a wrong
+ * capital letter and PostgreSQL does not.
  *
- * ── RELEVANT SCHEMA ─────────────────────────────────────────────────────────
+ * ── RELEVANT SCHEMA (Northwind Company) ─────────────────────────────────────
  *
- *   "Orders" — 79 rows, one per order. "OrderID", "CustomerID", "EmployeeID",
- *     "OrderDate" TIMESTAMP, "ShipVia" (-> "Shippers"."ShipperID"), "Freight".
- *   "Order Details" — 193 rows, one per order line. "OrderID", "ProductID",
+ *   "Orders" — 10000 rows, one per order, 2020-01-01 to 2024-12-31. "OrderID",
+ *     "CustomerID", "EmployeeID", "OrderDate" TIMESTAMP, "ShipVia" (-> "Shippers"."ShipperID"),
+ *     "Freight", "Channel" ('Sales rep', 'Web', 'Phone' or 'EDI').
+ *   "Order Details" — 25233 rows, one per order line. "OrderID", "ProductID",
  *     "UnitPrice", "Quantity", "Discount". A line's sale is
  *     "UnitPrice" * "Quantity" * (1 - "Discount").
- *   "Products" — 20 rows. "ProductID", "ProductName", "SupplierID", "CategoryID".
+ *   "Products" — 80 rows. "ProductID", "ProductName", "SupplierID", "CategoryID".
  *   "Categories" — 8 rows. "CategoryID", "CategoryName".
- *   "Suppliers" — 6 rows. "SupplierID", "CompanyName".
- *   "Shippers" — 3 rows. "ShipperID", "CompanyName".
- *   "Employees" — 3 rows. "EmployeeID", "FirstName".
- *   "Customers" — 25 rows. "CustomerID", "CompanyName", "Country".
+ *   "Shippers" — 4 rows. "ShipperID", "CompanyName".
+ *   "Employees" — 12 rows. "EmployeeID", "FirstName", "LastName". Two sales reps share a
+ *     first name and two share a surname: group by "EmployeeID", never by a name.
+ *   "Customers" — 120 rows. "CustomerID", "CompanyName", "Country" (21 countries),
+ *     "Segment" ('Restaurant', 'Retail' or 'Wholesale').
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait (the path to enlightenment)
-class CtesKoans extends KoanBase {
+class CtesKoans extends NorthwindCoKoanBase {
 
     // 1) NAME IT, THEN USE THE NAME. The WITH clause builds a step called category_totals: one
     //    row per category, with its total sales. Fill in where the final SELECT reads from.
-    //    (Three rows. One category sells more than three times the next.)
+    //    (Three rows, biggest first.)
     def "name it, then use the name: the three biggest categories"() {
         expect:
-        shouldReturn([["Meat/Poultry", 23331.67], ["Seafood", 6634.77], ["Grains/Cereals", 6360.78]], '''
+        shouldReturn([["Meat/Poultry", 3077564.58], ["Confections", 2593131.62], ["Produce", 2232360.64]], '''
             WITH category_totals AS (
               SELECT c."CategoryName",
                      ROUND(SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")), 2) AS "Total"
@@ -99,10 +102,11 @@ class CtesKoans extends KoanBase {
     // 2) USE A STEP TWICE. The same step feeds the list AND the average it is compared with —
     //    no second copy of the brackets. Fill in the comparison's right-hand side: the average
     //    "Total" of the step.
-    //    (Predict: the average category is 7269.16. Koan 1 showed you the top three.)
+    //    (Predict: the average category is 1877128.89. Koan 1 showed you the top three.)
     def "use a step twice: categories above the average category"() {
         expect:
-        shouldReturn([["Meat/Poultry", 23331.67]], '''
+        shouldReturn([["Meat/Poultry", 3077564.58], ["Confections", 2593131.62], ["Produce", 2232360.64],
+                      ["Seafood", 2027789.62]], '''
             WITH category_totals AS (
               SELECT c."CategoryName",
                      SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")) AS "Total"
@@ -118,14 +122,14 @@ class CtesKoans extends KoanBase {
         ''')
     }
 
-    // 3) ONE STEP READS ANOTHER. employee_totals has one row per employee, with their orders
-    //    and their sales. The second step, per_order, works out the sales per order FROM THE
-    //    FIRST STEP. Fill in what per_order reads from.
-    //    (Three rows, best average order first.)
-    def "one step reads another: sales per order, per employee"() {
+    // 3) ONE STEP READS ANOTHER. rep_totals has one row per sales rep, with their orders and
+    //    their sales. The second step, per_order, works out the sales per order FROM THE FIRST
+    //    STEP. Fill in what per_order reads from.
+    //    (The three best averages. Nine reps take orders, and they are close.)
+    def "one step reads another: sales per order, per sales rep"() {
         expect:
-        shouldReturn([["Andrew", 836.64], ["Nancy", 693.53], ["Janet", 690.93]], '''
-            WITH employee_totals AS (
+        shouldReturn([["Umberto", "Jansen", 1523.30], ["Yara", "Schmidt", 1518.62], ["Lukas", "Young", 1508.97]], '''
+            WITH rep_totals AS (
               SELECT o."EmployeeID",
                      count(DISTINCT o."OrderID") AS "Orders",
                      SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")) AS "Sales"
@@ -137,132 +141,132 @@ class CtesKoans extends KoanBase {
               SELECT "EmployeeID", ROUND(CAST("Sales" / "Orders" AS DECIMAL(12,4)), 2) AS "Per order"
               FROM ___
             )
-            SELECT e."FirstName", po."Per order"
+            SELECT e."FirstName", e."LastName", po."Per order"
             FROM per_order po
             JOIN "Employees" e ON e."EmployeeID" = po."EmployeeID"
             ORDER BY po."Per order" DESC
+            LIMIT 3
         ''')
     }
 
-    // 4) A TOTAL OF TOTALS. supplier_sales has one row per supplier. all_sales adds those rows
-    //    up into one number. Fill in what all_sales reads from, so the final SELECT can show each
-    //    supplier's share of everything sold, as a percentage.
-    //    (Six rows. Two suppliers account for more than 60% between them.)
-    def "a total of totals: each supplier's share of all sales"() {
+    // 4) A TOTAL OF TOTALS. channel_sales has one row per order channel. all_sales adds those
+    //    rows up into one number. Fill in what all_sales reads from, so the final SELECT can show
+    //    each channel's share of everything sold, as a percentage.
+    //    (Four rows. The sales reps bring in more than a third.)
+    def "a total of totals: each channel's share of all sales"() {
         expect:
-        shouldReturn([["Pavlova Ltd", 31.8], ["Tokyo Traders", 30.2], ["Pasta Buttini s.r.l.", 15.9],
-                      ["Grandma Kellys Homestead", 9.5], ["Exotic Liquids", 7.7], ["New Orleans Cajun Delights", 4.9]], '''
-            WITH supplier_sales AS (
-              SELECT s."CompanyName",
+        shouldReturn([["Sales rep", 37.5], ["Web", 27.5], ["Phone", 25.0], ["EDI", 10.0]], '''
+            WITH channel_sales AS (
+              SELECT o."Channel",
                      SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")) AS "Sales"
-              FROM "Suppliers" s
-              JOIN "Products" p ON p."SupplierID" = s."SupplierID"
-              JOIN "Order Details" d ON d."ProductID" = p."ProductID"
-              GROUP BY s."CompanyName"
+              FROM "Orders" o
+              JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+              GROUP BY o."Channel"
             ),
             all_sales AS (
               SELECT SUM("Sales") AS "All"
               FROM ___
             )
-            SELECT "CompanyName",
+            SELECT "Channel",
                    ROUND(CAST(100 * "Sales" / (SELECT "All" FROM all_sales) AS DECIMAL(12,4)), 1) AS "Share"
-            FROM supplier_sales
+            FROM channel_sales
             ORDER BY "Share" DESC
         ''')
     }
 
     // 5) EQUIVALENT: REWRITE THE NESTED QUERY WITH WITH. The first query below is the nested
-    //    version, and it is right: the suppliers whose sales beat the average supplier. Rewrite
-    //    it — fill in the body of supplier_totals so that it returns one row per "SupplierID"
-    //    with its sales as "Total". The koan checks that your version returns EXACTLY the rows
-    //    the nested one does.
-    //    (Two rows. Look inside the nested version's brackets: the step is already there.)
-    def "equivalent: rewrite the nested supplier query with WITH"() {
+    //    version, and it is right: the products that sold more units in 2024 than the average
+    //    product. Rewrite it — fill in the body of product_units so that it returns one row per
+    //    "ProductID" with its 2024 units as "Units". The koan checks that your version returns
+    //    EXACTLY the rows the nested one does.
+    //    (Look inside the nested version's brackets: the step is already there, written twice.)
+    def "equivalent: rewrite the nested product query with WITH"() {
         given: "the nested version, which is correct"
         def nested = rows('''
-            SELECT s."CompanyName", ROUND(t."Total", 2) AS "Total"
-            FROM (SELECT p."SupplierID",
-                         SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")) AS "Total"
-                  FROM "Products" p
-                  JOIN "Order Details" d ON d."ProductID" = p."ProductID"
-                  GROUP BY p."SupplierID") AS t
-            JOIN "Suppliers" s ON s."SupplierID" = t."SupplierID"
-            WHERE t."Total" > (SELECT AVG(t2."Total")
-                               FROM (SELECT p."SupplierID",
-                                            SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")) AS "Total"
-                                     FROM "Products" p
-                                     JOIN "Order Details" d ON d."ProductID" = p."ProductID"
-                                     GROUP BY p."SupplierID") AS t2)
-            ORDER BY "Total" DESC
+            SELECT p."ProductName", t."Units"
+            FROM (SELECT d."ProductID", sum(d."Quantity") AS "Units"
+                  FROM "Order Details" d
+                  JOIN "Orders" o ON o."OrderID" = d."OrderID"
+                  WHERE o."OrderDate" >= DATE '2024-01-01' AND o."OrderDate" < DATE '2025-01-01'
+                  GROUP BY d."ProductID") AS t
+            JOIN "Products" p ON p."ProductID" = t."ProductID"
+            WHERE t."Units" > (SELECT AVG(t2."Units")
+                               FROM (SELECT d."ProductID", sum(d."Quantity") AS "Units"
+                                     FROM "Order Details" d
+                                     JOIN "Orders" o ON o."OrderID" = d."OrderID"
+                                     WHERE o."OrderDate" >= DATE '2024-01-01' AND o."OrderDate" < DATE '2025-01-01'
+                                     GROUP BY d."ProductID") AS t2)
+            ORDER BY t."Units" DESC, p."ProductName"
         ''')
 
         expect: "your rewrite returns the same rows"
         shouldReturn(nested, '''
-            WITH supplier_totals AS (
+            WITH product_units AS (
               ___
             )
-            SELECT s."CompanyName", ROUND(t."Total", 2) AS "Total"
-            FROM supplier_totals t
-            JOIN "Suppliers" s ON s."SupplierID" = t."SupplierID"
-            WHERE t."Total" > (SELECT AVG("Total") FROM supplier_totals)
-            ORDER BY "Total" DESC
+            SELECT p."ProductName", u."Units"
+            FROM product_units u
+            JOIN "Products" p ON p."ProductID" = u."ProductID"
+            WHERE u."Units" > (SELECT AVG("Units") FROM product_units)
+            ORDER BY u."Units" DESC, p."ProductName"
         ''')
     }
 
-    // 6) DIAGNOSE: THE TIDY-UP THAT DROPPED TWO CATEGORIES. "Every category and its units in
-    //    August 2023." Somebody tidied the query: one step with every order line and its date,
-    //    and the August test moved to the final WHERE. It returned 6 rows out of 8 — a WHERE on a
-    //    LEFT JOINed column throws away the categories with no August line, and the unit totals
-    //    all still looked right. Put the August test back INSIDE the step, where it narrows the
-    //    lines before the join: fill in the step's WHERE, half-open, with DATE '…' literals.
-    //    (Eight rows. Two categories sold nothing in August 2023.)
+    // 6) DIAGNOSE: THE TIDY-UP THAT DROPPED TWO CATEGORIES. "Every category and its units on
+    //    18 February 2023." Somebody tidied the query: one step with every order line and its
+    //    date, and the day's test moved to the final WHERE. It returned 6 rows out of 8 — a WHERE
+    //    on a LEFT JOINed column throws away the categories with no line that day, and the unit
+    //    totals all still looked right. Put the day's test back INSIDE the step, where it narrows
+    //    the lines before the join: fill in the step's WHERE, half-open ("OrderDate" is a
+    //    TIMESTAMP), with DATE '…' literals.
+    //    (Eight rows. Two categories sold nothing that day.)
     def "diagnose: the tidy-up that dropped two categories"() {
         expect:
-        shouldReturn([["Beverages", 33], ["Condiments", 33], ["Confections", 14], ["Dairy Products", 37],
-                      ["Grains/Cereals", 15], ["Meat/Poultry", null], ["Produce", null], ["Seafood", 32]], '''
-            WITH august_lines AS (
+        shouldReturn([["Beverages", 123], ["Condiments", null], ["Confections", 29], ["Dairy Products", 46],
+                      ["Grains/Cereals", null], ["Meat/Poultry", 6], ["Produce", 103], ["Seafood", 24]], '''
+            WITH day_lines AS (
               SELECT p."CategoryID", d."Quantity"
               FROM "Products" p
               JOIN "Order Details" d ON d."ProductID" = p."ProductID"
               JOIN "Orders" o ON o."OrderID" = d."OrderID"
               WHERE ___
             ),
-            august_units AS (
+            day_units AS (
               SELECT "CategoryID", sum("Quantity") AS "Units"
-              FROM august_lines
+              FROM day_lines
               GROUP BY "CategoryID"
             )
             SELECT c."CategoryName", u."Units"
             FROM "Categories" c
-            LEFT JOIN august_units u ON u."CategoryID" = c."CategoryID"
+            LEFT JOIN day_units u ON u."CategoryID" = c."CategoryID"
             ORDER BY c."CategoryName"
         ''')
     }
 
     // 7) RUN ONE STEP ON ITS OWN. When a query with steps looks wrong, read the steps one at a
-    //    time. Keep the step from koan 6 and look straight into it: how many August 2023 lines,
-    //    and how many units? Fill in what the final SELECT reads from.
+    //    time. Keep a step like koan 6's and look straight into it: how many order lines on
+    //    18 February 2023, and how many units? Fill in what the final SELECT reads from.
     //    (One row: lines, then units.)
     def "run one step on its own"() {
         expect:
-        shouldReturn([[10, 164]], '''
-            WITH august_lines AS (
+        shouldReturn([[7, 331]], '''
+            WITH day_lines AS (
               SELECT d."OrderID", d."Quantity"
               FROM "Order Details" d
               JOIN "Orders" o ON o."OrderID" = d."OrderID"
-              WHERE o."OrderDate" >= DATE '2023-08-01' AND o."OrderDate" < DATE '2023-09-01'
+              WHERE o."OrderDate" >= DATE '2023-02-18' AND o."OrderDate" < DATE '2023-02-19'
             )
             SELECT count(*) AS "Lines", sum("Quantity") AS "Units"
             FROM ___
         ''')
     }
 
-    // 8) EQUIVALENT: REWRITE THE SHIPPER REPORT WITH WITH. The nested version below sums the
+    // 8) EQUIVALENT: REWRITE THE COURIER REPORT WITH WITH. The nested version below sums the
     //    freight where one row is one order and counts the lines over the join, each in its own
     //    brackets. Rewrite it: fill in the body of the lines step — one row per "ShipVia", with
     //    the number of order lines as "Lines".
-    //    (Three rows, and the rewrite must match them exactly.)
-    def "equivalent: rewrite the shipper report with WITH"() {
+    //    (Four rows, and the rewrite must match them exactly.)
+    def "equivalent: rewrite the courier report with WITH"() {
         given: "the nested version, which is correct"
         def nested = rows('''
             SELECT s."CompanyName", f."Freight", l."Lines"
@@ -303,28 +307,28 @@ class CtesKoans extends KoanBase {
     //      · return the country and its total ROUNDed to 2 decimals, biggest first
     //      · keep only the countries above the AVERAGE of that step's totals
     //    NAME THE STEP ONCE AND USE IT TWICE, as in koan 2.
-    //    (Ten countries in all. How many beat their own average?)
+    //    (Twenty-one countries in all. How many beat their own average?)
     def "write the whole query: countries above the average country"() {
         expect:
-        shouldReturn([["Germany", 27256.20]], '''
+        shouldReturn([["Spain", 1888866.87], ["Germany", 1843311.18], ["USA", 1782708.72], ["Finland", 1658906.50],
+                      ["Brazil", 1419735.92], ["Belgium", 1336736.04], ["Norway", 1019667.00], ["Mexico", 765645.83]], '''
             ___
         ''')
     }
 
     // 10) The whole query again.
-    //     THE QUESTION: for each supplier, how many products do they supply, and how many units
-    //     of them sold in August 2023?
-    //       · one row per "Suppliers"."CompanyName", ordered by "CompanyName"
-    //       · three columns: the name, the products, the August 2023 units
+    //     THE QUESTION: for each customer segment, how many customers are in it, and how many
+    //     units did its customers buy in August 2023?
+    //       · one row per "Customers"."Segment", ordered by "Segment"
+    //       · three columns: the segment, the customers, the August 2023 units
     //       · August 2023, half-open: on or after DATE '2023-08-01', before DATE '2023-09-01'
-    //     TWO STEPS, EACH AT ITS OWN GRAIN: products counted where one row is one product, units
-    //     summed over the August lines — then join both to the suppliers. Keep the August test
-    //     inside its step (koan 6).
-    //     (Six rows. Every supplier sold something in August 2023.)
-    def "write the whole query: products and August 2023 units per supplier"() {
+    //     TWO STEPS, EACH AT ITS OWN GRAIN: customers counted where one row is one customer,
+    //     units summed over the August lines — then join the two. Keep the August test inside
+    //     its step (koan 6). Count the customers after joining the lines and you count lines.
+    //     (Three rows. Every segment bought something in August 2023.)
+    def "write the whole query: customers and August 2023 units per segment"() {
         expect:
-        shouldReturn([["Exotic Liquids", 3, 49], ["Grandma Kellys Homestead", 3, 17], ["New Orleans Cajun Delights", 2, 17],
-                      ["Pasta Buttini s.r.l.", 4, 52], ["Pavlova Ltd", 3, 14], ["Tokyo Traders", 5, 15]], '''
+        shouldReturn([["Restaurant", 35, 3039], ["Retail", 46, 3906], ["Wholesale", 39, 4893]], '''
             ___
         ''')
     }

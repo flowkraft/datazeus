@@ -38,7 +38,7 @@ import spock.lang.Stepwise
  * UNION ALL versus UNION is the practical half: UNION deduplicates and costs a sort, and people
  * reach for it by habit when they wanted UNION ALL.
  *
- * ── KOANS AND THE SERIES CASE (.docs/plan-sql-series2-story.md §0, §3) ─────────────
+ * ── KOANS AND THE SERIES CASE (.docs/plan-academy-course-stories-artefacts.md §1, §3.2) ─────────────
  * The LESSON reconciles the case's lists (Speedy Express customers EXCEPT customers who received a Speedy
  * delivery: 23; INTERSECT of open and shipped: 24). The KOANS reconcile other lists — countries with
  * customers vs countries with suppliers (UNION / INTERSECT / EXCEPT), products sold in 2023 EXCEPT 2024,

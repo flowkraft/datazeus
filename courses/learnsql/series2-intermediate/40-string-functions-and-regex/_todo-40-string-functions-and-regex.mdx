@@ -43,15 +43,28 @@ published: false
     report needs — CAST between text and numbers (it closes Series 1 · 07's '9' > '10' gap), ROUND and
     formatting. A cheat sheet ships with it.
 
-    ── THE SERIES CASE — CASE FILE SEGMENT — the call sheet (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
-    LESSON DATA (Northwind is clean — no stray spaces or case variants; say so): "Customers"."Phone" comes
-    in many formats — (1) 135-5555 · 91.24.45.40 · 0621-08460 — normalise it; "Products"."QuantityPerUnit"
-    is free text — 10 boxes x 20 bags · 24 - 12 oz bottles · 10 pkgs. — pull out the pack count.
-    CASE FILE: the manager's call sheet for the customers with an order that has no ShippedDate — the phone
-    in one format, each customer's open order numbers in one cell (STRING_AGG … ORDER BY). Measure it.
+    ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
+    No case in this episode (the old "call sheet" is dropped).
+    LESSON DATA — A DATASET REQUIREMENT: Northwind Company's generator currently writes every phone in one clean
+    format. This lesson needs mess to clean, so the dataset must PLANT it (and say so): phones in several formats,
+    a few stray spaces and case variants in names and cities. "QuantityPerUnit" is already free text
+    ("10 boxes x 20 bags", "24 - 12 oz bottles") — pull out the pack size.
     NO REGEX PUZZLES — a pattern earns its place only if people write it at work.
     WHAT GOES WRONG candidates: a case-sensitive match that silently misses rows; STRING_AGG without ORDER BY
-    giving a list whose order changes between runs (Series 1 · 15's lesson, in a cell).
+    giving a list whose order changes between runs.
+
+    DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
+    academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
+    came from the frozen Northwind is to be RE-FOUND on it: the lesson beat stays, the numbers move. First
+    measurements are DuckDB only (stories sheet §3.2.2); every figure is re-asserted on PostgreSQL in the spec.
+
+    ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
+    Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
+    KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
+    WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
+    repeats itself does the opposite. Checking in the brief is cheaper than re-cutting a published video.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     LEVEL ● of ●●●●. THE BREATHER between the two window-function episodes (Series 2 · 35 and 2 · 45).

@@ -41,7 +41,7 @@ import spock.lang.Stepwise
  * Teach the SELECT-first habit: write the WHERE as a SELECT, look at the rows, then change the
  * verb. BOUNDARY: isolation levels and locking are Data Ops; COMMIT/ROLLBACK basics are here.
  *
- * ── KOANS AND THE SERIES CASE (.docs/plan-sql-series2-story.md §0, §3) ─────────────
+ * ── KOANS AND THE SERIES CASE (.docs/plan-academy-course-stories-artefacts.md §1, §3.2) ─────────────
  * The LESSON's main example applies (supposed) courier confirmations to "Orders" inside a transaction and rolls
  * back. The KOANS run on the throwaway copy KoanBase opens, and on OTHER tables — a price change on
  * "Products" with the SELECT-first habit, INSERT … SELECT, a DELETE with the right WHERE, ON CONFLICT DO NOTHING

@@ -64,13 +64,13 @@ import spock.lang.Stepwise
  * lines, and it is the thing that would have caught the wrong answer above. Java & Groovy
  * 1 · 40 and Python 1 · 35 close on the same check on purpose.
  *
- * ── KOANS AND THE SERIES CASE (.docs/plan-sql-series2-story.md §0, §3) ─────────────
+ * ── KOANS AND THE SERIES CASE (.docs/plan-academy-course-stories-artefacts.md §1, §3.2) ─────────────
  * See THE QUESTION above: the koans build the same case from the supplier side, on different tables, and end
  * on the habit check (the key count survives every join).
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
  * The last episode of the series; it may use anything above it.
- * DATA: the lesson's figures are in .docs/plan-sql-series2-story.md §2 (DuckDB 2026-09-15); the
+ * DATA: the lesson's figures are in .docs/plan-academy-course-stories-artefacts.md Appendix A (DuckDB 2026-09-15); the
  * supplier-side figures are not measured yet.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait

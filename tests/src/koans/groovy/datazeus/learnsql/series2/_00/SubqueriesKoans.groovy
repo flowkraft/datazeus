@@ -1,6 +1,6 @@
 package datazeus.learnsql.series2._00
 
-import datazeus._internal.KoanBase
+import datazeus._internal.NorthwindCoKoanBase
 import spock.lang.Stepwise
 
 /**
@@ -37,8 +37,8 @@ import spock.lang.Stepwise
  *
  * The same ideas, in the same order, asked about DIFFERENT TABLES. The lesson compares
  * products with the average PRICE and customers with the average CUSTOMER. Here you
- * compare orders with the average FREIGHT, and suppliers with the average SUPPLIER —
- * so copying a query across from the video will not work.
+ * compare orders with the average FREIGHT, suppliers with the average SUPPLIER and sales
+ * reps with the average SALES REP — so copying a query across from the video will not work.
  *
  * TEN KOANS, EASIEST FIRST, IN THE ORDER THE LESSON BUILDS THEM:
  *   1    a value in brackets: freight above the average
@@ -49,49 +49,50 @@ import spock.lang.Stepwise
  *   6    a table in FROM, and its grain
  *   7    the average of WHAT: suppliers above the average supplier
  *   8    a subquery beside HAVING
- *   9    write the whole query: products that beat the average product
- *  10    write the whole query: a value inside a list inside a query
+ *   9    write the whole query: sales reps who beat the average sales rep
+ *  10    write the whole query: a value inside a value inside a list
  *
- * These run on DuckDB. Every one is written so it returns the SAME answer against the
- * PostgreSQL in CloudBeaver. KEEP THE DOUBLE QUOTES on every name, spelled exactly as
- * the schema below spells them: DuckDB forgives a missing quote or a wrong capital
- * letter and PostgreSQL does not, so a koan can go green here on a query that
- * CloudBeaver refuses.
+ * These run on DuckDB, on Northwind Company — the same data the Seed Data tab installs
+ * into CloudBeaver's PostgreSQL. Every one is written so it returns the SAME answer there,
+ * once `SET search_path TO northwind_co_s;` has been run in the editor (this file does
+ * that for you). KEEP THE DOUBLE QUOTES on every name, spelled exactly as the schema below
+ * spells them: DuckDB forgives a missing quote or a wrong capital letter and PostgreSQL
+ * does not, so a koan can go green here on a query that CloudBeaver refuses.
  *
- * ── RELEVANT SCHEMA ─────────────────────────────────────────────────────────
+ * ── RELEVANT SCHEMA (Northwind Company, schema northwind_co_s) ───────────────
  *
- * The tables these koans use, in full, so you can write a query without leaving this
- * file.
+ * The tables these koans use, with the columns they need, so you can write a query
+ * without leaving this file. Five years of trading: 2020-01-01 to 2024-12-31.
  *
- *   "Orders" — 79 rows, 14 columns. One row per order.
+ *   "Orders" — 10,000 rows. One row per order.
  *     "OrderID"         INTEGER        "CustomerID"      VARCHAR
  *     "EmployeeID"      INTEGER        "OrderDate"       TIMESTAMP
- *     "RequiredDate"    TIMESTAMP      "ShippedDate"     TIMESTAMP (27 are empty)
+ *     "RequiredDate"    TIMESTAMP      "ShippedDate"     TIMESTAMP (empty if not shipped)
  *     "ShipVia"         INTEGER        "Freight"         DECIMAL(19,4)
- *     "ShipName"        VARCHAR        "ShipAddress"     VARCHAR
- *     "ShipCity"        VARCHAR        "ShipRegion"      VARCHAR
- *     "ShipPostalCode"  VARCHAR        "ShipCountry"     VARCHAR
+ *     "Status"          VARCHAR ('Shipped', 'Cancelled' or 'Open')
+ *     plus the ship-to address, "Channel", "CreatedAt" and "UpdatedAt".
  *
- *   "Customers" — 25 rows. The two columns these koans use:
- *     "CustomerID"      VARCHAR (five capital letters, e.g. 'ALFKI')
- *     "CompanyName"     VARCHAR
+ *   "Customers" — 120 rows. "CustomerID" VARCHAR (five characters, e.g. 'ZENIT'),
+ *     "CompanyName" VARCHAR, and address, contact and "Segment" columns.
  *
- *   "Employees" — 3 rows. "EmployeeID" 1 is Nancy, 2 is Andrew, 3 is Janet.
+ *   "Employees" — 12 rows. "EmployeeID" INTEGER, "FirstName" VARCHAR, "LastName" VARCHAR,
+ *     "Title" VARCHAR, "ReportsTo" INTEGER. Employees 1 to 3 are the chief executive and
+ *     the two sales managers, and take no orders; 4 to 12 are the sales reps.
+ *     TWO REPS SHARE A SURNAME (Ravi and Sven Keller) and two share a first name (Lukas):
+ *     group by "EmployeeID", never by a name.
  *
- *   "Suppliers" — 6 rows. "SupplierID" INTEGER, "CompanyName" VARCHAR, and eleven
- *     address and contact columns these koans do not need.
+ *   "Suppliers" — 20 rows. "SupplierID" INTEGER, "CompanyName" VARCHAR, and address and
+ *     contact columns these koans do not need.
  *
- *   "Products" — 20 rows, 10 columns.
+ *   "Products" — 80 rows.
  *     "ProductID"       INTEGER        "ProductName"     VARCHAR
  *     "SupplierID"      INTEGER        "CategoryID"      INTEGER
- *     "QuantityPerUnit" VARCHAR        "UnitPrice"       DECIMAL(19,4)
- *     "UnitsInStock"    SMALLINT       "UnitsOnOrder"    SMALLINT
- *     "ReorderLevel"    SMALLINT       "Discontinued"    BOOLEAN
+ *     "UnitPrice"       DECIMAL(19,4)  "UnitCost"        DECIMAL(19,4)
+ *     "Discontinued"    BOOLEAN        plus stock columns.
  *
- *   "Categories" — 8 rows. "CategoryID" INTEGER, "CategoryName" VARCHAR,
- *     "Description" VARCHAR, "Picture" BLOB.
+ *   "Categories" — 8 rows. "CategoryID" INTEGER, "CategoryName" VARCHAR, "Description" VARCHAR.
  *
- *   "Order Details" — 193 rows, 5 columns. ONE ROW PER THING BOUGHT.
+ *   "Order Details" — 25,233 rows, 5 columns. ONE ROW PER THING BOUGHT.
  *     "OrderID"         INTEGER        "ProductID"       INTEGER
  *     "UnitPrice"       DECIMAL(19,4)  "Quantity"        SMALLINT
  *     "Discount"        DECIMAL(8,4)
@@ -99,17 +100,17 @@ import spock.lang.Stepwise
  * WHAT ONE LINE IS WORTH: `d."UnitPrice" * d."Quantity" * (1 - d."Discount")`.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait (the path to enlightenment)
-class SubqueriesKoans extends KoanBase {
+class SubqueriesKoans extends NorthwindCoKoanBase {
 
     // 1) A VALUE IN BRACKETS. How many orders paid more freight than the average order?
     //    The brackets run first and hand back ONE number; the outer query compares every
     //    order with it, exactly as if you had typed the number in. Fill in the function
     //    that averages a column.
-    //    (Predict first: more or fewer than half of the 79? Checkable fact: the average
-    //     freight is 50.49 — select the part in brackets and run it alone to see it.)
+    //    (Predict first: more or fewer than half of the 10,000? Checkable fact: the average
+    //     freight is 52.74 — select the part in brackets and run it alone to see it.)
     def "a value in brackets: freight above the average"() {
         expect:
-        shouldReturn 36, '''
+        shouldReturn 4065, '''
             SELECT count(*)
             FROM "Orders"
             WHERE "Freight" > (SELECT ___("Freight") FROM "Orders")
@@ -123,49 +124,49 @@ class SubqueriesKoans extends KoanBase {
     //     compare "=" with it — see koan 3.)
     def "a value in brackets can be the whole comparison"() {
         expect:
-        shouldReturn([[72, "HILAA", 98.92]], '''
+        shouldReturn([[7826, "BRAM2", 294.35]], '''
             SELECT "OrderID", "CustomerID", "Freight"
             FROM "Orders"
             WHERE "Freight" = (___)
         ''')
     }
 
-    // 3) ONE VALUE ONLY. Which orders paid more freight than EVERY order Janet took?
-    //    ("EmployeeID" 3.) Written as SELECT "Freight" the brackets hand back twenty-seven
-    //    values — one per order of hers — and ">" cannot compare with twenty-seven numbers:
-    //    the query stops with "more than one row returned by a subquery used as an
-    //    expression". More than every one of them means more than the BIGGEST of them.
-    //    Fill in the expression that turns her twenty-seven freights into one.
-    //    (Two orders, heaviest first. Neither of them is Janet's.)
+    // 3) ONE VALUE ONLY. Which orders paid more freight than EVERY order Ines Torres took?
+    //    ("EmployeeID" 9.) Written as SELECT "Freight" the brackets hand back 1,125 values —
+    //    one per order of hers — and ">" cannot compare with 1,125 numbers: the query stops
+    //    with "more than one row returned by a subquery used as an expression". More than
+    //    every one of them means more than the BIGGEST of them. Fill in the expression that
+    //    turns her 1,125 freights into one.
+    //    (Two orders, heaviest first. Neither of them is hers.)
     def "one value only: turn a column of values into one"() {
         expect:
-        shouldReturn([[72, 98.92],
-                      [59, 97.53]], '''
+        shouldReturn([[7826, 294.35],
+                      [4688, 240.68]], '''
             SELECT "OrderID", "Freight"
             FROM "Orders"
             WHERE "Freight" > (SELECT ___
                                FROM "Orders"
-                               WHERE "EmployeeID" = 3)
+                               WHERE "EmployeeID" = 9)
             ORDER BY "Freight" DESC
         ''')
     }
 
-    // 4) A LIST. Which products has Alfreds Futterkiste ever bought? The brackets hand back
-    //    a column of product ids — one for every line Alfreds ever ordered — and the outer
+    // 4) A LIST. Which products has Zenith Fine Foods ever bought? The brackets hand back a
+    //    column of product ids — one for every line Zenith ever ordered — and the outer
     //    query keeps each product whose id is IN that list. Fill in the keyword that tests
     //    whether a value is one of a list.
-    //    (Eight products, by name.)
+    //    (Six products, by name.)
     def "a list: IN"() {
         expect:
-        shouldReturn([["Boston Crab Meat"], ["Chai"], ["Chang"], ["Genen Shouyu"],
-                      ["Ikura"], ["Mishi Kobe Niku"], ["Pavlova"], ["Thuringer Rostbratwurst"]], '''
+        shouldReturn([["Island Gingerbread"], ["Island Olives"], ["Meadow Cider"],
+                      ["Orchard Salami"], ["Rustic Toffee"], ["Stone Marzipan"]], '''
             SELECT "ProductName"
             FROM "Products"
             WHERE "ProductID" ___ (
               SELECT d."ProductID"
               FROM "Order Details" d
               JOIN "Orders" o ON o."OrderID" = d."OrderID"
-              WHERE o."CustomerID" = 'ALFKI'
+              WHERE o."CustomerID" = 'ZENIT'
             )
             ORDER BY "ProductName"
         ''')
@@ -174,30 +175,30 @@ class SubqueriesKoans extends KoanBase {
     // 5) A JOIN REPEATS WHAT IN DOES NOT. The same question as koan 4, written as a join
     //    from the product to its order lines to their orders. Fill in the join condition
     //    that ties each order line to its product.
-    //    (Predict first: IN gave eight rows. A join returns one row per MATCH, and Alfreds
+    //    (Predict first: IN gave six rows. A join returns one row per MATCH, and Zenith
     //     bought some of those products more than once — so how many rows now? IN asks a
     //     yes-or-no question per product, which is why it never repeats one.)
     def "a join repeats what IN does not"() {
         expect:
-        shouldReturn 11, '''
+        shouldReturn 8, '''
             SELECT count(*)
             FROM "Products" p
             JOIN "Order Details" d ON ___
             JOIN "Orders" o ON o."OrderID" = d."OrderID"
-            WHERE o."CustomerID" = 'ALFKI'
+            WHERE o."CustomerID" = 'ZENIT'
         '''
     }
 
-    // 6) A TABLE IN FROM. What does the AVERAGE SUPPLIER earn us? That needs one total per
+    // 6) A TABLE IN FROM. What does the AVERAGE SUPPLIER sell? That needs one total per
     //    supplier first, and then the average of those totals. The brackets are that table
     //    of totals, named t. Fill in the clause that makes the inside return ONE ROW PER
     //    SUPPLIER.
     //    (Without it the inside adds up every line into one total, and the "average" of a
-    //     single total is just 58153.31 — the whole business, not a supplier. One row per
-    //     WHAT is the question the brackets answer.)
+    //     single total is just 15017031.15 — the whole business over five years, not a
+    //     supplier. One row per WHAT is the question the brackets answer.)
     def "a table in FROM, and its grain"() {
         expect:
-        shouldReturn 9692.22, '''
+        shouldReturn 750851.56, '''
             SELECT ROUND(AVG(t."Total"), 2)
             FROM (SELECT p."SupplierID",
                          SUM(d."UnitPrice" * d."Quantity"
@@ -208,16 +209,24 @@ class SubqueriesKoans extends KoanBase {
         '''
     }
 
-    // 7) THE AVERAGE OF WHAT. Which suppliers earn us more than the average SUPPLIER?
+    // 7) THE AVERAGE OF WHAT. Which suppliers sell more than the average SUPPLIER?
     //    Each supplier's total is compared with the average of the per-supplier totals —
     //    koan 6's table, now inside the HAVING. Fill in what the average is taken over.
-    //    (Two suppliers. Compare them with the average ORDER LINE instead — 301.31 — and
-    //     all six would pass, which is the lesson's trap on different tables: a supplier's
-    //     total is hundreds of lines added up, so of course it beats one line.)
+    //    (Nine suppliers of the twenty. Compare them with the average ORDER LINE instead —
+    //     595.13 — and all twenty would pass, which is the lesson's trap on different
+    //     tables: a supplier's total is thousands of lines added up, so of course it beats
+    //     one line.)
     def "the average of what: suppliers above the average supplier"() {
         expect:
-        shouldReturn([["Pavlova Ltd", 18519.15],
-                      ["Tokyo Traders", 17535.04]], '''
+        shouldReturn([["Baltic Producers", 1653749.77],
+                      ["Saffron Farms", 1527636.00],
+                      ["Harbor Brewery", 1459556.71],
+                      ["Bramble Dairy", 1317014.75],
+                      ["Nordic Fisheries", 1206310.33],
+                      ["Valley Brewery", 883794.54],
+                      ["Delta Mills", 771196.43],
+                      ["Bramble Producers", 770850.02],
+                      ["Alpine Kitchens", 763132.73]], '''
             SELECT s."CompanyName",
                    ROUND(SUM(d."UnitPrice" * d."Quantity"
                      * (1 - d."Discount")), 2) AS "Total sales"
@@ -240,58 +249,65 @@ class SubqueriesKoans extends KoanBase {
     // 8) A SUBQUERY BESIDE HAVING. Which categories have an average product price above the
     //    average price of ALL products? HAVING filters the groups; the brackets supply the
     //    one number every group is measured against. Fill in the brackets' select list.
-    //    (One category, and by a long way: the two most expensive products in the
-    //     catalogue are both in it.)
+    //    (Three of the eight categories, dearest first. Checkable fact: the average price
+    //     of all 80 products is 24.01.)
     def "a subquery beside HAVING"() {
         expect:
-        shouldReturn([["Meat/Poultry", 110.4]], '''
+        shouldReturn([["Meat/Poultry", 38.97],
+                      ["Confections", 29.29],
+                      ["Dairy Products", 26.49]], '''
             SELECT c."CategoryName", ROUND(AVG(p."UnitPrice"), 2) AS "Average price"
             FROM "Products" p
             JOIN "Categories" c ON c."CategoryID" = p."CategoryID"
             GROUP BY c."CategoryName"
             HAVING AVG(p."UnitPrice") > (SELECT ___ FROM "Products")
+            ORDER BY "Average price" DESC
         ''')
     }
 
     // 9) The whole query — no scaffolding.
-    //    THE QUESTION: which products earned us more than the average product did?
-    //      · one row per product, by name       -> "Products"."ProductName"
-    //      · what it earned: the line money, summed, ROUNDed to 2
-    //      · kept only if that total beats the average of the per-product totals
-    //      · biggest earner first
-    //      · return "ProductName", then the money — in that order
-    //    GRAIN FIRST: the average must be the average PRODUCT, one total per product,
-    //    averaged — not the average order line.
-    //    (Five products. Checkable fact: the average product earned 2907.67.)
-    def "write the whole query: products that beat the average product"() {
+    //    THE QUESTION: which sales reps sold more than the average sales rep?
+    //      · one row per employee who took orders — GROUP BY "EmployeeID" (two reps share a
+    //        surname, so a name is not enough), with "FirstName" and "LastName" beside it
+    //      · what each sold: the line money, summed, ROUNDed to 2
+    //      · kept only if that total beats the average of the per-employee totals
+    //      · biggest seller first
+    //      · return "FirstName", "LastName", then the money — in that order
+    //    GRAIN FIRST: the average must be the average EMPLOYEE, one total per employee,
+    //    averaged — not the average order line. Only the nine reps who took orders have a
+    //    total, so the average is over those nine.
+    //    (Four reps. Checkable fact: the average rep sold 1668559.02 — and the fifth rep
+    //     misses it by less than 26,000.)
+    def "write the whole query: sales reps who beat the average sales rep"() {
         expect:
-        shouldReturn([["Thuringer Rostbratwurst", 16464.07],
-                      ["Mishi Kobe Niku", 6867.60],
-                      ["Ikura", 4338.45],
-                      ["Gnocchi di nonna Alice", 3784.80],
-                      ["Tofu", 3218.96]], '''
+        shouldReturn([["Hugo", "Dubois", 2683582.70],
+                      ["Ravi", "Keller", 2262633.06],
+                      ["Yara", "Schmidt", 2173151.40],
+                      ["Umberto", "Jansen", 2027512.41]], '''
             ___
         ''')
     }
 
     // 10) The whole query again — brackets inside brackets.
-    //     THE QUESTION: which customers have ever bought our CHEAPEST product?
-    //       · nobody tells you which product that is: find the lowest "UnitPrice" (a value),
-    //       · then the product with that price (a value),
-    //       · then the customers with an order line for it (a list)
-    //       · return "CustomerID" and "CompanyName", ordered by "CustomerID"
+    //     THE QUESTION: which suppliers supply the category of our MOST EXPENSIVE product?
+    //       · nobody tells you which product that is: find the highest "UnitPrice" (a value),
+    //       · then the category of the product with that price (a value),
+    //       · then the suppliers of the products in that category (a list)
+    //       · return "SupplierID" and "CompanyName", ordered by "SupplierID"
     //     BUILD IT FROM THE INSIDE OUT, running each bracket alone before you wrap the next
     //     one around it. That is how anybody writes a query like this.
-    //     (Seven customers.)
-    def "write the whole query: a value inside a list inside a query"() {
+    //     (Eight suppliers, from ten products: two suppliers make two of them each, and IN
+    //      still lists each supplier once.)
+    def "write the whole query: a value inside a value inside a list"() {
         expect:
-        shouldReturn([["ANATR", "Ana Trujillo Emparedados y helados"],
-                      ["BONAP", "Bon app'"],
-                      ["DRACD", "Drachenblut Delikatessen"],
-                      ["FOLKO", "Folk och fä HB"],
-                      ["GREAL", "Great Lakes Food Market"],
-                      ["LILAS", "LILA-Supermercado"],
-                      ["OTTIK", "Ottilies Käseladen"]], '''
+        shouldReturn([[6, "Harbor Brewery"],
+                      [7, "Baltic Orchards"],
+                      [9, "Saffron Farms"],
+                      [12, "Baltic Mills"],
+                      [14, "Meadow Dairy"],
+                      [17, "Baltic Producers"],
+                      [18, "Elm Fisheries"],
+                      [20, "Delta Mills"]], '''
             ___
         ''')
     }

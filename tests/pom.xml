@@ -19,8 +19,10 @@
     The two roots are intentionally separate: the gate verifies EXACTLY the queries the
     lesson/video show; the koans are related practice, not a blanked copy of the gate.
 
-    The KOANS run only against the canonical ../datasets/northwind/northwind.duckdb (opened
-    as a throwaway copy) — no Docker, nothing to install: learners just write SQL.
+    The KOANS run only against a canonical DuckDB file, opened as a throwaway copy:
+    ../datasets/northwind/northwind.duckdb, or, from Learn SQL Series 2 on,
+    ../datasets/northwind-co/northwind_co.duckdb (schema northwind_co_s) — no Docker, nothing to
+    install: learners just write SQL.
 
     The GATE (*Spec) runs every lesson's SQL on BOTH engines, because identical data on two
     engines does NOT guarantee identical query results (date casts, NULL logic, integer
@@ -44,6 +46,9 @@
     <!-- Which source root the default build compiles & runs. The `koans` profile flips it. -->
     <test.src.dir>${project.basedir}/src/verify/groovy</test.src.dir>
     <test.includes>**/*Spec.java</test.includes>
+    <!-- Where Maven builds. Default target/; pass -Ddz.build.dir=target-NN so two lesson specs can run
+         at the same time without compiling into each other's classes. -->
+    <dz.build.dir>${project.basedir}/target</dz.build.dir>
   </properties>
 
   <dependencies>
@@ -92,6 +97,7 @@
   </dependencies>
 
   <build>
+    <directory>${dz.build.dir}</directory>
     <plugins>
       <!-- Compile ONLY the active source root (gate by default, koans under -Pkoans). -->
       <plugin>

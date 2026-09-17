@@ -84,24 +84,45 @@ published: false
     when its list holds a NULL. Worth one beat: each order beside the customer's PREVIOUS order date as a
     correlated subquery — Series 2 · 45 redoes it with LAG in one pass.
 
-    ── THE SERIES CASE — MAIN EXAMPLE — question 2 opens (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
-    The series case (a third of sales has no shipping record) moves from "how big, whose" to "did those
-    orders really not ship?". Figures, DuckDB 2026-09-15 — re-assert on PostgreSQL:
-      24 of 25 customers had an order with no ShippedDate (EXISTS); QUICK-Stop never did (NOT EXISTS).
-      18 customers placed a NEW order while an older one still had no ship date (correlated EXISTS on a
-      later order by the same customer). Ask it out loud: would a customer reorder, on schedule, from a
-      supplier that never delivered? That is question 2.
-    OFF-STORY, KEPT: the NOT IN trap stays on Employees.ReportsTo — a real NULL (shipping data would
-    need an invented one). KEEP SHORT: HAVING with no GROUP BY inside EXISTS — the Series 1 · 35 promise,
-    one small example, not a section.
-    DROPPED 2026-09-15: "ordered in Q1 2024 and never since" as a churn question — all 10 are simply not
-    due for their next order (78–159 days since the last, on a ~190-day cycle). Plain SQL at most.
+    ── THE SERIES CASE — CASE FILE SEGMENT — question 2 opens (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
+    ONE query, ONE finding, after the whole EXISTS lesson: a correlated EXISTS. Of the customers with an un-dated
+    Speedy Express order placed 2024-03-04..2024-08-30, how many placed a LATER order that has a ship date?
+    LOCKED (gate 2, 2026-09-17, both engines): 46 of 49. One condition in the subquery — no invoices.
+    Said as SOFT evidence (reminder below). The courier's confirmations settle it in Series 2 · 48.
+    OFF-STORY, KEPT (re-find on Northwind Company S): the NOT IN trap on "Employees"."ReportsTo" — the CEO's is a
+    real NULL, so "who manages nobody?" with NOT IN returns no rows; NOT EXISTS returns the reps. KEEP SHORT:
+    HAVING with no GROUP BY inside EXISTS — the Series 1 · 35 promise, one small example.
+    DROPPED 2026-09-15: "ordered in Q1 and never since" as a churn question. Plain SQL at most.
+
+    DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
+    academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
+    came from the frozen Northwind is to be RE-FOUND on it: the lesson beat stays, the numbers move. First
+    measurements are DuckDB only (stories sheet §3.2.2); every figure is re-asserted on PostgreSQL in the spec.
+
+    ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
+    Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: CASE FILE SEGMENT — question 2 opens.
+    A SEGMENT IS ONE QUERY of the shape the lesson just taught, and ONE finding, after a full lesson — using
+    nothing the learner has not met yet. If it needs more, it belongs to a later episode or to the project.
+    WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
+    repeats itself does the opposite. Checking in the brief is cheaper than re-cutting a published video.
+
+    ── REMINDER: THE EVIDENCE IS SOFT — SAY SO LOUDLY (owner review, 2026-09-16) ─────────────────
+    Customers ordering again and being served normally SUGGESTS the goods arrived; it does NOT PROVE it. Say it
+    out loud, in the video (a spoken line, not a footnote) and in the article: it is also what a customer on a
+    standing schedule would do whatever happened to one order; SQL narrows it down, people (and the courier's
+    confirmations, Series 2 · 48) confirm it. Suggested line for Mnemosyne, to adapt: "That's what delivered
+    orders would look like. It isn't proof — it's the reason to ask the courier before anyone calls a customer."
+    WHY: it is true; the course rules out verdicts; separating what data shows from what it proves is the
+    workplace skill; and it is what makes "ask the courier first" the sensible recommendation.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     LEVEL ●●● of ●●●●. BUILDS ON: Series 2 · 00, 2 · 20, Series 1 · 35 (the HAVING promise),
     1 · 45 (UNKNOWN).
-    SETS UP: Series 2 · 48 (EXCEPT reconciles the Speedy Express lists), 2 · 45 (LAG redoes the
-    "previous order" correlated subquery), 2 · 60 (the case's question 2), Series 3 · 22 (NOT EXISTS as a plan).
+    SETS UP: Series 2 · 48 (the courier's confirmations settle what this episode's evidence only suggests),
+    2 · 45 (LAG redoes a "previous order" correlated subquery), 2 · 60 (the case's question 2), Series 3 · 22
+    (NOT EXISTS as a plan).
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:choose

@@ -1,6 +1,6 @@
 ---
 title: "CTEs (WITH) — Breaking a Long Query Into Named Steps"
-description: "Give each step of a long query a name with WITH, use a step more than once, read and debug the steps one at a time, and check that a rewrite returns exactly what the original did."
+description: "Give each step of a long query a name with WITH, use a step more than once, write a filter once for every use of a step, read and debug the steps one at a time, and check that a rewrite returns exactly what the original did."
 topic: "learn-sql"
 tags: ["sql", "intermediate", "cte", "with", "readability", "refactoring"]
 level: "intermediate"
@@ -18,9 +18,9 @@ videoId: "learnsql-series2-20-ctes"
 
 ## Right, and hard to read
 
-The last two lessons ended on queries that return the right answer and are hard to read: brackets inside brackets, a subquery in `FROM` next to a `LEFT JOIN`. This lesson adds one tool that changes how such queries read, without changing what they return: `WITH`, which gives each step of a query a **name**.
+The last two lessons ended on queries that return the right answer and are hard to read: brackets inside brackets, a subquery in `FROM` next to a `LEFT JOIN`, and in the freight report the same month written twice. This lesson adds one tool that changes how such queries read, without changing what they return: `WITH`, which gives each step of a query a **name**.
 
-Every query below runs on the Northwind database on PostgreSQL. Write each one in CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
+Every query below runs on Northwind Company, the dataset installed in the <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">first lesson of this series</a>, and assumes `SET search_path TO northwind_co_s;` has been run in the CloudBeaver editor. Write each query and compare the result with the table under it.
 
 ## The nested version
 
@@ -76,7 +76,7 @@ FROM customer_totals;
 
 | Average customer |
 | ---------------- |
-| 2326.13          |
+| 126193.54        |
 
 The same average as in the subqueries lesson. The part in brackets after `WITH customer_totals AS` is a **CTE**, a common table expression: a subquery with a name, written before the query that uses it.
 
@@ -108,76 +108,77 @@ WHERE t."Total" > (SELECT AVG("Total")
 ORDER BY "Total sales" DESC;
 ```
 
-| CompanyName                | Total sales |
-| -------------------------- | ----------- |
-| Cactus Comidas para llevar | 4567.8      |
-| Blauer See Delikatessen    | 4318.8      |
-| Frankenversand             | 4267.27     |
-| …                          | …           |
-| Morgenstern Gesundkost     | 3289.13     |
-| Around the Horn            | 2701.58     |
-| Great Lakes Food Market    | 2683.28     |
+| CompanyName      | Total sales |
+| ---------------- | ----------- |
+| Fjord Foods      | 797164      |
+| Yarrow Pantry    | 786022.56   |
+| Quayside Traders | 783579.03   |
+| …                | …           |
+| Amber Grocers    | 186853.36   |
+| Emerald Grocers  | 175249.7    |
 
-The same nine customers as the nested query, and now it reads from top to bottom: first the customer totals, then the customers whose total is above their average.
+The same 30 customers as the nested query, and now it reads from top to bottom: first the customer totals, then the customers whose total is above their average.
 
 ## Steps that read steps
 
-One `WITH` can define several steps, separated by commas, and **each step can read the steps above it**. Here is the June product report from the <a href="/academy/learn-sql/multi-table-joins-duplicate-rows" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">multi-table joins lesson</a> as three steps: June's order lines, the units per product, and the report:
+One `WITH` can define several steps, separated by commas, and **each step can read the steps above it**. Here is the Dairy report from the <a href="/academy/learn-sql/multi-table-joins-duplicate-rows" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">multi-table joins lesson</a> (every Dairy product and its units in May 2024) as steps: May's order lines, the units per product, and the report:
 
-{/* The same highlight as the video: the two step names in green, and june_units reading june_lines. */}
+{/* The same highlight as the video: the two step names in green, and may_units reading may_lines. */}
 
-```sql file=./scripts/june-report-with.sql {1,9,12}
-WITH june_lines AS (
+```sql file=./scripts/dairy-report-with.sql {1,9,12}
+WITH may_lines AS (
   SELECT d."ProductID", d."Quantity"
   FROM "Order Details" d
   JOIN "Orders" o
     ON o."OrderID" = d."OrderID"
-  WHERE o."OrderDate" >= DATE '2024-06-01'
-    AND o."OrderDate" <  DATE '2024-07-01'
+  WHERE o."OrderDate" >= DATE '2024-05-01'
+    AND o."OrderDate" <  DATE '2024-06-01'
 ),
-june_units AS (
+may_units AS (
   SELECT "ProductID",
-         sum("Quantity") AS "June units"
-  FROM june_lines
+         sum("Quantity") AS "May units"
+  FROM may_lines
   GROUP BY "ProductID"
 )
-SELECT p."ProductName", u."June units"
+SELECT p."ProductName", u."May units"
 FROM "Products" p
-LEFT JOIN june_units u
+LEFT JOIN may_units u
   ON u."ProductID" = p."ProductID"
+WHERE p."CategoryID" = 4
 ORDER BY p."ProductName";
 ```
 
-`june_units` reads from `june_lines`, and the final query joins every product to `june_units`.
+`may_units` reads from `may_lines`, and the final query joins every Dairy product to `may_units`.
 
 ### Check that the answer did not move
 
 A rewrite is only correct if it returns exactly what the original returned. The quickest check is to count the rows and add up the totals, on the original and on the rewrite, and compare. Add the report as one more step and count it:
 
-```sql file=./scripts/june-report-with-check.sql
-WITH june_lines AS (
+```sql file=./scripts/dairy-report-with-check.sql
+WITH may_lines AS (
   SELECT d."ProductID", d."Quantity"
   FROM "Order Details" d
   JOIN "Orders" o
     ON o."OrderID" = d."OrderID"
-  WHERE o."OrderDate" >= DATE '2024-06-01'
-    AND o."OrderDate" <  DATE '2024-07-01'
+  WHERE o."OrderDate" >= DATE '2024-05-01'
+    AND o."OrderDate" <  DATE '2024-06-01'
 ),
-june_units AS (
+may_units AS (
   SELECT "ProductID",
-         sum("Quantity") AS "June units"
-  FROM june_lines
+         sum("Quantity") AS "May units"
+  FROM may_lines
   GROUP BY "ProductID"
 ),
 report AS (
-  SELECT p."ProductName", u."June units"
+  SELECT p."ProductName", u."May units"
   FROM "Products" p
-  LEFT JOIN june_units u
+  LEFT JOIN may_units u
     ON u."ProductID" = p."ProductID"
+  WHERE p."CategoryID" = 4
 )
 SELECT count(*) AS "Rows",
-       count("June units") AS "Sold",
-       sum("June units") AS "Units"
+       count("May units") AS "Sold",
+       sum("May units") AS "Units"
 FROM report;
 ```
 
@@ -187,19 +188,19 @@ FROM report;
 
 | Rows | Sold | Units |
 | ---- | ---- | ----- |
-| 20   | 6    | 40    |
+| 10   | 7    | 1891  |
 
 </div>
 
-Twenty products, six with June units, forty units: the same as the version with a subquery in the last lesson.
+Ten products, seven with May units, 1891 units: the same as the version with a subquery in the last lesson.
 
 ## The tidy-up that changed the answer
 
-The query still feels long. A tempting tidy-up: one step with every order line and its date, and the June test moved to the final `WHERE`, where filters usually go:
+The query still feels long. A tempting tidy-up: one step with every order line and its date, and the May test moved to the final `WHERE`, next to the Dairy filter, where filters usually go:
 
-{/* The same highlight as the video: the moved WHERE, in red. */}
+{/* The same highlight as the video: the moved May test, in red. */}
 
-```sql file=./scripts/june-report-tidied.sql {13-14}#err
+```sql file=./scripts/dairy-report-tidied.sql {14-15}#err
 WITH order_lines AS (
   SELECT d."ProductID", d."Quantity",
          o."OrderDate"
@@ -208,28 +209,30 @@ WITH order_lines AS (
     ON o."OrderID" = d."OrderID"
 )
 SELECT p."ProductName",
-       sum(l."Quantity") AS "June units"
+       sum(l."Quantity") AS "May units"
 FROM "Products" p
 LEFT JOIN order_lines l
   ON l."ProductID" = p."ProductID"
-WHERE l."OrderDate" >= DATE '2024-06-01'
-  AND l."OrderDate" <  DATE '2024-07-01'
+WHERE p."CategoryID" = 4
+  AND l."OrderDate" >= DATE '2024-05-01'
+  AND l."OrderDate" <  DATE '2024-06-01'
 GROUP BY p."ProductName"
 ORDER BY p."ProductName";
 ```
 
-| ProductName                 | June units |
-| --------------------------- | ---------- |
-| Aniseed Syrup               | 3          |
-| Boston Crab Meat            | 8          |
-| Chai                        | 12         |
-| Chang                       | 10         |
-| Chef Antons Cajun Seasoning | 2          |
-| Scottish Longbreads         | 5          |
+| ProductName      | May units |
+| ---------------- | --------- |
+| Coastal Parmesan | 10        |
+| Harvest Butter   | 408       |
+| Heritage Butter  | 836       |
+| Heritage Gouda   | 58        |
+| Highland Yoghurt | 52        |
+| Rustic Butter    | 471       |
+| Smoked Feta      | 56        |
 
-Six rows. The units still add up to 40, so a check on the total alone would pass. The row count does not:
+Seven rows. The units still add up to 1891, so a check on the total alone would pass. The row count does not:
 
-```sql file=./scripts/june-report-tidied-check.sql
+```sql file=./scripts/dairy-report-tidied-check.sql
 WITH order_lines AS (
   SELECT d."ProductID", d."Quantity",
          o."OrderDate"
@@ -239,53 +242,91 @@ WITH order_lines AS (
 ),
 report AS (
   SELECT p."ProductName",
-         sum(l."Quantity") AS "June units"
+         sum(l."Quantity") AS "May units"
   FROM "Products" p
   LEFT JOIN order_lines l
     ON l."ProductID" = p."ProductID"
-  WHERE l."OrderDate" >= DATE '2024-06-01'
-    AND l."OrderDate" <  DATE '2024-07-01'
+  WHERE p."CategoryID" = 4
+    AND l."OrderDate" >= DATE '2024-05-01'
+    AND l."OrderDate" <  DATE '2024-06-01'
   GROUP BY p."ProductName"
 )
 SELECT count(*) AS "Rows",
-       count("June units") AS "Sold",
-       sum("June units") AS "Units"
+       count("May units") AS "Sold",
+       sum("May units") AS "Units"
 FROM report;
 ```
 
 | Rows | Sold | Units |
 | ---- | ---- | ----- |
-| 6    | 6    | 40    |
+| 7    | 7    | 1891  |
 
-The `WHERE` now tests `l."OrderDate"`, a column that comes from the `LEFT JOIN`. For a product with no June line that column is NULL, the test is not true, and the row is removed — the same problem as in the JOINs lessons. The tidy-up changed the answer from 20 products to 6.
+The `WHERE` now tests `l."OrderDate"`, a column that comes from the `LEFT JOIN`. For a product with no May line that column is NULL, the test is not true, and the row is removed — the same problem as in the joins lesson. The tidy-up lost Alpine Butter, Classic Feta and Island Cheddar, the three products the report was for.
 
 The same check on both versions:
 
 | Version                 | Rows | Sold | Units |
 | ----------------------- | ---- | ---- | ----- |
-| june_lines → june_units | 20   | 6    | 40    |
-| the tidy-up             | 6    | 6    | 40    |
+| may_lines → may_units   | 10   | 7    | 1891  |
+| the tidy-up             | 7    | 7    | 1891  |
 
-**Keep a filter inside the step it narrows.** In the first version the June test runs inside `june_lines`, before any join, where it cannot remove a product.
+**Keep a filter inside the step it narrows.** In the first version the May test runs inside `may_lines`, before any join, where it cannot remove a product.
 
-### Your turn
+## One filter, and every use of the step sees it
 
-Rewrite the sales-and-freight report from the last lesson with two named steps, `sales` and `freight`, and check that the answer did not move: Frankenversand should still be first, with freight of 268.33.
+The sales-and-freight report from the last lesson is correct, and it writes May's range twice: once in the brackets that add up the sales, once in the brackets that add up the freight.
 
-```sql file=./scripts/sales-and-freight-with.sql
-WITH sales AS (
+{/* The same highlight as the video: the two copies of May's range, in grey. */}
+
+```sql file=../15-multi-table-joins-duplicate-rows/scripts/sales-and-freight-aggregated-first.sql {9-10,16-17}
+SELECT c."CompanyName", s."Total sales", f."Freight"
+FROM "Customers" c
+JOIN (SELECT o."CustomerID",
+             ROUND(SUM(d."UnitPrice" * d."Quantity"
+               * (1 - d."Discount")), 2) AS "Total sales"
+      FROM "Orders" o
+      JOIN "Order Details" d
+        ON d."OrderID" = o."OrderID"
+      WHERE o."OrderDate" >= DATE '2024-05-01'
+        AND o."OrderDate" <  DATE '2024-06-01'
+      GROUP BY o."CustomerID") AS s
+  ON s."CustomerID" = c."CustomerID"
+JOIN (SELECT "CustomerID",
+             SUM("Freight") AS "Freight"
+      FROM "Orders"
+      WHERE "OrderDate" >= DATE '2024-05-01'
+        AND "OrderDate" <  DATE '2024-06-01'
+      GROUP BY "CustomerID") AS f
+  ON f."CustomerID" = c."CustomerID"
+ORDER BY f."Freight" DESC
+LIMIT 5;
+```
+
+Nothing is wrong with it today. The cost comes with the next edit. Move the sales brackets to June, forget the freight brackets, and the query still runs without an error: it reports 39 customers, with June's sales next to May's freight.
+
+As steps, the month's orders are one step, `month_orders`, and both the sales step and the freight step read it:
+
+{/* The same highlight as the video: the May range in green, and the two steps that read month_orders in grey. */}
+
+```sql file=./scripts/sales-and-freight-with.sql {4-5,11,18}#good
+WITH month_orders AS (
+  SELECT "OrderID", "CustomerID", "Freight"
+  FROM "Orders"
+  WHERE "OrderDate" >= DATE '2024-05-01'
+    AND "OrderDate" <  DATE '2024-06-01'
+),
+sales AS (
   SELECT o."CustomerID",
          ROUND(SUM(d."UnitPrice" * d."Quantity"
            * (1 - d."Discount")), 2) AS "Total sales"
-  FROM "Orders" o
-  JOIN "Order Details" d
-    ON d."OrderID" = o."OrderID"
+  FROM month_orders o
+  JOIN "Order Details" d ON d."OrderID" = o."OrderID"
   GROUP BY o."CustomerID"
 ),
 freight AS (
   SELECT "CustomerID",
          SUM("Freight") AS "Freight"
-  FROM "Orders"
+  FROM month_orders
   GROUP BY "CustomerID"
 )
 SELECT c."CompanyName", s."Total sales", f."Freight"
@@ -296,145 +337,137 @@ ORDER BY f."Freight" DESC
 LIMIT 5;
 ```
 
-| CompanyName         | Total sales | Freight |
-| ------------------- | ----------- | ------- |
-| Frankenversand      | 4267.27     | 268.33  |
-| Alfreds Futterkiste | 3838.43     | 253.73  |
-| Folk och fä HB      | 1594.23     | 247.24  |
-| Ernst Handel        | 3902.78     | 226.15  |
-| Du monde entier     | 1918.93     | 205.06  |
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-good)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-good-ink))]">
 
-## Look inside one step
-
-When a query with steps returns something unexpected, look at one step on its own: keep the `WITH` and point the final `SELECT` at the step you want to see.
-
-{/* The same highlight as the video: the SELECT that reads one step, in green. */}
-
-```sql file=./scripts/june-lines-step.sql {10-11}#good
-WITH june_lines AS (
-  SELECT d."OrderID", d."ProductID",
-         d."Quantity"
-  FROM "Order Details" d
-  JOIN "Orders" o
-    ON o."OrderID" = d."OrderID"
-  WHERE o."OrderDate" >= DATE '2024-06-01'
-    AND o."OrderDate" <  DATE '2024-07-01'
-)
-SELECT *
-FROM june_lines
-ORDER BY "OrderID", "ProductID";
-```
-
-| OrderID | ProductID | Quantity |
-| ------- | --------- | -------- |
-| 4       | 1         | 12       |
-| 4       | 2         | 10       |
-| 5       | 3         | 3        |
-| 6       | 4         | 2        |
-| 6       | 5         | 5        |
-| 7       | 6         | 8        |
-
-Six June lines from four orders, adding up to 40 units. This step is correct, so the problem, if there is one, is in a later step.
-
-## The case file: the report, as named steps
-
-The case this series follows: in Northwind, a third of what was sold, 19169 of 58153.31, is on orders that have no ship date. The <a href="/academy/learn-sql/multi-table-joins-duplicate-rows" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">multi-table joins lesson</a> found where that money sits, by sales rep and by courier: the value of each order added up first, in brackets, and joined to the orders with no ship date. That is a report somebody re-runs every week, so it has to be easy to read.
-
-As named steps: `open_orders` keeps the orders with no `"ShippedDate"`, `order_value` adds up the order lines of each one, reading the step above it, and the final query joins both to the rep and the courier:
-
-{/* The same highlight as the video: the two step names in green; order_value reading open_orders,
-    and the final query reading both steps, in grey. */}
-
-```sql file=./scripts/open-orders-by-rep-and-courier-with.sql {1,6,10,19-20}
-WITH open_orders AS (
-  SELECT "OrderID", "EmployeeID", "ShipVia", "Freight"
-  FROM "Orders"
-  WHERE "ShippedDate" IS NULL
-),
-order_value AS (
-  SELECT o."OrderID",
-         SUM(d."UnitPrice" * d."Quantity"
-           * (1 - d."Discount")) AS "Order value"
-  FROM open_orders o
-  JOIN "Order Details" d ON d."OrderID" = o."OrderID"
-  GROUP BY o."OrderID"
-)
-SELECT e."FirstName" AS "Rep",
-       s."CompanyName" AS "Courier",
-       count(*) AS "Orders",
-       ROUND(SUM(v."Order value"), 2) AS "Sales",
-       SUM(o."Freight") AS "Freight"
-FROM open_orders o
-JOIN order_value v ON v."OrderID" = o."OrderID"
-JOIN "Employees" e ON e."EmployeeID" = o."EmployeeID"
-JOIN "Shippers" s ON s."ShipperID" = o."ShipVia"
-GROUP BY e."FirstName", s."CompanyName"
-ORDER BY "Sales" DESC;
-```
-
-{/* The same highlight as the video: the first row, in grey — the row the text talks about, no verdict. */}
-
-<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold">
-
-| Rep   | Courier        | Orders | Sales   | Freight |
-| ----- | -------------- | ------ | ------- | ------- |
-| Nancy | Speedy Express | 24     | 18848.3 | 1277.84 |
-| Janet | United Package | 2      | 292.2   | 38.25   |
-| Nancy | United Package | 1      | 28.5    | 11.61   |
+| CompanyName       | Total sales | Freight |
+| ----------------- | ----------- | ------- |
+| Alpine Provisions | 15686.56    | 610.83  |
+| Golden Pantry     | 18342.33    | 562.08  |
+| Yarrow Pantry     | 12884.6     | 502.33  |
+| Quayside Traders  | 13170.94    | 497.47  |
+| Nordic Foods      | 11322.73    | 480.29  |
 
 </div>
 
-`open_orders` is used twice: `order_value` reads it, and so does the final query, for the rep, the courier and the freight. Each order's value is added up in its own step, where one row is one order, so the freight next to it is counted once.
+The same five rows as the last lesson. May is written once, and every use of the step sees it. Each measure is still added up in its own step, where one row is one of its own: the rule from the joins lesson does not change.
 
-In Northwind, 24 of the orders with no ship date are her orders sent with Speedy Express, and they carry 18848.3 of the 19169. The other two rows belong in the picture too: two of Janet's orders and one more of Nancy's, all with United Package. The report shows where the money sits, not why it has no ship date.
+### Check the freight too
 
-### Check that the answer did not move
+Check this rewrite the same way: the report as one more step, then its rows and its totals.
 
-The same check as on the June report: add the report as one more step, then count its rows and add up its orders and its sales.
-
-```sql file=./scripts/open-orders-by-rep-and-courier-check.sql
-WITH open_orders AS (
-  SELECT "OrderID", "EmployeeID", "ShipVia", "Freight"
+```sql file=./scripts/sales-and-freight-with-check.sql
+WITH month_orders AS (
+  SELECT "OrderID", "CustomerID", "Freight"
   FROM "Orders"
-  WHERE "ShippedDate" IS NULL
+  WHERE "OrderDate" >= DATE '2024-05-01'
+    AND "OrderDate" <  DATE '2024-06-01'
 ),
-order_value AS (
-  SELECT o."OrderID",
-         SUM(d."UnitPrice" * d."Quantity"
-           * (1 - d."Discount")) AS "Order value"
-  FROM open_orders o
+sales AS (
+  SELECT o."CustomerID",
+         ROUND(SUM(d."UnitPrice" * d."Quantity"
+           * (1 - d."Discount")), 2) AS "Total sales"
+  FROM month_orders o
   JOIN "Order Details" d ON d."OrderID" = o."OrderID"
-  GROUP BY o."OrderID"
+  GROUP BY o."CustomerID"
+),
+freight AS (
+  SELECT "CustomerID",
+         SUM("Freight") AS "Freight"
+  FROM month_orders
+  GROUP BY "CustomerID"
 ),
 report AS (
-  SELECT e."FirstName" AS "Rep",
-         s."CompanyName" AS "Courier",
-         count(*) AS "Orders",
-         ROUND(SUM(v."Order value"), 2) AS "Sales",
-         SUM(o."Freight") AS "Freight"
-  FROM open_orders o
-  JOIN order_value v ON v."OrderID" = o."OrderID"
-  JOIN "Employees" e ON e."EmployeeID" = o."EmployeeID"
-  JOIN "Shippers" s ON s."ShipperID" = o."ShipVia"
-  GROUP BY e."FirstName", s."CompanyName"
+  SELECT c."CompanyName", s."Total sales", f."Freight"
+  FROM "Customers" c
+  JOIN sales s ON s."CustomerID" = c."CustomerID"
+  JOIN freight f ON f."CustomerID" = c."CustomerID"
 )
 SELECT count(*) AS "Rows",
-       sum("Orders") AS "Orders",
-       sum("Sales") AS "Sales"
+       sum("Total sales") AS "Sales",
+       sum("Freight") AS "Freight"
 FROM report;
 ```
 
-{/* The same highlight as the video: the check, in green. */}
-
 <div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-good)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-good-ink))]">
 
-| Rows | Orders | Sales |
-| ---- | ------ | ----- |
-| 3    | 27     | 19169 |
+| Rows | Sales     | Freight |
+| ---- | --------- | ------- |
+| 47   | 262931.17 | 8977.88 |
 
 </div>
 
-Three rows, 27 orders, 19169 in sales: the same as the nested version in the joins lesson. The rewrite changed how the report reads and nothing that it returns. When it is re-run next week and a number looks different, each step can be looked at on its own, starting with `SELECT * FROM open_orders`.
+47 customers, 262931.17 in sales and 8977.88 in freight: the same as the last lesson's version with its `LIMIT 5` removed, and 8977.88 is exactly May's freight over `"Orders"` alone. The freight is in the check on purpose. It is the number a join multiplies, and a rewrite that joins the order lines to the freight would still return 47 rows and the same sales. A check on rows and sales alone would pass it.
+
+### Your turn
+
+Run the same report for June 2024. Change the two dates in `month_orders`, and nothing else. Who pays the most freight in June?
+
+```sql file=./scripts/sales-and-freight-june.sql
+WITH month_orders AS (
+  SELECT "OrderID", "CustomerID", "Freight"
+  FROM "Orders"
+  WHERE "OrderDate" >= DATE '2024-06-01'
+    AND "OrderDate" <  DATE '2024-07-01'
+),
+sales AS (
+  SELECT o."CustomerID",
+         ROUND(SUM(d."UnitPrice" * d."Quantity"
+           * (1 - d."Discount")), 2) AS "Total sales"
+  FROM month_orders o
+  JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+  GROUP BY o."CustomerID"
+),
+freight AS (
+  SELECT "CustomerID",
+         SUM("Freight") AS "Freight"
+  FROM month_orders
+  GROUP BY "CustomerID"
+)
+SELECT c."CompanyName", s."Total sales", f."Freight"
+FROM "Customers" c
+JOIN sales s ON s."CustomerID" = c."CustomerID"
+JOIN freight f ON f."CustomerID" = c."CustomerID"
+ORDER BY f."Freight" DESC
+LIMIT 5;
+```
+
+| CompanyName       | Total sales | Freight |
+| ----------------- | ----------- | ------- |
+| Juniper Trading   | 21727.16    | 772.19  |
+| Zenith Food Hall  | 18151.04    | 715.64  |
+| Fjord Foods       | 17594.89    | 625.96  |
+| Golden Pantry     | 15954.95    | 536.37  |
+| Alpine Provisions | 15670.92    | 528.21  |
+
+The step's name now says "month", not "May", for exactly this reason: the step holds whichever month its two dates say.
+
+## Look inside one step
+
+When a query with steps returns something that looks wrong, look at one step on its own: keep the `WITH` and point the final `SELECT` at the step you want to see. Narrow it to the rows in doubt. In the last lesson a join made Nordic Foods' May freight look like 2149.26, so look at its orders in `month_orders`:
+
+{/* The same highlight as the video: the SELECT that reads one step, in green. */}
+
+```sql file=./scripts/month-orders-step.sql {7-8}#good
+WITH month_orders AS (
+  SELECT "OrderID", "CustomerID", "Freight"
+  FROM "Orders"
+  WHERE "OrderDate" >= DATE '2024-05-01'
+    AND "OrderDate" <  DATE '2024-06-01'
+)
+SELECT *
+FROM month_orders
+WHERE "CustomerID" = 'NORDI'
+ORDER BY "OrderID";
+```
+
+| OrderID | CustomerID | Freight |
+| ------- | ---------- | ------- |
+| 8374    | NORDI      | 184.43  |
+| 8468    | NORDI      | 59.69   |
+| 8482    | NORDI      | 44.27   |
+| 8548    | NORDI      | 191.9   |
+
+Four May orders, and their freight adds up to 480.29, the figure in the report. This step is correct, so if a number were wrong, the problem would be in a later step.
 
 ## For reading, not for speed
 
@@ -444,12 +477,12 @@ Do not expect a CTE to make a query faster. The database is free to treat a CTE 
 
 1. **Name a step, then use the name.**
 2. **A step can read the steps above it**, and a step can be used more than once.
-3. **After any rewrite, compare the rows and the totals with the original.**
-4. **Keep a filter inside the step it narrows.**
+3. **After any rewrite, compare the rows and the totals with the original**, including the column a join could multiply.
+4. **Write a filter once, inside the step it narrows.**
 
 ## Practice
 
-There are ten koans for this lesson. They ask different questions from this page: categories, suppliers and countries, and employees and shippers across every order rather than the orders with no ship date, so copying a query from this page will not answer them. Two of them are **equivalence koans**: they run a correct nested query first, and your rewrite with `WITH` has to return exactly the same rows.
+There are ten koans for this lesson. They ask different questions from this page: categories, sales reps, order channels, products, couriers, countries and customer segments, so copying a query from this page will not answer them. Two of them are **equivalence koans**: they run a correct nested query first, and your rewrite with `WITH` has to return exactly the same rows. The koans ship with their own copy of Northwind Company, so they need no setup.
 
 ```powershell
 cd c:/DataPallas/db/datazeus
@@ -466,8 +499,8 @@ c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series2\_20\C
 
 Each koan has a `___` where the answer belongs. Replace one, save, run the command again, and watch that koan go green.
 
-The koans follow this page: reading a step by its name, using a step twice, a step that reads another step, a total of totals, two rewrites that must match a nested query, a tidy-up that dropped two categories, and looking inside one step. The last two give only the question: the countries above the average country, and products and August 2023 units per supplier.
+The koans follow this page: reading a step by its name, using a step twice, a step that reads another step, a total of totals, two rewrites that must match a nested query, a tidy-up that dropped two categories, and looking inside one step. The last two give only the question: the countries above the average country, and each customer segment's customers and August 2023 units.
 
 ## What is next
 
-The next lesson is **EXISTS and correlated subqueries**: a subquery that looks at each row in turn. It opens the second question of the case: which customers waited for an order with no ship date, and did they keep ordering?
+The next lesson is **views**: a step with a name that outlives the query. The `customer_totals` step from this page is a good example of one that could live in the database, so that every report only has to read it.

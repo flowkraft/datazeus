@@ -1,4 +1,4 @@
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
-WHERE "UnitPrice" > 28.72
+WHERE "UnitPrice" > 24.01
 ORDER BY "UnitPrice" DESC;

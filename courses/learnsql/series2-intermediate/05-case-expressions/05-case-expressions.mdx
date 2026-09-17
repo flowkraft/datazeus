@@ -22,7 +22,7 @@ The shipping team is reviewing freight costs, and they want **every order labell
 
 With Series 1 alone, this takes three queries, one `WHERE` per band, and the three answers put together by hand. Even then the result is three counts, not a label on each order. This lesson adds the tool that does it in one query: **CASE**, SQL's if-then.
 
-Every query below runs on the Northwind database on PostgreSQL. Write each one in CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
+Every query below runs on Northwind Company, the dataset installed in the <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">first lesson of this series</a>, and assumes `SET search_path TO northwind_co_s;` has been run in the CloudBeaver editor. Write each query and compare the result with the table under it.
 
 ## CASE: a value chosen row by row
 
@@ -50,16 +50,16 @@ It is an expression, like the calculated columns from the <a href="/academy/lear
 
 | OrderID | Freight | Band   |
 | ------- | ------- | ------ |
-| 1       | 25.1    | medium |
-| 2       | 15.5    | light  |
-| 3       | 40      | medium |
-| 4       | 32.38   | medium |
-| 5       | 11.61   | light  |
-| 6       | 45.5    | medium |
+| 1       | 38.4    | medium |
+| 2       | 114.85  | heavy  |
+| 3       | 37.25   | medium |
+| 4       | 29.15   | medium |
+| 5       | 18.58   | light  |
+| 6       | 18.43   | light  |
 
 </div>
 
-Read order 1 the way CASE does. Its freight is 25.1. The first `WHEN` asks "under 25?", and the answer is no. The second asks "under 60?", and the answer is yes, so CASE stops and returns medium. Order 5, on 11.61, stops at the first `WHEN`.
+Read order 1 the way CASE does. Its freight is 38.4. The first `WHEN` asks "under 25?", and the answer is no. The second asks "under 60?", and the answer is yes, so CASE stops and returns medium. Order 5, on 18.58, stops at the first `WHEN`. Order 2, on 114.85, fails both tests and gets the `ELSE` value, heavy.
 
 ## Count the bands
 
@@ -81,11 +81,11 @@ ORDER BY min("Freight");
 
 | Band   | Orders |
 | ------ | ------ |
-| light  | 16     |
-| medium | 34     |
-| heavy  | 29     |
+| light  | 2446   |
+| medium | 4156   |
+| heavy  | 3398   |
 
-16, 34 and 29 add up to 79, every order in the table. The label the query made up is the thing it groups by. `ORDER BY min("Freight")` sorts the bands by the smallest freight in each, so light comes first instead of in alphabetical order.
+2446, 4156 and 3398 add up to 10000, every order in the table. The label the query made up is the thing it groups by. `ORDER BY min("Freight")` sorts the bands by the smallest freight in each, so light comes first instead of in alphabetical order.
 
 PostgreSQL and DuckDB both let `GROUP BY` use the name `"Band"` from the `SELECT`. Some databases do not, and there you repeat the whole CASE in the `GROUP BY`.
 
@@ -113,12 +113,12 @@ ORDER BY min("Freight");
 
 | Band   | Orders |
 | ------ | ------ |
-| medium | 50     |
-| heavy  | 29     |
+| medium | 6602   |
+| heavy  | 3398   |
 
 </div>
 
-There are no light orders at all, and medium went from 34 to 50. The 16 light orders are still in the table, and their freight did not change. What changed is the order of the tests: **under 25 is also under 60**. The first `WHEN` now asks "under 60?", every light order answers yes, and CASE stops there. The light test is never reached.
+There are no light orders at all, and medium went from 4156 to 6602, which is 2446 + 4156. The 2446 light orders are still in the table, and their freight did not change. What changed is the order of the tests: **under 25 is also under 60**. The first `WHEN` now asks "under 60?", every light order answers yes, and CASE stops there. The light test is never reached.
 
 There is no error and no warning. The result simply has one band fewer. So **write the narrow tests first**: a wide test above a narrow one catches its rows before the narrow one is checked.
 
@@ -144,12 +144,12 @@ ORDER BY "Label" NULLS LAST;
 
 | Label    | Orders |
 | -------- | ------ |
-| heavy    | 37     |
-| `[NULL]` | 42     |
+| heavy    | 4383   |
+| `[NULL]` | 5617   |
 
 </div>
 
-37 orders are heavy, and **42 orders are labelled NULL**. A CASE with no `ELSE` returns NULL for every row that no `WHEN` matched. It does not look harmful here, because the 42 are still counted. The trouble starts when a query tests the label.
+4383 orders are heavy, and **5617 orders are labelled NULL**, more than half of them. A CASE with no `ELSE` returns NULL for every row that no `WHEN` matched. It does not look harmful here, because the 5617 are still counted. The trouble starts when a query tests the label.
 
 ### How many orders are not heavy?
 
@@ -171,7 +171,7 @@ WHERE "Label" <> 'heavy';
 | --------- |
 | 0         |
 
-Zero, although 42 orders are not heavy. Every one of them is labelled NULL, and this is the rule from the <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a>: NULL is not unequal to 'heavy'. The comparison `NULL <> 'heavy'` is **unknown**, and `WHERE` keeps only rows where the test is true. All 42 are dropped.
+Zero, although 5617 orders are not heavy. Every one of them is labelled NULL, and this is the rule from the <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a>: NULL is not unequal to 'heavy'. The comparison `NULL <> 'heavy'` is **unknown**, and `WHERE` keeps only rows where the test is true. All 5617 are dropped.
 
 ### Write the ELSE
 
@@ -192,13 +192,13 @@ WHERE "Label" <> 'heavy';
 
 | Not heavy |
 | --------- |
-| 42        |
+| 5617      |
 
-One line, and the 42 orders are back.
+One line, and the 5617 orders are back.
 
 ## The short form
 
-When every `WHEN` compares the same column with a value, the column can be written once, after `CASE`:
+When every `WHEN` compares the same column with a value, the column can be written once, after `CASE`. Here it turns the courier number in `"ShipVia"` into a name, written from memory with the three couriers Series 1's Northwind had:
 
 {/* The same highlight as the video: CASE "ShipVia" and its first WHEN, in grey. */}
 
@@ -214,13 +214,22 @@ GROUP BY "Shipper"
 ORDER BY "Shipper";
 ```
 
+{/* The same highlight as the video: the NULL row in terracotta. */}
+
+<div className="[&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(4)_td]:font-bold [&_tbody_tr:nth-child(4)_td]:text-[rgb(var(--hl-fault-ink))]">
+
 | Shipper          | Orders |
 | ---------------- | ------ |
-| Federal Shipping | 26     |
-| Speedy Express   | 26     |
-| United Package   | 27     |
+| Federal Shipping | 831    |
+| Speedy Express   | 7513   |
+| United Package   | 1145   |
+| `[NULL]`         | 511    |
 
-It works, but these names are already stored in the `"Shippers"` table, and a join reads them from there:
+</div>
+
+511 orders have no courier name. Northwind Company has a fourth courier, Northern Freight Lines, with `"ShipVia"` 4. The CASE does not name it and has no `ELSE`, so its orders get NULL: the missing `ELSE` again, arriving the way it usually does at work, through a list typed into a query that went out of date.
+
+The names are already stored in the `"Shippers"` table, and a join reads them from there:
 
 ```sql file=./scripts/shipper-names-by-join.sql
 SELECT s."CompanyName" AS "Shipper",
@@ -232,16 +241,23 @@ GROUP BY s."CompanyName"
 ORDER BY s."CompanyName";
 ```
 
-It returns the same 26, 26 and 27. The join is better here: when a shipper is renamed, the table changes and the query does not have to. **CASE is for labels that nobody stored**, such as light, medium and heavy. If the label already lives in a table, read it from the table.
+| Shipper                | Orders |
+| ---------------------- | ------ |
+| Federal Shipping       | 831    |
+| Northern Freight Lines | 511    |
+| Speedy Express         | 7513   |
+| United Package         | 1145   |
+
+All four couriers, by the names the company stores. The join is better here: when a courier is added or renamed, the table changes and the query does not have to. **CASE is for labels that nobody stored**, such as light, medium and heavy. If the label already lives in a table, read it from the table.
 
 ## COALESCE is a CASE
 
-The <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a> used `COALESCE` to put a stand-in where a value is missing. It is a short way of writing a CASE: when the value is NULL, use the stand-in; otherwise use the value.
+The <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a> used `COALESCE` to put a stand-in where a value is missing. It is a short way of writing a CASE: when the value is NULL, use the stand-in; otherwise use the value. Customers in Canada have a province in `"Region"`, and customers in Poland have none, so these rows take both branches:
 
 {/* The same highlight as the video: COALESCE and the CASE's three lines, in grey. */}
 
 ```sql file=./scripts/region-coalesce-and-case.sql {2,4-6}
-SELECT "CompanyName",
+SELECT "CompanyName", "Country",
        COALESCE("Region", '(none)')
          AS "With COALESCE",
        CASE
@@ -249,81 +265,79 @@ SELECT "CompanyName",
          ELSE "Region"
        END AS "With CASE"
 FROM "Customers"
-ORDER BY "CustomerID"
-LIMIT 4;
+WHERE "Country" IN ('Canada', 'Poland')
+ORDER BY "CustomerID";
 ```
 
-| CompanyName                        | With COALESCE | With CASE |
-| ---------------------------------- | ------------- | --------- |
-| Alfreds Futterkiste                | (none)        | (none)    |
-| Ana Trujillo Emparedados y helados | (none)        | (none)    |
-| Antonio Moreno Taquería            | (none)        | (none)    |
-| Around the Horn                    | (none)        | (none)    |
+| CompanyName        | Country | With COALESCE | With CASE |
+| ------------------ | ------- | ------------- | --------- |
+| Cedar Grocers      | Poland  | (none)        | (none)    |
+| Emerald Fine Foods | Canada  | BC            | BC        |
+| Golden Supermarket | Canada  | BC            | BC        |
+| Kestrel Provisions | Poland  | (none)        | (none)    |
+| Pampas Foods       | Canada  | BC            | BC        |
+| Tundra Foods       | Canada  | QC            | QC        |
+| Upland Trading     | Canada  | QC            | QC        |
+| Zenith Food Hall   | Poland  | (none)        | (none)    |
 
-The two columns are identical, and they stay identical for all 25 customers.
+The two columns are identical, and they stay identical for all 120 customers.
 
-## A third of the sales, and no ship date
+## Your turn: online or offline
 
-The <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> ended on a finding: in Northwind, **a third of what we sold is on orders with no `"ShippedDate"`**. Before anyone can ask why, a report has to answer the plain questions first: how many orders, and where are they? Every one of those questions starts with a label on each order, so the rest of this lesson uses CASE to answer them.
+Every order in Northwind Company came in through a `"Channel"`: Sales rep, Web, Phone or EDI (orders sent system to system). Label every order **online** when it came through Web or EDI, and **offline** otherwise. A `WHEN` can hold any test a `WHERE` can, `IN` included. Predict the counts before you run it:
 
-### Your turn
-
-Label every order as shipped, or no ship date. An order with no ship date has an empty `"ShippedDate"`. Predict the counts before you run it:
-
-```sql file=./scripts/shipped-or-no-ship-date.sql
+```sql file=./scripts/orders-online-or-offline.sql
 SELECT CASE
-         WHEN "ShippedDate" IS NULL THEN 'no ship date'
-         ELSE 'shipped'
-       END AS "Status",
+         WHEN "Channel" IN ('Web', 'EDI') THEN 'online'
+         ELSE 'offline'
+       END AS "Channel type",
        count(*) AS "Orders"
 FROM "Orders"
-GROUP BY "Status"
+GROUP BY "Channel type"
 ORDER BY "Orders" DESC;
 ```
 
-| Status       | Orders |
+| Channel type | Orders |
 | ------------ | ------ |
-| shipped      | 52     |
-| no ship date | 27     |
+| offline      | 6234   |
+| online       | 3766   |
 
 ## CASE inside SUM: a column for each status
 
-Now where. A manager wants, for every country, **how many orders there are and how many have no ship date**, side by side, one row per country.
+Every order also has a `"Status"`: Shipped, Cancelled or Open. A manager wants, for every channel, **how many orders there are and how many are in each status**, side by side, one row per channel.
 
-That is two counts with two different conditions, and one query has only one `WHERE`. The way around it is to move the condition into the column:
+That is three counts with three different conditions, and one query has only one `WHERE`. The way around it is to move each condition into its own column:
 
 {/* The same highlight as the video: the SUM(CASE …) lines, in grey. */}
 
-```sql file=./scripts/no-ship-date-per-country.sql {3-4}
-SELECT "ShipCountry",
+```sql file=./scripts/status-per-channel.sql {3-8}
+SELECT "Channel",
        count(*) AS "Orders",
-       SUM(CASE WHEN "ShippedDate" IS NULL
-           THEN 1 ELSE 0 END) AS "No ship date"
+       SUM(CASE WHEN "Status" = 'Shipped'
+           THEN 1 ELSE 0 END) AS "Shipped",
+       SUM(CASE WHEN "Status" = 'Cancelled'
+           THEN 1 ELSE 0 END) AS "Cancelled",
+       SUM(CASE WHEN "Status" = 'Open'
+           THEN 1 ELSE 0 END) AS "Open"
 FROM "Orders"
-GROUP BY "ShipCountry"
-ORDER BY "Orders" DESC, "ShipCountry";
+GROUP BY "Channel"
+ORDER BY "Orders" DESC;
 ```
 
-{/* The same highlight as the video: Germany in blue, the row the text reads. */}
+{/* The same highlight as the video: Sales rep in blue, the row the text reads. */}
 
 <div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
 
-| ShipCountry | Orders | No ship date |
-| ----------- | ------ | ------------ |
-| Germany     | 32     | 10           |
-| Mexico      | 8      | 4            |
-| Sweden      | 8      | 3            |
-| UK          | 7      | 2            |
-| France      | 6      | 2            |
-| Venezuela   | 6      | 2            |
-| Argentina   | 3      | 1            |
-| Austria     | 3      | 1            |
-| Italy       | 3      | 1            |
-| USA         | 3      | 1            |
+| Channel   | Orders | Shipped | Cancelled | Open |
+| --------- | ------ | ------- | --------- | ---- |
+| Sales rep | 3749   | 3669    | 61        | 19   |
+| Web       | 2765   | 2669    | 50        | 46   |
+| Phone     | 2485   | 2413    | 42        | 30   |
+| EDI       | 1001   | 969     | 22        | 10   |
 
 </div>
 
-Germany has 32 orders, and 10 of them have no ship date. `SUM` adds numbers, so how did it count? The CASE turns every order with no ship date into a 1 and every other order into a 0, and `SUM` adds the ones. The result is a count, **without a `WHERE`**, next to the count of all orders.
+Sales rep has 3749 orders: 3669 shipped, 61 cancelled and 19 open. `SUM` adds numbers, so how did it count? Each CASE turns every order in its status into a 1 and every other order into a 0, and `SUM` adds the ones. The result is a count, **without a `WHERE`**, next to the count of all orders. The three status columns add back up to the orders on every row, which is a quick check that no status was missed.
 
 You can add as many of these columns as you need, one per status, all in the same `GROUP BY`. This is how a report with a column for each status is built.
 
@@ -333,154 +347,150 @@ You will also see it written with `count`, and there the missing `ELSE` is on pu
 
 {/* The same highlight as the video: the count(CASE …) lines, in green. */}
 
-```sql file=./scripts/no-ship-date-counted-with-count.sql {3-4}#good
-SELECT "ShipCountry",
+```sql file=./scripts/status-per-channel-counted-with-count.sql {3-8}#good
+SELECT "Channel",
        count(*) AS "Orders",
-       count(CASE WHEN "ShippedDate" IS NULL
-             THEN 1 END) AS "No ship date"
+       count(CASE WHEN "Status" = 'Shipped'
+             THEN 1 END) AS "Shipped",
+       count(CASE WHEN "Status" = 'Cancelled'
+             THEN 1 END) AS "Cancelled",
+       count(CASE WHEN "Status" = 'Open'
+             THEN 1 END) AS "Open"
 FROM "Orders"
-GROUP BY "ShipCountry"
-ORDER BY "Orders" DESC, "ShipCountry";
+GROUP BY "Channel"
+ORDER BY "Orders" DESC;
 ```
 
-Shipped orders get NULL, `count` of a column skips NULLs, and the result is the same table: Germany still has 10. In the filter above, the missing `ELSE` was a bug. Here it does the counting. The difference is whether you meant the NULLs.
+Every order outside the status gets NULL, `count` of a column skips NULLs, and the result is the same table: Sales rep still has 61 cancelled. In the filter above, the missing `ELSE` was a bug. Here it does the counting. The difference is whether you meant the NULLs.
 
 ## A share that comes back as 0
 
-Germany has the most orders with no ship date. It also has by far the most orders, so 10 on its own says little. The fair comparison is **the share**: the count divided by all of that country's orders. Add it as a fourth column:
+Sales rep has the most cancelled orders. It also has by far the most orders, so 61 on its own says little. The fair comparison is **the share**: the cancelled count divided by all of that channel's orders. Add it as a fourth column:
 
 {/* The same highlight as the video: the division, in grey. Nothing on the card looks wrong yet. */}
 
-```sql file=./scripts/share-per-country-integer-division.sql {5-6}
-SELECT "ShipCountry",
+```sql file=./scripts/cancelled-share-per-channel-integer-division.sql {5-6}
+SELECT "Channel",
        count(*) AS "Orders",
-       SUM(CASE WHEN "ShippedDate" IS NULL
-           THEN 1 ELSE 0 END) AS "No ship date",
-       SUM(CASE WHEN "ShippedDate" IS NULL
+       SUM(CASE WHEN "Status" = 'Cancelled'
+           THEN 1 ELSE 0 END) AS "Cancelled",
+       SUM(CASE WHEN "Status" = 'Cancelled'
            THEN 1 ELSE 0 END) / count(*) AS "Share"
 FROM "Orders"
-GROUP BY "ShipCountry"
-ORDER BY "Orders" DESC, "ShipCountry";
+GROUP BY "Channel"
+ORDER BY "Orders" DESC;
 ```
 
 This is what CloudBeaver shows:
 
-{/* The same highlight as the video: the Share column in terracotta, with Germany's cell bold — share-zero's fault column. */}
+{/* The same highlight as the video: the Share column in terracotta, with Sales rep's cell bold — share-zero's fault column. */}
 
 <div className="[&_th:nth-child(4)]:bg-[rgb(var(--hl-fault)/var(--hl-head))] [&_th:nth-child(4)]:text-[rgb(var(--hl-fault-ink))] [&_td:nth-child(4)]:bg-[rgb(var(--hl-fault)/var(--hl-col))] [&_td:nth-child(4)]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(1)_td:nth-child(4)]:font-bold">
 
-| ShipCountry | Orders | No ship date | Share |
-| ----------- | ------ | ------------ | ----- |
-| Germany     | 32     | 10           | 0     |
-| Mexico      | 8      | 4            | 0     |
-| Sweden      | 8      | 3            | 0     |
-| UK          | 7      | 2            | 0     |
-| France      | 6      | 2            | 0     |
-| Venezuela   | 6      | 2            | 0     |
-| Argentina   | 3      | 1            | 0     |
-| Austria     | 3      | 1            | 0     |
-| Italy       | 3      | 1            | 0     |
-| USA         | 3      | 1            | 0     |
+| Channel   | Orders | Cancelled | Share |
+| --------- | ------ | --------- | ----- |
+| Sales rep | 3749   | 61        | 0     |
+| Web       | 2765   | 50        | 0     |
+| Phone     | 2485   | 42        | 0     |
+| EDI       | 1001   | 22        | 0     |
 
 </div>
 
-**Every share is 0**, on a row that says 10 of 32 right next to it. There is no error. On PostgreSQL, **a whole number divided by a whole number is a whole number**: `SUM` of ones and zeros is a whole number, `count(*)` is a whole number, so 10 ÷ 32 is worked out as 0.3125 and the fraction is thrown away. Every country has fewer orders with no ship date than orders, so every country gets 0.
+**Every share is 0**, on a row that says 61 cancelled right next to it. There is no error. On PostgreSQL, **a whole number divided by a whole number is a whole number**: `SUM` of ones and zeros is a whole number, `count(*)` is a whole number, so 61 ÷ 3749 is worked out as 0.016… and the fraction is thrown away. Every channel has fewer cancelled orders than orders, so every channel gets 0.
 
 <Callout>
-**The engines disagree here, and the koans run on the other one.** Run the same query in DuckDB and Germany's share is **0.3125**: DuckDB's `/` always keeps the fraction. PostgreSQL, SQL Server and SQLite throw it away when both sides are whole numbers; MySQL and DuckDB keep it. So a share that looks right in one tool can be a column of zeros in the next. **Write it so that it cannot depend on the engine**: put a decimal number into the calculation before the division, as below.
+**The engines disagree here, and the koans run on the other one.** Run the same query in DuckDB and Sales rep's share is **0.01627…**: DuckDB's `/` always keeps the fraction. PostgreSQL, SQL Server and SQLite throw it away when both sides are whole numbers; MySQL and DuckDB keep it. So a share that looks right in one tool can be a column of zeros in the next. **Write it so that it cannot depend on the engine**: put a decimal number into the calculation before the division, as below.
 </Callout>
 
 ### Multiply by 100.0 first
 
 {/* The same highlight as the video: the ROUND(100.0 * …) lines, in green. */}
 
-```sql file=./scripts/share-per-country.sql {5-6}#good
-SELECT "ShipCountry",
+```sql file=./scripts/cancelled-share-per-channel.sql {5-6}#good
+SELECT "Channel",
        count(*) AS "Orders",
-       SUM(CASE WHEN "ShippedDate" IS NULL
-           THEN 1 ELSE 0 END) AS "No ship date",
-       ROUND(100.0 * SUM(CASE WHEN "ShippedDate" IS NULL
-             THEN 1 ELSE 0 END) / count(*), 1) AS "Share %"
+       SUM(CASE WHEN "Status" = 'Cancelled'
+           THEN 1 ELSE 0 END) AS "Cancelled",
+       ROUND(100.0 * SUM(CASE WHEN "Status" = 'Cancelled'
+             THEN 1 ELSE 0 END) / count(*), 1) AS "Cancelled %"
 FROM "Orders"
-GROUP BY "ShipCountry"
-ORDER BY "Orders" DESC, "ShipCountry";
+GROUP BY "Channel"
+ORDER BY "Orders" DESC;
 ```
 
-`100.0` has a decimal point, so `100.0 * SUM(…)` is a decimal number, and a decimal divided by a whole number keeps its fraction on every database. The 100 turns the share into a percentage, and `ROUND(…, 1)` keeps one decimal place. The order matters: `100.0 * SUM(…) / count(*)` multiplies first. Writing `100 * SUM(…) / count(*)` without the `.0` gives PostgreSQL 31 for Germany instead of 31.3, and `SUM(…) / count(*) * 100.0` divides first and gives 0 again.
+`100.0` has a decimal point, so `100.0 * SUM(…)` is a decimal number, and a decimal divided by a whole number keeps its fraction on every database. The 100 turns the share into a percentage, and `ROUND(…, 1)` keeps one decimal place. The order matters: `100.0 * SUM(…) / count(*)` multiplies first. Writing `100 * SUM(…) / count(*)` without the `.0` gives PostgreSQL 1 for Sales rep instead of 1.6, and `SUM(…) / count(*) * 100.0` divides first and gives 0 again.
 
-{/* The same highlight as the video: Germany and Mexico's shares in grey — look here, no verdict. */}
+{/* The same highlight as the video: Sales rep's and EDI's shares in grey — look here, no verdict. */}
 
-<div className="[&_tbody_tr:nth-child(-n+2)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(-n+2)_td:nth-child(4)]:font-bold">
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td:nth-child(4)]:font-bold [&_tbody_tr:nth-child(4)_td:nth-child(4)]:font-bold">
 
-| ShipCountry | Orders | No ship date | Share % |
-| ----------- | ------ | ------------ | ------- |
-| Germany     | 32     | 10           | 31.3    |
-| Mexico      | 8      | 4            | 50      |
-| Sweden      | 8      | 3            | 37.5    |
-| UK          | 7      | 2            | 28.6    |
-| France      | 6      | 2            | 33.3    |
-| Venezuela   | 6      | 2            | 33.3    |
-| Argentina   | 3      | 1            | 33.3    |
-| Austria     | 3      | 1            | 33.3    |
-| Italy       | 3      | 1            | 33.3    |
-| USA         | 3      | 1            | 33.3    |
+| Channel   | Orders | Cancelled | Cancelled % |
+| --------- | ------ | --------- | ----------- |
+| Sales rep | 3749   | 61        | 1.6         |
+| Web       | 2765   | 50        | 1.8         |
+| Phone     | 2485   | 42        | 1.7         |
+| EDI       | 1001   | 22        | 2.2         |
 
 </div>
 
 ### A share travels with its count
 
-Mexico's 50 is the highest share in the table, and it is **4 orders out of 8**. One more order without a ship date would move it to 62.5; one fewer, to 37.5. A share on its own hides how few rows are behind it, which is why this report prints the count beside every share.
+The count and the share point at opposite ends of the table. Sales rep has **the most** cancelled orders and **the lowest** share, 1.6. EDI has **the fewest**, 22, and **the highest** share, 2.2. It is tempting to read that as "EDI is where orders get cancelled".
 
-To know whether Germany's 31.3 is high, compare it with the whole company. The same columns without a `GROUP BY` give one row for all the orders:
+First compare it with the whole company. The same columns without a `GROUP BY` give one row for all the orders:
 
-```sql file=./scripts/share-company.sql
+```sql file=./scripts/cancelled-share-company.sql
 SELECT count(*) AS "Orders",
-       SUM(CASE WHEN "ShippedDate" IS NULL
-           THEN 1 ELSE 0 END) AS "No ship date",
-       ROUND(100.0 * SUM(CASE WHEN "ShippedDate" IS NULL
-             THEN 1 ELSE 0 END) / count(*), 1) AS "Share %"
+       SUM(CASE WHEN "Status" = 'Cancelled'
+           THEN 1 ELSE 0 END) AS "Cancelled",
+       ROUND(100.0 * SUM(CASE WHEN "Status" = 'Cancelled'
+             THEN 1 ELSE 0 END) / count(*), 1) AS "Cancelled %"
 FROM "Orders";
 ```
 
-| Orders | No ship date | Share % |
-| ------ | ------------ | ------- |
-| 79     | 27           | 34.2    |
+| Orders | Cancelled | Cancelled % |
+| ------ | --------- | ----------- |
+| 10000  | 175       | 1.8         |
 
-34.2 for the company. **Germany has the most orders with no ship date and still sits below the company's share**, and nearly every country is close to a third. The count said Germany, the small sample said Mexico, and the share says it is not one country at all.
+1.8 for the company. EDI's 2.2 is above it, but by very little: it is 22 orders of 1001, and **with four fewer cancellations EDI would read 1.8**, the company's own share. Every channel sits close to the company's figure. A share on its own hides how few rows are behind a difference, which is why a report prints the count beside every share.
 
-## Whose orders?
+## Case file: one courier stands out
 
-The same columns work for any group. Join the orders to `"Employees"`, and count each person's orders and how many of them have no ship date:
+This series follows one case through Northwind Company. The <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> ended on a question: in 2024, orders grew while invoicing fell. Why? An order is invoiced once its ship date is recorded, so one place to look is **the orders marked Shipped that have no `"ShippedDate"`**. The report is this lesson's shape: per courier, all of its 2024 orders, how many of them are marked shipped with no ship date, and the share, beside its count. The one new thing is a `WHEN` with two tests joined by `AND`:
 
-{/* The same highlight as the video: the SUM(CASE …) lines, in grey. */}
+{/* The same highlight as the video: the two SUM(CASE …) columns, in grey. */}
 
-```sql file=./scripts/no-ship-date-per-employee.sql {3-6}
-SELECT e."FirstName",
+```sql file=./scripts/shipped-no-ship-date-per-courier-2024.sql {3-6}
+SELECT s."CompanyName" AS "Courier",
        count(*) AS "Orders",
-       SUM(CASE
-             WHEN o."ShippedDate" IS NULL THEN 1
-             ELSE 0
-           END) AS "No ship date"
+       SUM(CASE WHEN o."Status" = 'Shipped' AND o."ShippedDate" IS NULL
+           THEN 1 ELSE 0 END) AS "Shipped, no date",
+       ROUND(100.0 * SUM(CASE WHEN o."Status" = 'Shipped' AND o."ShippedDate" IS NULL
+             THEN 1 ELSE 0 END) / count(*), 1) AS "Share %"
 FROM "Orders" o
-JOIN "Employees" e
-  ON e."EmployeeID" = o."EmployeeID"
-GROUP BY e."FirstName"
-ORDER BY e."FirstName";
+JOIN "Shippers" s ON s."ShipperID" = o."ShipVia"
+WHERE o."OrderDate" >= DATE '2024-01-01'
+  AND o."OrderDate" < DATE '2025-01-01'
+GROUP BY s."CompanyName"
+ORDER BY s."CompanyName";
 ```
 
-{/* The same highlight as the video: Nancy's row in grey — worth a question, not a fault. */}
+{/* The same highlight as the video: the Speedy Express row, in grey — the finding, no verdict. */}
 
 <div className="[&_tbody_tr:nth-child(3)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(3)_td]:font-bold">
 
-| FirstName | Orders | No ship date |
-| --------- | ------ | ------------ |
-| Andrew    | 24     | 0            |
-| Janet     | 27     | 2            |
-| Nancy     | 28     | 25           |
+| Courier                | Orders | Shipped, no date | Share % |
+| ---------------------- | ------ | ---------------- | ------- |
+| Federal Shipping       | 216    | 0                | 0       |
+| Northern Freight Lines | 125    | 0                | 0       |
+| Speedy Express         | 1768   | 178              | 10.1    |
+| United Package         | 289    | 0                | 0       |
 
 </div>
 
-25 of Nancy's 28 orders have no ship date, Janet has 2 of 27, and Andrew has none of his 24. That is what the column says about **her orders**, and it is all it says. It does not say why, and it does not say whose doing it is: the empty date could be an order that never left, or one that left and was never recorded. **A number is not a verdict.** It is worth asking about, with a person rather than with another query, and this series comes back to it once there is more to go on.
+Both tests are needed: cancelled and open orders never have a ship date, so `"ShippedDate" IS NULL` on its own would count them too.
+
+In Northwind Company, **178 of Speedy Express's 1768 orders from 2024 are marked shipped with no ship date, 10.1%. The other three couriers have none, not one of their 630 orders.** It is one courier. That is what the columns say, and all they say: not why, and not whether those orders arrived. SQL tells us where to look; people confirm it.
 
 ## Four rules for CASE
 
@@ -491,7 +501,7 @@ ORDER BY e."FirstName";
 
 ## Practice
 
-There are eleven koans for this lesson. They use different tables from this page: products labelled by price and stock, order lines with and without a discount, and suppliers by region and by what they need to reorder, so copying a query from this page will not answer them.
+There are eleven koans for this lesson. They ask different questions from this page and its case file: products labelled by price, by stock and by whether they are still sold, order lines with and without a discount, the ship-to line of the year's last orders, and the returns in the stock ledger, so copying a query from this page will not answer them. The koans ship with their own copy of Northwind Company, so they need no setup.
 
 ```powershell
 cd c:/DataPallas/db/datazeus
@@ -508,10 +518,10 @@ c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series2\_05\C
 
 Each koan has a `___` where the answer belongs. Predict the answer, replace the blank, save, run the command again, and watch that koan go green.
 
-The koans follow this page: finishing a CASE with its `ELSE`, writing the tests in the right order, the NULL a missing `ELSE` produces, `COALESCE` written the long way, `SUM(CASE …)` for a count and for money, `count(CASE …)` with the `ELSE` left out on purpose, and the share of discounted order lines in each category. The last two give only the question, and the whole query has to be written from scratch: price bands as columns, and what each supplier needs to reorder, with its share.
+The koans follow this page: finishing a CASE with its `ELSE`, writing the tests in the right order, the NULL a missing `ELSE` produces, `COALESCE` written the long way, `SUM(CASE …)` for a count and for money, `count(CASE …)` with the `ELSE` left out on purpose, and the share of discounted order lines in each category. The last two give only the question, and the whole query has to be written from scratch: price bands as columns, and the return rate of each category.
 
 **One idea here has no koan, on purpose.** The share that comes back as 0 is the most expensive mistake on this page, and DuckDB, which the koans run on, keeps the fraction that PostgreSQL throws away. A koan would go green for the very query CloudBeaver shows as a column of zeros, so that rule lives here, in the video and in the flashcards instead. The share koans still ask for `100.0 *`: write it that way and your answer is right on both.
 
 ## What is next
 
-The next lesson is **dates and times**: grouping by real months and quarters, date ranges and their boundaries, and how long ago something happened. For the orders with no ship date, that is the next question after how many, where and whose: **since when?**
+The next lesson is **dates and times**: grouping by real months and weeks, date ranges and their boundaries, and how long ago something happened. For the orders marked shipped with no ship date, that is the next question after where: **since when?**

@@ -42,8 +42,9 @@ published: false
 
     ── A QUESTION THAT HAS WRONG ANSWERS THAT LOOK RIGHT — CHOSEN 2026-09-15 ────
     Without that property, "end to end" just means "longer", and a longer drill is still a
-    drill. The question is the series case (THE SERIES CASE below): a third of what we sold
-    has no shipping record — did those orders really not ship, or did nobody record it? The
+    drill. The question is the series case (THE SERIES CASE below, decided 2026-09-17): 2024's
+    ordered sales grew while invoiced sales fell — where did the money go, and were those orders
+    delivered? The
     article must NAME the numbers a careful person gets wrong on the way, and the koans must
     be able to tell the right answer from them.
     (The two earlier candidates are dropped: revenue per customer per quarter answered nothing
@@ -61,28 +62,57 @@ published: false
     every join, a query someone can re-run, and a written recommendation that says what the numbers do and do
     not prove. Nothing new in the SQL — say so.
 
-    ── THE SERIES CASE — THE WHOLE CASE (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
-    The question, chosen 2026-09-15: A THIRD OF WHAT WE SOLD HAS NO SHIPPING RECORD — did those orders really
-    not ship, or did nobody record it? The report for the manager:
-      size — 19169 of 58153.31 (33%), 27 of 79 orders, 24 of 25 customers, 25 past their RequiredDate;
-      since when — the first quarter of the data, ~4 more a quarter;
-      whose — Nancy's orders sent with Speedy Express (24 of 25), with the counter-examples;
-      the evidence both ways — customers kept reordering on the same rhythm (Series 2 · 45/58);
-      what SQL cannot decide — the rep's process or the courier;
-      the recommendation — send Speedy Express the 24 order numbers first, record what comes back, call only
-      the customers whose orders cannot be confirmed, and fix reports that count ordered sales as delivered
-      (the corrected top 10: Lehmanns first; Cactus falls from #1 to #14).
-    THE WRONG ANSWERS THAT LOOKED RIGHT, named in the article: the ordered-sales top 10, "it's Germany" (most
-    such orders, below-average share), Mexico's 50% (4 of 8), the freight fan-out, a 0% share from integer
-    division, "it's Nancy", "it's Speedy Express".
-    KOANS: the same case from the SUPPLIER side (Suppliers, Products, Order Details) — different tables, as
-    Series 1 · 50's koans did — ending on the habit check (the key count survives every join). Measure first.
-    RULES: "in Northwind"; "her orders"; a recommendation, not a verdict. All figures in .docs §2 — DuckDB
-    2026-09-15, re-assert on PostgreSQL.
+    ── THE SERIES CASE — THE WHOLE CASE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
+    THE QUESTION: in Northwind Company, 2024's ordered sales grew while invoiced sales fell. Where did the money
+    go, were those orders delivered, and what do we do? Nothing new in the SQL — say so. The report for the
+    manager, each step runnable on its own, with the row-count and total checks:
+      the gap — ordered vs invoiced, 2024 (Series 2 · 00);
+      the courier — "marked shipped, no ship date" is Speedy Express, not the others (· 05);
+      the dates — a steady trickle from the week of 2024-03-04 to the end of August 2024, 0–1 a week outside (· 10);
+      the money — shipped orders with no invoice (· 15);
+      the evidence, said as soft — customers ordered again and were served (· 25);
+      the reconciliation — confirmed vs never confirmed (· 48); the fix, in a transaction (· 55);
+      WHAT ONLY THE PROJECT FINDS — orders still 'Open' long after they should have shipped: cancelled by the
+      customer and never updated, phantom revenue in the ordered report (LOCKED: 43 orders, €59,611.41); and the claim
+      deadline: 12 months from the order, the earliest expiring 2025-03-08.
+    THE RECOMMENDATION, not a verdict: invoice the confirmed orders now; file claims for the unconfirmed before
+    the windows close; restate the phantom sales; make every report say whether it counts ordered or delivered;
+    say plainly what the data cannot prove. The stake (figures sheet .docs/plan-academy-figures-northwind-co-s.md; first
+    measurement → LOCKED at gate 2: 177 outage orders, €256,895 never invoiced; ≈ €247k protected).
+    ORDERED SALES WERE NOT WRONG (owner, 2026-09-16): they measure demand and answered that question right.
+    THE WRONG ANSWERS THAT LOOKED RIGHT, named in the article: "sales are fine, orders are up"; "customers are
+    paying late" (finance's first explanation); "it's seasonal"; "Speedy Express lost 177 orders" (the
+    confirmations say otherwise); "switch courier".
+    KOANS: a different question on different tables, as Series 1 · 50's koans did, ending on the habit check (the
+    key count survives every join). Measure first.
+    RULES: "in Northwind Company"; no person blamed; a recommendation, not a verdict.
+
+    DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
+    academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
+    came from the frozen Northwind is to be RE-FOUND on it: the lesson beat stays, the numbers move. First
+    measurements are DuckDB only (stories sheet §3.2.2); every figure is re-asserted on PostgreSQL in the spec.
+
+    ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
+    Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: MAIN EXAMPLE — the whole case.
+    A SEGMENT IS ONE QUERY of the shape the lesson just taught, and ONE finding, after a full lesson — using
+    nothing the learner has not met yet. If it needs more, it belongs to a later episode or to the project.
+    WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
+    repeats itself does the opposite. Checking in the brief is cheaper than re-cutting a published video.
+
+    ── REMINDER: THE EVIDENCE IS SOFT — SAY SO LOUDLY (owner review, 2026-09-16) ─────────────────
+    Customers ordering again and being served normally SUGGESTS the goods arrived; it does NOT PROVE it. Say it
+    out loud, in the video (a spoken line, not a footnote) and in the article: it is also what a customer on a
+    standing schedule would do whatever happened to one order; SQL narrows it down, people (and the courier's
+    confirmations, Series 2 · 48) confirm it. Suggested line for Mnemosyne, to adapt: "That's what delivered
+    orders would look like. It isn't proof — it's the reason to ask the courier before anyone calls a customer."
+    WHY: it is true; the course rules out verdicts; separating what data shows from what it proves is the
+    workplace skill; and it is what makes "ask the courier first" the sensible recommendation.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     The last episode of the series; it may use anything above it.
-    DATA: every figure of the case is in .docs/plan-sql-series2-story.md §2 (DuckDB, 2026-09-15) —
+    DATA: every figure of the case is in .docs/plan-academy-course-stories-artefacts.md Appendix A (DuckDB, 2026-09-15) —
     re-assert each on PostgreSQL in the spec before the article uses it.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────

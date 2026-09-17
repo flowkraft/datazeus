@@ -44,7 +44,7 @@ import spock.lang.Stepwise
  * Series 2, and Series 1 · 25 named STRING_AGG as Series 2's — the aggregate that turns many rows of
  * text into one. `||` and ROUND are Series 1 · 20's: build on both, re-teach neither.
  *
- * ── KOANS AND THE SERIES CASE (.docs/plan-sql-series2-story.md §0, §3) ─────────────
+ * ── KOANS AND THE SERIES CASE (.docs/plan-academy-course-stories-artefacts.md §1, §3.2) ─────────────
  * The LESSON uses "Customers"."Phone", "Products"."QuantityPerUnit" and the case's call sheet. The KOANS
  * work on other text — "Suppliers" (contact names, cities, phones), "Employees" (titles, courtesy titles),
  * "Categories"."Description" — case-insensitive search, trim/split, a practical pattern, STRING_AGG with

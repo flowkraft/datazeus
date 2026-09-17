@@ -244,6 +244,11 @@ series:
         dataset: northwind:model
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Categories", "Customers", "Suppliers", "Products", "Orders", "Order Details", "Employees"]
+          fit: good
+          reason: "The frozen Northwind rows are small enough to model by hand and rich enough to run fit/refuse/answer proofs. Minimum: the shipped 25 customers, 79 orders, 193 lines, 20 products, and 8 categories; the learner's practice schema is the artifact being built."
       # The first modelling DECISION, and the one every later episode depends on: is this a
       # thing the business keeps track of, or a fact about such a thing? Northwind's own schema
       # answers it three different ways, which is what makes it a good teacher here.
@@ -259,6 +264,11 @@ series:
         dataset: northwind:read
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Customers", "Suppliers", "Products", "Categories", "Employees"]
+          fit: good
+          reason: "Northwind exposes business things and their descriptive attributes across several domains, with enough variation to distinguish entities from facts. Minimum: 5 customers, 3 products, 2 suppliers, and 2 categories."
       # Business rules are SENTENCES before they are lines: "every order is placed by exactly one
       # customer; a customer may have placed none". This episode is the translation in both
       # directions, and the diagram is AUTHORED (PlantUML text in the ER Diagram tab), not only
@@ -275,6 +285,11 @@ series:
         dataset: northwind:read
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Customers", "Orders", "Employees", "Orders.ShippedDate"]
+          fit: good
+          reason: "Orders provide mandatory customer/order relationships, employees provide manager relationships, and NULL shipped dates demonstrate optionality. Minimum: one parent with no children, one child with a parent, and one optional relationship value."
       # GRAIN, pulled forward from Series 3: "one row per WHAT?" is the first question of ANY
       # table, answered before a key can be chosen. schema.sql is born here.
       # The demonstration writes itself, and the data is the grader: declare PRIMARY KEY("OrderID")
@@ -292,6 +307,11 @@ series:
         dataset: northwind:model
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Orders", "Order Details", "Products", "Customers"]
+          fit: good
+          reason: "The order-line bridge gives a decisive composite grain: one row per order/product, not one row per order. Minimum: two orders, two products, one order with multiple lines, and one repeated product across orders."
       # 1:M is a foreign key; M:N needs a table of its own. The attributed junction is the COMMON
       # case, not the exotic one: Northwind's order line carries Quantity, Discount and UnitPrice.
       # The second requirement of the series lands here: a product can come from several
@@ -304,6 +324,11 @@ series:
         dataset: northwind:model
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Products", "Suppliers", "Order Details", "Orders"]
+          fit: partial
+          reason: "Order Details demonstrates a many-to-many order/product junction, but frozen Northwind has only Products.SupplierID and cannot prove several suppliers per product at different prices. Add a small ProductSuppliers bridge with at least one product and two suppliers; keep the shipped rows unchanged."
       # Let the anomaly carry the argument, not the definitions. And the flat table needs NO new
       # dataset: it is Learn SQL, Series 1 · 50's own three-table report query, saved as one
       # table. Rename a customer in it, miss one row, and the report shows two companies.
@@ -321,6 +346,11 @@ series:
         dataset: northwind:model
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Customers", "Orders", "Order Details", "Products"]
+          fit: good
+          reason: "The three-table sales report can be flattened to show update, insert, and delete anomalies, then decomposed into 3NF tables. Minimum: 10 orders, 20 lines, repeated customers/products, and one changed customer fact."
       # NEW 2026-09-14. The judgement that stops normalization from becoming dogma: some
       # duplication is redundancy, and some is HISTORY. Northwind has both cases built in:
       # "Order Details"."UnitPrice" copies Products."UnitPrice", and Orders.Ship* copies the
@@ -334,6 +364,11 @@ series:
         dataset: northwind:model
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Products.UnitPrice", "Order Details.UnitPrice", "Orders.ShipAddress", "Customers.Address"]
+          fit: good
+          reason: "Order-line price and copied ship-to address are genuine point-in-time facts, not necessarily update redundancy. Minimum: one product price change after an order and one customer address change with an historical order."
       # NEW 2026-09-14 — generalisation had no episode anywhere in the course. Four Northwind
       # tables repeat a company or person name, an address and a phone. Are they one kind of
       # thing in different roles, or four things? The three implementations are the choice:
@@ -349,6 +384,11 @@ series:
         dataset: northwind:read
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Customers", "Suppliers", "Shippers", "Employees"]
+          fit: partial
+          reason: "The four roles share contact-like attributes, enough to compare supertype, single-table, and subtype designs, but the frozen data has no shared party identity or overlapping person across roles. Add a small cross-role party fixture if the lesson needs a proof rather than a design discussion."
       # The first physical episode. Types were used as given since 15; now they are decisions.
       # DuckDB has no CREATE DOMAIN (tested) though ENUM covers much of it — the DOMAIN half is
       # done in CloudBeaver against PostgreSQL, and "this exists there and not here" is content.
@@ -360,6 +400,11 @@ series:
         dataset: northwind:model
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Customers", "Products", "Orders", "Order Details"]
+          fit: good
+          reason: "Existing text, dates, numeric prices, discounts, and booleans support type/domain trade-offs; PostgreSQL is needed for the DOMAIN demonstration while DuckDB can cover portable types. Minimum: 10 rows and at least one nullable text, decimal, date, and boolean value."
       # What 10 and 20 DREW, declared. Northwind's rows are referentially clean (verified: no
       # orphans), so every correct FK loads — the payoff is the NEXT bad insert, not an old row.
       # DuckDB has no ON DELETE CASCADE (tested): name it as a portability fact.
@@ -371,6 +416,11 @@ series:
         dataset: northwind:model
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Customers", "Orders", "Products", "Order Details", "Employees"]
+          fit: good
+          reason: "The shipped rows are referentially clean, so valid loads succeed and deliberate orphan inserts refuse. Minimum: one parent/child pair, one empty parent, and one attempted orphan for each key relationship."
       # The data grades the rules: NOT NULL on "Region" is REJECTED (21 of 25 customers have
       # none) and CHECK("UnitPrice" > 10) is REJECTED (a 4.50 product exists). A constraint
       # reality violates is a bug, not rigour. Pair every shouldReject with a shouldAccept, or
@@ -383,6 +433,11 @@ series:
         dataset: northwind:model
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Customers.Region", "Customers.Email", "Products.UnitPrice", "Products.ProductName"]
+          fit: good
+          reason: "Real NULL regions/emails, a low product price, duplicate-prone names, and defaults let constraints be tested against reality rather than invented perfection. Minimum: one accepted NULL, one rejected negative/invalid value, and one real duplicate candidate."
       # NULL as a DECISION, answered before NOT NULL is declared: is this value optional, is the
       # fact simply not there yet, or does its absence mean a different KIND of thing?
       # Boundary: Learn SQL, Series 1 · 45 owns NULL SEMANTICS (three-valued logic). This owns the
@@ -395,6 +450,11 @@ series:
         dataset: northwind:model
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Customers.Region", "Customers.Email", "Orders.ShippedDate", "Orders.ShipVia"]
+          fit: good
+          reason: "NULL regions/emails and unshipped orders distinguish an optional value, an unknown future fact, and a relationship with no applicable row. Minimum: one row in each of those three states."
       # The round trip, performed: diagram (logical) -> DDL (physical) -> load (proof). Late on
       # purpose — CREATE TABLE arrives as the OUTPUT of the decisions, not as the first lesson.
       # Naming is part of writing the DDL well, so it is here: "Order Details" has a space and
@@ -408,6 +468,11 @@ series:
         dataset: northwind:model
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Customers", "Orders", "Order Details", "Products"]
+          fit: good
+          reason: "The learner can translate the established ER decisions into DDL, quote the existing Order Details name, and reload the real rows. Minimum: the full frozen source is preferred; the 79-order set keeps load errors inspectable."
       # Reverse-engineering and anti-patterns in one episode, because reading a schema and judging
       # it are one skill. Placed after the build because judging needs the whole toolkit: you
       # cannot see that EAV destroyed the grain until you know what grain is.
@@ -426,6 +491,11 @@ series:
         dataset: northwind:read
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Customers", "Orders", "Order Details", "Products", "CustomerDemographics"]
+          fit: good
+          reason: "The undeclared shipped schema is a fair review target: missing keys, empty tables, mixed naming, a comma-list risk, and real grain questions are visible. Minimum: the complete frozen schema, including empty Territories and CustomerDemographics tables."
       # THE SERIES 1 PROJECT. The whole loop, alone, on Northwind's business as it runs today plus
       # the two requirements its shipped tables cannot hold (several contacts per customer, from
       # 05; several suppliers per product, each at its own price, from 20).
@@ -446,6 +516,11 @@ series:
         dataset: northwind:model
         core: true
         status: planned
+        data:
+          source: northwind
+          tables: ["Customers", "Orders", "Order Details", "Products", "Suppliers", "Employees"]
+          fit: partial
+          reason: "The frozen Northwind source supports the complete model/load/reconciliation loop, but the project also requires several contacts per customer and several suppliers per product at different prices, which are absent from the source. Add explicit fixture rows or the ProductSuppliers/CustomerContacts source extensions; minimum source remains 25 customers, 79 orders, and 193 lines."
 
   # MOVEMENTS
   #   00-05  ELICIT & DESIGN       brief -> questions -> the learner's first model, loaded from the
@@ -491,6 +566,11 @@ series:
         dataset: library:brief
         core: true
         status: planned
+        data:
+          source: library
+          tables: ["lending-log.csv"]
+          fit: good
+          reason: "The brief and 26-row spreadsheet intentionally provide nouns, verbs, ambiguities, repeating author data, NULL returned values, and business questions before any schema exists. Minimum: the supplied 26 rows plus the unanswered questions in the brief."
       # The first cut, deliberately EARLY so the rest of the series attacks the learner's own model.
       # COMMIT BEFORE REVEAL: they publish it, THEN see ours and the three decisions we made
       # differently. Nearly everyone ships one `book` table here — do NOT rescue them; 10 is where
@@ -503,6 +583,11 @@ series:
         dataset: library
         core: true
         status: planned
+        data:
+          source: library
+          tables: ["lending-log.csv"]
+          fit: good
+          reason: "The lending log is sufficient to design and load a first library model, including a reference-only book that was incorrectly lent. Minimum: the supplied 26 rows, 10 members, 10 titles, and at least one rejected business-rule row."
       # REFRAMED 2026-09-14. The spreadsheet shows three levels, not two: The Pragmatic Programmer
       # in two genuinely different editions (ISBN-10 020161622X, 2nd ed. 9780135957059) and Dune's
       # film tie-in, the SAME book under a different ISBN. So ISBN is not a bad key — it is the key
@@ -519,6 +604,11 @@ series:
         dataset: library
         core: true
         status: planned
+        data:
+          source: library
+          tables: ["lending-log.csv"]
+          fit: good
+          reason: "Repeated titles, editions with different ISBNs, ISBN-10/ISBN-13, missing ISBNs, and multiple physical copies make title/edition/copy and surrogate-key choices concrete. Minimum: two editions of one title, one no-ISBN title, and four copies of another title."
       # REFRAMED 2026-09-14. Series 1 · 20 already teaches the junction that carries facts, and
       # there the pair of foreign keys WAS the key. A loan is different: the same member can
       # borrow the same copy again next month, so (member, copy) cannot be the key — the
@@ -531,6 +621,11 @@ series:
         dataset: library
         core: true
         status: planned
+        data:
+          source: library
+          tables: ["lending-log.csv"]
+          fit: good
+          reason: "Repeated member/copy loans demonstrate that a loan is an event with its own identity rather than a permanent member-copy relationship. Minimum: one member borrowing one copy twice and one open loan."
       # Three techniques, one decision: choose by the QUESTION asked most often (one level up?
       # the whole subtree? reparenting often?), never by elegance. The library adds a second axis
       # the category tree cannot hold: children's books are shelved by AGE BAND, the rest by
@@ -546,6 +641,11 @@ series:
         hands_on: ["check:answers", "build:library", "cards"]
         dataset: library
         status: planned
+        data:
+          source: library
+          tables: ["lending-log.csv"]
+          fit: good
+          reason: "Categories, nested subjects, children's age bands, and repeated authors provide a real hierarchy plus a second classification axis. Minimum: two parent categories, one child category, one deeper subject, and one item classified on the second axis."
       # BUSINESS time: when a fact was TRUE. Moved off Northwind 2026-09-14 — its price example is
       # Series 1 · 30 now, and this episode is library-only: memberships that lapse and restart,
       # a fee that changes, "was Danny a member on 1 June?". System time (when a ROW changed) is
@@ -562,6 +662,11 @@ series:
         dataset: library
         core: true
         status: planned
+        data:
+          source: library
+          tables: ["lending-log.csv"]
+          fit: good
+          reason: "Joined dates, membership status, due/returned dates, fines, and the brief's lapse/restart ambiguity support valid-time and transaction-time decisions. Minimum: two membership periods, one changed fee/rule, and three loans at different lifecycle points."
       # NEW 2026-09-14. The brief is full of rules no column constraint can hold: a copy can be out
       # only once at a time; renew once if nobody is waiting; reference-only books are never lent.
       # The choice is WHERE each rule lives — reshape the model so a plain constraint holds it, a
@@ -574,6 +679,11 @@ series:
         dataset: library
         core: true
         status: planned
+        data:
+          source: library
+          tables: ["lending-log.csv"]
+          fit: good
+          reason: "Open loans and the reference-only loan create cross-row and cross-table rules that cannot be solved by a single column alone. Minimum: one copy with an overlapping-loan attempt, one waiting/reservation case, and one non-lendable title."
       # SYSTEM time, the other axis next to 25: when a ROW was written, changed or hidden.
       # Soft delete is not free: it breaks UNIQUE (the fix, a partial unique index, is PostgreSQL
       # only), it leaves children pointing at a "gone" parent, and it poisons every later query.
@@ -586,6 +696,11 @@ series:
         hands_on: ["cloudbeaver", "check:refuses", "build:library", "cards"]
         dataset: library
         status: planned
+        data:
+          source: library
+          tables: ["lending-log.csv"]
+          fit: good
+          reason: "The left member with retained loans, deleted-like status, last_edited, and edited_by make system time and soft-delete costs visible. Minimum: one inactive member with historical children and two audit actors."
       # ENUM type vs lookup table vs CHECK — decided by who adds a value and how often. If a
       # business user must add one without a deploy, it is a table. That is the whole rule.
       # Boundary: Data Model Patterns, Series 1 owns type and status tables as a pattern.
@@ -595,6 +710,11 @@ series:
         hands_on: ["build:library", "cards"]
         dataset: library
         status: planned
+        data:
+          source: library
+          tables: ["lending-log.csv"]
+          fit: good
+          reason: "Member status, categories, fine states, and staff-maintained values support the choice between CHECK/ENUM and editable lookup tables. Minimum: three values in one changing business vocabulary and one value that a non-developer should be able to add."
       # A DECISION episode, not a proof episode: the learner leaves able to say "far enough" in a
       # review and defend it. It NEEDS a genuine BCNF case from the library itself — if none can
       # be found when the episode is written, merge it into 40 as "how far to normalize".
@@ -608,6 +728,11 @@ series:
         hands_on: ["build:library", "cards"]
         dataset: library
         status: planned
+        data:
+          source: library
+          tables: ["lending-log.csv"]
+          fit: partial
+          reason: "The library model is the right domain, but the supplied 26 rows do not guarantee a genuine BCNF violation with enough evidence for a durable lesson. Add one explicit functional-dependency case, such as instructor-to-room or branch-to-address, before publishing; otherwise merge this decision into the normalization lesson."
       # MERGED 2026-09-14 from 40 denormalization and 45 indexing. The decision is the ORDER of
       # escalation: the right index first, then a summary, then deliberate duplication — and
       # every copy names who keeps it in sync. Finishes the sentence Series 1 · 25 left open.
@@ -619,6 +744,11 @@ series:
         hands_on: ["cloudbeaver", "check:answers", "build:library", "cards"]
         dataset: library
         status: planned
+        data:
+          source: library
+          tables: ["lending-log.csv"]
+          fit: partial
+          reason: "The 26-row log can motivate read patterns but cannot show measurable index/summary trade-offs. Add a generated lending log of at least 10,000 loans across 600 members, 4,000 books, and multiple years; keep the supplied rows as the correctness fixture."
       # The third answer to "how far do you model": stop, and store a document. Model it if you
       # will FILTER, JOIN or AGGREGATE on it, or it must be constrained; store JSON if it is
       # shapeless, varies per row, or is only read whole.
@@ -629,6 +759,11 @@ series:
         hands_on: ["check:answers", "build:library", "cards"]
         dataset: library
         status: planned
+        data:
+          source: library
+          tables: ["lending-log.csv", "library schema"]
+          fit: good
+          reason: "The notes column has varied, row-specific attributes such as translator, original language, large print, board book, and series position, making the JSON-versus-columns boundary concrete. Minimum: 10 varied notes and at least one field that must remain relational."
       # THE LIBRARY GOES LIVE HERE. Until now the model was in design and rebuilt freely; from
       # this episode every change is a migration, and its check is the strongest in the track:
       # apply it, and the ENTIRE existing suite must still pass, plus the new tests.
@@ -644,6 +779,11 @@ series:
         dataset: library
         core: true
         status: planned
+        data:
+          source: library
+          tables: ["library schema", "lending-log.csv"]
+          fit: good
+          reason: "The learner's existing library schema and acceptance suite provide the live artifact for additive, rename, split, backfill, and compatibility migrations. Minimum: one deployed schema, existing checks, and three changes covering an additive entity, a renamed attribute, and a split."
       # THE SERIES 2 PROJECT: three change requests against the learner's live schema.
       #   EBOOKS           no physical copy, so the copy model breaks — the SUPERTYPE/SUBTYPE choice
       #                    from Series 1 · 35, now paid for on the learner's own model
@@ -659,6 +799,11 @@ series:
         dataset: library
         core: true
         status: planned
+        data:
+          source: library
+          tables: ["library schema", "lending-log.csv"]
+          fit: good
+          reason: "Ebooks, a second branch, and reservations are coherent change requests against the learner's model; they stress the physical-copy assumption, location, and one-loan-at-a-time rule. Minimum: one ebook, two branches, one reservation competing with a loan, and the full prior check suite."
 
   # MOVEMENTS
   #   00-10  THE STANDARD METHOD, BUILT AT ONCE   why a second shape, Kimball's four steps, and the
@@ -744,6 +889,11 @@ series:
         dataset: northwind:read
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Customers", "Orders", "Order Details", "Products"]
+          fit: good
+          reason: "Northwind Company S gives the same relational business at 10,000 orders, 120 customers, 80 products, and about 25,000 lines, enough to compare an OLTP model with the learner's reporting shape without warehouse-scale noise. Minimum: 100 orders, 10 customers, and a multi-line order."
       # Kimball's procedure, and the most transferable thing in the Toolkit: 1. select the BUSINESS
       # PROCESS (not a department, not a report), 2. declare the GRAIN, 3. identify the DIMENSIONS,
       # 4. identify the FACTS. Merged with facts-and-dimensions on 2026-09-14 — the vocabulary and
@@ -760,6 +910,11 @@ series:
         dataset: northwind:read
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Products", "Customers", "Employees"]
+          fit: good
+          reason: "Orders are a clear business process and the S-scale tables provide enough grain, dimensions, and measures for Kimball's four-step design. Minimum: 100 orders, 10 products, 10 customers, and two employees."
       # The star is BUILT here, the first time it is shown — not described for six episodes first.
       # Dimensions first, then the fact; loaded through the learner's Series 1 views; and the
       # reconciliation query is written in the same sitting and kept forever after.
@@ -775,6 +930,11 @@ series:
         dataset: northwind:star
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Customers", "Orders", "Order Details", "Products", "Employees"]
+          fit: good
+          reason: "The learner builds the star from Series 1 views and reconciles it to Northwind Company S; the 10,000-order source makes the build meaningful while remaining practical in DuckDB. Minimum: 100 orders, 200 lines, and at least two dimensions with missing/unknown members."
       # The fact-table half of grain: which measures add up across which dimensions. A price or a
       # discount rate is non-additive; a month-end balance is semi-additive — SUM across products,
       # never across time. Both are silent: SUM runs and returns a plausible, wrong number.
@@ -789,6 +949,11 @@ series:
         dataset: northwind:star
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Order Details", "Orders", "Products"]
+          fit: good
+          reason: "Order-line revenue, quantity, unit price, discount, and freight support additive, semi-additive, and non-additive measure decisions; the source has enough repeated products and dates to expose wrong sums. Minimum: 50 lines across 12 months and at least one ratio measure."
       # Kimball's shapes, all of them available here with measured data:
       #   TRANSACTION           the order-line fact from 10.
       #   PERIODIC SNAPSHOT     month-end stock per product, from seed.stock_movements — it must end
@@ -811,6 +976,11 @@ series:
         dataset: northwind:star
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Products", "StockMovements", "SalesTargets"]
+          fit: good
+          reason: "The S dataset supplies transaction orders, accumulating order status/dates, stock movements, and monthly category targets for periodic, accumulating, transaction, and factless examples. Minimum: 100 orders, 20 products, 12 months, and one product-month with no sale."
       # A generated calendar table beats date_trunc: fiscal periods, week numbering, holidays, and
       # attributes a report can GROUP BY. Merged with role-playing on 2026-09-14 because
       # role-playing IS the date dimension used several ways: OrderDate, RequiredDate, ShippedDate.
@@ -828,6 +998,11 @@ series:
         dataset: northwind:star
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders.OrderDate", "Orders.RequiredDate", "Orders.ShippedDate"]
+          fit: good
+          reason: "Five years of order, required, and shipped dates support one conformed calendar used in three roles, including NULL/unshipped orders. Minimum: 24 months, one partial boundary period, and at least one missing shipped date."
       # DEGENERATE: the order number lives IN the fact with no table of its own — people invent a
       # dim_order for it. JUNK: a handful of low-cardinality flags (shipped?, discounted?,
       # discontinued product?) collapsed into one small dimension instead of columns on the fact.
@@ -844,6 +1019,11 @@ series:
         dataset: northwind:star
         core: true
         status: planned
+        data:
+          source: [northwind_co_s, generated]
+          tables: ["Orders.OrderID", "Orders.Status", "Order Details.Discount", "Products.Discontinued"]
+          fit: partial
+          reason: "Northwind Company S supplies the order number and flags for a correct learner-built degenerate/junk design, while the existing NorthwindOlapDataGenerator star is the deliberately flawed comparison. The old generated star lacks an order number and is not a reconciliation source; retain it only as the judged anti-example."
       # Moved AFTER the star exists (2026-09-14): you cannot weigh normalizing a dimension before
       # you have one. Product -> Category and Product -> Supplier are the natural snowflake.
       # Give Kimball's reasoning, then the columnar-era caveat. Boundary: Data Warehousing,
@@ -858,6 +1038,11 @@ series:
         hands_on: ["tab:er-diagram", "cards"]
         dataset: northwind:star
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Products", "Categories", "Suppliers"]
+          fit: good
+          reason: "Product-category and product-supplier relationships give a real snowflake alternative to compare with a denormalized star. Minimum: 20 products across four categories and at least five suppliers."
       # Moved after grain, fact types and the date dimension (2026-09-14): SCD Type 2 needs all
       # three. Northwind has NO change history — every product has one price, no customer moves —
       # so the learner makes the change in their own copy (a customer moves city), exactly as in
@@ -875,6 +1060,11 @@ series:
         dataset: northwind:star
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Customers", "CustomerChanges", "Products", "PriceChanges", "Orders"]
+          fit: good
+          reason: "Northwind Company S includes dated customer and price changes plus five years of orders, enough to implement and compare Type 1, Type 2, and Type 3 history. Minimum: 20 customers, 10 products, two changes, and facts before and after a change."
       # An employee covers several territories, so "revenue by territory" cannot come from a fact
       # keyed on employee. The data is the seed (seed.employee_territories) because Northwind's own
       # EmployeeTerritories ships empty: three employees, eight territories, New York shared.
@@ -890,6 +1080,11 @@ series:
         hands_on: ["check:reconciles", "build:star", "cards"]
         dataset: northwind:star
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Employees", "EmployeeTerritories", "Territories", "Region", "Orders"]
+          fit: good
+          reason: "The S seed deliberately populates employee territories, shared territories, and allocation weights, so revenue can be allocated without fan-out. Minimum: three employees, five territories, one shared territory, and weights summing to one per employee."
       # Kimball's enterprise argument, and the reason the method scales past one star. Northwind
       # now has three processes: orders, stock movements and sales targets (the last two from the
       # seed). Conformed product and date dimensions let them sit on one page.
@@ -910,6 +1105,11 @@ series:
         dataset: northwind:star
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Products", "StockMovements", "SalesTargets", "Categories"]
+          fit: good
+          reason: "Orders, stock movements, and category-month targets are separate processes with shared product/date/category dimensions; the S seed includes target-only January 2025 rows for a real full drill-across. Minimum: two processes, two dimensions, 12 months, and one target with no sales."
       # NOT Kimball — say whose alternative this is, out loud. When auditability and many changing
       # sources demand hubs, links and satellites, and when they only add machinery.
       # TRADEMARK: Linstedt asserts a mark on "Data Vault 2.0" and runs a certification programme;
@@ -925,6 +1125,11 @@ series:
         hands_on: ["tab:er-diagram", "cards"]
         dataset: northwind:star
         status: planned
+        data:
+          source: [northwind_co_s, generated]
+          tables: ["Customers", "Orders", "Order Details", "Products", "CustomerChanges", "PriceChanges"]
+          fit: good
+          reason: "Northwind Company S supplies realistic changing-source rows for hubs, links, and satellites; the existing generated star gives a small comparison target for when a dimensional model is preferable. Minimum: 20 customers, 50 orders, two changed attributes, and one many-to-many relationship."
       # The analytics-engineering shift, judged honestly: on a columnar engine a wide, denormalised
       # table is often fine and sometimes best. The shipped main.vw_sales_detail already is one.
       # What columnar storage did NOT change: grain, additivity, history — a wide table still needs
@@ -937,6 +1142,11 @@ series:
         hands_on: ["check:reconciles", "build:star", "cards"]
         dataset: northwind:star
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Customers", "Products", "Employees"]
+          fit: good
+          reason: "A learner-built wide reporting table can be reconciled to the S source while preserving grain, additivity, history, and order number; the existing generated wide view is a useful comparison, not the answer key. Minimum: 100 orders and 200 lines across at least three dimensions."
       # THE SERIES 3 PROJECT, and the course's last proof. The learner's Series 1 model, through its
       # views, becomes: the order-line star, the accumulating snapshot, the month-end stock
       # snapshot, and budget vs actual — on conformed dimensions, with at least one Type 2 dimension.
@@ -954,3 +1164,8 @@ series:
         dataset: northwind:star
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Customers", "Orders", "Order Details", "Products", "StockMovements", "SalesTargets", "EmployeeTerritories", "CustomerChanges", "PriceChanges"]
+          fit: good
+          reason: "The complete S-scale Company dataset plus the learner's Series 1 views supports a reconciled transaction star, accumulating order snapshot, stock snapshot, targets, bridge allocation, and Type 2 dimension. Minimum: 100 orders, 200 lines, 12 months, two processes, one history change, and one shared territory."

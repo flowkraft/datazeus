@@ -83,12 +83,24 @@ published: false
     service levels (p90/p95); a median per group; NTILE for quartiles; the ROW_NUMBER workaround on engines with
     no percentile function. MODE, PERCENT_RANK, CUME_DIST: one line each.
 
-    ── THE SERIES CASE — CASE FILE SEGMENT (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
-    MAIN EXAMPLE STAYS: average vs median order value, 736.12 vs 506.17.
-    CASE FILE: define "late" from the data instead of guessing — shipped orders take a median 6 days, the
-    slowest 9 (Federal Shipping and United Package alike); the open orders' median age is 260 days by the
-    data's last day. And Series 2 · 45's evidence confirmed with the median: the gap to a customer's next order
-    is 190 days after an order with no ShippedDate and 190 after a shipped one. DuckDB 2026-09-15.
+    ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
+    No case in this episode (the old "late defined from the data" and median reorder gaps are dropped).
+    MAIN EXAMPLE STAYS: the average vs the median order value — re-measure on Northwind Company S (first
+    measurement: the average order is €1,500.56; the median to be measured). Its skew is planted (a long tail of
+    large orders), so the gap between the two should be visible; if it is not, the dataset is tuned.
+
+    DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
+    academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
+    came from the frozen Northwind is to be RE-FOUND on it: the lesson beat stays, the numbers move. First
+    measurements are DuckDB only (stories sheet §3.2.2); every figure is re-asserted on PostgreSQL in the spec.
+
+    ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
+    Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
+    KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
+    WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
+    repeats itself does the opposite. Checking in the brief is cheaper than re-cutting a published video.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     LEVEL ●●●● of ●●●●. BUILDS ON: Series 2 · 35 (the MySQL workaround), Series 1 · 25 (AVG, and the

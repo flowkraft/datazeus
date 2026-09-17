@@ -23,42 +23,46 @@ In the <a href="/academy/learn-sql/select-sum-join-group-by-order-by-limit-proje
 1. **A join that drops rows** that a `LEFT JOIN` was supposed to keep.
 2. **A join that multiplies money**: a total that is too big, with nothing in the result to show it.
 
-Neither one produces an error. Both are about the same question: **one row of this result is one what?** At the end, the same tool answers the question the dates lesson left open: whose orders have no ship date, and how much money is on them.
+Neither one produces an error. Both are about the same question: **one row of this result is one what?** At the end, the same tool answers the next question of this series' case: how much money is on the orders that were marked shipped and never invoiced.
 
-Every query below runs on the Northwind database on PostgreSQL. Write each one in CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
+Every query below runs on Northwind Company, the dataset installed in the <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">first lesson of this series</a>, and assumes `SET search_path TO northwind_co_s;` has been run in the CloudBeaver editor. Write each query and compare the result with the table under it.
 
-## Every product, and its June units
+## Every Dairy product, and its May units
 
-The first report: **every product, with the units it sold in June 2024**, including the products that sold nothing. "Every product" means a `LEFT JOIN` from `"Products"`, as in the <a href="/academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">JOINs lesson</a>, and June is a half-open range, as in the <a href="/academy/learn-sql/dates-and-times" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">dates lesson</a>. The June test goes in the `ON`:
+The first report comes from the manager of the Dairy Products category (category 4): **every Dairy product, with the units it sold in May 2024**, including the products that sold nothing, because those are the ones she wants to talk about. "Every product" means a `LEFT JOIN` from `"Products"`, as in the <a href="/academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">JOINs lesson</a>, and May is a half-open range, as in the <a href="/academy/learn-sql/dates-and-times" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">dates lesson</a>. The May test goes in the `ON`:
 
 {/* The same highlight as the video: the two joins, in grey. */}
 
-```sql file=./scripts/june-units-left-then-inner.sql {4,6}
+```sql file=./scripts/dairy-units-left-then-inner.sql {4,6}
 SELECT p."ProductName",
-       sum(d."Quantity") AS "June units"
+       sum(d."Quantity") AS "May units"
 FROM "Products" p
 LEFT JOIN "Order Details" d
   ON d."ProductID" = p."ProductID"
 JOIN "Orders" o
   ON o."OrderID" = d."OrderID"
- AND o."OrderDate" >= DATE '2024-06-01'
- AND o."OrderDate" <  DATE '2024-07-01'
+ AND o."OrderDate" >= DATE '2024-05-01'
+ AND o."OrderDate" <  DATE '2024-06-01'
+WHERE p."CategoryID" = 4
 GROUP BY p."ProductName"
 ORDER BY p."ProductName";
 ```
 
-| ProductName                 | June units |
-| --------------------------- | ---------- |
-| Aniseed Syrup               | 3          |
-| Boston Crab Meat            | 8          |
-| Chai                        | 12         |
-| Chang                       | 10         |
-| Chef Antons Cajun Seasoning | 2          |
-| Scottish Longbreads         | 5          |
+| ProductName      | May units |
+| ---------------- | --------- |
+| Coastal Parmesan | 10        |
+| Harvest Butter   | 408       |
+| Heritage Butter  | 836       |
+| Heritage Gouda   | 58        |
+| Highland Yoghurt | 52        |
+| Rustic Butter    | 471       |
+| Smoked Feta      | 56        |
 
-**Count the rows before and after.** Twenty products went in; six rows came out. The query still says `LEFT JOIN`, and fourteen products are missing.
+**Count the rows before and after.** Ten Dairy products went in; seven rows came out. The query still says `LEFT JOIN`, and three products are missing, which are exactly the three the manager asked about.
 
-The `LEFT JOIN` to `"Order Details"` kept every product. Then the plain `JOIN` to `"Orders"` kept only the rows that matched a June order, and removed every other row, including the ones the `LEFT JOIN` had kept. **An inner join after a left join drops what the left join kept.** It is the ON-versus-WHERE problem from the JOINs lesson, one table further along.
+The `LEFT JOIN` to `"Order Details"` kept every product. Then the plain `JOIN` to `"Orders"` kept only the rows that matched a May order, and removed every other row, including the ones the `LEFT JOIN` had kept. **An inner join after a left join drops what the left join kept.** It is the ON-versus-WHERE problem from the JOINs lesson, one table further along.
+
+Here the rows went missing because the match was narrowed to one month: over five years, every product in Northwind Company has sold. Rows with no match at all go the same way. One customer, Yarrow Supermarket, has never placed an order, and three people in `"Employees"` (the chief executive and the two sales managers) take no orders, so an inner join to `"Orders"` leaves them out of any customer or employee report.
 
 ## LEFT all the way: it looks repaired
 
@@ -66,111 +70,119 @@ The obvious fix is to make the second join a `LEFT JOIN` too:
 
 {/* The same highlight as the video: the second LEFT JOIN, in grey. */}
 
-```sql file=./scripts/june-units-left-all-the-way.sql {6}
+```sql file=./scripts/dairy-units-left-all-the-way.sql {6}
 SELECT p."ProductName",
-       sum(d."Quantity") AS "June units"
+       sum(d."Quantity") AS "May units"
 FROM "Products" p
 LEFT JOIN "Order Details" d
   ON d."ProductID" = p."ProductID"
 LEFT JOIN "Orders" o
   ON o."OrderID" = d."OrderID"
- AND o."OrderDate" >= DATE '2024-06-01'
- AND o."OrderDate" <  DATE '2024-07-01'
+ AND o."OrderDate" >= DATE '2024-05-01'
+ AND o."OrderDate" <  DATE '2024-06-01'
+WHERE p."CategoryID" = 4
 GROUP BY p."ProductName"
 ORDER BY p."ProductName";
 ```
 
-{/* The same highlight as the video: Chai in terracotta. */}
+{/* The same highlight as the video: Heritage Butter in terracotta. */}
 
-<div className="[&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(4)_td]:font-bold [&_tbody_tr:nth-child(4)_td]:text-[rgb(var(--hl-fault-ink))]">
+<div className="[&_tbody_tr:nth-child(5)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(5)_td]:font-bold [&_tbody_tr:nth-child(5)_td]:text-[rgb(var(--hl-fault-ink))]">
 
-| ProductName                    | June units |
-| ------------------------------ | ---------- |
-| Aniseed Syrup                  | 101        |
-| Boston Crab Meat               | 128        |
-| Camembert Pierrot              | 70         |
-| Chai                           | 79         |
-| Chang                          | 114        |
-| …                              | …          |
-| Tofu                           | 143        |
-| Uncle Bobs Organic Dried Pears | 84         |
+| ProductName      | May units |
+| ---------------- | --------- |
+| Alpine Butter    | 1819      |
+| Classic Feta     | 2991      |
+| Coastal Parmesan | 1759      |
+| Harvest Butter   | 20002     |
+| Heritage Butter  | 47743     |
+| Heritage Gouda   | 1562      |
+| Highland Yoghurt | 2107      |
+| Island Cheddar   | 3436      |
+| Rustic Butter    | 26813     |
+| Smoked Feta      | 1214      |
 
 </div>
 
-All 20 products are back, which makes the report look repaired. But Chai now shows 79 units for June, where the previous query showed 12, and the column adds up to 2070 — every unit ever sold. June's real total is 40.
+All ten products are back, which makes the report look repaired. But Heritage Butter now shows 47743 units for May, where the previous query showed 836, and the column adds up to 109446: every Dairy unit sold in five years. May's real total is 1891.
 
-The June test sits in the `ON` of a `LEFT JOIN`, so it only decides whether an order gets attached to a line. The order lines, and their quantities, are kept either way. **Every number in this result is wrong**, and the row count gives no warning.
+The May test sits in the `ON` of a `LEFT JOIN`, so it only decides whether an order gets attached to a line. The order lines, and their quantities, are kept either way. **Every number in this result is wrong**, and the row count gives no warning.
 
 ## Narrow first, then join
 
-The fix is to answer the June question first, in brackets, and then join the products to the answer. The brackets add up June's lines per product — a table in `FROM`, from the <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> — and the products are `LEFT JOIN`ed to that table:
+The fix is to answer the May question first, in brackets, and then join the products to the answer. The brackets add up May's lines per product — a table in `FROM`, from the <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> — and the products are `LEFT JOIN`ed to that table:
 
-{/* The same highlight as the video: the June range, in green. */}
+{/* The same highlight as the video: the May range, in green. */}
 
-```sql file=./scripts/june-units-narrowed-first.sql {10-11}#good
+```sql file=./scripts/dairy-units-narrowed-first.sql {10-11}#good
 SELECT p."ProductName",
-       j."June units"
+       m."May units"
 FROM "Products" p
 LEFT JOIN (SELECT d."ProductID",
                   sum(d."Quantity")
-                    AS "June units"
+                    AS "May units"
            FROM "Order Details" d
            JOIN "Orders" o
              ON o."OrderID" = d."OrderID"
-           WHERE o."OrderDate" >= DATE '2024-06-01'
-             AND o."OrderDate" <  DATE '2024-07-01'
-           GROUP BY d."ProductID") AS j
-  ON j."ProductID" = p."ProductID"
+           WHERE o."OrderDate" >= DATE '2024-05-01'
+             AND o."OrderDate" <  DATE '2024-06-01'
+           GROUP BY d."ProductID") AS m
+  ON m."ProductID" = p."ProductID"
+WHERE p."CategoryID" = 4
 ORDER BY p."ProductName";
 ```
 
-{/* The same highlight as the video: Chai in green. */}
+{/* The same highlight as the video: Heritage Butter in green. */}
 
-<div className="[&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-good)/var(--hl-row))] [&_tbody_tr:nth-child(4)_td]:font-bold [&_tbody_tr:nth-child(4)_td]:text-[rgb(var(--hl-good-ink))]">
+<div className="[&_tbody_tr:nth-child(5)]:bg-[rgb(var(--hl-good)/var(--hl-row))] [&_tbody_tr:nth-child(5)_td]:font-bold [&_tbody_tr:nth-child(5)_td]:text-[rgb(var(--hl-good-ink))]">
 
-| ProductName                    | June units |
-| ------------------------------ | ---------- |
-| Aniseed Syrup                  | 3          |
-| Boston Crab Meat               | 8          |
-| Camembert Pierrot              | `[NULL]`   |
-| Chai                           | 12         |
-| Chang                          | 10         |
-| Chef Antons Cajun Seasoning    | 2          |
-| Filo Mix                       | `[NULL]`   |
-| …                              | …          |
-| Uncle Bobs Organic Dried Pears | `[NULL]`   |
+| ProductName      | May units |
+| ---------------- | --------- |
+| Alpine Butter    | `[NULL]`  |
+| Classic Feta     | `[NULL]`  |
+| Coastal Parmesan | 10        |
+| Harvest Butter   | 408       |
+| Heritage Butter  | 836       |
+| Heritage Gouda   | 58        |
+| Highland Yoghurt | 52        |
+| Island Cheddar   | `[NULL]`  |
+| Rustic Butter    | 471       |
+| Smoked Feta      | 56        |
 
 </div>
 
-Twenty rows, six of them with June units that add up to 40, and fourteen NULLs for the products with no June sale. The June filter runs inside the brackets, before the join, where it cannot remove a product.
+Ten rows, seven of them with May units that add up to 1891, and three NULLs for the products with no sale in May. The May filter runs inside the brackets, before the join, where it cannot remove a product. The category filter stays outside, in the `WHERE`: it narrows the products, which is what the report is about.
+
+The manager now has her three names. One of them, Classic Feta, is a discontinued product; Alpine Butter and Island Cheddar are not, and those are the conversations to have.
 
 ### Your turn
 
-How many products had no sale in June? Keep the narrowed-first query and count the rows where the June units are NULL. Predict the answer first:
+How many Dairy products had no sale in May? Keep the narrowed-first query and count the rows where the May units are NULL. Predict the answer first:
 
-```sql file=./scripts/products-without-june-sale.sql
-SELECT count(*) AS "No June sale"
+```sql file=./scripts/dairy-products-without-may-sale.sql
+SELECT count(*) AS "No May sale"
 FROM "Products" p
 LEFT JOIN (SELECT d."ProductID",
                   sum(d."Quantity")
-                    AS "June units"
+                    AS "May units"
            FROM "Order Details" d
            JOIN "Orders" o
              ON o."OrderID" = d."OrderID"
-           WHERE o."OrderDate" >= DATE '2024-06-01'
-             AND o."OrderDate" <  DATE '2024-07-01'
-           GROUP BY d."ProductID") AS j
-  ON j."ProductID" = p."ProductID"
-WHERE j."June units" IS NULL;
+           WHERE o."OrderDate" >= DATE '2024-05-01'
+             AND o."OrderDate" <  DATE '2024-06-01'
+           GROUP BY d."ProductID") AS m
+  ON m."ProductID" = p."ProductID"
+WHERE p."CategoryID" = 4
+  AND m."May units" IS NULL;
 ```
 
-| No June sale |
-| ------------ |
-| 14           |
+| No May sale |
+| ----------- |
+| 3           |
 
 ## A join that multiplies money
 
-The manager wants **sales and freight per customer** on one report. It is the customer report from the end of Series 1 with one more `SUM`:
+The next request: **sales and freight per customer for May 2024**, on one report, top five by freight. It is the customer report from the end of Series 1 with one more `SUM`:
 
 {/* The same highlight as the video: the freight line, in grey. */}
 
@@ -184,26 +196,28 @@ JOIN "Orders" o
   ON o."CustomerID" = c."CustomerID"
 JOIN "Order Details" d
   ON d."OrderID" = o."OrderID"
+WHERE o."OrderDate" >= DATE '2024-05-01'
+  AND o."OrderDate" <  DATE '2024-06-01'
 GROUP BY c."CompanyName"
 ORDER BY "Freight" DESC
 LIMIT 5;
 ```
 
-{/* The same highlight as the video: Folk och fä HB's freight in terracotta. */}
+{/* The same highlight as the video: Nordic Foods' freight in terracotta. */}
 
 <div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-fault-ink))]">
 
 | CompanyName         | Total sales | Freight |
 | ------------------- | ----------- | ------- |
-| Folk och fä HB      | 1594.23     | 659.64  |
-| Frankenversand      | 4267.27     | 625.77  |
-| Alfreds Futterkiste | 3838.43     | 603.21  |
-| Du monde entier     | 1918.93     | 547.16  |
-| Ernst Handel        | 3902.78     | 527.35  |
+| Nordic Foods        | 11322.73    | 2149.26 |
+| Golden Pantry       | 18342.33    | 2050.36 |
+| Alpine Provisions   | 15686.56    | 1814.54 |
+| Nordic Delicatessen | 12531.83    | 1317.29 |
+| Juniper Trading     | 11928.18    | 1226.41 |
 
 </div>
 
-Folk och fä HB appears to pay the most freight: 659.64. Check it the way Series 1 taught, with a second query. Freight is stored on the order, so sum it over `"Orders"` alone, without the order lines:
+Nordic Foods appears to pay the most freight: 2149.26. Check it the way Series 1 taught, with a second query. Freight is stored on the order, so sum it over `"Orders"` alone, without the order lines:
 
 {/* The same highlight as the video: the freight line, in green. */}
 
@@ -213,45 +227,50 @@ SELECT c."CompanyName",
 FROM "Customers" c
 JOIN "Orders" o
   ON o."CustomerID" = c."CustomerID"
+WHERE o."OrderDate" >= DATE '2024-05-01'
+  AND o."OrderDate" <  DATE '2024-06-01'
 GROUP BY c."CompanyName"
 ORDER BY "Freight" DESC
 LIMIT 5;
 ```
 
-| CompanyName         | Freight |
-| ------------------- | ------- |
-| Frankenversand      | 268.33  |
-| Alfreds Futterkiste | 253.73  |
-| Folk och fä HB      | 247.24  |
-| Ernst Handel        | 226.15  |
-| Du monde entier     | 205.06  |
+| CompanyName       | Freight |
+| ----------------- | ------- |
+| Alpine Provisions | 610.83  |
+| Golden Pantry     | 562.08  |
+| Yarrow Pantry     | 502.33  |
+| Quayside Traders  | 497.47  |
+| Nordic Foods      | 480.29  |
 
-Frankenversand is first, with 268.33. Folk och fä HB paid 247.24, not 659.64.
+Alpine Provisions is first, with 610.83. Nordic Foods paid 480.29, not 2149.26, and is fifth.
 
 ### Why the freight grew
 
-Look at Folk och fä HB's three orders and how many lines each one has:
+Look at Nordic Foods' May orders and how many lines each one has:
 
-```sql file=./scripts/folk-och-fa-orders-and-lines.sql
+```sql file=./scripts/nordic-foods-orders-and-lines.sql
 SELECT o."OrderID", o."Freight",
        count(*) AS "Lines"
 FROM "Orders" o
 JOIN "Order Details" d
   ON d."OrderID" = o."OrderID"
-WHERE o."CustomerID" = 'FOLKO'
+WHERE o."CustomerID" = 'NORDI'
+  AND o."OrderDate" >= DATE '2024-05-01'
+  AND o."OrderDate" <  DATE '2024-06-01'
 GROUP BY o."OrderID", o."Freight"
 ORDER BY o."OrderID";
 ```
 
 | OrderID | Freight | Lines |
 | ------- | ------- | ----- |
-| 19      | 87.33   | 3     |
-| 44      | 82.08   | 2     |
-| 69      | 77.83   | 3     |
+| 8374    | 184.43  | 5     |
+| 8468    | 59.69   | 3     |
+| 8482    | 44.27   | 2     |
+| 8548    | 191.9   | 5     |
 
-`"Freight"` is stored once per order. After joining `"Order Details"`, one row is one **order line**, and each line carries a copy of its order's freight. `SUM` adds every copy: 87.33 × 3 + 82.08 × 2 + 77.83 × 3 = 659.64. An order with more lines gets its freight counted more times.
+`"Freight"` is stored once per order. After joining `"Order Details"`, one row is one **order line**, and each line carries a copy of its order's freight. `SUM` adds every copy: 184.43 × 5 + 59.69 × 3 + 44.27 × 2 + 191.9 × 5 = 2149.26. An order with more lines gets its freight counted more times, so four big orders overtook Alpine Provisions' thirteen small ones.
 
-Across the whole company:
+Across the whole company, all five years:
 
 ```sql file=./scripts/company-freight-two-ways.sql
 SELECT (SELECT SUM("Freight")
@@ -265,15 +284,17 @@ SELECT (SELECT SUM("Freight")
 
 | Orders alone | After the join |
 | ------------ | -------------- |
-| 3988.52      | 9871.56        |
+| 527429.46    | 1712919.25     |
 
-The joined total is nearly two and a half times the real freight bill, and nothing reported a problem. The sales column in the first report was correct all along: sales are calculated from the lines, and one row is one line.
+The joined total is more than three times the real freight bill, and nothing reported a problem. The sales column in the first report was correct all along: sales are calculated from the lines, and one row is one line.
 
-## SUM(DISTINCT) is luck
+## SUM(DISTINCT) is not a fix
 
 Series 1 fixed a multiplied count with `DISTINCT`, so it is tempting to write `SUM(DISTINCT o."Freight")`:
 
-```sql file=./scripts/sum-distinct-freight.sql
+{/* The same highlight as the video: SUM(DISTINCT) in red. */}
+
+```sql file=./scripts/sum-distinct-freight.sql {1}#err
 SELECT SUM(DISTINCT o."Freight")
          AS "SUM(DISTINCT)"
 FROM "Orders" o
@@ -283,25 +304,22 @@ JOIN "Order Details" d
 
 | SUM(DISTINCT) |
 | ------------- |
-| 3988.52       |
+| 391726.53     |
 
-It returns exactly 3988.52, but only by luck. `SUM(DISTINCT …)` adds each distinct **value** once. It does not know about orders. It gives the right answer here because no two of the 79 orders have the same freight. Here are three orders written into the query, two of them with the same freight:
+It is smaller than the joined total, but it is not the freight bill either: it is 135702.93 short of 527429.46. `SUM(DISTINCT …)` adds each distinct **value** once. It does not know about orders. When two orders have the same freight, it counts that value once and loses the other order. In Northwind Company that happens all the time:
 
-{/* The same highlight as the video: SUM(DISTINCT) in red. */}
-
-```sql file=./scripts/sum-distinct-shared-freight.sql {1}#err
-SELECT SUM(DISTINCT "Freight") AS "SUM(DISTINCT)",
-       SUM("Freight") AS "Real total"
-FROM (VALUES (1, 10.00),
-             (2, 10.00),
-             (3, 25.50)) AS t("OrderID", "Freight");
+```sql file=./scripts/orders-and-freight-values.sql
+SELECT count(*) AS "Orders",
+       count(DISTINCT "Freight")
+         AS "Freight values"
+FROM "Orders";
 ```
 
-| SUM(DISTINCT) | Real total |
-| ------------- | ---------- |
-| 35.5          | 45.5       |
+| Orders | Freight values |
+| ------ | -------------- |
+| 10000  | 6689           |
 
-`SUM(DISTINCT)` keeps one of the two 10.00 values and loses a whole order. On real data, the first time two orders share a freight value, the report is wrong again without any sign.
+Ten thousand orders share 6689 different freight values. On a smaller slice the error is smaller and harder to spot: for May 2024 alone, `SUM(DISTINCT)` returns 8837.47 against a real 8977.88, because 181 orders have 178 different values. A number that is only slightly wrong is the one nobody checks.
 
 ## Aggregate first, then join
 
@@ -309,7 +327,7 @@ The correct version adds up each measure where one row is one of its own, and jo
 
 {/* The same highlight as the video: the freight brackets, in green. */}
 
-```sql file=./scripts/sales-and-freight-aggregated-first.sql {11-14}#good
+```sql file=./scripts/sales-and-freight-aggregated-first.sql {13-18}#good
 SELECT c."CompanyName", s."Total sales", f."Freight"
 FROM "Customers" c
 JOIN (SELECT o."CustomerID",
@@ -318,32 +336,36 @@ JOIN (SELECT o."CustomerID",
       FROM "Orders" o
       JOIN "Order Details" d
         ON d."OrderID" = o."OrderID"
+      WHERE o."OrderDate" >= DATE '2024-05-01'
+        AND o."OrderDate" <  DATE '2024-06-01'
       GROUP BY o."CustomerID") AS s
   ON s."CustomerID" = c."CustomerID"
 JOIN (SELECT "CustomerID",
              SUM("Freight") AS "Freight"
       FROM "Orders"
+      WHERE "OrderDate" >= DATE '2024-05-01'
+        AND "OrderDate" <  DATE '2024-06-01'
       GROUP BY "CustomerID") AS f
   ON f."CustomerID" = c."CustomerID"
 ORDER BY f."Freight" DESC
 LIMIT 5;
 ```
 
-{/* The same highlight as the video: Frankenversand in green. */}
+{/* The same highlight as the video: Alpine Provisions in green. */}
 
 <div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-good)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-good-ink))]">
 
-| CompanyName         | Total sales | Freight |
-| ------------------- | ----------- | ------- |
-| Frankenversand      | 4267.27     | 268.33  |
-| Alfreds Futterkiste | 3838.43     | 253.73  |
-| Folk och fä HB      | 1594.23     | 247.24  |
-| Ernst Handel        | 3902.78     | 226.15  |
-| Du monde entier     | 1918.93     | 205.06  |
+| CompanyName       | Total sales | Freight |
+| ----------------- | ----------- | ------- |
+| Alpine Provisions | 15686.56    | 610.83  |
+| Golden Pantry     | 18342.33    | 562.08  |
+| Yarrow Pantry     | 12884.6     | 502.33  |
+| Quayside Traders  | 13170.94    | 497.47  |
+| Nordic Foods      | 11322.73    | 480.29  |
 
 </div>
 
-Frankenversand is first again, and every sales total is the same as in the first report. Both columns are now right. The query is also hard to read, which the next lesson deals with.
+Alpine Provisions is first again, and every sales total is the same as in the joined report. Both columns are now right. The query is also hard to read, and May's range is written twice, which the next lesson deals with.
 
 ## One row is one what?
 
@@ -355,36 +377,33 @@ Before adding up a column after a join, ask the question from the end of Series 
 
 `"Order Details"` is a **bridge** table: it connects orders and products, which have a many-to-many relationship. Through a bridge, `count(*)` counts lines. Count something else only when you say so:
 
-```sql file=./scripts/chai-lines-and-customers.sql
+```sql file=./scripts/heritage-butter-lines-and-customers.sql
 SELECT count(*) AS "Lines",
        count(DISTINCT o."CustomerID")
          AS "Customers"
 FROM "Order Details" d
 JOIN "Orders" o
   ON o."OrderID" = d."OrderID"
-WHERE d."ProductID" = 1;
+WHERE d."ProductID" = 28;
 ```
 
 | Lines | Customers |
 | ----- | --------- |
-| 10    | 8         |
+| 779   | 78        |
 
-Chai sold on 10 order lines to 8 different customers.
+Heritage Butter (product 28) sold on 779 order lines, to 78 different customers.
 
-## Case file: whose orders, and how much money?
+## Case file: how much was never invoiced?
 
-This series follows one case through Northwind. In the subqueries lesson, 19169 of the 58153.31 it sold turned out to be on orders with no ship date, and the dates lesson showed those orders going back to the first quarter of the data. What was left to find is where that money sits: which rep took the orders, and which courier was meant to deliver them.
+This series follows one case through Northwind Company. In 2024 its ordered sales grew while its invoiced sales fell; the orders marked shipped with no ship date turned out to be one courier's, and they started in March and stopped at the end of August. The question still open is **how much money**. Every shipped order should have an invoice in `"Invoices"`, so the report is: the orders marked shipped that have no invoice, and what they are worth.
 
-That report mixes three grains. An order's value comes from its **lines**. Its freight is stored once on the **order**. The rep and the courier are one row each in `"Employees"` and `"Shippers"`. So the value goes first, in brackets, one row per order, exactly like the freight per customer above. Then everything joins to one row per order:
+It is this lesson's shape again. An order's value comes from its **lines**; the invoice is at most one row per **order**. So each order's value goes first, in brackets, one row per order; then the orders `LEFT JOIN` the invoices, and `IS NULL` keeps the ones with no match, as in the JOINs lesson:
 
 {/* The same highlight as the video: the brackets, in green. */}
 
-```sql file=./scripts/no-ship-date-by-rep-and-courier.sql {7-11}#good
-SELECT e."FirstName" AS "Rep",
-       s."CompanyName" AS "Courier",
-       count(*) AS "Orders",
-       ROUND(SUM(v."Order value"), 2) AS "Sales",
-       SUM(o."Freight") AS "Freight"
+```sql file=./scripts/shipped-orders-without-invoice.sql {4-8}#good
+SELECT count(*) AS "Orders",
+       ROUND(SUM(v."Order value"), 2) AS "Value"
 FROM "Orders" o
 JOIN (SELECT "OrderID",
              SUM("UnitPrice" * "Quantity"
@@ -392,41 +411,36 @@ JOIN (SELECT "OrderID",
       FROM "Order Details"
       GROUP BY "OrderID") AS v
   ON v."OrderID" = o."OrderID"
-JOIN "Employees" e
-  ON e."EmployeeID" = o."EmployeeID"
-JOIN "Shippers" s
-  ON s."ShipperID" = o."ShipVia"
-WHERE o."ShippedDate" IS NULL
-GROUP BY e."FirstName", s."CompanyName"
-ORDER BY "Sales" DESC;
+LEFT JOIN "Invoices" i
+  ON i."OrderID" = o."OrderID"
+WHERE o."Status" = 'Shipped'
+  AND i."InvoiceID" IS NULL;
 ```
 
-{/* The same highlight as the video: the first row, in grey — the row the text talks about, no verdict. */}
+{/* The same highlight as the video: the row, in grey — the finding, no verdict. */}
 
 <div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold">
 
-| Rep   | Courier        | Orders | Sales   | Freight |
-| ----- | -------------- | ------ | ------- | ------- |
-| Nancy | Speedy Express | 24     | 18848.3 | 1277.84 |
-| Janet | United Package | 2      | 292.2   | 38.25   |
-| Nancy | United Package | 1      | 28.5    | 11.61   |
+| Orders | Value     |
+| ------ | --------- |
+| 188    | 275698.44 |
 
 </div>
 
-Before the `GROUP BY`, one row is one order, so `count(*)` counts orders and `SUM(o."Freight")` adds each freight once. The three rows hold all 27 orders with no ship date and all 19169 of the money. With `"Order Details"` joined in directly instead of in brackets, the first row's freight would read 3185.64.
+Before the `WHERE`, one row is one order, so `count(*)` counts orders. With `"Order Details"` joined in directly instead of in brackets, the value would come out the same but `count(*)` would say 460: lines, not orders.
 
-In Northwind, the first row is Nancy's: 24 of the 27 are her orders sent with Speedy Express, and they carry 18848.3 of the 19169. That says where the money sits. It does not say why, and a number is not a verdict: this series comes back to it.
+In Northwind Company, **188 orders are marked shipped and have no invoice, worth 275698.44.** That is how much money the question is about. It does not say whether those orders were delivered: the data has not answered that yet, and this series comes back to it.
 
 ## Four rules for joins
 
 1. **Count the rows before and after every join.**
 2. **An `INNER JOIN` after a `LEFT JOIN` drops what the `LEFT JOIN` kept.**
 3. **Narrow or aggregate before the join**, in brackets, not after it.
-4. **Sum a column only at its own grain.** `SUM(DISTINCT …)` is right only by luck.
+4. **Sum a column only at its own grain.** `SUM(DISTINCT …)` removes repeated values, not repeated orders.
 
 ## Practice
 
-There are ten koans for this lesson. They ask different questions from this page and its case file: categories in other months, freight per customer country, orders per year, and a few orders you write into the query yourself, so copying a query from this page will not answer them. Some are predictions (what does one more join do to this number?) and some are diagnoses of a query somebody wrote.
+There are ten koans for this lesson. They ask different questions from this page and its case file: one employee's orders, every category on one day, freight per customer country, orders per year, every employee in 2024, and a few orders you write into the query yourself, so copying a query from this page will not answer them. Some are predictions (what does one more join do to this number?) and some are diagnoses of a query somebody wrote. The koans ship with their own copy of Northwind Company, so they need no setup.
 
 ```powershell
 cd c:/DataPallas/db/datazeus
@@ -443,8 +457,8 @@ c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series2\_15\M
 
 Each koan has a `___` where the answer belongs. Predict the answer, replace the blank, save, run the command again, and watch that koan go green.
 
-The koans follow this page: counting rows after a join, an inner join after a left join, the left-join "repair", freight multiplied by one more join, counting orders instead of lines, `SUM(DISTINCT)` on two orders with the same freight, aggregating before the join, and counting through a bridge. The last two give only the question: orders, freight and sales per year, and products and December 2022 units per category.
+The koans follow this page: counting rows after a join, an inner join after a left join, the left-join "repair", freight multiplied by one more join, counting orders instead of lines, `SUM(DISTINCT)` on two orders with the same freight, aggregating before the join, and counting through a bridge. The last two give only the question: orders, freight and sales per year, and every employee's orders and units in 2024.
 
 ## What is next
 
-The case file's report is the kind that gets run again every week, and as a query in brackets inside a join it is hard to read. The next lesson is **CTEs**: `WITH`, which gives each step of a query a name, so the same report reads from top to bottom: first the orders with no ship date, then each order's value, then the report by rep and courier.
+Both cures on this page work, and both are hard to read: a query in brackets inside a join, and in the freight report May's range written twice. The next lesson is **CTEs**: `WITH`, which gives each step of a query a name, so the same report reads from top to bottom, one step at a time.

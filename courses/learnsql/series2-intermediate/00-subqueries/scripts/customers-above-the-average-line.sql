@@ -8,5 +8,5 @@ JOIN "Order Details" d
   ON d."OrderID" = o."OrderID"
 GROUP BY c."CompanyName"
 HAVING SUM(d."UnitPrice" * d."Quantity"
-         * (1 - d."Discount")) > 301.31
+         * (1 - d."Discount")) > 595.13
 ORDER BY "Total sales" DESC;

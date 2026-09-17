@@ -2,7 +2,19 @@
 
 One Spock/Maven module with **two source roots**, same toolchain. Built on **Spock**
 (the Groovy BDD framework), running against an **embedded DuckDB** seeded from
-`../datasets/northwind/`. No Docker, no external database.
+`../datasets/northwind/` (Learn SQL Series 1, Data Modeling) or `../datasets/northwind-co/` (Northwind
+Company, from Learn SQL Series 2 on). No Docker, no external database for the koans.
+
+## Two datasets, two bases
+| lessons on | koans extend | specs extend | schema |
+|---|---|---|---|
+| Northwind (frozen) | `KoanBase` | `NorthwindGateSpec` | the file's default |
+| Northwind Company S | `NorthwindCoKoanBase` | `NorthwindCoGateSpec` | `northwind_co_s` (`SET search_path` is done for you) |
+
+`NorthwindCoGateSpec` re-checksums BOTH engines against `_dataset_info` before a single figure is
+asserted, so a spec can never pass on data that is not the lessons' data. With `PGHOST` set, it
+expects Northwind Company installed in that PostgreSQL (DataPallas ▸ Seed Data ▸ Academy Northwind
+Co Install); without it, Testcontainers' PostgreSQL gets a type-faithful copy of the DuckDB file.
 
 ## Two source roots, two jobs
 - **`src/verify/` — `*Spec.groovy` — the publish GATE.** Real answers baked in; tests
@@ -48,6 +60,10 @@ mvn test -Pkoans    # all koans (src/koans, red until filled)
 mvn test -Pkoans -Dtest.includes="**/learnsql/series1/_00/**/*Koans.java"   # one lesson
 ```
 The `-Pkoans` profile flips which source root is compiled/run — one toolchain.
+
+Two specs building at the same time (two terminals, two agents) must not share `target/`: give each
+its own with `-Ddz.build.dir=target-NN`, e.g.
+`PGHOST=localhost ./mvnw -o -q test -Dtest=SubqueriesSpec -Ddz.build.dir=target-00`.
 
 The gate spec reads the lesson's **own** `scripts/*.sql` (relative to this module), so the
 SQL is authored once under `courses/learnsql/.../scripts/` and verified here — no drift.

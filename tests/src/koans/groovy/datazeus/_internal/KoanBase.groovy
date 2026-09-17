@@ -67,6 +67,13 @@ abstract class KoanBase extends Specification {
     /** The canonical Northwind database (relative to the tests/ module dir). Override per lesson if needed. */
     protected String dataset() { "../datasets/northwind/northwind.duckdb" }
 
+    /**
+     * The schema the koans' plain table names resolve to, or null for the file's default. Series 2
+     * onwards overrides dataset() and this together (see NorthwindCoKoanBase): Northwind Company
+     * lives in schema northwind_co_s, exactly where the Seed Data tab installs it.
+     */
+    protected String schema() { null }
+
     def setupSpec() {
         // Open a throwaway COPY of the shipped database, so a koan run can never lock
         // or mutate the same northwind.duckdb the learner is exploring in the CLI /
@@ -75,6 +82,7 @@ abstract class KoanBase extends Specification {
         dbCopy = File.createTempFile("koan-northwind-", ".duckdb")
         Files.copy(src.toPath(), dbCopy.toPath(), StandardCopyOption.REPLACE_EXISTING)
         db = Sql.newInstance("jdbc:duckdb:" + dbCopy.absolutePath, "org.duckdb.DuckDBDriver")
+        if (schema()) db.execute("SET search_path = '" + schema() + "'")
     }
 
     def cleanupSpec() {

@@ -10,7 +10,7 @@
 #
 # ── WHAT ANKI IS FOR ────────────────────────────────────────────────────────────────────────
 # Reviewed on a phone, weeks later, with no database open. EVERY CARD CARRIES ITS OWN PREMISE:
-# where a card needs a value (a freight of 25.1, 42 unlabelled rows, 10 matching rows of 32) the
+# where a card needs a value (a freight of 38.4, 5617 unlabelled rows, 61 matching rows of 3749) the
 # FRONT states it, and the card tests the REASONING. No card names a Northwind table as something
 # to remember, and none asks for a figure from the dataset. The koans are where the SQL is written;
 # this deck is where the rules have to hold without rows in reach.
@@ -46,7 +46,7 @@ cards:
       back: "From the top down, one row at a time. It stops at the first WHEN whose test is true and returns that THEN value; the WHENs below it are never checked for that row. If none is true, it returns the ELSE value."
 
   - basic:
-      front: "<code>CASE WHEN freight &lt; 25 THEN 'light' WHEN freight &lt; 60 THEN 'medium' ELSE 'heavy' END</code>. An order has a freight of 25.1. Walk through what CASE does."
+      front: "<code>CASE WHEN freight &lt; 25 THEN 'light' WHEN freight &lt; 60 THEN 'medium' ELSE 'heavy' END</code>. An order has a freight of 38.4. Walk through what CASE does."
       back: "The first WHEN asks \"under 25?\": no. The second asks \"under 60?\": yes, so CASE stops and returns 'medium'. The ELSE is never reached."
 
   - basic:
@@ -71,8 +71,8 @@ cards:
       back: "NULL. A CASE with no ELSE returns NULL for every row that no WHEN matched."
 
   - basic:
-      front: "42 orders have a label of NULL because the CASE had no ELSE. You filter <code>WHERE label &lt;&gt; 'heavy'</code>. How many of the 42 come back, and why?"
-      back: "None. <code>NULL &lt;&gt; 'heavy'</code> is unknown, not true, and WHERE keeps only rows where the test is true. Add an ELSE so those rows get a real label, and the filter finds all 42."
+      front: "5617 orders have a label of NULL because the CASE had no ELSE. You filter <code>WHERE label &lt;&gt; 'heavy'</code>. How many of the 5617 come back, and why?"
+      back: "None. <code>NULL &lt;&gt; 'heavy'</code> is unknown, not true, and WHERE keeps only rows where the test is true. Add an ELSE so those rows get a real label, and the filter finds all 5617."
 
   - basic:
       front: "You want to filter on a label made by CASE in the SELECT. Why can't <code>WHERE band = 'heavy'</code> in the same query see it, and what do you do?"
@@ -80,8 +80,8 @@ cards:
 
   # ── 5. THE SHORT FORM, AND WHEN NOT TO USE CASE ──
   - basic:
-      front: "<code>CASE ship_via WHEN 1 THEN 'Speedy Express' WHEN 2 THEN 'United Package' END</code> — the shipper names are already stored in a <code>shippers</code> table. What should the query do instead, and why?"
-      back: "JOIN to <code>shippers</code> and read the name. When a shipper is renamed, the table changes and the query does not have to. CASE is for labels nobody stored, such as light, medium and heavy."
+      front: "<code>CASE ship_via WHEN 1 THEN 'Speedy Express' WHEN 2 THEN 'United Package' WHEN 3 THEN 'Federal Shipping' END</code> runs with no error, but one group comes back with a NULL shipper. The names are stored in a <code>shippers</code> table, which has four rows. What happened, and what should the query do instead?"
+      back: "The fourth shipper (ship_via 4) matches no WHEN, and there is no ELSE, so its rows get NULL. JOIN to <code>shippers</code> and read the name: when a shipper is added or renamed, the table changes and the query does not have to. CASE is for labels nobody stored, such as light, medium and heavy."
 
   - basic:
       front: "When can you use the short form <code>CASE column WHEN value THEN …</code> instead of <code>CASE WHEN column = value THEN …</code>?"
@@ -92,25 +92,25 @@ cards:
 
   # ── 7. CASE INSIDE AN AGGREGATE ──
   - basic:
-      front: "For each country you need the number of orders AND the number with no ship date, on one row. One query has only one WHERE. How do you get both?"
-      back: "Move the condition into a column: <code>count(*) AS orders, SUM(CASE WHEN shipped_date IS NULL THEN 1 ELSE 0 END) AS no_ship_date</code>, grouped by country. The CASE turns each order with no ship date into a 1 and every other order into a 0, and SUM adds the ones."
+      front: "For each sales channel you need the number of orders AND the number in each status (shipped, cancelled, open), on one row. One query has only one WHERE. How do you get them all?"
+      back: "Move each condition into its own column: <code>count(*) AS orders, SUM(CASE WHEN status = 'Cancelled' THEN 1 ELSE 0 END) AS cancelled</code>, and one more SUM(CASE …) per status, grouped by channel. Each CASE turns an order in its status into a 1 and every other order into a 0, and SUM adds the ones. The status columns add back up to the orders."
 
   - cloze: "<code>SUM(CASE WHEN status = 'returned' THEN {{c1::1}} ELSE {{c2::0}} END)</code> counts the returned rows in each group, without a WHERE."
 
   - basic:
-      front: "<code>count(CASE WHEN shipped_date IS NULL THEN 1 END)</code> has no ELSE. Is that a bug?"
+      front: "<code>count(CASE WHEN status = 'Cancelled' THEN 1 END)</code> has no ELSE. Is that a bug?"
       back: "No, it is on purpose. Rows that do not match get NULL, and count of an expression skips NULLs, so it counts exactly the matching rows, the same as SUM(CASE … THEN 1 ELSE 0 END). A missing ELSE is a bug when you filter on the label, not when you count it."
 
   # ── 8. THE SHARE, AND THE DIVISION THAT THROWS THE FRACTION AWAY ──
   - basic:
-      front: "A group has 32 rows and 10 of them match. <code>SUM(CASE WHEN … THEN 1 ELSE 0 END) / count(*)</code> returns 0 on PostgreSQL, and 0.3125 on DuckDB. Why the 0, and how do you write the share so every database agrees?"
-      back: "Both sides are whole numbers, and on PostgreSQL (and SQL Server, and SQLite) a whole number divided by a whole number is a whole number: the fraction is thrown away. DuckDB keeps it. Put a decimal number in first: <code>ROUND(100.0 * SUM(CASE … END) / count(*), 1)</code> gives 31.3 on both. There is no error either way — the zeros simply look like an answer."
+      front: "A group has 3749 rows and 61 of them match. <code>SUM(CASE WHEN … THEN 1 ELSE 0 END) / count(*)</code> returns 0 on PostgreSQL, and 0.01627… on DuckDB. Why the 0, and how do you write the share so every database agrees?"
+      back: "Both sides are whole numbers, and on PostgreSQL (and SQL Server, and SQLite) a whole number divided by a whole number is a whole number: the fraction is thrown away. DuckDB keeps it. Put a decimal number in first: <code>ROUND(100.0 * SUM(CASE … END) / count(*), 1)</code> gives 1.6 on both. There is no error either way — the zeros simply look like an answer."
 
   - cloze: "<code>ROUND({{c1::100.0}} * SUM(CASE … END) / count(*), 1)</code> — the decimal point makes the division keep its fraction, and the multiplication comes {{c2::before}} the division."
 
   - basic:
-      front: "One country shows 50% of its orders with no ship date, another 31.3%, and the whole company 34.2%. Before anyone calls the 50% country the problem, what has to be on the report beside each share?"
-      back: "Its count. 50% can be 4 orders of 8, where one order moves it by 12.5 points; 31.3% can be 10 orders of 32, the most of any country. A share always travels with its count, and the overall share is what tells you whether any group is really high."
+      front: "One sales channel has the most cancelled orders and the lowest cancellation share (1.6%); another has the fewest and the highest (2.2%); the whole company is at 1.8%. Before anyone calls the 2.2% channel the problem, what has to be on the report beside each share, and what is the overall 1.8% for?"
+      back: "Its count. 2.2% can be 22 orders of 1001, where four fewer cancellations would make it 1.8%. A share always travels with its count, and the overall share is what tells you whether any group is really high rather than a few orders away from everyone else."
 
   # ── 9. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
   - basic:

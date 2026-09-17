@@ -40,15 +40,26 @@ published: false
     group, top N per group, a detail row beside its group's total or average (SUM/AVG OVER PARTITION BY), and
     removing duplicate rows with ROW_NUMBER — keep one per key.
 
-    ── THE SERIES CASE — CASE FILE SEGMENT (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
-    CASE FILE: each customer's oldest order with no ShippedDate (ROW_NUMBER = 1 — the call list's order), and
-    the corrected top 10 by DELIVERED sales with RANK: Lehmanns Marktstand 3881.75 · Ernst Handel 3812.63 ·
-    Alfreds Futterkiste 3748.28 · Frankenversand 3581.22 · Morgenstern Gesundkost 2782.96 · LILA-Supermercado
-    1728.38 · Blauer See 1626.00 · Toms Spezialitäten 1411.10 · Bon app' 1393.33 · Around the Horn 1290.48;
-    Cactus, #1 on ordered sales, is #14 (1181.95). DuckDB 2026-09-15.
-    WHAT GOES WRONG (off-story): ties. Northwind has NO tie at first place in any natural group (checked: latest
-    order per customer/employee/country, dearest/cheapest per category). Use Series 1 · 15's two products at
-    12.5: ROW_NUMBER() <= 4 over price returns 4 rows with an ARBITRARY fourth; RANK() <= 4 returns 5.
+    ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
+    No case in this episode (the old case's "oldest open order per customer" and "top 10 on delivered sales" are
+    dropped with it). The lesson teaches on its own best examples: the latest order per customer, top N per group,
+    a row beside its group's total, removing duplicates with ROW_NUMBER.
+    WHAT GOES WRONG (off-story): ties — ROW_NUMBER() <= N silently picks an arbitrary row where RANK() keeps both.
+    Re-find a natural tie on Northwind Company S; if none exists, the dataset PLANTS one (two products at the
+    same price) and says so in the generator's comments.
+
+    DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
+    academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
+    came from the frozen Northwind is to be RE-FOUND on it: the lesson beat stays, the numbers move. First
+    measurements are DuckDB only (stories sheet §3.2.2); every figure is re-asserted on PostgreSQL in the spec.
+
+    ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
+    Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
+    KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
+    WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
+    repeats itself does the opposite. Checking in the brief is cheaper than re-cutting a published video.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     LEVEL ●●●● of ●●●●. BUILDS ON: Series 2 · 20 (keeping only ROW_NUMBER = 1 needs a CTE), 2 · 30 (the self-join it replaces),

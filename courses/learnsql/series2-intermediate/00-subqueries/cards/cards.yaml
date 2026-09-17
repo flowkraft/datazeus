@@ -10,7 +10,7 @@
 #
 # ── WHAT ANKI IS FOR ────────────────────────────────────────────────────────────────────────
 # Reviewed on a phone, weeks later, with no database open. EVERY CARD CARRIES ITS OWN PREMISE:
-# where a card needs a number (an average of 301.31, three beverages) the FRONT states it, and the
+# where a card needs a number (an average of 595.13, ten beverages) the FRONT states it, and the
 # card tests the REASONING. No card names a Northwind table as something to remember, and none
 # asks for a figure from the dataset. The koans are where the SQL is written; this deck is where
 # the rules have to hold without rows in reach.
@@ -19,7 +19,7 @@
 # value shape and its error, the list shape and why it does not repeat rows, the table shape and
 # its name, the average-of-what trap, a filter the brackets do not see, the habits, and last the
 # production card.
-# 14 basic, 4 cloze — about the 3:1 the existing decks run.
+# 15 basic, 4 cloze — about the 3:1 the existing decks run.
 #
 # WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
 #   - Series 1 · 35 owns WHERE against HAVING. The card here is about why an aggregate needs a
@@ -52,8 +52,8 @@ cards:
       back: "Exactly one value: one row and one column. The comparison uses it as if the number had been written there."
 
   - basic:
-      front: "<code>WHERE price &gt; (SELECT price FROM products WHERE category_id = 1)</code> stops with \"more than one row returned by a subquery used as an expression\". Category 1 has three products. What is the error really asking?"
-      back: "Which of the three prices you mean. More than all of them means more than the highest, so ask for one value: <code>(SELECT MAX(price) FROM products WHERE category_id = 1)</code>."
+      front: "<code>WHERE price &gt; (SELECT price FROM products WHERE category_id = 1)</code> stops with \"more than one row returned by a subquery used as an expression\". Category 1 has ten products. What is the error really asking?"
+      back: "Which of the ten prices you mean. More than all of them means more than the highest, so ask for one value: <code>(SELECT MAX(price) FROM products WHERE category_id = 1)</code>."
 
   - cloze: "\"More than every price in the list\" is the same as more than the {{c1::MAX}}; \"less than every price in the list\" is the same as less than the {{c2::MIN}}."
 
@@ -61,8 +61,8 @@ cards:
   - cloze: "A subquery that returns one column of many rows is a list. Test a value against it with {{c1::IN}}: <code>WHERE customer_id {{c1::IN}} (SELECT customer_id FROM orders …)</code>."
 
   - basic:
-      front: "A product sold on 10 order lines, and one customer bought it 3 times. How many rows does each return: customers WHERE customer_id IN (the customers of those lines), and customers JOINed to those lines?"
-      back: "IN returns each customer once, so 8 rows. The join returns one row per matching line, so 10 rows, with that customer 3 times. IN asks a yes-or-no question for each customer."
+      front: "A discontinued product sold on 9 order lines this year, and one customer bought it twice. How many rows does each return: customers WHERE customer_id IN (the customers of those lines), and customers JOINed to those lines?"
+      back: "IN returns each customer once, so 8 rows. The join returns one row per matching line, so 9 rows, with that customer twice. IN asks a yes-or-no question for each customer."
 
   # ── 4. THE TABLE SHAPE ──
   - basic:
@@ -75,19 +75,23 @@ cards:
 
   # ── 5. THE AVERAGE OF WHAT? ──
   - basic:
-      front: "The average of the amount column in an order-lines table is 301.31. You list customers whose total spend is above 301.31, and every customer appears. Why?"
-      back: "301.31 is the average order line. A customer's total is many lines added together, so it is almost always bigger than one line. To compare customers with the average customer, average the per-customer totals."
+      front: "The average of the amount column in an order-lines table is 595.13. You list customers whose total spend is above 595.13, and 118 of the 119 customers appear. Why?"
+      back: "595.13 is the average order line. A customer's total is many lines added together, so it is almost always bigger than one line; only a customer who has bought hardly anything falls below it. To compare customers with the average customer, average the per-customer totals."
 
   - cloze: "Before comparing with an average, ask what one row of the averaged data represents: the average {{c1::order line}} and the average {{c2::customer}} can be many times apart."
 
   - basic:
-      front: "Two queries are identical except for the subquery inside the HAVING. One returns 25 customers, the other 9. Neither errors. What does that tell you about subqueries?"
+      front: "Two queries are identical except for the subquery inside the HAVING. One returns 118 customers, the other 30. Neither errors. What does that tell you about subqueries?"
       back: "The outer query trusts whatever value the subquery returns. A subquery with the wrong grain produces a plausible, wrong answer with no warning, so check what it returns before you trust the result."
 
-  # ── 5b. A FILTER THE BRACKETS DO NOT SEE (the case file: the nine re-run on delivered sales) ──
+  # ── 5b. TWO TOTALS, TWO QUESTIONS (the case segment: a year's orders and a year's invoices) ──
   - basic:
-      front: "A report keeps only shipped orders with <code>WHERE shipped_date IS NOT NULL</code>, and its HAVING compares each customer's total with <code>(SELECT AVG(t.total) FROM (SELECT customer_id, SUM(amount) AS total FROM … GROUP BY customer_id) AS t)</code>. The shipped filter is written only in the outer query. What goes wrong?"
-      back: "The subquery is a query of its own and does not see the outer query's WHERE, so it still averages every order, shipped or not. Shipped totals get compared with an all-orders average: a plausible, wrong list with no error. Write the same filter inside the brackets too."
+      front: "For one year, the orders placed add up to 3628572.55 and the invoices sent add up to 3190372.69. Which total is wrong?"
+      back: "Neither, necessarily. They answer different questions: what customers ordered measures demand, and what was invoiced is what the company billed. The useful question is the gap between them, and why it is there."
+
+  - basic:
+      front: "How can one query return two totals from two different tables side by side, in one row?"
+      back: "Put each total in its own value subquery in the select list: <code>SELECT (SELECT SUM(…) FROM orders …) AS ordered, (SELECT SUM(amount) FROM invoices …) AS invoiced;</code> Each bracket returns one value, and the outer SELECT needs no FROM."
 
   # ── 6. THE HABITS ──
   - basic:

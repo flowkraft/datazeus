@@ -42,7 +42,7 @@ import spock.lang.Stepwise
  * HANDS-ON (curriculum.yaml): koan:equivalent, koan:predict — `equivalent` is the spine (the UNION ALL
  * version and the GROUPING SETS version return the same rows); `predict` on where the NULLs land.
  *
- * ── KOANS AND THE SERIES CASE (.docs/plan-sql-series2-story.md §0, §3) ─────────────
+ * ── KOANS AND THE SERIES CASE (.docs/plan-academy-course-stories-artefacts.md §1, §3.2) ─────────────
  * The LESSON's main example is the case: rep x courier with subtotals (Nancy–Speedy Express 25 orders /
  * 24 with no ShippedDate …); its NULL-collision example is "Customers"."Region". The KOANS use other
  * tables: units per category per order year with ROLLUP; supplier country x category with GROUPING SETS;

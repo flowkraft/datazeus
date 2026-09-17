@@ -1,33 +1,52 @@
 package datazeus.learnsql.series2._20
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.NorthwindCoGateSpec
 import spock.lang.Unroll
 
 /**
  * VERIFIED spec = the PUBLISH GATE for Series 2 · lesson _20
  * "CTEs (WITH) — Breaking a Long Query Into Named Steps".
  *
- * Every figure the video, the article, the short and the koans put in front of a learner is
- * asserted here, on BOTH engines. The lesson's scripts, and the sections that run them:
+ * Runs on NORTHWIND COMPANY S (schema northwind_co_s) on BOTH engines, each re-checksummed against
+ * `_dataset_info` before any assertion (NorthwindCoGateSpec). Every figure the video, the article,
+ * the trailer, the short and the koans put in front of a learner is asserted here. The lesson's
+ * scripts, and the sections that run them:
  *
  *    customers-above-the-average-customer-nested, average-customer-with,
  *    customers-above-the-average-customer-with                                §1 name it, then use it
- *    june-report-with, june-report-with-check, june-lines-step                §2 steps that read steps
- *    june-report-tidied, june-report-tidied-check                             §3 the tidy-up
- *    sales-and-freight-with                                                   §4 the hands-on
- *    open-orders-by-rep-and-courier-with, open-orders-by-rep-and-courier-check §4b the case file
+ *    dairy-report-with, dairy-report-with-check                               §2 steps that read steps
+ *    dairy-report-tidied, dairy-report-tidied-check                           §3 the tidy-up
+ *    sales-and-freight-with, sales-and-freight-with-check                     §4 one filter, every use sees it
+ *    sales-and-freight-june                                                   §4b the hands-on
+ *    month-orders-step                                                        §4c look inside one step
  *
- * §5 asserts the numbers the KOANS' comments state, and §6 runs the koans file itself, as written,
- * on both engines — including the two EQUIVALENCE koans, whose expected rows are whatever the given
- * nested query returns — plus, on DuckDB, the comparison exactly as KoanBase makes it (Groovy ==).
+ * §5 asserts the data facts the lesson leans on and every number the KOANS' comments state, and §6
+ * runs the koans file itself, as written, on both engines — including the two EQUIVALENCE koans,
+ * whose expected rows are whatever the given nested query returns — plus, on DuckDB, the comparison
+ * exactly as KoanBase makes it (Groovy ==).
  *
  * ── A REWRITE IS ONLY A REWRITE IF THE ANSWER DID NOT MOVE ────────────────────────────────
- * The WITH versions are compared ROW FOR ROW with the queries they rewrite, including the ones that
- * live in other lessons' scripts folders (Series 2 · 00's nested query, Series 2 · 15's June cure,
- * sales-and-freight cure and case-file report by rep and courier). If either lesson's script changes,
- * this gate fails.
+ * The WITH versions are compared ROW FOR ROW with the queries they rewrite, which live in other
+ * lessons' scripts folders: Series 2 · 00's nested customer query, Series 2 · 15's Dairy cure
+ * (dairy-units-narrowed-first) and its sales-and-freight cure (sales-and-freight-aggregated-first).
+ * If either lesson's script changes, this gate fails.
+ *
+ * ── NO STORY IN THIS EPISODE (plan-academy-course-stories-artefacts.md §3.2.1, row 20) ───────
+ * The drafted case parts (the delivered re-run, the report by rep and courier) are gone. Its beat
+ * "one filter, every use of the step sees it" is taught on the sales-and-freight report: May's range,
+ * written twice in Series 2 · 15's cure, is written once in the month_orders step (§4).
+ *
+ * ── THE TWO REVIEW NOTES IN THE VIDEO'S HEADER, MEASURED HERE ─────────────────────────────
+ *  1. The tidy-up returns EXACTLY Series 2 · 15's left-then-inner rows (asserted in §3): the trap
+ *     still repeats the previous lesson. The open alternative ("merge two steps and the freight
+ *     multiplies again") is measured in §4 and NOT on screen: rows 47 = 47, sales 262931.17 =
+ *     262931.17, freight 28515.7 against 8977.88, Nordic Foods back on top with 2149.26.
+ *  2. The check the lesson shows on the freight report includes the freight, so it catches that
+ *     merge; a rows-and-sales check would not (asserted in §4).
  */
-class CtesSpec extends NorthwindGateSpec {
+class CtesSpec extends NorthwindCoGateSpec {
+
+    static final String S15 = "../courses/learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/scripts/"
 
     // --- 1. NAME IT, THEN USE IT -------------------------------------------------------------------
 
@@ -38,24 +57,30 @@ class CtesSpec extends NorthwindGateSpec {
     }
 
     @Unroll
-    def "[#engine] WITH customer_totals: the average customer is 2326.13, and the same 9 customers as the nested query"() {
+    def "[#engine] WITH customer_totals: the average customer is 126193.54, and the same 30 customers as the nested query"() {
         given:
         def nested = sqlFor(engine).rows(script("customers-above-the-average-customer-nested"))
         def with = sqlFor(engine).rows(script("customers-above-the-average-customer-with"))
+        def asCard = { List rows -> rows.collect { [it.CompanyName, dec(it["Total sales"])] } }
 
         expect: "with-one's figure"
-        dec(sqlFor(engine).firstRow(script("average-customer-with"))["Average customer"]) == dec("2326.13")
+        dec(sqlFor(engine).firstRow(script("average-customer-with"))["Average customer"]) == dec("126193.54")
 
-        and: "nine-again: row for row the nested query's answer"
-        with.size() == 9
-        with.collect { [it.CompanyName, dec(it["Total sales"])] } == nested.collect { [it.CompanyName, dec(it["Total sales"])] }
-        with.first().CompanyName == "Cactus Comidas para llevar"
-        dec(with.first()["Total sales"]) == dec("4567.8")
-        with.takeRight(3).collect { [it.CompanyName, dec(it["Total sales"])] } ==
-                [["Morgenstern Gesundkost", dec("3289.13")], ["Around the Horn", dec("2701.58")], ["Great Lakes Food Market", dec("2683.28")]]
+        and: "same-thirty: row for row the nested query's answer"
+        with.size() == 30
+        asCard(with) == asCard(nested)
+        asCard(with).take(3) == [["Fjord Foods", dec("797164")], ["Yarrow Pantry", dec("786022.56")], ["Quayside Traders", dec("783579.03")]]
+        asCard(with).takeRight(2) == [["Amber Grocers", dec("186853.36")], ["Emerald Grocers", dec("175249.7")]]
+
+        and: "no two totals are equal, so the order on the card is the same on both engines"
+        with.collect { dec(it["Total sales"]) }.unique().size() == 30
 
         and: "the nested query really is three brackets deep (the trailer's claim)"
         script("customers-above-the-average-customer-nested").count("(SELECT") == 2
+
+        and: "the WITH version writes the step once and reads it twice"
+        script("customers-above-the-average-customer-with").count("FROM customer_totals") == 2
+        script("customers-above-the-average-customer-with").count("(SELECT") == 1
 
         where:
         engine << ENGINES
@@ -64,28 +89,25 @@ class CtesSpec extends NorthwindGateSpec {
     // --- 2. STEPS THAT READ STEPS -------------------------------------------------------------------
 
     @Unroll
-    def "[#engine] the June report as steps returns exactly last lesson's cure: 20 rows, 6 sold, 40 units"() {
+    def "[#engine] the Dairy report as steps returns exactly last lesson's cure: 10 rows, 7 sold, 1891 units"() {
         given:
-        def with = sqlFor(engine).rows(script("june-report-with"))
-        def cure = sqlFor(engine).rows(new File("../courses/learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/scripts/june-units-narrowed-first.sql").text)
-        def check = sqlFor(engine).firstRow(script("june-report-with-check"))
+        def with = sqlFor(engine).rows(script("dairy-report-with"))
+        def cure = sqlFor(engine).rows(new File(S15 + "dairy-units-narrowed-first.sql").text)
+        def check = sqlFor(engine).firstRow(script("dairy-report-with-check"))
+        def asCard = { List rows -> rows.collect { [it.ProductName, it["May units"] == null ? null : (it["May units"] as int)] } }
 
-        expect:
-        with.collect { [it.ProductName, it["June units"] == null ? null : (it["June units"] as int)] } ==
-                cure.collect { [it.ProductName, it["June units"] == null ? null : (it["June units"] as int)] }
+        expect: "row for row"
+        asCard(with) == asCard(cure)
+        asCard(with) == [["Alpine Butter", null], ["Classic Feta", null], ["Coastal Parmesan", 10], ["Harvest Butter", 408],
+                         ["Heritage Butter", 836], ["Heritage Gouda", 58], ["Highland Yoghurt", 52], ["Island Cheddar", null],
+                         ["Rustic Butter", 471], ["Smoked Feta", 56]]
 
         and: "same-answer's card"
-        [check.Rows as int, check.Sold as int, check.Units as int] == [20, 6, 40]
+        [check.Rows as int, check.Sold as int, check.Units as int] == [10, 7, 1891]
 
-        where:
-        engine << ENGINES
-    }
-
-    @Unroll
-    def "[#engine] one step alone: six June lines, orders 4 to 7, adding up to 40"() {
-        expect: "june-lines-result's card"
-        sqlFor(engine).rows(script("june-lines-step")).collect { [it.OrderID as int, it.ProductID as int, it.Quantity as int] } ==
-                [[4, 1, 12], [4, 2, 10], [5, 3, 3], [6, 4, 2], [6, 5, 5], [7, 6, 8]]
+        and: "may_units reads may_lines, and May is written once"
+        script("dairy-report-with").contains("FROM may_lines")
+        script("dairy-report-with").count("DATE '2024-05-01'") == 1
 
         where:
         engine << ENGINES
@@ -94,111 +116,226 @@ class CtesSpec extends NorthwindGateSpec {
     // --- 3. THE TIDY-UP ----------------------------------------------------------------------------
 
     @Unroll
-    def "[#engine] the tidy-up: 6 rows, and the units still add up to 40 — only the row count notices"() {
+    def "[#engine] the tidy-up: 7 rows, and the units still add up to 1891 — only the row count notices"() {
         given:
-        def tidied = sqlFor(engine).rows(script("june-report-tidied"))
-        def check = sqlFor(engine).firstRow(script("june-report-tidied-check"))
+        def tidied = sqlFor(engine).rows(script("dairy-report-tidied"))
+        def check = sqlFor(engine).firstRow(script("dairy-report-tidied-check"))
+        def asCard = { List rows -> rows.collect { [it.ProductName, it["May units"] as int] } }
 
-        expect: "six-rows' card"
-        tidied.collect { [it.ProductName, it["June units"] as int] } ==
-                [["Aniseed Syrup", 3], ["Boston Crab Meat", 8], ["Chai", 12], ["Chang", 10],
-                 ["Chef Antons Cajun Seasoning", 2], ["Scottish Longbreads", 5]]
+        expect: "seven-rows' card"
+        asCard(tidied) == [["Coastal Parmesan", 10], ["Harvest Butter", 408], ["Heritage Butter", 836], ["Heritage Gouda", 58],
+                           ["Highland Yoghurt", 52], ["Rustic Butter", 471], ["Smoked Feta", 56]]
 
         and: "equivalent-check's second row"
-        [check.Rows as int, check.Sold as int, check.Units as int] == [6, 6, 40]
+        [check.Rows as int, check.Sold as int, check.Units as int] == [7, 7, 1891]
+
+        and: "the three products it lost are exactly the three with no May sale"
+        (sqlFor(engine).rows(script("dairy-report-with")).findAll { it["May units"] == null }*.ProductName) ==
+                ["Alpine Butter", "Classic Feta", "Island Cheddar"]
+
+        and: "REVIEW NOTE 1: these are the very rows of the joins lesson's left-then-inner card"
+        asCard(tidied) == asCard(sqlFor(engine).rows(new File(S15 + "dairy-units-left-then-inner.sql").text))
 
         where:
         engine << ENGINES
     }
 
-    // --- 4. THE HANDS-ON ---------------------------------------------------------------------------
+    // --- 4. ONE FILTER, EVERY USE OF THE STEP SEES IT ---------------------------------------------------
 
     @Unroll
-    def "[#engine] the hands-on rewrite returns last lesson's sales-and-freight cure row for row: Frankenversand 268.33 first"() {
+    def "[#engine] May written once: the steps return last lesson's sales-and-freight cure row for row, and the check matches on rows, sales AND freight"() {
         given:
+        def cureSrc = new File(S15 + "sales-and-freight-aggregated-first.sql").text
         def with = sqlFor(engine).rows(script("sales-and-freight-with"))
-        def cure = sqlFor(engine).rows(new File("../courses/learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/scripts/sales-and-freight-aggregated-first.sql").text)
+        def cure = sqlFor(engine).rows(cureSrc)
+        def check = sqlFor(engine).firstRow(script("sales-and-freight-with-check"))
+        def asCard = { List rows -> rows.collect { [it.CompanyName, dec(it["Total sales"]), dec(it.Freight)] } }
 
-        expect:
-        with.collect { [it.CompanyName, dec(it["Total sales"]), dec(it.Freight)] } == cure.collect { [it.CompanyName, dec(it["Total sales"]), dec(it.Freight)] }
-        with.first().CompanyName == "Frankenversand"
-        dec(with.first().Freight) == dec("268.33")
+        expect: "may-twice: last lesson's cure writes May's range twice; the steps write it once"
+        cureSrc.count("DATE '2024-05-01'") == 2
+        script("sales-and-freight-with").count("DATE '2024-05-01'") == 1
+        script("sales-and-freight-with").count("FROM month_orders") == 2
+
+        and: "may-once-result's card, row for row the cure"
+        asCard(with) == asCard(cure)
+        asCard(with) == [["Alpine Provisions", dec("15686.56"), dec("610.83")], ["Golden Pantry", dec("18342.33"), dec("562.08")],
+                         ["Yarrow Pantry", dec("12884.6"), dec("502.33")], ["Quayside Traders", dec("13170.94"), dec("497.47")],
+                         ["Nordic Foods", dec("11322.73"), dec("480.29")]]
+
+        and: "freight-check's card: 47 rows, 262931.17, 8977.88"
+        [check.Rows as int, dec(check.Sales), dec(check.Freight)] == [47, dec("262931.17"), dec("8977.88")]
+
+        and: "'the same as last lesson's version, before its LIMIT'"
+        def cureAll = sqlFor(engine).rows(cureSrc.replace("LIMIT 5;", ""))
+        cureAll.size() == 47
+        cureAll.collect { new BigDecimal(it["Total sales"].toString()) }.sum().stripTrailingZeros() == dec("262931.17")
+        cureAll.collect { new BigDecimal(it.Freight.toString()) }.sum().stripTrailingZeros() == dec("8977.88")
+
+        and: "8977.88 is May's whole freight bill, over Orders alone: 181 orders, 47 customers"
+        def may = sqlFor(engine).firstRow('''SELECT SUM("Freight") AS f, count(*) AS n, count(DISTINCT "CustomerID") AS c FROM "Orders"
+                                             WHERE "OrderDate" >= DATE '2024-05-01' AND "OrderDate" < DATE '2024-06-01' ''')
+        [dec(may.f), may.n as int, may.c as int] == [dec("8977.88"), 181, 47]
+
+        and: "LIMIT 5 cuts cleanly: the sixth row is below the fifth"
+        dec(sqlFor(engine).rows(script("sales-and-freight-with").replace("LIMIT 5;", "LIMIT 6;"))[5].Freight) < dec("480.29")
 
         where:
         engine << ENGINES
     }
-
-    // --- 4b. THE CASE FILE: THE REPORT, AS NAMED STEPS ----------------------------------------------
 
     @Unroll
-    def "[#engine] case file: the joins lesson's report as named steps — 3 rows by rep and courier, row for row the nested version, 27 orders, 19169"() {
-        given:
-        def with = sqlFor(engine).rows(script("open-orders-by-rep-and-courier-with"))
-        def nested = sqlFor(engine).rows(new File("../courses/learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/scripts/no-ship-date-by-rep-and-courier.sql").text)
-        def check = sqlFor(engine).firstRow(script("open-orders-by-rep-and-courier-check"))
-        def asCard = { List rows -> rows.collect { [it.Rep, it.Courier, it.Orders as int, dec(it.Sales), dec(it.Freight)] } }
+    def "[#engine] may-twice: change one bracket to June and forget the other — no error, 39 customers, June's sales beside May's freight"() {
+        given: "the joins lesson's cure with ONLY the sales bracket moved to June"
+        def src = new File(S15 + "sales-and-freight-aggregated-first.sql").text
+        def forgot = src.replace("o.\"OrderDate\" >= DATE '2024-05-01'", "o.\"OrderDate\" >= DATE '2024-06-01'")
+                        .replace("o.\"OrderDate\" <  DATE '2024-06-01'", "o.\"OrderDate\" <  DATE '2024-07-01'")
 
-        expect: "case-report's card, in order"
-        asCard(with) == [
-                ["Nancy", "Speedy Express", 24, dec("18848.3"), dec("1277.84")],
-                ["Janet", "United Package", 2, dec("292.2"), dec("38.25")],
-                ["Nancy", "United Package", 1, dec("28.5"), dec("11.61")]]
+        expect: "exactly one bracket changed"
+        forgot != src
+        forgot.count("DATE '2024-05-01'") == 1
+        forgot.count("DATE '2024-07-01'") == 1
 
-        and: "a rewrite, not a new report: row for row what the joins lesson's nested version returns"
-        asCard(with) == asCard(nested)
-
-        and: "case-report-check's card: 3 rows, 27 orders, 19169"
-        [check.Rows as int, check.Orders as int, dec(check.Sales)] == [3, 27, dec("19169")]
-
-        and: "the step the article says to look inside first holds all 27 orders with no ship date"
-        (sqlFor(engine).firstRow('''WITH open_orders AS (SELECT "OrderID" FROM "Orders" WHERE "ShippedDate" IS NULL)
-                                    SELECT count(*) AS n FROM open_orders''').n as int) == 27
-
-        and: "case-the-report's note, and the article's opening: 19169 of 58153.31 — a third"
-        def money = sqlFor(engine).firstRow('''SELECT ROUND(SUM(CASE WHEN o."ShippedDate" IS NULL
-                                                        THEN d."UnitPrice" * d."Quantity" * (1 - d."Discount") ELSE 0 END), 2) AS open_sales,
-                                                      ROUND(SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")), 2) AS all_sales
-                                               FROM "Order Details" d JOIN "Orders" o ON o."OrderID" = d."OrderID"''')
-        dec(money.open_sales) == dec("19169")
-        dec(money.all_sales) == dec("58153.31")
-        (money.open_sales as BigDecimal).divide(money.all_sales as BigDecimal, 4, java.math.RoundingMode.HALF_UP) == new BigDecimal("0.3296")   // "a third"
+        and: "it runs, and quietly reports 39 customers instead of 47"
+        sqlFor(engine).rows(forgot.replace("LIMIT 5;", "")).size() == 39
 
         where:
         engine << ENGINES
     }
 
-    // --- 5. What the KOANS stand on --------------------------------------------------------------
+    @Unroll
+    def "[#engine] REVIEW NOTE 2 and the open alternative: merge sales and freight into one step and only the freight in the check notices"() {
+        // Not on screen. The owner's open curriculum question for 20; the check the lesson shows must catch it.
+        given:
+        def merged = '''WITH month_orders AS (
+                          SELECT "OrderID", "CustomerID", "Freight" FROM "Orders"
+                          WHERE "OrderDate" >= DATE '2024-05-01' AND "OrderDate" < DATE '2024-06-01'),
+                        customer_totals AS (
+                          SELECT o."CustomerID",
+                                 ROUND(SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")), 2) AS "Total sales",
+                                 SUM(o."Freight") AS "Freight"
+                          FROM month_orders o JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+                          GROUP BY o."CustomerID"),
+                        report AS (
+                          SELECT c."CompanyName", t."Total sales", t."Freight"
+                          FROM "Customers" c JOIN customer_totals t ON t."CustomerID" = c."CustomerID")'''
+        def m = sqlFor(engine).firstRow(merged + ' SELECT count(*) AS "Rows", sum("Total sales") AS "Sales", sum("Freight") AS "Freight" FROM report')
+        def top = sqlFor(engine).rows(merged + ' SELECT "CompanyName", "Freight" FROM report ORDER BY "Freight" DESC LIMIT 1')[0]
+
+        expect: "rows and sales match the right answer; freight does not"
+        [m.Rows as int, dec(m.Sales)] == [47, dec("262931.17")]
+        dec(m.Freight) == dec("28515.7")
+        [top.CompanyName, dec(top.Freight)] == ["Nordic Foods", dec("2149.26")]
+
+        where:
+        engine << ENGINES
+    }
+
+    // --- 4b. THE HANDS-ON: CHANGE THE MONTH IN ONE PLACE -------------------------------------------------
+
+    @Unroll
+    def "[#engine] the hands-on: June 2024 in the one step — Juniper Trading first, on 772.19"() {
+        given:
+        def june = script("sales-and-freight-june")
+        def rows = sqlFor(engine).rows(june)
+
+        expect: "only the two dates changed"
+        june == script("sales-and-freight-with").replace(">= DATE '2024-05-01'", ">= DATE '2024-06-01'")
+                                                 .replace("<  DATE '2024-06-01'", "<  DATE '2024-07-01'")
+
+        and: "the article's card"
+        rows.collect { [it.CompanyName, dec(it["Total sales"]), dec(it.Freight)] } == [
+                ["Juniper Trading", dec("21727.16"), dec("772.19")], ["Zenith Food Hall", dec("18151.04"), dec("715.64")],
+                ["Fjord Foods", dec("17594.89"), dec("625.96")], ["Golden Pantry", dec("15954.95"), dec("536.37")],
+                ["Alpine Provisions", dec("15670.92"), dec("528.21")]]
+        dec(sqlFor(engine).rows(june.replace("LIMIT 5;", "LIMIT 6;"))[5].Freight) < dec("528.21")
+
+        where:
+        engine << ENGINES
+    }
+
+    // --- 4c. LOOK INSIDE ONE STEP ------------------------------------------------------------------------
+
+    @Unroll
+    def "[#engine] one step alone: month_orders for Nordic Foods holds four orders, 480.29 of freight"() {
+        given:
+        def rows = sqlFor(engine).rows(script("month-orders-step"))
+
+        expect: "month-orders-result's card"
+        rows.collect { [it.OrderID as int, it.CustomerID, dec(it.Freight)] } ==
+                [[8374, "NORDI", dec("184.43")], [8468, "NORDI", dec("59.69")], [8482, "NORDI", dec("44.27")], [8548, "NORDI", dec("191.9")]]
+        rows.collect { new BigDecimal(it.Freight.toString()) }.sum().stripTrailingZeros() == dec("480.29")
+        sqlFor(engine).firstRow('''SELECT "CompanyName" AS n FROM "Customers" WHERE "CustomerID" = 'NORDI' ''').n == "Nordic Foods"
+
+        and: "the step is the one in the report, word for word"
+        script("sales-and-freight-with").startsWith(script("month-orders-step").readLines().take(6).join("\n"))
+
+        where:
+        engine << ENGINES
+    }
+
+    // --- 5. THE DATA FACTS, AND WHAT THE KOANS STAND ON -----------------------------------------------
+
+    @Unroll
+    def "[#engine] the dataset is Northwind Company S"() {
+        expect:
+        ['Orders': 10000, 'Order Details': 25233, 'Products': 80, 'Customers': 120, 'Employees': 12, 'Categories': 8, 'Shippers': 4].every { t, n ->
+            (sqlFor(engine).firstRow("SELECT count(*) AS n FROM \"${t}\"".toString()).n as int) == n
+        }
+
+        and: "the average customer is over the 119 customers who ordered (one never did)"
+        sqlFor(engine).firstRow('SELECT count(DISTINCT "CustomerID") AS n FROM "Orders"').n as int == 119
+
+        where:
+        engine << ENGINES
+    }
 
     @Unroll
     def "[#engine] the koan comments' facts are true"() {
-        expect: "koan 2: the average category is 7269.16"
+        expect: "koan 2: the average category is 1877128.89"
         dec(sqlFor(engine).firstRow('''SELECT ROUND(AVG(t."Total"), 2) AS a FROM (
                                          SELECT p."CategoryID", SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")) AS "Total"
                                          FROM "Products" p JOIN "Order Details" d ON d."ProductID" = p."ProductID"
-                                         GROUP BY p."CategoryID") t''').a) == dec("7269.16")
+                                         GROUP BY p."CategoryID") t''').a) == dec("1877128.89")
 
-        and: "koan 6: the tidied version (filter in the final WHERE) returns 6 rows of 8"
+        and: "koan 3: nine reps take orders, and the third and fourth averages differ (LIMIT 3 cuts cleanly)"
+        def reps = sqlFor(engine).rows('''SELECT o."EmployeeID", SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")) / count(DISTINCT o."OrderID") AS p
+                                          FROM "Orders" o JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+                                          GROUP BY o."EmployeeID" ORDER BY p DESC''')
+        reps.size() == 9
+        new BigDecimal(reps[2].p.toString()) > new BigDecimal(reps[3].p.toString()) + 1
+
+        and: "koan 4: the shares, unrounded, are nowhere near a rounding edge"
+        def ch = sqlFor(engine).rows('''SELECT o."Channel" AS c, SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")) AS s
+                                        FROM "Orders" o JOIN "Order Details" d ON d."OrderID" = o."OrderID" GROUP BY o."Channel"''')
+        def all = ch.collect { new BigDecimal(it.s.toString()) }.sum()
+        ch.every { r ->
+            def pct = new BigDecimal(r.s.toString()) * 100 / all
+            def frac = (pct * 10).remainder(BigDecimal.ONE).abs()
+            (frac - 0.5).abs() > 0.02
+        }
+
+        and: "koan 6: the tidied version (the day's test in the final WHERE) returns 6 rows of 8"
         sqlFor(engine).rows('''WITH lines AS (SELECT p."CategoryID", d."Quantity", o."OrderDate"
                                              FROM "Products" p JOIN "Order Details" d ON d."ProductID" = p."ProductID"
                                              JOIN "Orders" o ON o."OrderID" = d."OrderID")
                                SELECT c."CategoryName", sum(l."Quantity") AS u FROM "Categories" c
                                LEFT JOIN lines l ON l."CategoryID" = c."CategoryID"
-                               WHERE l."OrderDate" >= DATE '2023-08-01' AND l."OrderDate" < DATE '2023-09-01'
+                               WHERE l."OrderDate" >= DATE '2023-02-18' AND l."OrderDate" < DATE '2023-02-19'
                                GROUP BY c."CategoryName"''').size() == 6
 
-        and: "koan 9: ten countries, the average country is 5815.33"
+        and: "koan 9: 21 countries, the average country is 715096.72"
         def countries = sqlFor(engine).firstRow('''SELECT count(*) AS n, ROUND(AVG(t."Total"), 2) AS a FROM (
                                      SELECT c."Country", SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")) AS "Total"
                                      FROM "Customers" c JOIN "Orders" o ON o."CustomerID" = c."CustomerID"
                                      JOIN "Order Details" d ON d."OrderID" = o."OrderID" GROUP BY c."Country") t''')
-        (countries.n as int) == 10
-        dec(countries.a) == dec("5815.33")
+        (countries.n as int) == 21
+        dec(countries.a) == dec("715096.72")
 
-        and: "koan 10: every supplier sold something in August 2023"
-        sqlFor(engine).firstRow('''SELECT count(DISTINCT p."SupplierID") AS n FROM "Products" p
-                                   JOIN "Order Details" d ON d."ProductID" = p."ProductID"
-                                   JOIN "Orders" o ON o."OrderID" = d."OrderID"
-                                   WHERE o."OrderDate" >= DATE '2023-08-01' AND o."OrderDate" < DATE '2023-09-01' ''').n == 6
+        and: "koan 10: three segments, and every one bought something in August 2023"
+        sqlFor(engine).firstRow('SELECT count(DISTINCT "Segment") AS n FROM "Customers"').n as int == 3
+        sqlFor(engine).firstRow('''SELECT count(DISTINCT c."Segment") AS n FROM "Customers" c
+                                   JOIN "Orders" o ON o."CustomerID" = c."CustomerID"
+                                   WHERE o."OrderDate" >= DATE '2023-08-01' AND o."OrderDate" < DATE '2023-09-01' ''').n as int == 3
 
         where:
         engine << ENGINES
@@ -247,21 +384,22 @@ class CtesSpec extends NorthwindGateSpec {
         titles.size() == 10
         titles[0] == "name it, then use the name: the three biggest categories"
         titles[1] == "use a step twice: categories above the average category"
-        titles[2] == "one step reads another: sales per order, per employee"
-        titles.findAll { koanNested(it) != null } == ["equivalent: rewrite the nested supplier query with WITH",
-                                                      "equivalent: rewrite the shipper report with WITH"]
+        titles[2] == "one step reads another: sales per order, per sales rep"
+        titles.findAll { koanNested(it) != null } == ["equivalent: rewrite the nested product query with WITH",
+                                                      "equivalent: rewrite the courier report with WITH"]
         koanQueries(titles[8])*.trim() == ["___"]
         koanQueries(titles[9])*.trim() == ["___"]
+        koansSource().contains("extends NorthwindCoKoanBase")
     }
 
     def "the video's editor mock quotes koan 1 verbatim, on the line its caret names"() {
-        // ED_CODE, ED_CARET ("Ln : 93   Col : 18") and animFill hard-code koan 1's blank line.
+        // ED_CODE, ED_CARET ("Ln : 96   Col : 18") and animFill hard-code koan 1's blank line.
         given:
         def lines = koansSource().split("\n")
 
         expect:
-        lines[92] == "            FROM ___"
-        lines[92].indexOf("___") == 17
+        lines[95] == "            FROM ___"
+        lines[95].indexOf("___") == 17
     }
 
     // --- helpers ---------------------------------------------------------------------------------
@@ -298,16 +436,16 @@ class CtesSpec extends NorthwindGateSpec {
     private static final Map<String, List<String>> ANSWERS = [
             "name it, then use the name: the three biggest categories"            : ["category_totals"],
             "use a step twice: categories above the average category"             : ['(SELECT AVG("Total") FROM category_totals)'],
-            "one step reads another: sales per order, per employee"               : ["employee_totals"],
-            "a total of totals: each supplier's share of all sales"               : ["supplier_sales"],
-            "equivalent: rewrite the nested supplier query with WITH"             : ['''SELECT p."SupplierID",
-                     SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")) AS "Total"
-              FROM "Products" p
-              JOIN "Order Details" d ON d."ProductID" = p."ProductID"
-              GROUP BY p."SupplierID"'''],
-            "diagnose: the tidy-up that dropped two categories"                   : ["o.\"OrderDate\" >= DATE '2023-08-01' AND o.\"OrderDate\" < DATE '2023-09-01'"],
-            "run one step on its own"                                             : ["august_lines"],
-            "equivalent: rewrite the shipper report with WITH"                    : ['''SELECT o."ShipVia", count(*) AS "Lines"
+            "one step reads another: sales per order, per sales rep"              : ["rep_totals"],
+            "a total of totals: each channel's share of all sales"                : ["channel_sales"],
+            "equivalent: rewrite the nested product query with WITH"              : ['''SELECT d."ProductID", sum(d."Quantity") AS "Units"
+              FROM "Order Details" d
+              JOIN "Orders" o ON o."OrderID" = d."OrderID"
+              WHERE o."OrderDate" >= DATE '2024-01-01' AND o."OrderDate" < DATE '2025-01-01'
+              GROUP BY d."ProductID"'''],
+            "diagnose: the tidy-up that dropped two categories"                   : ["o.\"OrderDate\" >= DATE '2023-02-18' AND o.\"OrderDate\" < DATE '2023-02-19'"],
+            "run one step on its own"                                             : ["day_lines"],
+            "equivalent: rewrite the courier report with WITH"                    : ['''SELECT o."ShipVia", count(*) AS "Lines"
               FROM "Orders" o
               JOIN "Order Details" d ON d."OrderID" = o."OrderID"
               GROUP BY o."ShipVia"'''],
@@ -325,25 +463,24 @@ class CtesSpec extends NorthwindGateSpec {
                 WHERE "Total" > (SELECT AVG("Total") FROM country_totals)
                 ORDER BY "Total" DESC
             '''],
-            "write the whole query: products and August 2023 units per supplier" : ['''
-                WITH product_counts AS (
-                  SELECT "SupplierID", count(*) AS "Products"
-                  FROM "Products"
-                  GROUP BY "SupplierID"
+            "write the whole query: customers and August 2023 units per segment"  : ['''
+                WITH segment_customers AS (
+                  SELECT "Segment", count(*) AS "Customers"
+                  FROM "Customers"
+                  GROUP BY "Segment"
                 ),
                 august_units AS (
-                  SELECT p."SupplierID", sum(d."Quantity") AS "Units"
-                  FROM "Products" p
-                  JOIN "Order Details" d ON d."ProductID" = p."ProductID"
-                  JOIN "Orders" o ON o."OrderID" = d."OrderID"
+                  SELECT c."Segment", sum(d."Quantity") AS "Units"
+                  FROM "Customers" c
+                  JOIN "Orders" o ON o."CustomerID" = c."CustomerID"
+                  JOIN "Order Details" d ON d."OrderID" = o."OrderID"
                   WHERE o."OrderDate" >= DATE '2023-08-01' AND o."OrderDate" < DATE '2023-09-01'
-                  GROUP BY p."SupplierID"
+                  GROUP BY c."Segment"
                 )
-                SELECT s."CompanyName", pc."Products", a."Units"
-                FROM "Suppliers" s
-                JOIN product_counts pc ON pc."SupplierID" = s."SupplierID"
-                LEFT JOIN august_units a ON a."SupplierID" = s."SupplierID"
-                ORDER BY s."CompanyName"
+                SELECT sc."Segment", sc."Customers", a."Units"
+                FROM segment_customers sc
+                LEFT JOIN august_units a ON a."Segment" = sc."Segment"
+                ORDER BY sc."Segment"
             '''],
     ]
 

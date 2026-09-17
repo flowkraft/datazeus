@@ -42,7 +42,7 @@ import spock.lang.Stepwise
  * needs depth, use a richer example rather than inventing Northwind rows.
  * Recursive walking is Series 3 · 10.
  *
- * ── KOANS AND THE SERIES CASE (.docs/plan-sql-series2-story.md §0, §3) ─────────────
+ * ── KOANS AND THE SERIES CASE (.docs/plan-academy-course-stories-artefacts.md §1, §3.2) ─────────────
  * The case does not appear in this episode (NONE). The KOANS: each employee beside their manager (LEFT JOIN
  * keeps Andrew), customers sharing a city (a.id < b.id, not twice, not with themselves), suppliers sharing a
  * country, and — if the lesson takes .docs §5.6 — product pairs on the same order (Chai + Chang: 9 orders).

@@ -10,14 +10,14 @@
 #
 # ── WHAT ANKI IS FOR ────────────────────────────────────────────────────────────────────────
 # Reviewed on a phone, weeks later, with no database open. EVERY CARD CARRIES ITS OWN PREMISE:
-# where a card needs a number (an order with freight 80 and three lines, 20 products in) the FRONT
+# where a card needs a number (an order with freight 80 and three lines, 10 products in) the FRONT
 # states it, and the card tests the REASONING. No card names a Northwind table as something to
 # remember, and none asks for a figure from the dataset.
 #
 # FILE ORDER IS THE CURRICULUM, in the lesson's order: counting rows, the inner join after a left
 # join, the left-join "repair", narrowing first, freight multiplied by a join, SUM(DISTINCT), grain
-# and aggregating first, the bridge table, the case file's report (one row per order, then join the
-# rest), and last the production card.
+# and aggregating first, the bridge table, the case file's report (one row per order, then LEFT JOIN
+# the invoices), and last the production card.
 # 14 basic, 4 cloze — about the 3:1 the existing decks run.
 #
 # WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
@@ -37,25 +37,25 @@ cards:
   - cloze: "Before trusting a query with joins, count the rows {{c1::before}} and {{c2::after}} every join."
 
   - basic:
-      front: "An employee took 27 orders, and every order has 1, 2 or 3 lines. You join the orders to their order lines and <code>count(*)</code>. Will you get 27?"
+      front: "An employee took 530 orders, and every order has between 1 and 6 lines. You join the orders to their order lines and <code>count(*)</code>. Will you get 27?"
       back: "No, more (unless every order has exactly one line). After the join one row is one order LINE, so count(*) counts lines. To count orders, use <code>count(DISTINCT o.order_id)</code>."
 
   # ── 2. AN INNER JOIN AFTER A LEFT JOIN ──
   - basic:
-      front: "<code>FROM products p LEFT JOIN order_lines l ON … JOIN orders o ON o.order_id = l.order_id AND &lt;June&gt;</code>. There are 20 products, and 6 sold in June. How many products come back, and why?"
-      back: "Only the 6 that matched a June order. The LEFT JOIN kept all 20, but the plain JOIN after it keeps only rows that found a match, so it drops exactly the rows the LEFT JOIN kept."
+      front: "<code>FROM products p LEFT JOIN order_lines l ON … JOIN orders o ON o.order_id = l.order_id AND &lt;May&gt;</code>. There are 10 products, and 7 sold in May. How many products come back, and why?"
+      back: "Only the 7 that matched a May order. The LEFT JOIN kept all 10, but the plain JOIN after it keeps only rows that found a match, so it drops exactly the rows the LEFT JOIN kept."
 
   - cloze: "An {{c1::INNER}} JOIN placed after a {{c2::LEFT}} JOIN drops the rows the left join kept."
 
   # ── 3. THE LEFT-JOIN "REPAIR" ──
   - basic:
-      front: "To keep all 20 products you change the second join to <code>LEFT JOIN orders o ON o.order_id = l.order_id AND &lt;June&gt;</code>. All 20 are back, but the units for June are far too big. Why?"
-      back: "The June test in the ON of a LEFT JOIN only decides whether an order is attached. Every order line is kept with its quantity, whatever its date, so the sum is all-time units. The report looks repaired and every number is wrong."
+      front: "To keep all 10 products you change the second join to <code>LEFT JOIN orders o ON o.order_id = l.order_id AND &lt;May&gt;</code>. All 10 are back, but the units for May are far too big. Why?"
+      back: "The May test in the ON of a LEFT JOIN only decides whether an order is attached. Every order line is kept with its quantity, whatever its date, so the sum is all-time units. The report looks repaired and every number is wrong."
 
   # ── 4. NARROW FIRST ──
   - basic:
-      front: "How do you get every product with its June units, including 0 or NULL for products that did not sell in June?"
-      back: "Narrow first: sum June's lines per product in a subquery in FROM, then LEFT JOIN the products to it. <code>FROM products p LEFT JOIN (SELECT product_id, SUM(quantity) AS units FROM order_lines … WHERE &lt;June&gt; GROUP BY product_id) AS j ON j.product_id = p.product_id</code>"
+      front: "How do you get every product with its May units, including NULL for products that did not sell in May?"
+      back: "Narrow first: sum May's lines per product in a subquery in FROM, then LEFT JOIN the products to it. <code>FROM products p LEFT JOIN (SELECT product_id, SUM(quantity) AS units FROM order_lines … WHERE &lt;May&gt; GROUP BY product_id) AS m ON m.product_id = p.product_id</code>"
 
   # ── 5. A JOIN THAT MULTIPLIES MONEY ──
   - basic:
@@ -72,8 +72,8 @@ cards:
 
   # ── 6. SUM(DISTINCT) ──
   - basic:
-      front: "After the join, <code>SUM(DISTINCT o.freight)</code> gives exactly the right company total. Why is it still the wrong fix?"
-      back: "It adds each distinct VALUE once, not each order once. It is right only while no two orders have the same freight. The first time two orders share a value, one of them silently disappears from the total."
+      front: "After the join, <code>SUM(DISTINCT o.freight)</code> gives a much smaller freight total. Why is it still the wrong fix?"
+      back: "It adds each distinct VALUE once, not each order once. Every time two orders share a freight value, one of them silently disappears from the total. On a small table it can come out exactly right by luck; on a large one, where freight values repeat all the time, it is far short."
 
   - basic:
       front: "Three orders have freight 10.00, 10.00 and 25.50. What do <code>SUM(DISTINCT freight)</code> and <code>SUM(freight)</code> return?"
@@ -99,8 +99,8 @@ cards:
 
   # ── 9. ONE ROW PER ORDER, THEN THE REPORT (the case file's shape, with no dataset figures) ──
   - basic:
-      front: "A report needs, per sales rep, the orders that have not shipped, their total value and their freight. Order value comes from <code>order_lines</code>; freight and the rep are on <code>orders</code>. In what order do you build it?"
-      back: "First each order's value, summed from its lines in a subquery: one row per order. Join that to the orders (filtered to the unshipped ones) and to the reps, then GROUP BY the rep. Every joined row is one order, so count(*) counts orders and SUM(freight) adds each freight once. Joining the lines directly would repeat each freight once per line."
+      front: "A report needs the number of shipped orders that have no invoice, and their total value. Order value comes from <code>order_lines</code>; <code>invoices</code> has at most one row per order. In what order do you build it?"
+      back: "First each order's value, summed from its lines in a subquery: one row per order. Join the orders to that, LEFT JOIN the invoices, and keep the shipped orders WHERE the invoice id IS NULL. Every row is one order, so count(*) counts orders. Joining the lines directly would give the same value but make count(*) count lines."
 
   # ── 10. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
   - basic:

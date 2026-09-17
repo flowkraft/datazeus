@@ -22,7 +22,42 @@ The top 10 customers report from the <a href="/academy/learn-sql/select-sum-join
 
 That question contains a second question: what is the average customer? Without SQL beyond Series 1, the only way to answer it is to run one query, write the number down, and paste it into a second query. This lesson shows how to let the database answer the first question inside the second one, with a **subquery**: a query in brackets that runs first, and whose result the outer query uses.
 
-Every query below runs on the Northwind database on PostgreSQL. Write each one in CloudBeaver and compare the result with the table under it. If that is not set up yet, the [Learn Data](/docs/learn-data) guide gets it running.
+{/* THE SETUP SECTION — Series 2 · 00 owns it; 05, 10, 15 and 20 link back here. Every figure in it
+    is asserted by SubqueriesSpec §0 on both engines. Mirrors the video's the-data slide. */}
+
+## Set up the data for Series 2
+
+Series 1 ran on Northwind: 79 orders over 18 months, 25 customers and 3 employees. That is the right size to learn `SELECT`, and too small for the questions in Series 2: weeks and months with real gaps in them, several couriers to compare, invoices, order statuses, years to compare with each other.
+
+So Series 2 runs on **Northwind Company**: a simulated company with the same table names you already know and five years of orders, from 2020 to 2024. It has 10,000 orders, 120 customers, 12 employees, 4 couriers and 80 products, plus invoices and a few more tables. Every Series 1 query runs on it unchanged; the answers are just bigger.
+
+**Install it once** (about a minute), from DataPallas:
+
+1. Open **Configuration → Connections**, select the Northwind PostgreSQL connection (the one CloudBeaver uses) and click **Edit**.
+2. Switch to the **Seed Data** tab. If the panel is not active yet, click **Test Connection** first.
+3. In the **Example** sub-tab, pick **Academy Northwind Co Install** in the **Template** dropdown and confirm.
+4. Click **Copy Example Script To Clipboard**.
+5. Switch to the **My Script** sub-tab, paste, click **Run Script**, and wait for it to finish.
+
+It installs into a schema of its own, `northwind_co_s`, so Series 1's Northwind stays exactly as it was. The [Seed Data walkthrough](/docs/report-generation/large-scale#step-2-open-the-connections-seed-data-tab) shows the same tab with screenshots.
+
+**Use it.** In CloudBeaver, run this once at the top of the SQL editor. It lasts for the editor's session, and every query in Series 2 assumes it:
+
+```sql
+SET search_path TO northwind_co_s;
+```
+
+Then check that the data is there:
+
+```sql
+SELECT count(*) FROM "Orders";
+```
+
+The answer is 10000.
+
+**If a number ever differs from a lesson**, run the template **Academy Verify** the same way. It says OK if your data is exactly the data the lessons use, or which table differs; then run the install again.
+
+The koans need none of this: they ship with their own copy of Northwind Company.
 
 ## Warm up on one table
 
@@ -38,7 +73,7 @@ FROM "Products";
 
 | Average price |
 | ------------- |
-| 28.72         |
+| 24.01         |
 
 Second question: which products cost more than that? Paste the number into a `WHERE`:
 
@@ -47,20 +82,30 @@ Second question: which products cost more than that? Paste the number into a `WH
 ```sql file=./scripts/above-average-price-typed.sql {3}
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
-WHERE "UnitPrice" > 28.72
+WHERE "UnitPrice" > 24.01
 ORDER BY "UnitPrice" DESC;
 ```
 
-| ProductName                    | UnitPrice |
-| ------------------------------ | --------- |
-| Thuringer Rostbratwurst        | 123.79    |
-| Mishi Kobe Niku                | 97        |
-| Gnocchi di nonna Alice         | 38        |
-| Camembert Pierrot              | 34        |
-| Ikura                          | 31        |
-| Uncle Bobs Organic Dried Pears | 30        |
+{/* 30 rows: the top four, an elision, the last two — as the video's thirty-products card shows the
+    top three and the last two. The elision also covers the two products that share 43.12, so no
+    row shown here depends on how an engine orders a tie (SubqueriesSpec §1). Classic Tonic in grey:
+    the row the text is about. */}
 
-Six products, and the answer is correct today. The problem is the number 28.72: it was pasted in by hand. If a price changes tomorrow, the real average moves, but the query still compares with 28.72. It keeps answering yesterday's question, and nothing reports that it is out of date.
+<div className="[&_tbody_tr:nth-child(7)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(7)_td]:font-bold">
+
+| ProductName         | UnitPrice |
+| ------------------- | --------- |
+| Harvest Chicken Pie | 81        |
+| Spiced Meatballs    | 61.12     |
+| Island Sausages     | 58.42     |
+| Smoked Feta         | 53.04     |
+| …                   | …         |
+| Coastal Crispbread  | 24.25     |
+| Classic Tonic       | 24.07     |
+
+</div>
+
+30 of the 80 products, and the answer is correct today. The problem is the number 24.01: it was pasted in by hand. Classic Tonic is on the list by six cents. If a price changes tomorrow, the real average moves, but the query still compares with 24.01. It keeps answering yesterday's question, and nothing reports that it is out of date.
 
 ## Why the average cannot go in the WHERE
 
@@ -97,7 +142,7 @@ WHERE "UnitPrice" > (SELECT AVG("UnitPrice")
 ORDER BY "UnitPrice" DESC;
 ```
 
-The database runs the query in brackets first. It returns **one value**, the average price, and the outer query compares every product with that value, exactly as it did with the pasted-in 28.72. The result is the same six products. The difference is that tomorrow the brackets return tomorrow's average, and there is no number to keep up to date.
+The database runs the query in brackets first. It returns **one value**, the average price, and the outer query compares every product with that value, exactly as it did with the pasted-in 24.01. The result is the same 30 products. The difference is that tomorrow the brackets return tomorrow's average, and there is no number to keep up to date.
 
 ### Run the inside on its own
 
@@ -125,7 +170,7 @@ WHERE "UnitPrice" > (SELECT "UnitPrice"
 SQL Error [21000]: ERROR: more than one row returned by a subquery used as an expression
 ```
 
-There are three beverages, so the brackets return three prices, and `>` compares one value with one value. The error is really a question: which of the three prices is meant? "More than every beverage" means more than the most expensive beverage, so ask for that one value with `MAX`:
+There are ten beverages, so the brackets return ten prices, and `>` compares one value with one value. The error is really a question: which of the ten prices is meant? "More than every beverage" means more than the most expensive beverage, so ask for that one value with `MAX`:
 
 {/* The same highlight as the video: the MAX line in green. */}
 
@@ -138,20 +183,19 @@ WHERE "UnitPrice" > (SELECT MAX("UnitPrice")
 ORDER BY "UnitPrice" DESC;
 ```
 
-| ProductName                    | UnitPrice |
-| ------------------------------ | --------- |
-| Thuringer Rostbratwurst        | 123.79    |
-| Mishi Kobe Niku                | 97        |
-| Gnocchi di nonna Alice         | 38        |
-| Camembert Pierrot              | 34        |
-| Ikura                          | 31        |
-| Uncle Bobs Organic Dried Pears | 30        |
-| Tofu                           | 23.25     |
-| Chef Antons Cajun Seasoning    | 22        |
-| Queso Cabrales                 | 21        |
-| Ravioli Angelo                 | 19.5      |
+| ProductName         | UnitPrice |
+| ------------------- | --------- |
+| Harvest Chicken Pie | 81        |
+| Spiced Meatballs    | 61.12     |
+| Island Sausages     | 58.42     |
+| Smoked Feta         | 53.04     |
+| …                   | …         |
+| Spiced Ham          | 39.32     |
+| Old Town Relish     | 39.19     |
 
-Ten products cost more than the most expensive beverage, Chang, at 19.
+Fourteen products cost more than the most expensive beverage, Alpine Ale, at 39.1.
+
+Two of the rows behind the "…" cost exactly the same, 43.12. `ORDER BY "UnitPrice"` does not say which of two equal prices comes first, so the database may return them in either order. When the order of tied rows matters, add a second column to the `ORDER BY`, such as `"ProductName"`.
 
 ## Three shapes
 
@@ -167,11 +211,11 @@ The queries above used a value. Next, a list.
 
 ## A list: IN
 
-Which customers have ever bought Chai? Chai is product 1. The brackets return the customer of every order line for Chai, and `IN` keeps each customer whose `"CustomerID"` appears in that list:
+Royal Raisins, product 39, has been discontinued, and sales wants to tell the customers who bought it this year. **Which customers bought Royal Raisins in 2024?** The brackets return the customer of every 2024 order line for Royal Raisins, and `IN` keeps each customer whose `"CustomerID"` appears in that list:
 
 {/* The same highlight as the video: the IN line, in grey. */}
 
-```sql file=./scripts/chai-customers.sql {3}
+```sql file=./scripts/royal-raisins-customers.sql {3}
 SELECT "CompanyName"
 FROM "Customers"
 WHERE "CustomerID" IN (
@@ -179,69 +223,70 @@ WHERE "CustomerID" IN (
   FROM "Orders" o
   JOIN "Order Details" d
     ON d."OrderID" = o."OrderID"
-  WHERE d."ProductID" = 1
+  WHERE d."ProductID" = 39
+    AND o."OrderDate" >= DATE '2024-01-01'
 )
 ORDER BY "CompanyName";
 ```
 
-Chai sold on 10 order lines, so it is tempting to predict 10 customers. The result has 8:
+Royal Raisins sold on 9 order lines in 2024, so it is tempting to predict 9 customers. The result has 8:
 
-{/* The same highlight as the video: Alfreds Futterkiste in blue, the row the text is about. */}
+{/* The same highlight as the video: Yarrow Pantry in blue, the row the text is about. */}
 
-<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+<div className="[&_tbody_tr:nth-child(6)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(6)_td]:font-bold [&_tbody_tr:nth-child(6)_td]:text-[rgb(var(--hl-pick-ink))]">
 
-| CompanyName              |
-| ------------------------ |
-| Alfreds Futterkiste      |
-| Around the Horn          |
-| Berglunds snabbköp       |
-| Drachenblut Delikatessen |
-| Ernst Handel             |
-| Great Lakes Food Market  |
-| Island Trading           |
-| Morgenstern Gesundkost   |
+| CompanyName         |
+| ------------------- |
+| Alpine Provisions   |
+| Golden Food Hall    |
+| Golden Pantry       |
+| Nordic Delicatessen |
+| Tundra Foods        |
+| Yarrow Pantry       |
+| Yarrow Trading      |
+| Zenith Food Hall    |
 
 </div>
 
-Alfreds Futterkiste bought Chai three times. `IN` asks one yes-or-no question for each customer, "is this customer's id in the list?", so each customer appears once, however many times their id appears inside the brackets.
+Yarrow Pantry bought Royal Raisins twice. `IN` asks one yes-or-no question for each customer, "is this customer's id in the list?", so each customer appears once, however many times their id appears inside the brackets.
 
 The same question written as a join returns one row per matching order line:
 
-```sql file=./scripts/chai-customers-joined.sql
+```sql file=./scripts/royal-raisins-customers-joined.sql
 SELECT c."CompanyName"
 FROM "Customers" c
 JOIN "Orders" o
   ON o."CustomerID" = c."CustomerID"
 JOIN "Order Details" d
   ON d."OrderID" = o."OrderID"
-WHERE d."ProductID" = 1
+WHERE d."ProductID" = 39
+  AND o."OrderDate" >= DATE '2024-01-01'
 ORDER BY c."CompanyName";
 ```
 
-{/* The same highlight as the video: the three Alfreds rows in grey. */}
+{/* The same highlight as the video: the two Yarrow Pantry rows in grey. */}
 
-<div className="[&_tbody_tr:nth-child(-n+3)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(-n+3)_td]:font-bold">
+<div className="[&_tbody_tr:nth-child(n+6):nth-child(-n+7)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(n+6):nth-child(-n+7)_td]:font-bold">
 
-| CompanyName              |
-| ------------------------ |
-| Alfreds Futterkiste      |
-| Alfreds Futterkiste      |
-| Alfreds Futterkiste      |
-| Around the Horn          |
-| Berglunds snabbköp       |
-| Drachenblut Delikatessen |
-| Ernst Handel             |
-| Great Lakes Food Market  |
-| Island Trading           |
-| Morgenstern Gesundkost   |
+| CompanyName         |
+| ------------------- |
+| Alpine Provisions   |
+| Golden Food Hall    |
+| Golden Pantry       |
+| Nordic Delicatessen |
+| Tundra Foods        |
+| Yarrow Pantry       |
+| Yarrow Pantry       |
+| Yarrow Trading      |
+| Zenith Food Hall    |
 
 </div>
 
-Ten rows, with Alfreds three times. Both queries are correct SQL, but only the first answers the question: who bought Chai is a list of customers, not a list of order lines. This is the repeated-rows problem from the <a href="/academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">report lesson</a>, seen from the other side: there, `count(DISTINCT …)` removed the repeats; here, `IN` never creates them.
+Nine rows, with Yarrow Pantry twice. Both queries are correct SQL, but only the first answers the question: who to tell is a list of customers, not a list of order lines. This is the repeated-rows problem from the <a href="/academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">report lesson</a>, seen from the other side: there, `count(DISTINCT …)` removed the repeats; here, `IN` never creates them.
 
 ### Your turn
 
-How many products sell at or below the average price? Six are above it, so predict the rest before you run it:
+How many products sell at or below the average price? Thirty are above it, so predict the rest before you run it:
 
 ```sql file=./scripts/at-or-below-average-price.sql
 SELECT count(*) AS "Products"
@@ -252,9 +297,9 @@ WHERE "UnitPrice" <= (SELECT AVG("UnitPrice")
 
 | Products |
 | -------- |
-| 14       |
+| 50       |
 
-14: every product that is not above the average, because no product costs exactly 28.72.
+50: every product that is not above the average, because no product costs exactly the average.
 
 ## Now the customers
 
@@ -268,9 +313,9 @@ FROM "Order Details";
 
 | Average |
 | ------- |
-| 301.31  |
+| 595.13  |
 
-Then the report from the last lesson, with a `HAVING` at the end that keeps the customers whose total is above 301.31:
+Then the report from the last lesson, with a `HAVING` at the end that keeps the customers whose total is above 595.13:
 
 {/* The same highlight as the video: the HAVING lines, in grey. */}
 
@@ -285,30 +330,32 @@ JOIN "Order Details" d
   ON d."OrderID" = o."OrderID"
 GROUP BY c."CompanyName"
 HAVING SUM(d."UnitPrice" * d."Quantity"
-         * (1 - d."Discount")) > 301.31
+         * (1 - d."Discount")) > 595.13
 ORDER BY "Total sales" DESC;
 ```
 
-{/* The same highlight as the video: QUICK-Stop in terracotta — the smallest customer, "above average". */}
+{/* The same highlight as the video: Tundra Grocers in terracotta — a customer on 1239.25, "above average". */}
 
 <div className="[&_tbody_tr:nth-child(6)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(6)_td]:font-bold [&_tbody_tr:nth-child(6)_td]:text-[rgb(var(--hl-fault-ink))]">
 
-| CompanyName                | Total sales |
-| -------------------------- | ----------- |
-| Cactus Comidas para llevar | 4567.8      |
-| Blauer See Delikatessen    | 4318.8      |
-| Frankenversand             | 4267.27     |
-| …                          | …           |
-| Die Wandernde Kuh          | 991.76      |
-| QUICK-Stop                 | 691.28      |
+| CompanyName       | Total sales |
+| ----------------- | ----------- |
+| Fjord Foods       | 797164      |
+| Yarrow Pantry     | 786022.56   |
+| Quayside Traders  | 783579.03   |
+| …                 | …           |
+| Willow Wholefoods | 1662.83     |
+| Tundra Grocers    | 1239.25     |
 
 </div>
 
-25 rows come back: **every customer is "above average"**, including QUICK-Stop with 691.28. Nothing errors, and the answer cannot be right. If every customer is above an average, it is not the average of the customers.
+118 rows come back. Northwind Company has 120 customers; one of them, Yarrow Supermarket, has never placed an order, so the joins leave 119. And **118 of those 119 are "above average"**, including Tundra Grocers with 1239.25, against a best customer on 797164. Nothing errors, and the answer cannot be right. A list of above-average customers that holds almost every customer is not measuring against the average customer.
 
 ## The average of what?
 
-301.31 is the average of the money column in `"Order Details"`, and every row of that table is one order line. So 301.31 is the **average order line**. A customer's total is many order lines added together (every customer here has at least five), so it will always be bigger than one line. The query compared each customer with an order line.
+595.13 is the average of the money column in `"Order Details"`, and every row of that table is one order line. So 595.13 is the **average order line**. A customer's total is many order lines added together, so it almost always beats one line. The query compared each customer with an order line.
+
+The one customer the query left out proves it. Upland Food Hall has placed a single order of two lines, worth 465.75 in total: less than one average line, and the only customer whose whole history is that small.
 
 This is the question from the report lesson again: **one row represents what?** To compare a customer with the average customer, first build one total per customer, then take the average of those totals. That needs the third shape: a table in brackets.
 
@@ -330,7 +377,7 @@ FROM (SELECT o."CustomerID",
 
 | Average customer |
 | ---------------- |
-| 2326.13          |
+| 126193.54        |
 
 The query in brackets returns a table with one row per customer and that customer's total. The outer query reads that table in its `FROM` and averages the totals.
 
@@ -340,8 +387,8 @@ The two averages are far apart:
 
 | Average of | Value |
 | ---------- | ----- |
-| an order line | 301.31 |
-| a customer | 2326.13 |
+| an order line | 595.13 |
+| a customer | 126193.54 |
 
 Neither is wrong. They answer different questions, and the manager asked about customers.
 
@@ -377,138 +424,84 @@ ORDER BY "Total sales" DESC;
 
 The inner query uses different aliases, `o2` and `d2`, so it is clear which tables belong to which query.
 
-{/* The same highlight as the video: Great Lakes Food Market in neutral tan, the last row above the line. */}
+{/* The same highlight as the video: Emerald Grocers in neutral tan, the last row above the line. */}
 
-<div className="[&_tbody_tr:nth-child(9)]:bg-[rgb(var(--hl-neutral)/var(--hl-row))] [&_tbody_tr:nth-child(9)_td]:font-bold">
+<div className="[&_tbody_tr:nth-child(6)]:bg-[rgb(var(--hl-neutral)/var(--hl-row))] [&_tbody_tr:nth-child(6)_td]:font-bold">
 
-| CompanyName                | Total sales |
-| -------------------------- | ----------- |
-| Cactus Comidas para llevar | 4567.8      |
-| Blauer See Delikatessen    | 4318.8      |
-| Frankenversand             | 4267.27     |
-| Lehmanns Marktstand        | 4077.12     |
-| Ernst Handel               | 3902.78     |
-| Alfreds Futterkiste        | 3838.43     |
-| Morgenstern Gesundkost     | 3289.13     |
-| Around the Horn            | 2701.58     |
-| Great Lakes Food Market    | 2683.28     |
+| CompanyName      | Total sales |
+| ---------------- | ----------- |
+| Fjord Foods      | 797164      |
+| Yarrow Pantry    | 786022.56   |
+| Quayside Traders | 783579.03   |
+| …                | …           |
+| Amber Grocers    | 186853.36   |
+| Emerald Grocers  | 175249.7    |
 
 </div>
 
-9 of the 25 customers spend more than the average customer. Great Lakes Food Market, with 2683.28, is the last one above 2326.13; LILA-Supermercado, with 2127.61, is the first one below it.
+30 customers spend more than the average customer. Emerald Grocers, with 175249.7, is the last one above 126193.54; Kestrel Pantry, with 121607.73, is the first one below it.
 
-The outer query is exactly the same as before. Only the query in brackets changed, and the answer went from all 25 customers to 9. The outer query trusts whatever the brackets return, which is what makes subqueries both useful and easy to get wrong.
+The outer query is exactly the same as before. Only the query in brackets changed, and the answer went from 118 customers to 30. The outer query trusts whatever the brackets return, which is what makes subqueries both useful and easy to get wrong.
 
 ### Reading a nested query
 
 The last query works, but it is hard to read: brackets inside brackets inside a `HAVING`. Read it from the inside out: the innermost query builds a table of customer totals, the query around it averages them, and the outer query compares each customer with that average. A later lesson in this series gives each step a name, so a query like this reads from top to bottom.
 
-{/* THE CASE FILE (.docs/plan-sql-series2-story.md §3, S2·00). The same skill as the lesson, applied
-    to one more question about the same report; nothing in it is new SQL. Mirrors the video's six
-    case-* slides. Every figure is asserted in SubqueriesSpec §4b on both engines. */}
+{/* THE CASE SEGMENT (.docs/plan-academy-course-stories-artefacts.md §3.2 and the story map §3.2.1, S2·00):
+    the series opens here. The same skill as the lesson — two VALUE subqueries — applied to one more
+    question the manager asked; nothing in it is new SQL. Mirrors the video's three case-* slides.
+    Every figure is asserted in SubqueriesSpec §4b on both engines, and LOCKED in
+    .docs/plan-academy-figures-northwind-co-s.md. */}
 
-## The report counted orders with no ship date
+## Ordered, and invoiced
 
-Before those nine customers go back to the manager, look once more at the money the report adds up. It adds up every order line of every order. In Northwind, 27 of the 79 orders have no ship date: their `"ShippedDate"` is `NULL`, the orders from the <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a>. The report counts their money like any other sale.
+The manager's note had a second line: **"2024: orders up 10% on last year, but invoicing is down. Which is it?"**
 
-So how much of the money is on those orders? That is two values: the sales on orders with no ship date, and all sales.
+That is two totals for 2024. The first is the money the report already adds up, for the orders placed in 2024. The second comes from `"Invoices"`, a table with one row for every invoice the company sent: the order it bills, the date it was sent, and the amount.
 
 ### Two values, side by side
 
-Each of the two is a value in brackets, and a value can go anywhere a single value can go, including the select list. So one query can return both, next to each other:
+Each total is a value in brackets, and a value can go anywhere a single value can go, including the select list. So one query can return both, next to each other:
 
-{/* The same highlight as the video: the IS NULL line, in grey. */}
+{/* The same highlight as the video: the two lines that open the brackets' FROM, in grey. */}
 
-```sql file=./scripts/sales-with-no-ship-date.sql {6}
+```sql file=./scripts/ordered-and-invoiced-2024.sql {3,9}
 SELECT (SELECT ROUND(SUM(d."UnitPrice" * d."Quantity"
                  * (1 - d."Discount")), 2)
         FROM "Order Details" d
         JOIN "Orders" o
           ON o."OrderID" = d."OrderID"
-        WHERE o."ShippedDate" IS NULL) AS "No ship date",
-       (SELECT ROUND(SUM("UnitPrice" * "Quantity"
-                 * (1 - "Discount")), 2)
-        FROM "Order Details") AS "All sales";
+        WHERE o."OrderDate" >= DATE '2024-01-01'
+          AND o."OrderDate" <  DATE '2025-01-01') AS "Ordered 2024",
+       (SELECT ROUND(SUM("Amount"), 2)
+        FROM "Invoices"
+        WHERE "InvoiceDate" >= DATE '2024-01-01'
+          AND "InvoiceDate" <  DATE '2025-01-01') AS "Invoiced 2024";
 ```
 
-| No ship date | All sales |
-| ------------ | --------- |
-| 19169        | 58153.31  |
+| Ordered 2024 | Invoiced 2024 |
+| ------------ | ------------- |
+| 3628572.55   | 3190372.69    |
 
-The first bracket is the report's money, joined to `"Orders"` so that it can see `"ShippedDate"`, and kept only where the ship date `IS NULL`. The second is the total from the report lesson's second check. Select either bracket on its own and run it: each returns one number.
+The first bracket is the report's money, joined to `"Orders"` so that it can see `"OrderDate"`, and kept for the orders placed in 2024. The second adds up the invoices sent in 2024. Select either bracket on its own and run it: each returns one number.
 
 The outer `SELECT` has no `FROM`, because all it does is return the two values. PostgreSQL and DuckDB accept that; older versions of Oracle need `FROM dual` at the end.
 
-19169 of 58153.31: **a third of the report's money is on orders with no ship date.**
+### Neither total is wrong
 
-## The nine, on delivered sales
+It is tempting to ask which of the two numbers is wrong. Neither is. **The two totals answer different questions.** What customers ordered measures demand: how much they asked us for. What was invoiced is what the company actually billed. The report answered the first question; the manager's note is about the gap between the two. In 2024, orders grew, and invoicing fell.
 
-The nine customers were ranked on all of that money. To rank them on what was delivered, keep only the orders that have a ship date. There is nothing new to write. It is the query from above with one line added in two places, `WHERE o."ShippedDate" IS NOT NULL`, once in the outer query and once inside the table in brackets, and with the column renamed so the report says what it adds up:
-
-{/* The same highlight as the video: the two WHERE lines, in green. */}
-
-```sql file=./scripts/customers-above-the-average-customer-delivered.sql {9,21}#good
-SELECT c."CompanyName",
-       ROUND(SUM(d."UnitPrice" * d."Quantity"
-         * (1 - d."Discount")), 2) AS "Delivered sales"
-FROM "Customers" c
-JOIN "Orders" o
-  ON o."CustomerID" = c."CustomerID"
-JOIN "Order Details" d
-  ON d."OrderID" = o."OrderID"
-WHERE o."ShippedDate" IS NOT NULL
-GROUP BY c."CompanyName"
-HAVING SUM(d."UnitPrice" * d."Quantity"
-         * (1 - d."Discount"))
-     > (SELECT AVG(t."Total")
-        FROM (SELECT o2."CustomerID",
-                     SUM(d2."UnitPrice"
-                       * d2."Quantity"
-                       * (1 - d2."Discount")) AS "Total"
-              FROM "Orders" o2
-              JOIN "Order Details" d2
-                ON d2."OrderID" = o2."OrderID"
-              WHERE o2."ShippedDate" IS NOT NULL
-              GROUP BY o2."CustomerID") AS t)
-ORDER BY "Delivered sales" DESC;
-```
-
-| CompanyName             | Delivered sales |
-| ----------------------- | --------------- |
-| Lehmanns Marktstand     | 3881.75         |
-| Ernst Handel            | 3812.63         |
-| Alfreds Futterkiste     | 3748.28         |
-| Frankenversand          | 3581.22         |
-| Morgenstern Gesundkost  | 2782.96         |
-| LILA-Supermercado       | 1728.38         |
-| Blauer See Delikatessen | 1626            |
-
-7 customers beat the average delivered customer, which is 1559.37. Three of the nine drop out, Around the Horn, Great Lakes Food Market and **Cactus Comidas para llevar**, and LILA-Supermercado comes in.
-
-Cactus is the report's number one on what it ordered, 4567.8. Its delivered sales are 1181.95, 14th of the 25 and below the average delivered customer.
-
-| Cactus Comidas para llevar | Total   |
-| -------------------------- | ------- |
-| ordered                    | 4567.8  |
-| delivered                  | 1181.95 |
-
-### Why the filter is written twice
-
-The query in brackets is a query of its own, and it does not see the outer query's `WHERE`. Leave the filter out of the brackets, and they still return the average of what customers **ordered**, 2326.13. Each customer's delivered total is then compared with it, and only 5 customers pass. There is no error. It is the grain question again: one row of the inside represents what? Without the filter, it is a customer's ordered total, and the question is about delivered totals.
-
-Run the inside on its own, as always. With the filter, the table in brackets returns 25 rows, so every customer has at least one order with a ship date, and the average is still the average of all 25 customers.
-
-None of this says what happened to the 27 orders. A ship date can be missing for more than one reason, and SQL cannot tell which. What it does show is that the report answered "what did they order?", and the manager may have meant "what was delivered?".
+Why would invoicing fall while orders grew? That is the question the next lessons follow, one step at a time: **what is missing, where, since when, and how much?**
 
 ## Before you trust a subquery
 
 1. **Run the inside on its own.**
 2. **Check its shape:** a value, a list or a table. The shape decides where it can go, and the wrong shape stops the query with an error.
-3. **Check its grain:** one row of the inside represents what? The wrong grain does not produce an error. It produces 25 customers who are all above average.
+3. **Check its grain:** one row of the inside represents what? The wrong grain does not produce an error. It produces 118 customers who are nearly all "above average".
 
 ## Practice
 
-There are ten koans for this lesson. They ask different questions from this page, mostly on different tables: orders compared with the average freight, the products one customer bought, and suppliers compared with the average supplier, so copying a query from this page will not answer them.
+There are ten koans for this lesson. They ask different questions from this page, on different tables: orders compared with the average freight, the products one customer bought, suppliers compared with the average supplier and sales reps compared with the average rep, so copying a query from this page will not answer them.
 
 ```powershell
 cd c:/DataPallas/db/datazeus
@@ -529,6 +522,6 @@ The koans follow this page: a value in brackets, a comparison that must receive 
 
 ## What is next
 
-A third of the report's money is on orders with no ship date, and that raises the questions this series follows: **how big is it, since when, where, and whose?**
+In 2024, customers ordered more and the company invoiced less. Something between the order and the invoice is missing, and that raises the questions this series follows: **what is missing, where, since when, and how much?**
 
-The next lesson is **CASE**: how a query turns a number into a label, such as "light", "medium" and "heavy", and how one report gets a column for the orders with a ship date and one for the orders without.
+The next lesson is **CASE**: how a query turns a value into a label, and how one query counts several kinds of order side by side, in a column each.

@@ -42,7 +42,7 @@ import spock.lang.Stepwise
  * PERCENTILE_DISC over an EVEN-sized group (nobody gets both right first time); `complete` on a
  * median per group.
  *
- * ── KOANS AND THE SERIES CASE (.docs/plan-sql-series2-story.md §0, §3) ─────────────
+ * ── KOANS AND THE SERIES CASE (.docs/plan-academy-course-stories-artefacts.md §1, §3.2) ─────────────
  * The LESSON's main example is average vs median order value (736.12 vs 506.17); its case file defines
  * "late" from delivery times (median 6, slowest 9) and confirms the reorder gaps (190 vs 190). The KOANS
  * use other questions: the median unit price per category (pick a category with an even count for CONT vs

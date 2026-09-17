@@ -1,4 +1,9 @@
 # The ordered episode list for Learn SQL — the SINGLE source of truth for the roadmap.
+# DATASET STATE (2026-09-17): academy-northwind-co-install.groovy currently creates only D1 Company S
+# (`northwind_co_s`). Company M/L and all derived D2-D6 datasets are planned or learner-produced. Any
+# lesson requiring northwind_co_m/l, a warehouse, a change feed, files, CRM, or a raw landing must remain
+# `partial`/`MISSING` until its generator and verifier exist. This is the actual repository state; planned
+# scales must not be described as already installed.
 #
 # Anything that has to know "what are the episodes, in what order, and where are we"
 # reads THIS file: the course page (/academy/learn-sql), the "you are here" roadmap
@@ -522,10 +527,10 @@ series:
     # THE RAMP — ● easy, ●●●● hard — and the rule behind it: EVERY EPISODE USES ONLY WHAT CAME
     # BEFORE IT. Each episode's comment below names what it builds on.
     #   00 Subqueries ●●          05 CASE ●                 10 Dates & Times ●●
-    #   15 JOINs & Grain ●●●      20 CTEs ●●                25 EXISTS & correlated ●●●
-    #   30 Self-joins ●●          35 Windows I ●●●●         40 Strings & regex ●
-    #   45 Windows II ●●●●        48 Set operations ●●      50 Grouping sets ●●●
-    #   52 Views ●●               55 INSERT/UPDATE/DELETE ●●  58 Median ●●●●    60 Project
+    #   15 JOINs & Grain ●●●      20 CTEs ●●                22 Views ●●
+    #   25 EXISTS & correlated ●●● 30 Self-joins ●●         35 Windows I ●●●●
+    #   40 Strings & regex ●      45 Windows II ●●●●        48 Set operations ●●
+    #   50 Grouping sets ●●●      55 INSERT/UPDATE/DELETE ●●  58 Median ●●●●    60 Project
     #
     # WHY SUBQUERIES OPEN IT, AND NOT CASE (the gentlest candidate). Series 1 · 50 closes, in the
     # video and in the article, on "Series 2 starts where today ended — queries built out of other
@@ -539,6 +544,7 @@ series:
     #   35, 38, 45, 50, 55, 58 and 60 kept their numbers.
     #   REORDERED 2026-09-15, before any of them was written (slugs unchanged):
     #   30 → 40 · 35 → 48 · 38 → 50 · 42 → 30 · 45 → 52 · 48 → 55 · 50 → 35 · 55 → 45. 58 and 60 kept theirs.
+    #   MOVED 2026-09-16 (slug unchanged): 52 views → 22, directly after CTEs.
     #
     # EVERY NUMBER QUOTED BELOW AND IN THE BRIEFS was run on datasets/northwind/northwind.duckdb on
     # 2026-09-14. They are DuckDB results; each lesson's spec re-asserts them on BOTH engines before
@@ -558,47 +564,67 @@ series:
     # Also: no SQL invented for the story; NO PUZZLES (an edge case earns airtime only if it produces a
     # wrong number at work; niche syntax gets a line); koans keep using different tables from the lesson.
     #
-    # ── THE SERIES STORY (2026-09-15; REPLACES "which customers are we losing?") ─────────────────
-    # That question failed on its own data: every customer reorders on a ~190-day cycle, so a
-    # "gone quiet after 90 days" label flagged on-schedule customers, #1 and #2 among them, and the
-    # honest answer was "nobody" — true and worthless to a business.
-    # THE NEW ONE, opened at the end of 00: Series 1 · 50's top 10 ranks customers on what they
-    # ORDERED; on what actually SHIPPED, #1 falls to #14. A THIRD OF WHAT WE SOLD HAS NO SHIPPING
-    # RECORD (19169.00 of 58153.31, 27 of 79 orders, 24 of 25 customers). Two questions, in order:
-    #   00–20  HOW BIG IS IT, SINCE WHEN, WHERE, AND WHOSE? — since the first week, ~4 a quarter; not a
-    #          country, not a product; almost all one rep's orders sent through one courier.
-    #   25–60  DID THOSE ORDERS REALLY NOT SHIP, OR DID NOBODY RECORD IT? — customers kept ordering on
-    #          the same rhythm while they sat open; the rep and the courier cannot be separated in the
-    #          data; "late" defined from the data; the fix applied safely.
-    #   60     A RECOMMENDATION, NOT A VERDICT: send Speedy Express the 24 order numbers first, call only
-    #          the customers whose orders cannot be confirmed, fix the reports, say what SQL cannot decide.
-    # The case is the MAIN EXAMPLE in 7 episodes, a CASE FILE SEGMENT in 7, and absent (NONE) from 2.
-    # NEVER: present Northwind as a real company's figures; blame a person (say "her orders", keep the
-    # counter-examples on screen, end on a process); claim a verdict.
-    # Every figure, the fit per episode and what the five drafts must change: .docs/plan-sql-series2-story.md.
-    # ALL FIGURES THERE ARE DuckDB ONLY (2026-09-15) — re-assert on PostgreSQL before a lesson uses one.
+    # ── THE SERIES STORY (DECIDED 2026-09-17; the story map approved the same day) ─────────────────────────
+    # CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17): this series covers its curriculum well
+    # and progresses steadily; the story goes along occasionally — short segments after full lessons, never
+    # whole episodes. It appears in 8 of 16 episodes (5 segments: 00, 05, 10, 15, 25; 3 main examples: 48, 55,
+    # 60) and in none of the other 8. A segment is ONE query of the shape the lesson just taught and ONE finding.
+    # THE DATA: the whole series runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the Seed Data
+    # script academy-northwind-co-install.groovy) — not on the frozen Northwind.
+    # THE CASE — the Speedy Express recording outage: for Speedy Express orders placed 2024-03-04..2024-08-30, one ship
+    # date in five was silently lost (gate 2; figures LOCKED in .docs/plan-academy-figures-northwind-co-s.md); the company invoices when a ship date is recorded, so those orders were never
+    # invoiced; the ordered-sales report (Series 1's own report) showed 2024 up and hid it. Two questions:
+    #   00–22  WHAT IS MISSING, WHERE, SINCE WHEN, AND HOW MUCH?
+    #   25–60  WERE THOSE ORDERS DELIVERED — AND WHAT DO WE DO?
+    # Ordered sales are NOT wrong (they measure demand); never "the report was wrong". No verdicts, nobody blamed,
+    # soft evidence said to be soft. Design, rules and the full map:
+    # .docs/plan-academy-course-stories-artefacts.md (§1 rules, §3.2 the case, §3.2.1 the map, §3.2.2 first
+    # measurements, Appendix A the superseded Northwind case). Data and planted amounts: .docs/plan-academy-datasets.md.
+    # The previous case ("a third of what we sold has no shipping record", on the frozen Northwind) was a generator
+    # artefact (the round-robin `i % 3` in NorthwindDataGenerator); the five drafts 00–20 still show it until step C.
+    #
+    # OPEN CURRICULUM QUESTIONS (from the 2026-09-15 review, NOT applied; moved here 2026-09-17):
+    #   20  replace the tidy-up trap (a moved filter, which repeats 15's six rows) with "merge two steps and the
+    #       freight multiplies again" (rows 25 = 25, sales 58153.31 = 58153.31, freight 9871.56 vs 3988.52).
+    #       Rule: one step, one grain. See the review note at the top of the 20 video's index.tsx.
+    #   10  every country x every month with CROSS JOIN (on Northwind Company S: 126 country-months in H1 2024,
+    #       21 empty). Not in the episode as written; the one-customer month spine teaches the missing rows.
+    #   30  mirrored pairs as the main trap ("products bought together": 495 rows with self-matches, 302 mirrored,
+    #       151 real pairs; Chai + Chang on 9 orders).
+    #   40, 48  make them `core`.
+    #   drift  the ROLLUP line in `excludes`; 50's brief claim; the published S1 · 20 link to an unpublished lesson
+    #       (404); the stale README and episode counts.
+    # WORKPLACE AUDIT (2026-09-15): keep SHORT, real but niche — HAVING with no GROUP BY inside EXISTS (25); CUBE's
+    #   2^n and GROUPING_ID (50); MODE, PERCENT_RANK, CUME_DIST (58); regex beyond practical patterns (40). Now in
+    #   the briefs: percentages and integer division (05); removing duplicates with ROW_NUMBER (35); updating rows
+    #   from a list (55); the anti-join as a third way (25); top N per group (35). Still only proposed: CROSS JOIN
+    #   for reports with every combination (10).
     episodes:
       # OPENS THE SERIES ON SERIES 1 · 50's LAST LINE — "queries built out of other queries" — and
       # on that report's next question: WHICH CUSTOMERS SPEND MORE THAN THE AVERAGE CUSTOMER?
+      # IT ALSO OWNS THE SERIES SETUP: why Series 2 runs on Northwind Company, how to install it once
+      # from the Seed Data tab, and `SET search_path TO northwind_co_s` (05–60 link back to it).
       #
       # THE QUESTION CARRIES A TRAP THAT MAKES THE TOOL NECESSARY, NOT DECORATIVE. avg() over the
-      # joined rows of Series 1 · 50's query is the average ORDER LINE, 301.31, so every one of the
-      # 25 customers is "above average". The average CUSTOMER needs the per-customer totals first —
-      # a subquery in FROM — and it is 2326.13, which 9 customers beat. It is Series 1 · 50's grain
-      # arriving through a WHERE, and it is answered with a query inside a query.
+      # joined rows of Series 1 · 50's query is the average ORDER LINE, 595.13, so 118 of the 119
+      # customers who ever ordered are "above average" (the one below has bought two lines in five
+      # years, 465.75 — the proof). The average CUSTOMER needs the per-customer totals first — a
+      # subquery in FROM — and it is 126193.54, which 30 customers beat. It is Series 1 · 50's grain
+      # arriving through a HAVING, and it is answered with a query inside a query.
       #
       # THE UNCORRELATED HALF ONLY, three shapes by what the brackets hand back:
-      #   a VALUE   scalar subquery      products dearer than the average price (6 of 20; avg 28.72)
-      #   a LIST    IN (SELECT …)        customers who ever bought Chai (8)
+      #   a VALUE   scalar subquery      products dearer than the average price (30 of 80; avg 24.01)
+      #   a LIST    IN (SELECT …)        customers who bought the discontinued Royal Raisins in 2024
+      #                                  (8 customers; the join gives 9 rows)
       #   a TABLE   subquery in FROM     the per-customer totals the hook needs
       # EXISTS, NOT EXISTS and correlated subqueries are 25, after CTEs. Do not preview them here.
       # BUILDS ON: Series 1 · 25 (aggregates), 1 · 30 (GROUP BY), 1 · 50 (the report and its grain).
       # WORKPLACE: compare each row with a number the data computes (an average, a maximum); filter by a list
       #   another query produces; query a query's result; check what the inside query's rows are first.
-      # STORY — CASE FILE SEGMENT (the ending): the nine-customer query re-run on DELIVERED sales (WHERE
-      #   "ShippedDate" IS NOT NULL in both halves): 7 customers beat the average delivered customer (1559.37), and
-      #   Cactus — #1 on ordered sales, 4567.8 — is not one of them (delivered 1181.95). A pair of value subqueries
-      #   shows 19169 of 58153.31 (33%) sits on orders with no ship date. The series question is asked.
+      # STORY (map 2026-09-17) — SEGMENT, the opening: two value subqueries side by side — 2024 ordered sales
+      #   3628572.55 vs invoiced sales 3190372.69 (the manager's note: orders up 10%, invoicing down — said, not
+      #   computed). Neither total is wrong: demand vs what was billed. Why did invoicing fall while orders grew?
+      #   (Rewritten on Northwind Company S at step C, 2026-09-17.)
       - n: "00"
         slug: subqueries
         title: "Subqueries — Using One Query's Result Inside Another"
@@ -606,25 +632,34 @@ series:
         hands_on: ["koan:predict", "koan:complete"]
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Products", "Categories", "Customers", "Orders", "Order Details", "Invoices"]
+          fit: good
+          reason: "The 10,000-order, 80-product, 120-customer seed supports scalar, IN, and FROM subqueries and the ordered-versus-invoiced comparison. Minimum: about 20 products, 12 customers, 40 orders, and 80 order lines with at least one multi-row category and one customer above/below the computed average."
       # THE GENTLEST EPISODE IN THE SERIES, on purpose, straight after the opener: one construct
       # that extends two Series 1 skills — an expression in the select list (1 · 20) and an
       # aggregate over a group (1 · 25, 1 · 30).
       #
       # CASE INSIDE SUM IS THE TRICK WORTH THE EPISODE: one query, several conditional totals —
-      # every order and the unshipped ones per country, side by side (Germany: 32 orders, 10 of
-      # them unshipped). That is how a report with a column per status gets built.
+      # every order and one column per "Status" (Shipped / Cancelled / Open) per sales channel, side
+      # by side (Sales rep: 3749 orders, 3669 shipped, 61 cancelled, 19 open). That is how a report
+      # with a column per status gets built. The share of it, written SUM(CASE …) / count(*), is 0 for
+      # every channel on PostgreSQL; 100.0 * first gives 1.6 … 2.2, and the channel with the most
+      # cancellations has the lowest share — a share travels with its count (company 1.8).
       #
       # THE TRAP: a CASE with no ELSE hands back NULL for every row it does not name. Label freight
-      # over 50 as 'heavy' and nothing else, and 42 of the 79 orders carry no label at all — which
-      # Series 1 · 45's rules then drop from every comparison and every count(column).
+      # over 50 as 'heavy' and nothing else, and 5617 of the 10000 orders carry no label at all — which
+      # Series 1 · 45's rules then drop from every comparison and every count(column). It comes back
+      # in the short form: CASE "ShipVia" written with Series 1's three couriers leaves the fourth
+      # courier's 511 orders NULL — the reason a JOIN beats CASE when the label is stored.
       # COALESCE is Series 1 · 45's; name it here in one line as the CASE it abbreviates.
       # SETS UP: 50 (the GROUPING() labelling idiom is a CASE) and Series 3 · 00 (the portable pivot).
       # WORKPLACE: label and bucket rows; one column per status with conditional counts and sums; percentages
       #   that do not come back as 0 (integer division); always write the ELSE.
-      # STORY — MAIN EXAMPLE (the status columns): shipped vs no ship date per country, with a share column.
-      #   SUM(CASE …) / count(*) is 0 on PostgreSQL (integer division) and 0.3125 for Germany on DuckDB; 100.0 * …
-      #   gives Germany 31.3 — the most such orders, yet below the company's 34.2 — and Mexico 50.0, which is 4 of 8.
-      #   Per rep: Nancy 25 of 28 — her orders, not a verdict. The freight bands and both ELSE traps keep their examples.
+      # STORY (map 2026-09-17) — SEGMENT, written at step C: per courier, 2024 orders marked 'Shipped' with no
+      #   "ShippedDate", a share with 100.0 * — Speedy Express 178 of 1768 (10.1), the other three 0 of 630.
+      #   One query, one finding: it is one courier. The freight bands and both ELSE traps keep their own examples.
       - n: "05"
         slug: case-expressions
         title: "CASE — SQL's If/Then for Labels & Buckets"
@@ -632,9 +667,14 @@ series:
         hands_on: ["koan:complete", "koan:predict"]
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Shippers", "Customers"]
+          fit: good
+          reason: "Orders contain varied freight, four shippers, statuses, and channels, which make row labels, buckets, conditional counts, percentages, and ELSE/NULL behavior observable. Minimum: 30 orders spanning all three freight bands, three statuses, and two channels; Shippers is needed for the stored-label comparison."
       # MOVED UP FROM 20 ON 2026-09-14. It adds one tool to three Series 1 skills — the half-open
       # range of 1 · 10, EXTRACT from 1 · 30, and the date arithmetic 1 · 45 used on trust — and two
-      # later episodes need it: 15 (the June report needs a clean month boundary) and 45
+      # later episodes need it: 15 (a monthly report needs a clean month boundary) and 45
       # (month-over-month needs date_trunc).
       #
       # DATE ARITHMETIC IS PART OF THIS EPISODE, not a footnote — the same competitor audit
@@ -643,30 +683,39 @@ series:
       # timestamp is an INTERVAL, and CAST(… AS DATE) minus CAST(… AS DATE) is a whole number of
       # days. That is what makes "days to ship" go wrong, and it is why Series 1 · 45 cast both
       # sides — this episode owes the explanation that one borrowed. AGE() too, with the caveat
-      # that it is PostgreSQL's own. Details in the episode's _todo scope block.
+      # that it is PostgreSQL's own (and averaging an INTERVAL: PostgreSQL does, the koans' DuckDB refuses).
       #
-      # Orders run from 2022-12-05 to 2024-06-12, so date_trunc('quarter') gives seven quarters and
-      # the last one is partial — the "say so on the report" beat Series 1 · 30 made about June.
+      # ON NORTHWIND COMPANY S (step C, 2026-09-17; every figure asserted by DatesAndTimesSpec on both engines):
+      # THE EARN — EXTRACT(MONTH) over five years puts 739 orders in "June" (120 + 130 + 144 + 168 + 177)
+      # when no real month ever passed 277; date_trunc gives 60 months, 90 to 277.
+      # PARTIAL PERIODS — the data runs 2020-01-01 (a Wednesday) to 2024-12-31 (a Tuesday), so every month,
+      # quarter and year is whole; the honest partial periods are WEEKS: date_trunc('week') labels the first
+      # week 2019-12-30 (5 days) and the last 2024-12-30 (2 days, 20 orders after a week of 60 — a "crash").
+      # Ask for min/max and say so on the report — the beat Series 1 · 30 made about June.
+      # BETWEEN'S BOUNDARY — November 2024 BETWEEN '11-01' AND '12-01' is 277 and December's BETWEEN starts on
+      # '12-01' (236): the 14 shipments of 1 December are in both; half-open November is 263. Ending on the
+      # 30th instead is REAL here: "OrderDate"/"ShippedDate" are midnight, but "CreatedAt" has a time of day,
+      # so BETWEEN … '11-30' on it drops the 7 orders keyed in on 30 November (271 against 278).
       #
-      # THE MISSING DAYS — A REPORT WITH HOLES IN IT. Series 1 · 30 closed a beat on "a zero is a
-      # fact; a missing row is a silence", and nothing has paid it off since. GROUP BY can only report
-      # the days that HAVE rows: orders per day in June 2024 comes back as 4 rows, and a chart drawn from
-      # it joins the 4 points and hides the 26 days with no orders at all. The fix is a DATE SPINE —
-      # every day in the range, generated with generate_series (a calendar table is the same idea,
-      # stored) — with the orders LEFT JOINed onto it (Series 1 · 40).
-      # THE TRAP INSIDE THE FIX (DuckDB, 2026-09-14 — re-assert on both engines): count(*) over that
-      # LEFT JOIN reports 30 orders for June, because every empty day still produces one row and
-      # count(*) counts it. count(o."OrderID") reports the real 4, with 26 zeros — Series 1 · 25's
-      # count(*) against count(column), exactly where it costs the most. Across the first half of 2024,
-      # 37 of the 60 country-months have no order at all.
+      # THE MISSING PERIODS — A REPORT WITH HOLES IN IT. Series 1 · 30 closed a beat on "a zero is a
+      # fact; a missing row is a silence", and nothing has paid it off since. The company has orders on
+      # almost every day, so the example is ONE CUSTOMER: Bramble Supermarket (BRAM3) per month in 2024
+      # comes back as 4 rows, and a chart drawn from it hides the 8 months with no orders. The fix is a
+      # DATE SPINE — every month, generated with generate_series (a calendar table is the same idea,
+      # stored) — with the orders LEFT JOINed onto it, the customer's condition in the ON (Series 1 · 40).
+      # THE TRAP INSIDE THE FIX: count(*) over that LEFT JOIN reports 14 — six order rows plus one row per
+      # empty month — while count(o."OrderID") reports the real 6, with 8 zeros: Series 1 · 25's count(*)
+      # against count(column), exactly where it costs the most.
       # PORTABILITY, in one line: generate_series is PostgreSQL's and DuckDB's (DuckDB returns TIMESTAMPs
       # even from DATE arguments); SQL Server and MySQL spell it differently, and a recursive CTE
       # (Series 3 · 10) builds the same spine anywhere. Series 4 owns the spellings.
       # WORKPLACE: group by real months, half-open ranges, partial periods, days between dates, anchoring
-      #   "recent" on the data, filling days that have no rows.
-      # STORY — CASE FILE SEGMENT (since when): orders with no ship date per quarter placed — 2, 4, 4, 4, 4, 4, 5,
-      #   from the first quarter of the data; the oldest has waited 555 days; 25 of the 27 are past the customer's own
-      #   RequiredDate. The two Junes, BETWEEN's double count and the June date spine stay the main examples.
+      #   "recent" on the data, filling periods that have no rows.
+      # STORY (map 2026-09-17) — SEGMENT, written (step C): date_trunc('week') over 2024 with 05's SUM(CASE …)
+      #   on 'Shipped' orders with no ship date — 0 a week until the week of 2024-03-04, then 3–12 every week
+      #   to the week of 2024-08-26, then 0 (1 once, in October). Every week has orders, so the conditional
+      #   count keeps the zeros. One query, one finding: it started and it stopped. The five Junes, BETWEEN's
+      #   boundary and the spine stay the lesson.
       - n: "10"
         slug: dates-and-times
         title: "Dates & Times — Getting Ranges and Boundaries Right"
@@ -674,31 +723,43 @@ series:
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders.OrderDate", "Orders.ShippedDate", "Orders.CreatedAt"]
+          fit: good
+          reason: "Five complete years provide repeated months, partial boundary weeks, a midnight shipping date, a time-bearing CreatedAt, and genuine missing months for a customer spine. Minimum: 24 months of orders across two years, one partial period at each edge, timestamps, and one customer with at least three empty months."
       # MERGED 2026-09-14 FROM OLD 00 (multi-table-joins) AND OLD 06 (join-fan-out) — see the
       # series note above. Series 1 · 50 already owns the three-table chain, counting rows before
       # and after a join, grain and count(DISTINCT). DO NOT RE-TEACH THEM: open on them as known,
       # and teach the two ways a join is WRONG that Series 1 · 50 deliberately left out.
       #
-      #   1. A JOIN THAT DROPS ROWS. "Every product, and the units it sold in June": "Products"
-      #      LEFT JOIN "Order Details", then an INNER JOIN to "Orders" narrowed to June. The inner
-      #      join discards every line with no June order, and with it every product the LEFT JOIN
-      #      kept — 6 rows back, 14 of the 20 products gone. Series 1 · 40's ON-versus-WHERE trap,
-      #      one table further along. The obvious repair, LEFT all the way down, brings the 20
-      #      products back and sums EVERY line they ever sold: 2070 units, where June was 40.
+      #   1. A JOIN THAT DROPS ROWS. The Dairy manager's report, "every Dairy product (category 4), and
+      #      the units it sold in May 2024": "Products" LEFT JOIN "Order Details", then an INNER JOIN to
+      #      "Orders" narrowed to May. The inner join discards every line with no May order, and with it
+      #      every product the LEFT JOIN kept — 7 rows back, 3 of the 10 products gone, exactly the three
+      #      she asked about. Series 1 · 40's ON-versus-WHERE trap, one table further along. The obvious
+      #      repair, LEFT all the way down, brings the 10 products back and sums EVERY line they ever
+      #      sold: 109446 units, where May was 1891.
+      #      WHY ONE CATEGORY IN ONE MONTH: every product sells over five years, and any whole month of
+      #      2024 sells 60 to 69 of the 80 products — a result nobody reads on a card.
       #   2. A JOIN THAT MULTIPLIES THE MONEY. An order-level column summed after joining to order
-      #      lines: sum("Freight") is 3988.52 over "Orders" and 9871.56 over the joined rows.
-      #      Alfreds' 253.73 becomes 603.21, and "number one by freight" moves from FRANK — the
-      #      answer Series 1 · 30 gave — to FOLKO. Nothing errors.
-      #      THE TEMPTING FIX IS WRONG AND LOOKS RIGHT ON THIS DATA. SUM(DISTINCT "Freight") returns
-      #      3988.52 exactly, because no two Northwind orders happen to share a freight value. It
-      #      sums distinct VALUES, not distinct ORDERS: two orders at the same freight are counted
-      #      once. Series 1 · 50 has just taught DISTINCT as the one-word repair, so the episode must
-      #      show this is luck, and a koan must break it on data with a repeated value.
+      #      lines, per customer for May 2024: Nordic Foods' 480.29 becomes 2149.26 (four big orders,
+      #      15 lines), and "number one by freight" moves from Alpine Provisions (610.83, thirteen small
+      #      orders) to Nordic Foods, fifth over "Orders" alone. Nothing errors. (Over all five years the
+      #      fan-out leaves number one where it is, so the report is a month.) Across the company,
+      #      sum("Freight") is 527429.46 over "Orders" and 1712919.25 over the joined rows.
+      #      THE TEMPTING FIX IS VISIBLY WRONG ON THIS DATA. SUM(DISTINCT "Freight") returns 391726.53,
+      #      135702.93 short, because 10000 orders share only 6689 freight values. It sums distinct
+      #      VALUES, not distinct ORDERS: two orders at the same freight are counted once. Series 1 · 50
+      #      has just taught DISTINCT as the one-word repair, so the episode shows it failing on the
+      #      real table (on May alone it is only 140.41 short — the error nobody notices), and a koan
+      #      breaks it on three orders written into the query.
       #
       # ONE CURE FOR BOTH: narrow or aggregate BEFORE the join — a subquery in FROM, from 00.
-      # "Products" LEFT JOIN (June's lines, summed per product) returns all 20 products, 6 of them
-      # with a June quantity, totalling 40. Freight summed per customer over "Orders" alone, then
-      # joined, puts FRANK back on top.
+      # "Products" LEFT JOIN (May's lines, summed per product) returns all 10 Dairy products, 7 of them
+      # with a May quantity, totalling 1891, and 3 NULL. Freight summed per customer over "Orders" alone,
+      # then joined, puts Alpine Provisions back on top, and every sales total is unchanged. The cure
+      # writes May's range twice — 20 (CTEs) writes it once.
       #
       # FRAME IT AS GRAIN — "one row per WHAT?" — never as a join gotcha. Grain is the idea behind
       # correct numbers everywhere, and three tracks collect on it: Data Modeling Series 1 · 15
@@ -707,21 +768,24 @@ series:
       # joined). Data Warehousing and Analytics Engineering with dbt build on it again.
       # Java & Groovy Series 1 · 40 is the SAME bug in memory, where no database warns you.
       #
-      # DATA NOTES, checked 2026-09-14. Northwind has NO ORPHANS — every customer has orders,
-      # every order has lines, every product has sold — so rows go missing only by narrowing the
-      # match, exactly as in Series 1 · 40. "Order Details" is the many-to-many bridge between
-      # orders and products and is worth one beat (Chai: 10 lines, 8 different customers).
-      # "EmployeeTerritories", "Territories" and "Region" exist and are EMPTY: do not build on them.
+      # DATA NOTES, checked 2026-09-17 on Northwind Company S. Every product has sold and every order
+      # has lines (1 to 6), so in the lesson rows go missing only by narrowing the match, exactly as in
+      # Series 1 · 40. There ARE a few rows with no match at all — one customer who never ordered
+      # (Yarrow Supermarket) and the three employees who take no orders (the chief executive and the
+      # two sales managers) — which the article says in one paragraph and koan 10 uses. "Invoices" is
+      # at most one row per order. "Order Details" is the many-to-many bridge between orders and
+      # products and is worth one beat (Heritage Butter: 779 lines, 78 different customers).
+      # "EmployeeTerritories", "Territories" and "Region" are populated in Northwind Company; nothing in
+      # this episode builds on them.
       # A five-table chain (sales per category per country) adds nothing a Series 1 · 50 viewer
       # needs taught — use it as an exercise, not as the lesson.
       # BUILDS ON: 00 (the cure), 10 (the June boundary), Series 1 · 40 and 1 · 50.
       # WORKPLACE: joins across several tables that neither drop nor multiply rows; aggregate each measure at
       #   its own grain before joining; bridge tables.
-      # STORY — CASE FILE SEGMENT (the money): aggregate first, then open orders by rep and courier — Nancy with
-      #   Speedy Express 24 orders, 18848.3 in sales, 1277.84 freight; Janet with United Package 2, 292.2; Nancy with
-      #   United Package 1, 28.5. MEASURED 2026-09-15: per courier the freight fan-out inflates every total ~2.5x
-      #   (Federal 3335.24 joined vs 1338.78) but keeps the ranking, so the per-customer version — which moves #1 —
-      #   stays the main example.
+      # STORY (map 2026-09-17) — SEGMENT, written 2026-09-17: each order's value aggregated first, then a LEFT JOIN
+      #   to "Invoices" — 188 orders marked shipped with no invoice, worth 275698.44 (with the lines joined directly,
+      #   count(*) would read 460). One query, one finding, no claim about delivery. The lesson's fan-out trap keeps
+      #   its own example.
       - n: "15"
         slug: multi-table-joins-duplicate-rows
         title: "Multi-Table JOINs & Grain — When a Join Silently Drops or Multiplies Your Rows"
@@ -729,6 +793,11 @@ series:
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Products", "Order Details", "Orders", "Customers", "Invoices"]
+          fit: good
+          reason: "Products plus the order-line bridge and orders produce both dropped LEFT JOIN rows and fan-out totals; invoices support the case-file reconciliation. Minimum: 10 products in one category, 30 orders, 60 lines, at least three products with no activity in the selected month, and one order with multiple lines."
       # Moved up from Series 3 (2026-08-24), and moved from 08 to 20 on 2026-09-14. A CTE is a
       # READABILITY tool, not an advanced feature, and holding it back meant every query in this
       # series got written as a nested subquery the learner would later have to unlearn. From here
@@ -741,8 +810,8 @@ series:
       # ROW_NUMBER needs a CTE or a subquery).
       # WORKPLACE: break a long query into named steps, reuse a step, debug one step at a time, check a rewrite
       #   returns the same rows and totals.
-      # STORY — CASE FILE SEGMENT (the report): open_orders -> order_value -> by rep and courier, checked against
-      #   15's nested version (3 rows, 19169 in total). Replaces the "customers who have gone quiet" section.
+      # STORY (map 2026-09-17) — NONE. The lesson's own examples; its "one filter, every use of the step sees it" beat
+      #   stays on non-story data. (The drafted case parts are removed at step C.)
       - n: "20"
         slug: ctes
         title: "CTEs (WITH) — Breaking a Long Query Into Named Steps"
@@ -750,6 +819,34 @@ series:
         hands_on: ["koan:equivalent", "koan:complete"]
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Products", "Customers"]
+          fit: good
+          reason: "The same multi-grain sales data gives CTEs several named steps, repeated use of a customer-total step, and a date filter that can be checked against the nested form. Minimum: 20 customers, 50 orders, 100 lines, two reusable aggregates, and at least one empty left-join result."
+      # MOVED FROM 52 TO 22 ON 2026-09-16 (owner): a view is a CTE that outlives the query, so it sits
+      # directly after CTEs, while WITH is fresh, instead of thirty episodes later. It needs nothing taught
+      # after 20. Hand-overs: 20 now ends "next: views"; this episode's closing hands over to EXISTS (25)
+      # and the case's second question.
+      # AFTER CTEs (20) ON PURPOSE: a view is a query given a name that outlives the session, and
+      # the learner already names steps with WITH. "When it hides a problem" has a concrete answer
+      # by now: a view that already joined order lines, summed again by somebody who cannot see
+      # inside it — 15's fan-out, one layer of abstraction removed from the person who pays for it.
+      # Materialized views are Data Warehousing — say so rather than half-teaching them.
+      # WORKPLACE: save a query as a named, reusable object; know a view's grain before summing from it.
+      # STORY (map 2026-09-17) — NONE. The fan-out-hidden-in-a-view trap keeps its own example. Its closing hands over
+      #   to EXISTS and the case's second question.
+      - n: "22"
+        slug: views
+        title: "VIEWs — Naming a Query So You Can Reuse It"
+        short: "VIEWs — name a query, reuse it"
+        hands_on: ["koan:equivalent"]
+        status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Invoices"]
+          fit: good
+          reason: "A view over an order-grain aggregate can be reused safely, while a view that hides line fan-out demonstrates the grain risk. Minimum: 30 orders, 60 lines, and at least one order without an invoice."
       # THE HARD HALF OF SUBQUERIES, split from old 05 on 2026-09-14 and placed after CTEs, so
       # correlation is met with the tool that makes it readable.
       #
@@ -774,9 +871,8 @@ series:
       # BUILDS ON: 00, 20, Series 1 · 35 and 1 · 45.
       # WORKPLACE: "has any / has none" questions — EXISTS, NOT EXISTS, the Series 1 · 40 anti-join — correlated
       #   subqueries, and NOT IN failing on a NULL.
-      # STORY — MAIN EXAMPLE (question 2 opens): 24 of 25 customers had an order with no ship date and
-      #   QUICK-Stop never did (NOT EXISTS); 18 placed a new order while an older one was still open (correlated
-      #   EXISTS). Would they, if it never arrived? The NOT IN trap keeps Employees.ReportsTo — a real NULL.
+      # STORY (map 2026-09-17) — SEGMENT, question 2 opens: a correlated EXISTS — customers with an un-dated order who
+      #   ordered again and were served. Said as soft evidence. The NOT IN trap keeps "Employees"."ReportsTo".
       - n: "25"
         slug: exists-and-correlated-subqueries
         title: "EXISTS & Correlated Subqueries — Questions About Each Row, and the NOT IN Trap"
@@ -784,6 +880,11 @@ series:
         hands_on: ["koan:choose", "koan:predict"]
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Employees", "Orders", "Order Details", "Customers"]
+          fit: good
+          reason: "Employees has a real NULL ReportsTo for the NOT IN trap; orders and lines support EXISTS, NOT EXISTS, correlated HAVING, and customer tests. Minimum: 6 employees including one manager with NULL ReportsTo, 30 orders, and at least one customer/order with and without a match."
       # MOVED FROM 10 TO 42 ON 2026-09-14, AND TO 30 ON 2026-09-15. It is a different join SHAPE — one
       # table, two roles — not a third "rows that multiply" episode, so it does not belong beside 15.
       # It sits DIRECTLY BEFORE WINDOW FUNCTIONS I (35): a row beside an earlier row, done with a
@@ -795,13 +896,18 @@ series:
       # Recursive walking is Series 3 · 10.
       # WORKPLACE: compare rows in the same table — employee and manager, pairs of related rows, a row beside
       #   an earlier row the pre-window way.
-      # STORY — NONE. Its best examples are manager and employee, and pairs of related rows; one line at most.
+      # STORY (map 2026-09-17) — NONE. Manager and employee (three levels), pairs of related rows.
       - n: "30"
         slug: self-joins-and-hierarchies
         title: "Self-JOINs & Hierarchies — Relating Rows to Other Rows in the Same Table"
         short: "Self-JOINs & Hierarchies — rows in the same table"
         hands_on: ["koan:complete"]
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Employees"]
+          fit: good
+          reason: "The three-level CEO/manager/representative hierarchy is enough for employee-manager self-joins and demonstrates why LEFT JOIN preserves the top manager. Minimum: 3 employees with one NULL ReportsTo and two direct reports; deeper recursion belongs to Series 3."
       # Moved down from Series 3, because "CTEs, subqueries and window functions on real questions" is not true
       # without them: running totals, month-over-month, rank-within-region and
       # latest-row-per-customer ARE what business questions look like, and they are the
@@ -814,8 +920,7 @@ series:
       # exists precisely so the person searching for it finds this line.
       # WORKPLACE: rank within groups, first/latest row per group, top N per group, a row beside its group's
       #   total, removing duplicates.
-      # STORY — CASE FILE SEGMENT: each customer's oldest open order (ROW_NUMBER) and the corrected top 10 by
-      #   delivered sales (RANK). The tie trap stays off-story: no natural Northwind group ties at first place.
+      # STORY (map 2026-09-17) — NONE. Latest row per group, top N per group, ties, removing duplicates.
       - n: "35"
         slug: window-functions-i
         title: "Window Functions I: OVER, PARTITION BY & ROW_NUMBER — The Latest Row per Customer"
@@ -823,6 +928,11 @@ series:
         hands_on: ["koan:predict", "koan:complete"]
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Customers", "Orders", "Order Details", "Products"]
+          fit: good
+          reason: "Five years of customer orders support latest-row-per-customer, rank/top-N per group, ties, and duplicate removal. Minimum: 12 customers with 3+ orders each, two tied values, and at least one customer with no order."
       # One episode, not two: pattern matching and the string/number helpers are both
       # "functions for data nobody cleaned", and both are reference material a working
       # person looks up rather than memorises. Ships with a cheat sheet and covers the
@@ -834,20 +944,22 @@ series:
       # aggregate 1 · 25 named as Series 2's. `||` is 1 · 20's; build on it, do not re-teach it.
       # WORKPLACE: case-insensitive search, trim and split, practical patterns, a list of rows in one cell
       #   (STRING_AGG), CAST and number formatting for a report. No regex puzzles.
-      # STORY — CASE FILE SEGMENT (the call sheet): "Phone" in one format, each customer's open order numbers
-      #   in one cell (STRING_AGG). Parsing QuantityPerUnit stays off-story.
+      # STORY (map 2026-09-17) — NONE. The dataset must plant messy phones, stray spaces and case variants for it.
       - n: "40"
         slug: string-functions-and-regex
         title: "String Functions, LIKE & Regex — Clean Up Messy Real-World Data"
         short: "String Functions, LIKE & Regex — clean up messy data"
         hands_on: ["koan:complete"]
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Customers.ContactName", "Customers.City", "Customers.Phone", "Suppliers", "Employees"]
+          fit: good
+          reason: "The seed intentionally plants trailing spaces, case variants, lower-case contacts, and mixed phone formats; supplier/employee names support practical string aggregation. Minimum: 20 text rows with at least three defects of each kind and enough repeated cities to aggregate."
       # MOVED FROM 55 TO 45 ON 2026-09-15. BUILDS ON 35 and on 10: month-over-month needs date_trunc to make the months before LAG can
       # compare them.
       # WORKPLACE: previous/next row (LAG, LEAD), running totals, month-over-month, frames.
-      # STORY — MAIN EXAMPLE for LAG (the key evidence): days from each order to the customer's next one average
-      #   175.5 after an order with no ship date and 178.3 after a shipped one (the medians, 190 and 190, wait for
-      #   58); plus the running total of sales with no ship date, 1501.25 -> 19169. The missing-months trap stays off-story.
+      # STORY (map 2026-09-17) — NONE. LAG gives the previous row, not the previous month (re-find or plant the gap).
       - n: "45"
         slug: window-functions-ii
         title: "Window Functions II: LAG/LEAD, Running Totals & Frames — Month-over-Month Growth in One Query"
@@ -855,20 +967,31 @@ series:
         hands_on: ["koan:predict", "koan:complete"]
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders.OrderDate", "Orders.Freight", "Orders.OrderID"]
+          fit: good
+          reason: "Five years of dated orders give LAG/LEAD, running totals, frames, and month-over-month comparisons; the sparse customer case exposes that LAG means previous row, not previous calendar month. Minimum: 24 monthly periods, 30 orders, and at least two missing customer-months."
       # CORRECTED 2026-09-15: this said Series 1 · 40 wrote a FULL OUTER JOIN as a UNION of a LEFT and
       # a RIGHT join. It does not — Series 1 · 40 has no UNION at all. The real callback: Series 1 · 40
       # says FULL OUTER JOIN earns its place in RECONCILIATION, comparing two lists that should agree —
       # and EXCEPT and INTERSECT are the set-based way to do exactly that.
       # WORKPLACE: stack result sets (UNION ALL), deduplicate on purpose (UNION), reconcile two lists
       #   (EXCEPT, INTERSECT).
-      # STORY — MAIN EXAMPLE (reconciliation): customers with a Speedy Express order EXCEPT customers who received
-      #   a Speedy delivery (23 of 24); customers with both an open and a shipped order (INTERSECT, 24).
+      # STORY (map 2026-09-17) — MAIN EXAMPLE, reconciliation: our un-dated Speedy Express orders INTERSECT / EXCEPT
+      #   the courier's confirmations — delivered (invoice them) vs never confirmed (claim them); the duplicate
+      #   confirmation is the UNION vs UNION ALL trap.
       - n: "48"
         slug: set-operations
         title: "UNION, INTERSECT, EXCEPT — Stacking and Reconciling Result Sets"
         short: "UNION, INTERSECT, EXCEPT — stack and reconcile lists"
         hands_on: ["koan:predict", "koan:choose"]
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "CourierConfirmations", "Shippers"]
+          fit: good
+          reason: "Orders and courier confirmations are deliberately overlapping but non-identical lists, with a duplicate confirmation, so UNION/UNION ALL, INTERSECT, and EXCEPT have business meaning. Minimum: 20 candidate orders, both matched and unmatched confirmations, and one duplicate."
       # NEW 2026-09-07, and it closes a promise this file made and never kept: the GROUP BY
       # comment in Series 1 · 30 says GROUPING SETS, ROLLUP and CUBE "are later series", and no
       # later series of THIS course delivered them.
@@ -935,28 +1058,19 @@ series:
       # Both look plausible on a slide, which is how they survive.
       # WORKPLACE: subtotals and a grand total in one query; label and sort the subtotal rows. ROLLUP, GROUPING
       #   SETS and GROUPING() are the workplace part; CUBE's 2^n and GROUPING_ID get a line each.
-      # STORY — MAIN EXAMPLE (the twist): rep x courier with subtotals — Nancy sends 25 of 28 orders with
-      #   Speedy Express and 24 have no ship date; her 2 Federal Shipping orders shipped; Janet's one Speedy order
-      #   shipped. The data cannot separate the rep from the courier. The NULL collision keeps Customers.Region.
+      # STORY (map 2026-09-17) — NONE. The real NULL vs the subtotal NULL on "Customers"."Region" (the dataset plants
+      #   some regions).
       - n: "50"
         slug: grouping-sets-rollup-cube
         title: "GROUPING SETS, ROLLUP & CUBE — Subtotals and Grand Totals in One Pass"
         short: "GROUPING SETS, ROLLUP & CUBE — subtotals in one pass"
         hands_on: ["koan:equivalent", "koan:predict"]
         status: planned
-      # AFTER CTEs (20) ON PURPOSE: a view is a query given a name that outlives the session, and
-      # the learner already names steps with WITH. "When it hides a problem" has a concrete answer
-      # by now: a view that already joined order lines, summed again by somebody who cannot see
-      # inside it — 15's fan-out, one layer of abstraction removed from the person who pays for it.
-      # Materialized views are Data Warehousing — say so rather than half-teaching them.
-      # WORKPLACE: save a query as a named, reusable object; know a view's grain before summing from it.
-      # STORY — NONE (one line at most: an open_orders view). The fan-out-hidden-in-a-view trap keeps its own example.
-      - n: "52"
-        slug: views
-        title: "VIEWs — Naming a Query So You Can Reuse It"
-        short: "VIEWs — name a query, reuse it"
-        hands_on: ["koan:equivalent"]
-        status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Customers.Region", "Orders", "Order Details", "Products", "Categories"]
+          fit: good
+          reason: "Customer Region contains real NULLs beside subtotal NULLs, while orders and lines provide category/country measures for GROUPING SETS, ROLLUP, and CUBE. Minimum: two categories, two countries, one real NULL region, and at least 30 order lines."
       # The only episode that writes data — placed late, once filtering is second nature.
       # COMMIT/ROLLBACK basics live here; isolation levels belong to a future ops track.
       # Renumbered from 40 to 48 on 2026-09-14 and to 55 on 2026-09-15, still after the views: its
@@ -989,9 +1103,8 @@ series:
       # key/constraint/DDL topic is deliberately Learn Data Modeling's.)
       # WORKPLACE: change data safely — the WHERE as a SELECT first, a transaction, check, roll back;
       #   insert-or-update; update rows from a list somebody sends.
-      # STORY — MAIN EXAMPLE (the fix, safely): SUPPOSE Speedy Express sends confirmations — a typed VALUES list,
-      #   said plainly to be example input — record them in a transaction, re-run the report, roll back. The trap: an
-      #   UPDATE without "ShippedDate" IS NULL overwrites dates that were already recorded.
+      # STORY (map 2026-09-17) — MAIN EXAMPLE, the fix safely: record the confirmed ship dates and create the missing
+      #   invoices in one transaction, check, roll back. The trap: an UPDATE without "ShippedDate" IS NULL.
       - n: "55"
         slug: insert-update-delete
         title: "INSERT, UPDATE, DELETE, UPSERT & Transactions — Change the Data, Safely"
@@ -999,6 +1112,11 @@ series:
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Invoices", "CourierConfirmations", "Customers"]
+          fit: good
+          reason: "The seed has unrecorded ship dates, courier confirmations, invoices created only for recorded dates, and cancellable/open orders, making safe UPDATE/INSERT, UPSERT, DELETE, and transaction checks realistic. Minimum: 20 orders, one confirmed missing date, one existing invoice, and one duplicate-key upsert case."
       # NEW 2026-09-07. An audit for performance coverage found something more basic: the words
       # median and percentile appear NOWHERE in any curriculum in this academy — checked by
       # grep across all twenty-eight, not assumed. That is a strange silence for a course whose
@@ -1064,15 +1182,18 @@ series:
       # the course of a number that is right and still misleads, which is the flip side of the
       # rule this track uses everywhere else.
       # WORKPLACE: typical values (the median, not the average), percentiles for service levels, medians per group.
-      # STORY — CASE FILE SEGMENT: "late" defined from the data (median 6 days to ship, slowest 9), and the
-      #   median gap to the next order confirmed: 190 after an open order, 190 after a shipped one. Average vs median
-      #   order value (736.12 vs 506.17) stays the main example.
+      # STORY (map 2026-09-17) — NONE. The average vs the median order value stays the main example.
       - n: "58"
         slug: median-and-percentiles
         title: "Median and Percentiles — WITHIN GROUP, and Why AVG Is Not the Answer"
         short: "Median and Percentiles — WITHIN GROUP, not AVG"
         hands_on: ["koan:predict", "koan:complete"]
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders.Freight", "Order Details", "Products"]
+          fit: good
+          reason: "Order values and freight have enough spread and outliers for median, percentile, per-category statistics, and the AVG-versus-typical comparison. Minimum: 21 orders for an odd median, one even-sized group, and one clear high-value outlier; the S seed is comfortably larger."
       # SERIES 2 PROJECT. The academy-wide audit found this series walking nine core episodes
       # with nothing that applied them — the same defect Python and Java & Groovy had.
       # It closes the series' own promise: a question a person actually asked, answered with
@@ -1082,9 +1203,9 @@ series:
       # The two earlier candidates are dropped: revenue per customer per quarter answered nothing the
       # series was asking, and "bought in Q1 2024 and not since" is not churn on this data.
       # WORKPLACE: answer a real question end to end, with the checks, and write the recommendation.
-      # STORY — THE WHOLE CASE: size, since when, whose orders and which courier, the evidence both ways,
-      #   what SQL cannot decide, the recommendation (Speedy Express's confirmations first, then call only the
-      #   unconfirmed), the corrected top 10 — and the wrong answers that looked right on the way.
+      # STORY (map 2026-09-17) — THE WHOLE CASE: the gap, the courier, the dates, the money, the soft evidence, the
+      #   reconciliation, the fix — plus what only the project finds (cancelled orders never updated; the claim
+      #   deadline) — and a recommendation, not a verdict, with the wrong answers that looked right on the way.
       - n: "60"
         slug: project-a-real-business-question
         title: "Subqueries + CTEs + Window Functions — Solving a Real Business Case, End to End"
@@ -1093,6 +1214,11 @@ series:
         core: true
         tags: ["project"]
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Customers", "Invoices", "CourierConfirmations", "Employees"]
+          fit: good
+          reason: "The full S2 case needs order/line grain, missing ship dates, invoices, courier evidence, statuses, and dates in one coherent dataset. Minimum: 100 orders over 12 months with 2+ lines each, 10 customers, an invoice gap, courier confirmations, and cancelled/open rows."
 
   - slug: series3-advanced
     title: Advanced SQL
@@ -1159,6 +1285,11 @@ series:
         short: "PIVOT & UNPIVOT — rows into a cross-tab report"
         hands_on: ["koan:equivalent", "koan:complete"]
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Orders.Channel", "Order Details", "Products", "Categories"]
+          fit: good
+          reason: "CASE inside SUM and portable pivoting need repeated status/channel/category values; the 10,000-order seed is more than enough. Minimum: 30 orders across three statuses and three pivot values, with at least one zero cell to preserve."
       # MOVED FROM 15 ON 2026-09-14: a standalone topic of middle difficulty, placed early so Block
       # A climbs. BUILDS ON: Series 1 · 07 (types — JSON is text until it is parsed), 1 · 45 (a
       # missing key is a NULL), Series 2 · 40 (text functions). DATA: Northwind has no JSON column
@@ -1169,6 +1300,11 @@ series:
         short: "JSON in SQL — semi-structured data, in place"
         hands_on: ["koan:complete", "koan:diagnose"]
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["WebOrders.Payload", "WebOrders.OrderID", "Orders", "Order Details"]
+          fit: good
+          reason: "WebOrders is now seeded with nested item arrays and planted missing keys, numeric text, and decimal-comma defects, while Orders/Order Details provide cleaned truth for comparison. Minimum: 30 payloads, 10 with multiple items, and at least one instance of each defect."
       # MOVED FROM 00 ON 2026-09-14. It opened the series with its hardest syntax, on data that does
       # not exist yet; here it follows its prerequisites directly. BUILDS ON: Series 2 · 20 (WITH),
       # 2 · 30 (the self-join it repeats level after level), 2 · 48 (UNION ALL joins the anchor to
@@ -1181,6 +1317,11 @@ series:
         hands_on: ["koan:predict", "koan:complete"]
         status: planned
         seed: bulk
+        data:
+          source: northwind_co_l
+          tables: ["Employees"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: the current installer creates only Company S, so northwind_co_l and its 600-employee six-level hierarchy do not exist. Build Company L with one planted reporting loop before using this lesson; minimum is about 30 employees across five levels plus one isolated cycle."
       # MOVED FROM 10 ON 2026-09-14, to CLOSE Block A. It is the one episode here that is an
       # analysis pattern rather than a SQL feature, and the strongest "so this is what it was all
       # for" moment in the course, so it comes when every tool it uses is in hand.
@@ -1195,6 +1336,11 @@ series:
         short: "Cohorts & Repeat-Purchase Analysis — who comes back"
         hands_on: ["koan:predict", "koan:complete"]
         status: planned
+        data:
+          source: northwind_co_s
+          tables: ["Customers", "Orders", "Order Details"]
+          fit: good
+          reason: "The seed has 120 customers over five years, including 25 joiners and 15 customers who stop, enough for cohort assignment, repeat purchase, and a month grid. Minimum: 20 customers over 24 months with at least three cohorts and repeat/non-repeat examples."
       # Block B — performance. All six need a dataset big enough for the planner to have real
       # choices to make, hence seed: bulk on every one of them.
       #
@@ -1287,6 +1433,11 @@ series:
         hands_on: ["koan:equivalent", "koan:diagnose"]
         status: planned
         seed: bulk
+        data:
+          source: northwind_co_l
+          tables: ["Orders", "Customers", "Products"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: the current installer creates only Company S. Build Company L with about 100,000 customers, 5 million orders, and 12.5 million lines, realistic skew, NULLs, and no secondary indexes before teaching measurable filter-placement and sargability effects."
       # BUILDS ON: 18. SETS UP: 22, 25, 27, 30. EXPLAIN ANALYZE output is engine-specific — teach it
       # PostgreSQL-first and say what DuckDB shows instead.
       - n: "20"
@@ -1296,6 +1447,11 @@ series:
         hands_on: ["koan:count:scanned", "koan:diagnose"]
         status: planned
         seed: bulk
+        data:
+          source: northwind_co_l
+          tables: ["Orders", "Order Details", "Customers"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: the current installer creates only Company S. The planned L workload would provide enough rows and statistics for EXPLAIN/ANALYZE; build it with primary/foreign keys but no secondary indexes before publishing this lesson."
       # NEW 2026-09-07. The rewrite episode, and it sits AFTER EXPLAIN on purpose: 18 is the
       # rules you apply blind, this is the ones you apply with evidence. Every rewrite here is
       # shown as two queries and a plan, and the reader is asked to prove the rows are identical
@@ -1364,6 +1520,11 @@ series:
         hands_on: ["koan:equivalent", "koan:count:scanned"]
         status: planned
         seed: bulk
+        data:
+          source: northwind_co_l
+          tables: ["Orders", "Customers", "Suppliers"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: the current installer creates only Company S. The planned L-scale rows are needed for measurable EXISTS/JOIN, DISTINCT, OR-rewrite, and deep-pagination plan changes; omit secondary indexes in that future build."
       # BUILDS ON: 18 (sargability), 20 (reading the plan), 22 (rewrites). SETS UP: 27, 30.
       - n: "25"
         slug: indexes
@@ -1372,6 +1533,11 @@ series:
         hands_on: ["koan:count:scanned", "koan:choose"]
         status: planned
         seed: bulk
+        data:
+          source: northwind_co_l
+          tables: ["Orders", "Customers", "Products"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: the current installer creates only Company S. Build the planned L-scale order/customer/product volume with primary/foreign keys only so learners can measure selectivity, scan reduction, and index write/storage trade-offs."
       # NEW 2026-09-07. The only mention of this subject anywhere in the academy was a comment
       # in ClickHouse about uniq against uniqExact — checked by grep across every curriculum.
       # Nothing explained WHY distinct counting is different from every other aggregate, which
@@ -1443,6 +1609,11 @@ series:
         hands_on: ["koan:predict", "koan:count:scanned"]
         status: planned
         seed: bulk
+        data:
+          source: northwind_co_l
+          tables: ["Orders", "Customers"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: the current installer creates only Company S. The planned L workload of five million orders across five years with customer skew and repeat buyers is needed for meaningful COUNT(DISTINCT) memory, pre-aggregation, and approximation comparisons."
       # BUILDS ON: all of Block B — this is the Series 3 project.
       - n: "30"
         slug: slow-to-fast
@@ -1452,6 +1623,11 @@ series:
         tags: ["project"]
         status: planned
         seed: bulk
+        data:
+          source: northwind_co_l
+          tables: ["Orders", "Order Details", "Customers", "Products"]
+          fit: MISSING
+          reason: "NOT AVAILABLE: the current installer creates only Company S. The complete tuning project needs the planned L-scale orders and lines, realistic seasonality, customer skew, NULLs, and learner-created indexes."
 
   # Split out of Series 3, where it was episodes 50-60 and nobody was ever going to reach it.
   # This is the most differentiated content in the course — no other SQL course teaches it,
@@ -1492,12 +1668,22 @@ series:
         short: "ANSI SQL vs Dialects — why the same SQL fails"
         hands_on: ["koan:predict", "koan:diagnose"]
         status: planned
+        data:
+          source: northwind
+          tables: ["Orders", "Order Details", "Customers", "Products"]
+          fit: partial
+          reason: "The frozen Northwind shape is sufficient for ANSI syntax and dialect examples, but five-engine parity, quoted identifiers, types, and empty-string behavior are not yet verified. Minimum: the classic 25 customers, 79 orders, 193 lines, and 20 products loaded identically on all five engines; add an engine verification fixture before publishing."
       - n: "05"
         slug: portable-sql
         title: "Portable Paging, Strings, Dates & UPSERT — One Query That Runs on Every Engine"
         short: "Portable Paging, Strings, Dates & UPSERT — every engine"
         hands_on: ["koan:equivalent", "koan:complete"]
         status: planned
+        data:
+          source: northwind
+          tables: ["Orders", "Customers", "Products"]
+          fit: partial
+          reason: "The frozen Northwind rows cover paging, strings, and dates, but portable UPSERT needs a writable staging/target table and five-engine syntax verification. Minimum: 79 orders with ties and NULL dates plus a small target table; add per-engine DDL/seed parity and a repeatable upsert fixture."
       - n: "10"
         slug: one-query-five-databases
         title: "Northwind on Postgres, Oracle, SQL Server, MySQL & Db2 — One Query, Five Databases"
@@ -1505,3 +1691,8 @@ series:
         hands_on: ["koan:author", "koan:equivalent"]
         tags: ["project"]
         status: planned
+        data:
+          source: northwind
+          tables: ["Customers", "Orders", "Order Details", "Products", "Categories", "Suppliers", "Employees"]
+          fit: partial
+          reason: "The frozen Northwind dataset has the right classic tables and minimum scale, but the five database copies and identifier/type behavior are unverified. Minimum: 25 customers, 79 orders, 193 lines, 20 products, and matching checksums on PostgreSQL, Oracle, SQL Server, MySQL, and Db2; add a cross-engine verification/install fixture before publishing."

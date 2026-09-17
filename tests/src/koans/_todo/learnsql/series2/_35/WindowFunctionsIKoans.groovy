@@ -43,8 +43,8 @@ import spock.lang.Stepwise
  * searched SQL task there is, and the keywords-lead title convention exists so the person
  * searching for it finds this line.
  *
- * ── KOANS AND THE SERIES CASE (.docs/plan-sql-series2-story.md §0, §3) ─────────────
- * The LESSON's case file: each customer's oldest open order and the corrected top 10 by delivered sales; its
+ * ── KOANS AND THE SERIES CASE (.docs/plan-academy-course-stories-artefacts.md §1, §3.2) ─────────────
+ * The LESSON's case file: each customer's oldest open order and the top 10 on delivered sales; its
  * tie example: Series 1 · 15's two products at 12.5 (ROW_NUMBER <= 4 vs RANK <= 4). The KOANS: the dearest
  * product per category, the latest order per employee, top 3 products per category by units sold, a row beside
  * its category's average price, removing duplicates from a VALUES list with ROW_NUMBER. Measure first.

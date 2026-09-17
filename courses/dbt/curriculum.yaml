@@ -112,6 +112,27 @@ course: learn-dbt
 track: dbt
 title: Analytics Engineering with dbt
 
+# DATASET DEPENDENCY NOTE (2026-09-17): dbt starts after extraction and loading.
+#   D1 northwind_co_s       real S-scale source for Series 1-2 and small CI/test runs
+#   D2 northwind_co_changes replayable daily/event feed for freshness, incremental models, snapshots, and bad-load tests
+#   D3 crm_export           optional second source for conformance examples when the project consumes CRM data
+#   D5 northwind_co_dw_*    optional warehouse target for cross-course reconciliation, not dbt's raw starting point
+#   D6 northwind_co_raw_*   learner-produced all-text landed copy, the actual dbt source contract
+#
+# D6 is intentionally NOT a prebuilt dataset: ETL produces it from D1/D3/D4, and dbt then proves that its
+# staging models cast/clean it back to the Company truth. The curriculum correctly keeps D6-dependent
+# episodes partial/MISSING until the ETL project, D2 feed, manifests, and verifiers exist.
+# D1 currently exists only at S. D1-M/L, D6-M, and the ClickHouse path are planned requirements for Series 3,
+# so their volume-dependent lessons remain MISSING. The existing Java fact_sales star is not a dbt source or
+# D5 answer key.
+#
+# Supporting comment-only dataset drafts:
+# C:\Projects\reportburster\asbl\src\main\external-resources\db-template\db\scripts\academy-northwind-co-changes.groovy
+# C:\Projects\reportburster\asbl\src\main\external-resources\db-template\db\scripts\academy-northwind-co-dw-install.groovy
+# C:\Projects\reportburster\asbl\src\main\external-resources\db-template\db\scripts\academy-files-export.groovy
+# There is deliberately no raw-install script: D6 is the learner's ETL output. Provide a D6 verifier/contract
+# instead, and only upgrade fit after the learner output can be checked by row counts and checksums.
+
 # Two real prerequisites, and dbt is the one track in the academy where a second one is honest:
 # dbt is SQL plus a project structure, and it starts AFTER the raw data has landed. Someone who
 # has never loaded a table has nothing for dbt to build on.
@@ -154,12 +175,22 @@ series:
         title: "What dbt Is and Is Not — The T in ELT, as a Real Project"
         hands_on: ["koan:choose"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Customers", "Products"]
+          fit: good
+          reason: "The T in ELT needs landed tables to point at, and Northwind Company S is already landed in DuckDB (datasets/northwind-co/northwind_co.duckdb), the engine this series uses. The choose koan only needs to show which tables dbt reads and that it writes none of their rows. The planned raw copy (D6) is not needed for a concept episode."
         status: planned
       - n: "05"
         slug: your-first-model
         title: "Your First Model — A SELECT That Becomes a View (stg_orders)"
         hands_on: ["koan:author", "dbt"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders"]
+          fit: good
+          reason: "stg_orders is one SELECT over Orders that renames and selects columns (OrderID, CustomerID, OrderDate, ShippedDate, Status, Channel), materialised as a view. It runs today with the source pointed at schema northwind_co_s. The koan should build into a throwaway copy of the committed DuckDB file, never into the file itself."
         status: planned
       # ALSO OWNS NODE SELECTION, added as a beat 2026-08-24. After `dbt run` it is the most
       # typed thing in the tool, and it appeared in no episode and no brief anywhere in the
@@ -177,46 +208,86 @@ series:
         title: "dbt run, build & compile — The Everyday Loop"
         hands_on: ["koan:process:tool", "dbt"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Customers", "Products"]
+          fit: good
+          reason: "Three or four models over these tables are enough for run, build, compile and --select my_model+ / +my_model to give visibly different node sets. compile shows the rendered SQL naming northwind_co_s tables; nothing here needs volume or history."
         status: planned
       - n: "15"
         slug: project-anatomy
         title: "Project Anatomy — profiles.yml, dbt_project.yml and the models Folder"
         hands_on: ["koan:complete", "dbt"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Customers"]
+          fit: good
+          reason: "profiles.yml points dbt-duckdb at a copy of northwind_co.duckdb and dbt_project.yml sets the source schema northwind_co_s. The file is named after the dataset, not the schema, on purpose (catalog/schema ambiguity), which is a real profiles.yml gotcha worth one line."
         status: planned
       - n: "20"
         slug: ref-and-source
         title: "ref() & source() — How dbt Works Out What to Build First"
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Customers", "Products", "Categories"]
+          fit: good
+          reason: "sources.yml declares these tables; stg_ models use source(), marts use ref(), and the predict/diagnose koans read the DAG order off them (Order Details before and after Products, Categories). It runs on the built schema today. When D6 exists, only the source schema name changes to northwind_co_raw_s."
         status: planned
       - n: "25"
         slug: materializations
         title: "Materializations — view, table, ephemeral, and When Each Wins"
         hands_on: ["koan:choose", "koan:count:scanned"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Order Details", "Orders", "Products"]
+          fit: good
+          reason: "count:scanned grades view against table: a view over Order Details re-reads all of its lines on every query, and a table reads them once. Scale S is enough because the proxy is a count, not a stopwatch. An ephemeral int_ model joining Products shows up inlined in the compiled SQL."
         status: planned
       - n: "30"
         slug: the-staging-layer
         title: "The Staging Layer — Clean Raw Northwind Once, Reuse It Everywhere"
         hands_on: ["koan:complete"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Customers.Phone", "Customers.City", "Customers.ContactName", "Orders", "WebOrders.Payload"]
+          fit: partial
+          reason: "Real cleaning exists today: phone numbers in five formats, cities with a trailing space or in capitals, contact names in lower case, and WebOrders.Payload JSON with a missing key, a quantity sent as text and a decimal comma. What is missing is the landed shape staging exists for: typed columns mean there is nothing to cast. Build D6 northwind_co_raw_s (the same rows as D1, every column as text, plus _loaded_at, _source_file and _batch_id on every row), so stg_ does the casts, renames and trims and a checksum proves the result equals D1. ETL S1's project produces the same copy."
         status: planned
       - n: "35"
         slug: marts
         title: "Marts — Build dim_customer and fct_sales on Top of Staging"
         hands_on: ["koan:author"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Customers", "Customers.Segment", "Orders", "Order Details", "Products.UnitCost", "Orders.Status"]
+          fit: good
+          reason: "dim_customer comes from Customers (Segment, Country, messy fields cleaned in staging). fct_sales is at order-line grain from Order Details joined to Orders, with margin from Products.UnitCost. Orders.Status (Cancelled, and the planted cancelled-but-still-Open orders) makes the mart's filter a real decision rather than a formality."
         status: planned
       - n: "40"
         slug: seeds
         title: "Seeds — Version-Controlled CSV Reference Data"
         hands_on: ["koan:complete"]
+        data:
+          source: northwind_co_s
+          tables: ["Customers.Country", "Suppliers.Country", "Orders.OrderDate"]
+          fit: good
+          reason: "The dbt project's own country_regions.csv (21 rows) maps exactly the 21 countries the generator uses, and every country has at least one customer, so the join to Customers.Country is complete. fiscal_calendar.csv (72 rows, 2020-2025 by month) covers every Orders.OrderDate plus the January 2025 SalesTargets month. The seed CSVs are authored with the lesson, not part of the dataset."
         status: planned
       - n: "45"
         slug: docs-and-lineage
         title: "Generated Docs & Lineage — The Northwind DAG, Drawn For You"
         hands_on: ["eyes", "dbt"]
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Customers", "Products", "Categories", "Employees", "Shippers", "Invoices"]
+          fit: good
+          reason: "The generated DAG needs enough sources and models to be worth drawing: these eight source tables through stg_, dim_ and fct_ give a real graph, and column descriptions can carry meanings from the data (ShippedDate NULL means 'not recorded', not 'not shipped'). It works on the built schema today."
         status: planned
 
       # ADDED 2026-08-24, when git, branches, diffs and pull requests appeared in ZERO episodes
@@ -250,6 +321,10 @@ series:
         title: "The Project in Git — What Belongs in the Repo, and What Must Never"
         hands_on: ["koan:process:tool", "terminal"]
         core: true
+        data:
+          source: none
+          fit: good
+          reason: "What belongs in the repo (models, tests, seeds, dbt_project.yml, packages.yml), what never does (profiles.yml, target/, dbt_packages/, logs/), and a model diff. The diff is of SQL text, so no rows are needed. It is the same project as the rest of the series, on northwind_co_s."
         status: planned
       # SERIES 1 PROJECT, added 2026-08-24. The series had none: the core path
       # walked ten episodes with nothing built at the end of them.
@@ -261,6 +336,11 @@ series:
         hands_on: ["koan:author", "koan:process:tool"]
         core: true
         tags: ["project"]
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Customers", "Products", "Categories", "Invoices"]
+          fit: partial
+          reason: "Sources to staging to marts to a queryable mart runs end to end on northwind_co_s today, and the mart can be checked against Invoices.Amount for shipped orders. What it lacks is 'raw': sources are already typed, so staging casts nothing. With D6 northwind_co_raw_s (all-text columns plus _loaded_at, _source_file and _batch_id), the project really starts from landed data, and the koan can assert that the staging output's checksums equal D1's."
         status: planned
   - slug: series2-trustworthy-dbt
     title: Trustworthy dbt
@@ -272,46 +352,86 @@ series:
         title: "Built-in Tests — not_null, unique, relationships, accepted_values"
         hands_on: ["koan:process:tool", "koan:complete"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders.OrderID", "Orders.Status", "Orders.Channel", "Orders.ShippedDate", "CourierConfirmations.OrderID", "Order Details.ProductID"]
+          fit: partial
+          reason: "Two tests fail for real today. unique on CourierConfirmations.OrderID catches the one confirmation sent twice (and the noise confirmations), and not_null on Orders.ShippedDate with where Status = 'Shipped' catches the outage and data-entry lapses. relationships (Order Details.ProductID, Orders.CustomerID) and accepted_values (Status, Channel) can only pass, because D1's keys and codes are clean. Add them in D2's day-45 bad load (planned: an order for a customer that does not exist) plus one Status value outside the set (e.g. 'shipped ' typed by hand, on one or two change-feed rows), so every built-in test has something real to catch. ETL S2's quality gates can use the same rows."
         status: planned
       - n: "05"
         slug: custom-tests
         title: "Singular & Custom Tests — Assert the Business Rule, Not Just the Column"
         hands_on: ["koan:author"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders.Status", "Orders.ShippedDate", "Orders.OrderDate", "Invoices", "Order Details"]
+          fit: good
+          reason: "The cross-course worked example, 'shipped orders must have a ship date within 30 days', fails on the planted rows: Speedy Express outage orders with Status 'Shipped' and no ShippedDate, plus ~0.2% lapses. The ~2% genuinely late shipments (15-24 days) pass, which is the noise that proves the rule is not trivially true. A second singular test, Invoices.Amount against the sum of the order lines, is a good rounding beat: the generator rounds each line to cents before summing, so a test on unrounded lines can be off by a cent (measure before quoting)."
         status: planned
       - n: "10"
         slug: sources-and-freshness
         title: "Sources & Freshness — Declare Raw Tables and Catch a Stale Feed"
         hands_on: ["koan:diagnose"]
         core: true
+        data:
+          source: [northwind_co_raw_s, northwind_co_changes]
+          tables: ["Orders._loaded_at", "Orders", "WebOrders", "CourierConfirmations"]
+          fit: MISSING
+          reason: "Declaring sources runs on northwind_co_s today, but freshness cannot be taught on it: every timestamp stops at 2024-12-31, so every source is equally about two years stale and no feed can be told apart as the stale one. It needs D6's _loaded_at on every raw row, and D2 applied day by day, with the apply script stamping _loaded_at relative to the moment the learner applies a day (kept out of the checksum) so freshness reads true on any date. Plant that one feed (WebOrders) stops arriving after a given day while Orders keeps loading, with noise from normal overnight gaps. ETL S2 (a feed that stopped) and Data Warehousing S3 can reuse it."
         status: planned
       - n: "15"
         slug: incremental-models
         title: "Incremental Models — Build Only the New Orders"
         hands_on: ["koan:rerun"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders.CreatedAt", "Orders.UpdatedAt", "Orders.OrderDate", "Order Details"]
+          fit: partial
+          reason: "Building only the new orders can be simulated today with a var cutoff over Orders. The ~1.5% of orders keyed in 1-10 days late (CreatedAt after OrderDate) show why a watermark on OrderDate silently misses rows, and koan:rerun can prove that totals do not double. What D1 cannot show is an already-built row changing, because each order has only its final UpdatedAt. The merge/unique_key beat needs D2 northwind_co_changes (planned: ~12 updates a day with ship dates filled and statuses changed, 3% of orders arriving 1-5 days late, 0.5% sent twice) applied between runs."
         status: planned
       - n: "20"
         slug: snapshots
         title: "Snapshots — SCD Type 2 History Without Writing the Merge"
         hands_on: ["koan:rerun", "koan:predict"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Customers", "CustomerChanges", "Products.UnitPrice", "PriceChanges"]
+          fit: partial
+          reason: "The ground truth exists: CustomerChanges (154 dated Segment/City/ContactName changes) and PriceChanges (255 dated), so a snapshot's rows can be checked against real history. But a snapshot watches a table change between runs, and Customers and Products never change after install, and neither has an updated-at column for the timestamp strategy. Needed: D2's daily customer change and weekly price changes (planned) applied between dbt snapshot runs, plus Customers.UpdatedAt and Products.UpdatedAt added to D1 (the date of the last CustomerChanges/PriceChanges row, else the join or first date), which also give ETL a dimension watermark and Data Warehousing its SCD2 load."
         status: planned
       - n: "25"
         slug: jinja-and-variables
         title: "Jinja & Variables — DRY SQL That's Still Readable"
         hands_on: ["koan:complete"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders.Channel", "Orders.Status", "Order Details", "Categories"]
+          fit: good
+          reason: "A for loop over the four Channel values ('Sales rep', 'Phone', 'EDI', 'Web') pivots revenue by channel, and the planted drift towards Web gives the output a visible trend. A var for the reporting year or a date range switches the model without editing it. Status gives an {% if %} for including or excluding open orders."
         status: planned
       - n: "30"
         slug: macros
         title: "Macros & dbt_utils — Reusable SQL Logic"
         hands_on: ["koan:author"]
+        data:
+          source: northwind_co_s
+          tables: ["Order Details.UnitPrice", "Order Details.Quantity", "Order Details.Discount", "Orders.OrderDate", "Orders.ShipCountry"]
+          fit: good
+          reason: "A line_revenue macro (UnitPrice * Quantity * (1 - Discount), rounded to cents) is exactly the expression repeated across the project. dbt_utils.generate_surrogate_key on (OrderID, ProductID) and date_spine over OrderDate, where small countries naturally have months with no orders, give the package macros a real job."
         status: planned
       - n: "35"
         slug: descriptions-and-contracts
         title: "Descriptions & Contracts — Documentation People Actually Trust"
         hands_on: ["koan:process:tool"]
+        data:
+          source: northwind_co_s
+          tables: ["Orders.ShippedDate", "Orders.Status", "Invoices.Amount", "Order Details.UnitPrice", "Orders.Freight"]
+          fit: good
+          reason: "Descriptions people trust have to say what the data really means: ShippedDate NULL means 'not recorded', not 'not shipped'; 'Open' includes cancellations nobody updated; revenue is goods only, with Freight kept separately (Invoices.Amount vs Invoices.Freight). A contract on fct_sales that declares revenue as decimal(19,2) against an expression computed from DECIMAL(19,4) columns gives the contract a real type mismatch to enforce."
         status: planned
       # ALSO OWNS NAMING AND STYLE, added as a beat 2026-08-24, because the layer split is
       # only half a convention if the files inside the layers are named however each person
@@ -343,6 +463,11 @@ series:
         title: "Project Structure — staging / intermediate / marts, and Why the Split Holds"
         hands_on: ["koan:choose"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Order Details", "Orders", "PriceChanges", "Products", "Customers", "Invoices"]
+          fit: good
+          reason: "The three layers each get real work: stg_ per table, an int_ model that joins order lines to orders and invoices (int_order_lines_invoiced), and dim_ and fct_ marts. Enough tables exist that the prefixes and folders matter in a directory listing."
         status: planned
       # ADDED 2026-08-24, and of everything in this pass it is the one the track most obviously
       # owed: the header says the job is to "turn A FOLDER OF AD-HOC SELECTS into a
@@ -367,12 +492,22 @@ series:
         title: "Refactoring a Query Pile — One 200-Line SELECT Into a Layered Model Set"
         hands_on: ["koan:equivalent", "koan:author"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Invoices", "Shippers", "Customers", "CourierConfirmations", "Orders.Freight"]
+          fit: good
+          reason: "The 200-line query is Learn SQL S2's outage investigation in one SELECT (shipped orders without invoices, by courier and month, confirmed or not), with the same subquery pasted three times. For the honest beat, the old query can carry the real freight fan-out bug: Orders.Freight summed after joining Order Details, which D1 exposes because orders average ~2.5 lines. koan:equivalent reproduces the bug first, and the fix goes in a separate commit."
         status: planned
       - n: "45"
         slug: environments-and-targets
         title: "Environments & Targets — dev vs prod, and Multiple Warehouses"
         hands_on: ["koan:complete"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders.OrderDate", "Orders", "Order Details"]
+          fit: good
+          reason: "The same scale-S schema is installed identically on DuckDB and PostgreSQL (checksums in _dataset_info), so dev on DuckDB and a PostgreSQL target must produce the same totals, which is the 'multiple warehouses' proof. A dev target that limits to the last 90 days of OrderDate shows target.name at work."
         status: planned
 
       # SERIES 2 PROJECT, added 2026-08-24. The series had none: the core path
@@ -385,6 +520,11 @@ series:
         hands_on: ["koan:author", "koan:process:tool"]
         core: true
         tags: ["project"]
+        data:
+          source: [northwind_co_raw_s, northwind_co_changes]
+          tables: ["Orders", "Order Details", "Customers", "Orders._loaded_at"]
+          fit: MISSING
+          reason: "The graded bad load is D2's day 45, not built: a duplicate OrderID, a negative Order Details.Quantity and an order for a CustomerID that does not exist, loaded through D6's raw copy so staging and tests see them as a real load. Surround it with legitimate noise the tests must NOT flag: late rows (3% arriving 1-5 days late) and the 0.5% sent twice that staging dedupes. Add one row per failure mode, so each test catches exactly one thing. D1 alone can only replay the outage (the not_null ship-date check), which is 05's lesson, not a bad load. ETL S2 uses the same day 45."
         status: planned
   - slug: series3-analytics-engineering-at-scale
     title: Analytics Engineering at Scale
@@ -415,6 +555,11 @@ series:
         title: "Moving to a Columnar Engine — The Same dbt Project, Pointed at ClickHouse"
         hands_on: ["koan:equivalent", "koan:count:scanned", "duckdb", "clickhouse"]
         core: true
+        data:
+          source: northwind_co_raw_m
+          tables: ["Orders", "Order Details", "Orders._loaded_at"]
+          fit: MISSING
+          reason: "koan:equivalent (same project, same numbers on DuckDB and ClickHouse) could prove itself at S, but count:scanned is the reason anyone moves, and it needs volume: M's ~1.25M order lines against a columnar read of two columns. Needed: D1-M (500,000 orders, 6,000 customers, the same planted facts scaled) and D6-M landed in ClickHouse, which means ClickHouse support in the install/raw scripts (today they refuse any vendor except POSTGRES and DUCKDB). Data Warehousing S2/S3 needs the same ClickHouse path."
         status: planned
       # ADDED 2026-08-24. The first thing that breaks after the move, and it breaks quietly.
       # `view` on ClickHouse is not the cheap pointer it is on DuckDB or Postgres, and a
@@ -430,6 +575,11 @@ series:
         slug: clickhouse-materializations
         title: "Materializations on ClickHouse — MergeTree Tables and the View That Is Not Free"
         hands_on: ["koan:choose", "koan:count:scanned", "clickhouse"]
+        data:
+          source: northwind_co_raw_m
+          tables: ["Order Details", "Orders"]
+          fit: MISSING
+          reason: "A staging view over raw Order Details re-read on every query is the expensive habit, and count:scanned only persuades at M (~1.25M lines, read again for each downstream query). A materialized view as an INSERT trigger needs rows inserted after it is created, which one D2 day at M supplies. Needs D1-M, D6-M in ClickHouse, and D2 at M (planned ≈ 215,000 events)."
         status: planned
       # ADDED 2026-08-24, absorbing the old 3 · 05 "Incremental Strategies — merge,
       # insert_overwrite, append", which listed three strategies in the abstract. On a real
@@ -448,6 +598,11 @@ series:
         title: "Incremental Without UPDATE — Replacing a Partition Instead of Editing Rows"
         hands_on: ["koan:rerun", "koan:choose", "clickhouse"]
         core: true
+        data:
+          source: [northwind_co_raw_m, northwind_co_changes]
+          tables: ["Orders.OrderDate", "Orders.CreatedAt", "Orders.UpdatedAt", "Order Details"]
+          fit: MISSING
+          reason: "insert_overwrite by month partition needs late rows landing in an already-built month, and updates to orders in it: D2 at M (late and doubled orders, ship dates filled), applied between two runs so koan:rerun can show totals not doubling. Plant a few late orders dated in the previous month on a month boundary, so choosing the partition key on CreatedAt instead of OrderDate gives a wrong answer. Needs D1-M, D6-M in ClickHouse and D2 at M."
         status: planned
       # ADDED 2026-08-24. Series 2 · 20 taught snapshots as the way to keep history, and on
       # this engine that tool is largely gone — snapshots need the same UPDATE the episode
@@ -464,6 +619,11 @@ series:
         slug: history-without-snapshots
         title: "History Without Snapshots — ReplacingMergeTree, FINAL and What Deduplication Costs"
         hands_on: ["koan:predict", "koan:count:scanned", "clickhouse"]
+        data:
+          source: [northwind_co_raw_m, northwind_co_changes]
+          tables: ["Orders.OrderID", "Orders.UpdatedAt", "Orders.Status", "CustomerChanges"]
+          fit: MISSING
+          reason: "ReplacingMergeTree needs several versions of the same key inserted over time, so the table shows duplicates until a merge: D2's order updates (Open to Shipped, a ship date filled, a cancellation) as new rows with a later UpdatedAt, and customer changes as new versions. koan:predict turns on 'it depends when you ask', and at M there are enough parts that a merge has not happened yet. Needs D1-M, D6-M in ClickHouse and D2 at M."
         status: planned
       # ADDED 2026-08-24, and it is the episode that keeps the reader employed. Series 2 · 00
       # taught `unique` and `not_null` and taught them as free. On a billion-row table `unique`
@@ -481,17 +641,32 @@ series:
         slug: testing-a-big-table
         title: "Testing a Big Table — Why unique Stops Being Free, and What to Assert Instead"
         hands_on: ["koan:choose", "koan:count:scanned", "clickhouse"]
+        data:
+          source: northwind_co_raw_m
+          tables: ["Order Details", "Orders.OrderID", "Orders.OrderDate", "Order Details._batch_id"]
+          fit: MISSING
+          reason: "unique over all of history against unique over yesterday's partition is a count:scanned comparison that only matters at volume: M's ~1.25M order lines and 500,000 orders. The 'yesterday' window needs daily load partitions (D6's _batch_id/_loaded_at, filled day by day from D2 at M). Plant one duplicate inside the recent window and one old duplicate outside it, so the windowed test's blind spot is visible and the trade-off is honest."
         status: planned
       - n: "25"
         slug: packages
         title: "Packages — Reuse Community Code (dbt_utils, codegen)"
         hands_on: ["koan:complete"]
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Customers", "Products", "Order Details"]
+          fit: good
+          reason: "codegen's generate_source and generate_base_model over these tables, and dbt_utils macros, need no volume. The data needs are met on the built schema today (on DuckDB). Running it on ClickHouse like the rest of the series needs the ClickHouse install path noted at 3 · 00, at any scale."
         status: planned
       - n: "30"
         slug: semantic-layer-and-metrics
         title: "The Semantic Layer & Metrics — One Definition of Revenue, in Code"
         hands_on: ["koan:equivalent"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders.Status", "Order Details", "Invoices.Amount", "Invoices.InvoiceDate", "SalesTargets"]
+          fit: good
+          reason: "'One definition of revenue' has real competitors in D1: ordered revenue (Order Details, including the planted cancelled-but-still-Open orders), invoiced revenue (Invoices.Amount, missing the outage orders), and shipped. They really differ in 2024, so koan:equivalent can check that the metric reproduces the agreed number. SalesTargets gives a second metric at category-month grain. Equivalence needs no volume, so S."
         status: planned
       # ALSO OWNS THE BREAKING CHANGE, added as a beat 2026-08-24. Exposures are the only thing
       # in the project that knows a dashboard exists, so this is the one episode that can
@@ -507,12 +682,22 @@ series:
         slug: exposures
         title: "Exposures — Lineage All the Way to the Dashboard"
         hands_on: ["koan:complete"]
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Customers"]
+          fit: good
+          reason: "An exposure only records that a dashboard depends on fct_sales and dim_customer. The rename beat (add the new column beside the old, then remove it) needs a real column on a real mart, not volume. It runs on the built schema."
         status: planned
       - n: "40"
         slug: testing-strategy
         title: "Testing Strategy — Unit Tests, Contracts and Quality at Scale"
         hands_on: ["koan:author"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Order Details.Discount", "Orders.ShippedDate", "PriceChanges", "WebOrders.Payload"]
+          fit: good
+          reason: "Unit-test fixtures should be the edge cases the data really has: discount 0.15 in the revenue expression, a Shipped order with no ShippedDate, an order dated on a PriceChanges.ChangedDate (price as of the order), and WebOrders payloads with a quantity sent as text or a decimal comma. Contracts reuse 2 · 35. The 'at scale' costs are 3 · 20's."
         status: planned
       # ADDED 2026-08-24, the second half of the academy's version-control hole. Series 1 · 47
       # puts the project in a repo; this is the part that involves another person, and it is
@@ -537,12 +722,22 @@ series:
         title: "Reviewing a Model Change — Reading a Diff That Moves a Number"
         hands_on: ["koan:diagnose", "koan:process:tool"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Invoices", "Orders.Status", "Orders.Freight"]
+          fit: good
+          reason: "The planted PR that silently changes a total has real candidates in D1: inner-joining Invoices drops the un-invoiced outage orders, filtering Status = 'Shipped' drops the phantom Open sales, and joining lines before summing Freight fans it out. Each moves 2024 revenue by an amount the diagnose koan can assert. No volume needed."
         status: planned
       - n: "45"
         slug: ci-cd-for-dbt
         title: "CI/CD for dbt — Slim CI, State Comparison and dbt build in a Pipeline"
         hands_on: ["koan:process:tool"]
         core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Customers"]
+          fit: good
+          reason: "Slim CI (state:modified+, defer to a prod manifest) needs a small, fast, deterministic dataset in the CI job. S with checksums is exactly that, while prod would be M. Nothing here depends on volume."
         status: planned
       # THE ONE EPISODE IN THE TRACK A READER CANNOT RUN, and the brief must say so in the
       # prose rather than letting them find out: cross-project ref() needs dbt Enterprise or
@@ -558,6 +753,11 @@ series:
         slug: dbt-mesh-and-multi-project
         title: "dbt Mesh & Multi-Project — When One Repo Stops Scaling"
         hands_on: ["koan:choose"]
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Order Details", "Invoices", "SalesTargets"]
+          fit: good
+          reason: "koan:choose grades a split, and the company has a natural one: a sales project (Orders, Order Details, SalesTargets) and a finance project (Invoices, PaidDate) that refs sales' public fct_sales. Data only makes the domains concrete, and it exists."
         status: planned
       - n: "55"
         slug: project-staging-to-metrics
@@ -565,4 +765,9 @@ series:
         hands_on: ["koan:author", "koan:process:tool", "dbt"]
         core: true
         tags: ["project"]
+        data:
+          source: [northwind_co_raw_m, northwind_co_changes]
+          tables: ["Orders", "Order Details", "Customers", "Products", "Invoices", "SalesTargets", "Orders._loaded_at"]
+          fit: MISSING
+          reason: "The production project on ClickHouse: raw M to staging to marts to the revenue metric, with a partition-replace incremental and a ReplacingMergeTree history model refreshed from the change feed. Needs D1-M, D6-M landed in ClickHouse and D2 at M. The planted facts (outage, phantom sales, late-keyed orders) must be scaled into M, so the metric's reconciliation against invoices means the same thing it did at S."
         status: planned

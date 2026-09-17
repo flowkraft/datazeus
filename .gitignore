@@ -2,8 +2,9 @@
 
 # Anki decks — built from cards/cards.yaml by tools/build-anki.py
 **/*.apkg
-# Maven (koans) output
+# Maven (koans) output; target-NN/ when two lesson specs build side by side (-Ddz.build.dir)
 **/target/
+**/target-*/
 # rendered videos — published to CDN / website, not git
 *.mp4
 

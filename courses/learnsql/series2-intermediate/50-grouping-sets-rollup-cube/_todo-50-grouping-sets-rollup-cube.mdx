@@ -72,16 +72,25 @@ published: false
     with GROUPING() and a CASE; sort them readably. ROLLUP and GROUPING SETS are the everyday tools; CUBE's
     2^n groupings and GROUPING_ID get a line each. MySQL's WITH ROLLUP in one line.
 
-    ── THE SERIES CASE — MAIN EXAMPLE — the twist (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
-    Rep x courier with subtotals shows what no single GROUP BY did. Figures, DuckDB 2026-09-15 (orders /
-    with no ShippedDate): Nancy–Speedy Express 25/24 · Nancy–Federal Shipping 2/0 · Nancy–United Package
-    1/1 · Janet–Federal 24/0 · Janet–Speedy 1/0 · Janet–United 2/2 · Andrew–United 24/0; subtotals Nancy
-    28/25, Janet 27/2, Andrew 24/0, Speedy 26/24, United 27/3, Federal 26/0; grand total 79/27.
-    The finding: Nancy's Federal orders shipped, and Janet's Speedy order shipped — the data CANNOT separate
-    the rep from the courier. Say "her orders"; no verdict.
-    OFF-STORY, KEPT: the real NULL vs the subtotal NULL on "Customers"."Region" (21 of 25 NULL).
-    CORRECTED 2026-09-15: the claim below that this family was absent from every curriculum was false
-    (curriculum.yaml records it); the episode still belongs here — this course owns the SQL.
+    ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
+    No case in this episode (the old rep × courier "twist" is dropped: it was a generator artefact). The lesson
+    teaches subtotals and grand totals on its own best example (sales by category and quarter, say).
+    OFF-STORY, KEPT — THE TRAP: a real NULL vs the subtotal NULL. A DATASET REQUIREMENT: Northwind Company's
+    "Customers"."Region" is currently NULL on every row; the trap needs SOME regions filled and some NULL (e.g.
+    states for USA, Canada and Brazil, NULL elsewhere) — the dataset must plant that.
+
+    DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
+    academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
+    came from the frozen Northwind is to be RE-FOUND on it: the lesson beat stays, the numbers move. First
+    measurements are DuckDB only (stories sheet §3.2.2); every figure is re-asserted on PostgreSQL in the spec.
+
+    ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
+    Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
+    KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
+    WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
+    repeats itself does the opposite. Checking in the brief is cheaper than re-cutting a published video.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     LEVEL ●●● of ●●●●. BUILDS ON: Series 2 · 48 (UNION ALL), 2 · 05 (the CASE labelling idiom),

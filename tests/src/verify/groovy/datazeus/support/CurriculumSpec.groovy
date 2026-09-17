@@ -511,6 +511,40 @@ class CurriculumSpec extends Specification {
         bad.isEmpty()
     }
 
+    /**
+     * `data` traces which dataset an episode runs on and whether it exists yet (lib/curriculum.ts
+     * CurriculumData). Separate from Data Modeling's `dataset` role tag above. Learn SQL Series 1 is
+     * out of scope: published on the frozen Northwind, nothing to trace.
+     */
+    static final List<String> DATA_TRACKS = ["learnsql", "datamodeling", "datawarehousing", "etlpipelines", "dbt"]
+    static final List<String> DATA_SOURCES = ["northwind", "northwind_co_s", "northwind_co_m", "northwind_co_l",
+                                              "northwind_co_changes", "crm_export", "northwind_co_files",
+                                              "northwind_co_dw_s", "northwind_co_dw_m", "northwind_co_dw_l",
+                                              "northwind_co_raw_s", "northwind_co_raw_m", "library", "messy", "generated", "none"]
+
+    def "#track: every episode traces its data, in the known vocabulary"() {
+        given:
+        def doc = load(new File(COURSES, track))
+        def bad = []
+        doc.series.findAll { !(track == "learnsql" && it.slug.startsWith("series1-")) }.each { s ->
+            s.episodes.each { ep ->
+                def d = ep.data
+                if (!d) { bad << "${ep.slug}: no data"; return }
+                def sources = d.source instanceof List ? d.source : [d.source]
+                sources.findAll { !(it in DATA_SOURCES) }.each { bad << "${ep.slug}: unknown source '${it}'" }
+                if (!(d.fit in ["good", "partial", "MISSING"])) bad << "${ep.slug}: unknown fit '${d.fit}'"
+                if (!d.reason) bad << "${ep.slug}: no reason"
+                if (!d.tables && sources != ["none"]) bad << "${ep.slug}: no tables"
+            }
+        }
+
+        expect:
+        bad.isEmpty()
+
+        where:
+        track << DATA_TRACKS
+    }
+
     def "data modeling: every episode has its cards, and something practised besides them"() {
         // Decided 2026-09-14: this track is video + article + working file + one check suite
         // per series + Anki cards. Cards are review, not practice — an episode whose only

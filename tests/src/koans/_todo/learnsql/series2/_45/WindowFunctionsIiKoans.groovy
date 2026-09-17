@@ -38,7 +38,7 @@ import spock.lang.Stepwise
  * Frames are where people get quietly wrong answers — the default frame with ORDER BY is not the
  * one most readers assume. Show the default, then show it stated explicitly.
  *
- * ── KOANS AND THE SERIES CASE (.docs/plan-sql-series2-story.md §0, §3) ─────────────
+ * ── KOANS AND THE SERIES CASE (.docs/plan-academy-course-stories-artefacts.md §1, §3.2) ─────────────
  * The LESSON's main example: days to each customer's next order (175.5 after an open order vs 178.3 after a
  * shipped one) and the running total of open sales; its trap: LAG over months per country skipping months.
  * The KOANS: a running total of freight per shipper by month, month-over-month units per category with LAG,

@@ -35,18 +35,33 @@ published: false
     it costs), reconcile two lists (EXCEPT both ways, INTERSECT), the column count / type / name rules, and
     ORDER BY on the combined result.
 
-    ── THE SERIES CASE — MAIN EXAMPLE — reconciliation (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
-    Reconciliation is what EXCEPT and INTERSECT are for at work. Figures, DuckDB 2026-09-15:
-      customers with a Speedy Express order: 24; of them, customers who never received a Speedy delivery
-      (EXCEPT customers with a shipped Speedy order): 23. Speedy's two shipped orders are order 1 (Nancy)
-      and order 4 (Janet).
-      customers with both an order that has no ShippedDate and one that shipped (INTERSECT): 24 — every
-      affected customer also received other orders.
-    CORRECTED 2026-09-15: the old claim that Series 1 · 40 wrote a FULL OUTER JOIN as a UNION is FALSE —
-    Series 1 · 40 has no UNION. The real callback: Series 1 · 40 says FULL OUTER JOIN earns its place in
-    reconciling two lists; EXCEPT/INTERSECT are the set-based way to do it.
-    WHAT GOES WRONG candidate: UNION instead of UNION ALL when stacking two real sources — identical rows
-    that were genuinely two records collapse into one, and the total comes back short with no error.
+    ── THE SERIES CASE — MAIN EXAMPLE — reconciliation (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
+    Reconciling two lists is what INTERSECT and EXCEPT are for at work, and the case's rows are the best rows to
+    teach it on. Speedy Express sends its delivery confirmations ("CourierConfirmations"):
+      our un-dated Speedy Express orders placed 2024-03-04..08-30 INTERSECT the confirmed order IDs → delivered,
+      invoice them; EXCEPT → never confirmed, claim them. LOCKED (gate 2, 2026-09-17, both engines):
+      177 un-dated · 164 confirmed (€242,383.04) · 13 not (€14,511.63); 173 confirmation rows, 172 distinct orders,
+      8 for orders that already have a ship date.
+    The noise is part of the lesson: a few confirmations are for orders that already have a ship date (EXCEPT the
+    other way round finds them), and one confirmation was sent twice (UNION vs UNION ALL when counting them).
+    CORRECTED 2026-09-15: Series 1 · 40 has no UNION. The real callback: it says FULL OUTER JOIN earns its place
+    in reconciling two lists; EXCEPT/INTERSECT are the set-based way to do it.
+    WHAT GOES WRONG: UNION instead of UNION ALL when stacking two real sources — the duplicate confirmation
+    collapses and the count comes back short with no error.
+
+    DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
+    academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
+    came from the frozen Northwind is to be RE-FOUND on it: the lesson beat stays, the numbers move. First
+    measurements are DuckDB only (stories sheet §3.2.2); every figure is re-asserted on PostgreSQL in the spec.
+
+    ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
+    Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: MAIN EXAMPLE — reconciliation.
+    A SEGMENT IS ONE QUERY of the shape the lesson just taught, and ONE finding, after a full lesson — using
+    nothing the learner has not met yet. If it needs more, it belongs to a later episode or to the project.
+    WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
+    repeats itself does the opposite. Checking in the brief is cheaper than re-cutting a published video.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     LEVEL ●● of ●●●●. THE CALLBACK: Series 1 · 40 says FULL OUTER JOIN earns its place in reconciling two

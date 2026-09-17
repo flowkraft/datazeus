@@ -39,12 +39,25 @@ published: false
     the one with no manager), pairs of related rows without counting each pair twice or pairing a row with
     itself (a.id < b.id), and a row beside an earlier row the pre-window-function way.
 
-    ── THE SERIES CASE — NONE (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
-    This episode's best examples are not the case. At most one line of the case (whose orders; Nancy reports
-    to Andrew). PROPOSED, NOT DECIDED (.docs §5.6): make "products bought together" (a self-join on order
-    lines) the main example and mirrored pairs the trap — 495 rows with self-matches, 302 mirrored, 151 real
-    pairs; Chai + Chang on 9 orders (DuckDB 2026-09-15) — so the headline trap is not Series 1 · 40's LEFT
-    JOIN rule a fourth time.
+    ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
+    No case in this episode. Its best examples: employee and manager — Northwind Company has three levels (CEO →
+    2 sales managers → 9 reps), so a LEFT JOIN keeps the CEO and a self-join per level shows the chain.
+    PROPOSED, NOT DECIDED (curriculum.yaml, Series 2 header, OPEN QUESTIONS): "products bought together" as the main
+    example with mirrored pairs as the trap — the old figures (495 rows, 302 mirrored, 151 pairs) are from the
+    frozen Northwind; re-find on Northwind Company S.
+
+    DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
+    academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
+    came from the frozen Northwind is to be RE-FOUND on it: the lesson beat stays, the numbers move. First
+    measurements are DuckDB only (stories sheet §3.2.2); every figure is re-asserted on PostgreSQL in the spec.
+
+    ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
+    Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
+    KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
+    WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
+    repeats itself does the opposite. Checking in the brief is cheaper than re-cutting a published video.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     LEVEL ●● of ●●●●. A different join SHAPE — one table, two roles — and not a third episode about

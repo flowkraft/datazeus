@@ -7,6 +7,8 @@ JOIN "Orders" o
   ON o."CustomerID" = c."CustomerID"
 JOIN "Order Details" d
   ON d."OrderID" = o."OrderID"
+WHERE o."OrderDate" >= DATE '2024-05-01'
+  AND o."OrderDate" <  DATE '2024-06-01'
 GROUP BY c."CompanyName"
 ORDER BY "Freight" DESC
 LIMIT 5;

@@ -53,7 +53,7 @@ import spock.lang.Stepwise
  * ("Customers who ordered in Q1 2024 and never since" was dropped as a churn question on 2026-09-15:
  * all 10 are simply not due for their next order.)
  *
- * ── KOANS AND THE SERIES CASE (.docs/plan-sql-series2-story.md §0, §3) ─────────────
+ * ── KOANS AND THE SERIES CASE (.docs/plan-academy-course-stories-artefacts.md §1, §3.2) ─────────────
  * The LESSON's main example is the case on Customers/Orders (24 of 25 customers waited, QUICK-Stop never;
  * 18 reordered while an order was open) and its NOT IN trap is on Employees.ReportsTo. The KOANS must ask
  * different questions on other tables — candidates (measure first): suppliers with a discontinued product

@@ -35,15 +35,27 @@ published: false
     moving averages, and frames — the default frame with ORDER BY is RANGE UNBOUNDED PRECEDING, which is not
     what most readers assume (ties share a running total; LAST_VALUE returns the current row).
 
-    ── THE SERIES CASE — MAIN EXAMPLE for LAG — the key evidence (.docs/plan-sql-series2-story.md §0, §2, §3) ──────
-    Days from each order to the SAME customer's next order: 175.5 on average after an order with no
-    ShippedDate (19 pairs) vs 178.3 after a shipped one (35 pairs). Customers behaved as if they received
-    their orders. (The medians, 190 and 190, are Series 2 · 58's.) Also the running total of sales with no
-    ShippedDate by quarter placed: 1501.25 · 4299 · 5729.64 · 10852.22 · 12454.02 · 17856.42 · 19169.
-    Worth one beat: LAG does in one pass what Series 2 · 25's correlated "previous order date" did.
-    OFF-STORY, KEPT — WHAT GOES WRONG: LAG gives the previous ROW, not the previous MONTH. Month-over-month per
-    ship country: 27 of 53 comparisons skip at least one month (Sweden's July 2023 is compared with February).
-    The fix is a country x month grid (CROSS JOIN, .docs §5.4 — not decided). DuckDB 2026-09-15.
+    ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
+    No case in this episode (the old reorder-rhythm evidence and running total are dropped; the soft-evidence beat
+    lives in Series 2 · 25 now). The lesson teaches LAG/LEAD, running totals, month-over-month, moving averages and
+    the default frame on its own best examples.
+    OFF-STORY, KEPT — WHAT GOES WRONG: LAG gives the previous ROW, not the previous MONTH. Re-find it on Northwind
+    Company S: with 10,000 orders most country-months have orders, so the trap needs a grain where months go
+    missing (a small country, or one product); if none fires naturally, the dataset plants one. The fix is a
+    month grid (CROSS JOIN — still an open question in curriculum.yaml).
+
+    DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
+    academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
+    came from the frozen Northwind is to be RE-FOUND on it: the lesson beat stays, the numbers move. First
+    measurements are DuckDB only (stories sheet §3.2.2); every figure is re-asserted on PostgreSQL in the spec.
+
+    ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
+    Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
+    KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
+    WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
+    repeats itself does the opposite. Checking in the brief is cheaper than re-cutting a published video.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     LEVEL ●●●● of ●●●●. BUILDS ON: Series 2 · 35, and 2 · 10 — month-over-month needs date_trunc
