@@ -15,12 +15,16 @@ videoId: "learnsql-series1-07-data-types"
 
 You ran `SELECT *` on `"Categories"` last lesson and got this back:
 
+<div className="[&_th:nth-child(4)]:bg-[rgb(var(--hl-grey)/var(--hl-head))] [&_td:nth-child(4)]:bg-[rgb(var(--hl-grey)/var(--hl-col))] [&_td:nth-child(4)]:text-[rgb(var(--hl-grey-ink))]">
+
 | CategoryID | CategoryName | Description | Picture |
 | ---------: | ------------ | ----------- | ------- |
 | 1 | Beverages | Soft drinks, coffees, teas, beers, and ales | NULL |
 | 2 | Condiments | Sweet and savory sauces, relishes, spreads, and seasonings | NULL |
 | 3 | Confections | Desserts, candies, and sweet breads | NULL |
 | 4 | Dairy Products | Cheeses | NULL |
+
+</div>
 
 The ids came back as whole numbers, the names and descriptions as words, and `"Picture"` was empty on every single row. **Nobody typed those rules in row by row.** Somebody decided them once, and what they chose is called the column's **data type**.
 
@@ -40,11 +44,13 @@ The promise is made once, when the table is created, and every row obeys it. Tha
 
 You do not have to guess, and you should not. Every SQL database describes its own tables in a set of standard tables called the **catalog**, and you query the catalog exactly like any other table.
 
-```sql file=./scripts/products-types.sql
+```sql file=./scripts/products-types.sql {2-3}
 SELECT "column_name", "data_type"
 FROM information_schema.columns
 WHERE table_name = 'Products';
 ```
+
+<div className="[&_th:nth-child(2)]:bg-[rgb(var(--hl-grey)/var(--hl-head))] [&_td:nth-child(2)]:bg-[rgb(var(--hl-grey)/var(--hl-col))] [&_td:nth-child(2)]:text-[rgb(var(--hl-grey-ink))]">
 
 | column_name | data_type |
 | ----------- | --------- |
@@ -59,6 +65,8 @@ WHERE table_name = 'Products';
 | ReorderLevel | smallint |
 | Discontinued | boolean |
 
+</div>
+
 The `WHERE table_name = 'Products'` line is a filter — you will write those properly next lesson. For now, read it as "only the Products table". And notice `'Products'` is in **single** quotes, because it is a text value, not the name of a column. That is the rule from last lesson, doing real work.
 
 <Callout>
@@ -69,7 +77,7 @@ This one query works on PostgreSQL, MySQL, SQL Server and DuckDB. It is the firs
 
 ## The five families you will actually meet
 
-Databases ship dozens of types. In day-to-day work you meet five.
+Databases ship dozens of types. In day-to-day work you meet 5.
 
 | Family | What it holds | In Northwind |
 | ------ | ------------- | ------------ |
@@ -89,17 +97,21 @@ FROM "Orders"
 LIMIT 3;
 ```
 
+<div className="[&_th:nth-child(2)]:bg-[rgb(var(--hl-grey)/var(--hl-head))] [&_td:nth-child(2)]:bg-[rgb(var(--hl-grey)/var(--hl-col))] [&_td:nth-child(2)]:text-[rgb(var(--hl-grey-ink))]">
+
 | OrderID | OrderDate |
 | ------: | --------- |
 | 1 | 2024-03-15 00:00:00.000 |
 | 2 | 2024-04-05 00:00:00.000 |
 | 3 | 2024-05-20 00:00:00.000 |
 
+</div>
+
 **Look at what came back.** You asked for a date and got a time as well, down to the millisecond — because the catalog does not call this column a date, it calls it a **timestamp**: a point on a clock, not a day on a calendar. Nobody recorded a time of day for these orders, so each one sits at midnight.
 
 That is the whole section in one result. `"OrderDate"` is not the text `"2024-03-15"` — text has no midnight to show you. It is a point in time the database understands, which is why it knows March comes before April **without comparing letters**.
 
-Some people store dates as text anyway. That is a bad habit: you can no longer add thirty days to one, and the database will happily accept the **31st of February**.
+Some people store dates as text anyway. That is a bad habit: you can no longer add 30 days to one, and the database will happily accept the **31st of February**.
 
 ## What the type decides
 
@@ -119,11 +131,15 @@ FROM "Products"
 LIMIT 3;
 ```
 
+<div className="[&_th:nth-child(3)]:bg-[rgb(var(--hl-grey)/var(--hl-head))] [&_td:nth-child(3)]:bg-[rgb(var(--hl-grey)/var(--hl-col))] [&_td:nth-child(3)]:text-[rgb(var(--hl-grey-ink))]">
+
 | ProductName | UnitPrice | ?column? |
 | ----------- | --------: | -------: |
 | Chai | 18 | 36 |
 | Chang | 19 | 38 |
 | Aniseed Syrup | 10 | 20 |
+
+</div>
 
 That third column has no name of its own. You asked for a calculation and never said what to call it, so the database invented a heading — PostgreSQL shows `?column?`, DuckDB shows `(UnitPrice * 2)`. Naming it yourself is a later lesson.
 
@@ -206,6 +222,8 @@ FROM "Products"
 LIMIT 4;
 ```
 
+<div className="[&_th:nth-child(3)]:bg-[rgb(var(--hl-grey)/var(--hl-head))] [&_td:nth-child(3)]:bg-[rgb(var(--hl-grey)/var(--hl-col))] [&_td:nth-child(3)]:text-[rgb(var(--hl-grey-ink))]">
+
 | ProductName | UnitsInStock | Discontinued |
 | ----------- | -----------: | ------------ |
 | Chai | 39 | false |
@@ -213,7 +231,9 @@ LIMIT 4;
 | Aniseed Syrup | 13 | false |
 | Chef Antons Cajun Seasoning | 53 | false |
 
-That last column is a **boolean** — it answers a yes-or-no question, so its value is either true or false for every product. All four here are false; only two of the twenty products are discontinued.
+</div>
+
+That last column is a **boolean** — it answers a yes-or-no question, so its value is either true or false for every product. All 4 here are false; only 2 of the 20 products are discontinued.
 
 **In CloudBeaver you will not see the word.** It draws a boolean as a checkbox: an empty box is false, a ticked one is true. Nothing is different about the data — `psql` prints the same value as `f`, and the DuckDB CLI prints `false`. Three tools, three renderings, one value. The type is what the database stores; how it appears is your client's decision.
 
@@ -251,7 +271,7 @@ cd c:/DataPallas/db/datazeus
 .\zeus.bat koans learnsql series1 _07
 ```
 
-On macOS or Linux, run `./zeus.sh koans learnsql series1 _07` from the same folder. The three arguments are course, series and episode.
+On macOS or Linux, run `./zeus.sh koans learnsql series1 _07` from the same folder. The 3 arguments are course, series and episode.
 
 > **Says the lesson isn't there?** Your copy of DataZeus predates this lesson — run `.\zeus.bat update` (or `./zeus.sh update`) once to fetch the latest lessons, then run the command again. Koans you have already solved are kept.
 
@@ -263,4 +283,4 @@ c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series1\_07\D
 
 Open it in any editor — Notepad++, VS Code, whatever you have. Each koan has a `___` where the answer belongs. Replace one, save, re-run the command above, and watch that koan go green.
 
-Ten koans, easiest first, in the order this lesson builds them: ask the catalog how many columns a table has and what one column is; read what the price column promises and what it returns; meet dates and true/false; see that a postal code is text; multiply a number; predict the comparison that catches everyone; then write a catalog query from scratch. They run on DuckDB — a single file, no server to start.
+10 koans, easiest first, in the order this lesson builds them: ask the catalog how many columns a table has and what 1 column is; read what the price column promises and what it returns; meet dates and true/false; see that a postal code is text; multiply a number; predict the comparison that catches everyone; then write a catalog query from scratch. They run on DuckDB — a single file, no server to start.
