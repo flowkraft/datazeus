@@ -36,7 +36,7 @@ FROM "Orders";
 | -----: |
 | 79 |
 
-One row. One column. Seventy-nine orders.
+One row. One column. 79 orders.
 
 Look at what just happened to the shape of the result. The `"Orders"` table has 79 rows in it, and this query returned **one**. That is what "aggregate" means: many rows go in, one value comes out.
 
@@ -112,7 +112,7 @@ FROM "Orders";
 | --------------: |
 | 50.4875949367088608 |
 
-Sixteen decimal places for a delivery charge.
+16 decimal places for a delivery charge.
 
 That is not a bug, and the reason is worth understanding rather than tidying away. It is **division**.
 
@@ -179,11 +179,11 @@ LIMIT 2;
 | ProductName | UnitPrice | Discontinued |
 | ----------- | --------: | ------------ |
 | Thuringer Rostbratwurst | 123.79 | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">true</span> |
-
-</div>
 | Mishi Kobe Niku | 97 | true |
 
-**Both of them.** `Thuringer Rostbratwurst` costs 123.79 and we do not sell it any more; neither do we sell `Mishi Kobe Niku` at 97.00. So the "most expensive product" is a sausage no customer can order, and it has been sitting at the top of that price list all along.
+</div>
+
+**Both of them.** `Thuringer Rostbratwurst` costs 123.79 and we do not sell it any more; neither do we sell `Mishi Kobe Niku` at 97. So the "most expensive product" is a sausage no customer can order, and it has been sitting at the top of that price list all along.
 
 The `"Products"` table has a `"Discontinued"` column. Use it:
 
@@ -197,7 +197,7 @@ WHERE "Discontinued" = false;
 | ------: |
 | 38 |
 
-**38.00, not 123.79.** Same table, same function, same column. The only difference is which rows the aggregate was allowed to see, and the answer fell by two thirds.
+**38, not 123.79.** Same table, same function, same column. The only difference is which rows the aggregate was allowed to see, and the answer fell by two thirds.
 
 > **`WHERE` runs first, and the aggregate only ever sees what survived it.** The row filter happens, and *then* the surviving rows are collapsed into one number.
 
@@ -220,7 +220,7 @@ WHERE "Discontinued" = false;
 | ------: | -------: | ------: | ------: |
 | 18 | 4.5 | 38 | 19.6444444444444444 |
 
-Eighteen products actually on sale, priced 4.5 to 38, averaging 19.64. All four aggregates describe **the same eighteen rows**, because they all sit above the same `WHERE`. Over the full catalogue that average is 28.72 — two rows out of twenty were pulling it up by more than nine.
+18 products actually on sale, priced 4.5 to 38, averaging 19.64. All four aggregates describe **the same 18 rows**, because they all sit above the same `WHERE`. Over the full catalogue that average is 28.72 — 2 rows out of 20 were pulling it up by more than 9.
 
 ## COUNT(\*) counts rows. COUNT(column) counts values.
 
@@ -232,18 +232,19 @@ SELECT count(*) AS "Orders",
 FROM "Orders";
 ```
 
-{/* The same highlight as the video: a ring on 52 — two-counts' point: count of a column skips the
-    empty values */}
+{/* The same highlight as the video: the row in the neutral tone with a ring on 52 —
+    two-counts' point: count of a column skips the empty values. NEUTRAL, not a fault: 52 is the
+    other correct answer, and terracotta told the viewer something was wrong with it. */}
 
-<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-fault-ink))]">
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-neutral)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold">
 
 | Orders | Shipped |
 | -----: | ------: |
-| 79 | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">52</span> |
+| 79 | <span className="rounded-md border-2 border-[rgb(var(--hl-neutral)/var(--hl-ring))] bg-[rgb(var(--hl-neutral)/var(--hl-head))] px-2.5 py-0.5">52</span> |
 
 </div>
 
-Two counts. One table. No `WHERE` anywhere. **Twenty-seven apart.**
+Two counts. One table. No `WHERE` anywhere. **27 apart.**
 
 Nothing is broken. You met those 27 orders in the sorting lesson: they were placed and have never shipped, so their `"ShippedDate"` is empty. And:
 
@@ -296,13 +297,15 @@ FROM "Orders"
 WHERE "ShipCountry" = 'Japan';
 ```
 
-{/* The same highlight as the video: a ring on [NULL] — empty-set's point: COUNT says 0, SUM says nothing */}
+{/* The same highlight as the video: the row in the neutral tone with a ring on the `[NULL]` —
+    empty-set's point: COUNT says 0, SUM says nothing. NEUTRAL, not a fault: the blank IS the
+    answer, with no error anywhere; the dashboard, not this cell, is where it becomes a lie. */}
 
-<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-fault-ink))]">
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-neutral)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold">
 
 | Orders | Total freight |
 | -----: | ------------- |
-| 0 | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">`[NULL]`</span> |
+| 0 | <span className="rounded-md border-2 border-[rgb(var(--hl-neutral)/var(--hl-ring))] bg-[rgb(var(--hl-neutral)/var(--hl-head))] px-2.5 py-0.5">`[NULL]`</span> |
 
 </div>
 
@@ -335,7 +338,7 @@ FROM "Orders";
 | --------: | -----: |
 | 10 | 79 |
 
-`DISTINCT` goes **inside the brackets**, in front of the column: count each different value once, however many rows carry it. Ten countries, across seventy-nine orders.
+`DISTINCT` goes **inside the brackets**, in front of the column: count each different value once, however many rows carry it. 10 countries, across 79 orders.
 
 You met `DISTINCT` last lesson as a thing that goes after `SELECT` and removes duplicate rows. This is the same idea in a different place, and the placement matters: `SELECT DISTINCT count(...)` is a different query that does not do this.
 
@@ -357,7 +360,7 @@ in the GROUP BY clause or be used in an aggregate function
 
 An error, at last — and a helpful one, once you see what it is protecting you from.
 
-`max("UnitPrice")` produces **one** value. `"ProductName"` has **twenty**. There is no honest way to put twenty names in one row, so rather than pick one and pretend, the database refuses. Every engine does this; the wording differs, and they all point at the same clause.
+`max("UnitPrice")` produces **one** value. `"ProductName"` has **20**. There is no honest way to put 20 names in one row, so rather than pick one and pretend, the database refuses. Every engine does this; the wording differs, and they all point at the same clause.
 
 There are two ways forward, and you already have one of them:
 
