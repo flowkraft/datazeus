@@ -99,10 +99,9 @@ ORDER BY "Stock value" DESC
 LIMIT 5;
 ```
 
-{/* The same highlight as the video: Mishi Kobe Niku in blue — name-it-result's LOOK tone, the line
-    carrying a third of the value */}
+{/* The same highlight as the video: the Stock value column in blue, with Mishi Kobe Niku also called out. */}
 
-<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))] [&_thead_th:nth-child(2)]:bg-[rgb(var(--hl-pick)/var(--hl-head))] [&_tbody_td:nth-child(2)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_td:nth-child(2)]:font-bold [&_tbody_td:nth-child(2)]:text-[rgb(var(--hl-pick-ink))]">
 
 | Product | Stock value |
 | ------- | ----------: |
@@ -116,7 +115,7 @@ LIMIT 5;
 
 Now look at the last-but-one line. It says `ORDER BY "Stock value" DESC` — **the sort is using the name you invented**, instead of repeating the multiplication. That is not just tidier. The calculation now exists in exactly one place in the query, so when somebody decides stock value should be based on a different column, there is one line to change instead of two that must be kept in step.
 
-And now read the *data* rather than the syntax. **One product is carrying more than a third of the value on that list** — 2813 against a five-row total of 8016.95 — which is the kind of thing a report exists to make visible. And the single most valuable line in the warehouse, **Mishi Kobe Niku**, twenty-nine units at 97.00, is one the company has **stopped selling**: nobody is going to order it, and it is sitting at the top. You could not see either of those ten minutes ago, and it took one multiplication.
+And now read the *data* rather than the syntax. **One product is carrying more than a third of the value on that list** — 2813 against a five-row total of 8016.95 — which is the kind of thing a report exists to make visible. And the single most valuable line in the warehouse, **Mishi Kobe Niku**, 29 units at 97.00, is one the company has **stopped selling**: nobody is going to order it, and it is sitting at the top. You could not see either of those ten minutes ago, and it took one multiplication.
 
 ## How far does the name reach?
 
@@ -183,22 +182,23 @@ ORDER BY "UnitPrice" DESC
 LIMIT 5;
 ```
 
-{/* The same highlight as the video: the first row in blue with a ring on 113.106923 — round-raw-result's
-    LOOK tone: the query did its job, the number is just not money yet */}
+{/* The same highlight as the video: the full Price in EUR column in orange, with a stronger cell ring
+    on 113.106923 — the query worked, but the raw result is not money yet. */}
 
-<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+<div className="[&_thead_th:nth-child(2)]:bg-[rgb(var(--hl-fault)/var(--hl-head))] [&_tbody_td:nth-child(2)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_td:nth-child(2)]:font-bold [&_tbody_td:nth-child(2)]:text-[rgb(var(--hl-fault-ink))]">
 
 | Product | Price in EUR |
 | ------- | -----------: |
-| Thuringer Rostbratwurst | <span className="rounded-md border-2 border-[rgb(var(--hl-pick)/var(--hl-ring))] bg-[rgb(var(--hl-pick)/var(--hl-head))] px-2.5 py-0.5">113.106923</span> |
+| Thuringer Rostbratwurst | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">113.106923</span> |
 | Mishi Kobe Niku | 88.6289 |
 
-</div>
 | Gnocchi di nonna Alice | 34.7206 |
 | Camembert Pierrot | 31.0658 |
 | Ikura | 28.3247 |
 
-**The prices went in with two decimal places, and not one of the five came back as money.** The top row runs to six decimal places. `113.106923` is not a price — nobody can be charged it and no report can print it. The answer is not wrong; it is just carrying more precision than the question has.
+</div>
+
+**The prices went in with 2 decimal places, and not one of the 5 came back as money.** The top row runs to 6 decimal places. `113.106923` is not a price — nobody can be charged it and no report can print it. The answer is not wrong; it is just carrying more precision than the question has.
 
 That is worth a moment, because it is where the decimals come from. **Multiplying two exact decimals adds their decimal places together.** A price with two and a rate with four give you six, every time, whether or not you wanted them — and nothing in the query warned you.
 
@@ -210,6 +210,8 @@ ORDER BY "UnitPrice" DESC
 LIMIT 5;
 ```
 
+<div className="[&_thead_th:nth-child(2)]:bg-[rgb(var(--hl-pick)/var(--hl-head))] [&_tbody_td:nth-child(2)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_td:nth-child(2)]:font-bold [&_tbody_td:nth-child(2)]:text-[rgb(var(--hl-pick-ink))]">
+
 | Product | Price in EUR |
 | ------- | -----------: |
 | Thuringer Rostbratwurst | 113.11 |
@@ -217,6 +219,8 @@ LIMIT 5;
 | Gnocchi di nonna Alice | 34.72 |
 | Camembert Pierrot | 31.07 |
 | Ikura | 28.32 |
+
+</div>
 
 `ROUND` takes two things: the number, and how many decimal places you want. Two, for money.
 
@@ -255,7 +259,7 @@ Maria AndersatAlfreds Futterkiste
 That is the whole rule for `||`: it joins precisely what you hand it and adds nothing.
 
 <Callout>
-**A warning for later.** If any piece of a `||` is empty — a `NULL` — the *entire* result becomes `NULL`, not just that piece. One missing middle name and the whole line vanishes from your report. `"City"` and `"Country"` are filled in for all twenty-five customers here, so it cannot bite you today; `"Region"` is empty for most of them and would. The <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL &amp; Three-Valued Logic</a> lesson is where `NULL` gets explained properly.
+**A warning for later.** If any piece of a `||` is empty — a `NULL` — the *entire* result becomes `NULL`, not just that piece. One missing middle name and the whole line vanishes from your report. `"City"` and `"Country"` are filled in for all 25 customers here, so it cannot bite you today; `"Region"` is empty for most of them and would. The <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL &amp; Three-Valued Logic</a> lesson is where `NULL` gets explained properly.
 </Callout>
 
 ## DISTINCT: duplicate values
@@ -270,6 +274,10 @@ FROM "Customers"
 ORDER BY "Country";
 ```
 
+{/* The video marks the returned Country column orange: the query is valid, but the result is
+    one row per customer rather than one row per requested country. */}
+<div className="[&_thead_th:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-head))] [&_tbody_td:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_td:nth-child(1)]:font-bold [&_tbody_td:nth-child(1)]:text-[rgb(var(--hl-fault-ink))]">
+
 | Country |
 | ------- |
 | Argentina |
@@ -281,7 +289,9 @@ ORDER BY "Country";
 | Germany |
 | … |
 
-**Twenty-five rows come back — one per customer, not one per country.** Germany is in there eleven times. The question had ten answers and you are about to hand over twenty-five lines.
+</div>
+
+**25 rows come back — one per customer, not one per country.** Germany is in there 11 times. The question had 10 answers and you are about to hand over 25 lines.
 
 Nothing is wrong with the query. You asked for every customer's country, and that is exactly what arrived.
 
@@ -291,10 +301,10 @@ FROM "Customers"
 ORDER BY "Country";
 ```
 
-{/* The same highlight as the video: Germany in blue — distinct-result's LOOK tone, eleven customers,
+{/* The same highlight as the video: Germany in blue — distinct-result's LOOK tone, 11 customers,
     one row */}
 
-<div className="[&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(4)_td]:font-bold [&_tbody_tr:nth-child(4)_td]:text-[rgb(var(--hl-pick-ink))]">
+<div className="[&_thead_th:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-head))] [&_tbody_td:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_td:nth-child(1)]:font-bold [&_tbody_td:nth-child(1)]:text-[rgb(var(--hl-pick-ink))] [&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(4)_td]:font-bold [&_tbody_tr:nth-child(4)_td]:text-[rgb(var(--hl-pick-ink))]">
 
 | Country |
 | ------- |
@@ -311,7 +321,7 @@ ORDER BY "Country";
 | USA |
 | Venezuela |
 
-**Ten.** `DISTINCT` goes immediately after `SELECT`, and it throws away any row that is a copy of one already returned. Eleven German customers collapse into a single row saying Germany.
+**10.** `DISTINCT` goes immediately after `SELECT`, and it throws away any row that is a copy of one already returned. 11 German customers collapse into a single row saying Germany.
 
 ## The wrong answer that looks right
 
@@ -325,10 +335,10 @@ FROM "Customers"
 ORDER BY "Country", "City";
 ```
 
-{/* The same highlight as the video: every Germany row in terracotta — distinct-trap-result's ALARM,
-    a list of countries that repeats a country */}
+{/* The same highlight as the video: the City column and Germany rows in blue LOOK, because every
+    country-city pair is a correct distinct result. */}
 
-<div className="[&_tbody_tr:nth-child(5)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(5)_td]:font-bold [&_tbody_tr:nth-child(5)_td]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(6)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(6)_td]:font-bold [&_tbody_tr:nth-child(6)_td]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(7)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(7)_td]:font-bold [&_tbody_tr:nth-child(7)_td]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(8)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(8)_td]:font-bold [&_tbody_tr:nth-child(8)_td]:text-[rgb(var(--hl-fault-ink))]">
+<div className="[&_thead_th:nth-child(2)]:bg-[rgb(var(--hl-pick)/var(--hl-head))] [&_tbody_td:nth-child(2)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_td:nth-child(2)]:font-bold [&_tbody_td:nth-child(2)]:text-[rgb(var(--hl-pick-ink))] [&_tbody_tr:nth-child(5)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(5)_td]:font-bold [&_tbody_tr:nth-child(5)_td]:text-[rgb(var(--hl-pick-ink))] [&_tbody_tr:nth-child(6)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(6)_td]:font-bold [&_tbody_tr:nth-child(6)_td]:text-[rgb(var(--hl-pick-ink))] [&_tbody_tr:nth-child(7)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(7)_td]:font-bold [&_tbody_tr:nth-child(7)_td]:text-[rgb(var(--hl-pick-ink))] [&_tbody_tr:nth-child(8)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(8)_td]:font-bold [&_tbody_tr:nth-child(8)_td]:text-[rgb(var(--hl-pick-ink))]">
 
 | Country | City |
 | ------- | ---- |
@@ -344,15 +354,13 @@ ORDER BY "Country", "City";
 
 </div>
 
-**Twenty-four.** Adding one column made a `DISTINCT` list more than twice as long, and Germany is back in it eleven times — under a heading that still says which countries we sell into.
-
-No error. No warning. Nothing to notice. And the word `DISTINCT` is still in the query, which is exactly what makes this one dangerous: you would point at it if anybody argued.
+**24.** Adding `City` made the `DISTINCT` list more than twice as long — exactly as it should. Germany appears 11 times because each country-city pair is distinct. Nothing is wrong with the query or the result.
 
 > **`DISTINCT` is not a function on the column next to it. It applies to the whole row you selected.**
 
 Two rows are copies only when **every column matches**. Germany-plus-Aachen and Germany-plus-Berlin are two different rows, so both survive — and the country column had no say in it at all. **Every column you add gives the rows one more way to differ, and one more way to stay.**
 
-If you have been keeping count, one row is missing: twenty-five customers went in and twenty-four came out. That row is the rule working in the other direction. Two customers — *Ana Trujillo Emparedados y helados* and *Antonio Moreno Taquería* — are in the same city, so they hold the same value in **both** of the columns you selected:
+If you have been keeping count, one row is missing: 25 customers went in and 24 came out. That row is the rule working in the other direction. Two customers — *Ana Trujillo Emparedados y helados* and *Antonio Moreno Taquería* — are in the same city, so they hold the same value in **both** of the columns you selected:
 
 | | `"Country"` | `"City"` |
 |---|---|---|
@@ -368,13 +376,13 @@ GROUP BY "Country", "City"
 HAVING COUNT(*) > 1;
 ```
 
-Run it and you get a single row back. That is your missing twenty-fifth.
+Run it and you get a single row back. That is your missing 25th.
 
 That is also why `DISTINCT` is a poor tool for "getting rid of duplicates" in general. When a result has rows in it you did not expect, `DISTINCT` will often make them disappear — and it will have hidden the reason rather than fixed it. **The usual cause is a join.** When one row on one side matches several rows on the other, every match comes back, and the row count multiplies without anything looking wrong. The <a href="/academy/learn-sql/multi-table-joins-duplicate-rows" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Multi-Table JOINs &amp; Grain</a> lesson is about exactly that. Until then: when extra rows surprise you, find out where they came from before you reach for `DISTINCT`.
 
 ### When two columns *is* what you meant
 
-None of that makes `SELECT DISTINCT "Country", "City"` a mistake. It is the right query for **"which towns, in which countries, do we have customers in?"** — twenty-four is the correct answer to *that* question. The trap was never the second column; it was the heading that no longer matched the query underneath it.
+None of that makes `SELECT DISTINCT "Country", "City"` a mistake. It is the right query for **"which towns, in which countries, do we have customers in?"** — 24 is the correct answer to *that* question. The trap was never the second column; it was the heading that no longer matched the query underneath it.
 
 <Callout>
 **One more engine difference.** With `SELECT DISTINCT`, anything you sort by has to appear in the select list. `SELECT DISTINCT "Country" FROM "Customers" ORDER BY "CustomerID"` is rejected by PostgreSQL (`42P10`) and accepted by DuckDB. The reason is fair enough once you see it: the rows have already been collapsed, so `"CustomerID"` no longer has a single value to sort by.
@@ -412,7 +420,7 @@ Three named headings, a rounded calculation, a filter and a sort. Nothing to exp
 
 **Notice what is *not* wrapped in `ROUND`.** `"UnitPrice"` is already money in the table, so rounding it would change nothing — you round what you **work out**, not what was already a price. Rounding every column on sight is a habit worth not forming.
 
-Two details worth pointing at. **The two most expensive products in the catalogue are not on this list** — `WHERE "Discontinued" = false` removed them, because a price list for things nobody can buy is worse than no price list. And **Tofu is where `ROUND` is doing the most visible work**: the raw conversion is `21.243525`, which is six decimal places of something nobody could be charged.
+Two details worth pointing at. **The 2 most expensive products in the catalogue are not on this list** — `WHERE "Discontinued" = false` removed them, because a price list for things nobody can buy is worse than no price list. And **Tofu is where `ROUND` is doing the most visible work**: the raw conversion is `21.243525`, which is 6 decimal places of something nobody could be charged.
 
 ## Two more things worth knowing
 
