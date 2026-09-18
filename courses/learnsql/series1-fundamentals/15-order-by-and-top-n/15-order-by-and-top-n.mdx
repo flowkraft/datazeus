@@ -52,6 +52,8 @@ FROM "Products"
 ORDER BY "UnitPrice";
 ```
 
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
 | ProductName | UnitPrice |
 | ----------- | --------: |
 | Guarana Fantastica | 4.5 |
@@ -62,6 +64,8 @@ ORDER BY "UnitPrice";
 | … | … |
 | Mishi Kobe Niku | 97 |
 | Thuringer Rostbratwurst | 123.79 |
+
+</div>
 
 Cheapest first — and you did not ask for cheapest first.
 
@@ -77,6 +81,8 @@ FROM "Products"
 ORDER BY "UnitPrice" DESC;
 ```
 
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+
 | ProductName | UnitPrice |
 | ----------- | --------: |
 | Thuringer Rostbratwurst | 123.79 |
@@ -84,6 +90,8 @@ ORDER BY "UnitPrice" DESC;
 | Gnocchi di nonna Alice | 38 |
 | Camembert Pierrot | 34 |
 | Ikura | 31 |
+
+</div>
 
 One word, and the list turns around. Read what it tells you: 123.79, then 97, and then it falls off a cliff to 38. **Two premium lines, and then everything else.** That is a fact about the business you could not see a minute ago, and it took six characters.
 
@@ -105,17 +113,17 @@ WHERE "City" IN (
 ORDER BY "PostalCode";
 ```
 
-{/* The same highlight as the video: the fourth row in blue with a ring on 8010 — the postal-result
-    slide's LOOK tone, because the query did its job; the column is text */}
+{/* The same highlight as the video: the fourth row in red with a ring on 8010 — the postal-result
+    slide's ALARM tone, because this ordering is misleading for postal-code text. */}
 
-<div className="[&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(4)_td]:font-bold [&_tbody_tr:nth-child(4)_td]:text-[rgb(var(--hl-pick-ink))]">
+<div className="[&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(4)_td]:font-bold [&_tbody_tr:nth-child(4)_td]:text-[rgb(var(--hl-fault-ink))]">
 
 | CompanyName | City | PostalCode |
 | ----------- | ---- | ---------- |
 | Morgenstern Gesundkost | Leipzig | 04179 |
 | Alfreds Futterkiste | Berlin | 12209 |
 | Die Wandernde Kuh | Stuttgart | 70563 |
-| Ernst Handel | Graz | <span className="rounded-md border-2 border-[rgb(var(--hl-pick)/var(--hl-ring))] bg-[rgb(var(--hl-pick)/var(--hl-head))] px-2.5 py-0.5">8010</span> |
+| Ernst Handel | Graz | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">8010</span> |
 | Frankenversand | München | 80805 |
 
 </div>
@@ -293,7 +301,7 @@ Swap the two and you get a completely different report — every customer alphab
 
 ## Where does "missing" go?
 
-Twenty-seven of Northwind's seventy-nine orders have no `"ShippedDate"`. They were placed and have never shipped. So when you sort by that column, the database has to put those twenty-seven **somewhere** — and this is the one place in this lesson where two correct engines disagree.
+27 of Northwind's 79 orders have no `"ShippedDate"`. They were placed and have never shipped. So when you sort by that column, the database has to put those 27 **somewhere** — and this is the one place in this lesson where two correct engines disagree.
 
 ```sql file=./scripts/recent-shipments.sql
 SELECT "OrderID", "CustomerID", "ShippedDate"
@@ -358,10 +366,10 @@ ORDER BY "OrderDate"
 LIMIT 5;
 ```
 
-{/* The same highlight as the video: the oldest unshipped order in blue — backlog-result's LOOK tone,
-    bad news the query was right to put first */}
+{/* The same highlight as the video: the oldest unshipped order in neutral grey — backlog-result's
+    NEUTRAL tone, because the correct result is being identified, not flagged as a fault. */}
 
-<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-neutral)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold">
 
 | OrderID | CustomerID | OrderDate |
 | ------: | ---------- | --------- |
@@ -394,7 +402,7 @@ LIMIT 5 OFFSET 5;
 | Queso Cabrales | 21 |
 | Ravioli Angelo | 19.5 |
 
-`OFFSET` skips rows you have already shown. So if you were putting this price list on screen five rows at a time, this query would show page two of your price list: products six to ten.
+`OFFSET` skips rows you have already shown. So if you were putting this price list on screen five rows at a time, this query would show page two of your price list: products 6 to 10.
 
 And it depends on everything above it: **`OFFSET` only means anything on top of a stable order.** If the sort leaves ties unbroken, page two can repeat a row from page one and silently drop another. That is the same defect as the top-five trap, arriving on the second screen instead of the first.
 
