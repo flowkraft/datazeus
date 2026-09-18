@@ -37,6 +37,11 @@ ORDER BY "UnitPrice" * "UnitsInStock" DESC
 LIMIT 5;
 ```
 
+{/* The video paints this heading in the ACCENT tone — the database's own shrug — so the problem
+    column is impossible to miss. `--hl-fault` carries the video's ACCENT (182,106,74); the ink is
+    the video's PAPER (#fdf6e3). */}
+<div className="[&_thead_th:nth-child(2)]:bg-[rgb(var(--hl-fault))] [&_thead_th:nth-child(2)]:text-[#fdf6e3] [&_thead_th:nth-child(2)]:font-black">
+
 | ProductName | ?column? |
 | ----------- | -------: |
 | Mishi Kobe Niku | 2813 |
@@ -44,6 +49,8 @@ LIMIT 5;
 | Chef Antons Cajun Seasoning | 1166 |
 | Ikura | 961 |
 | Tofu | 813.75 |
+
+</div>
 
 Two things to notice, and only one of them is a surprise.
 
@@ -63,6 +70,10 @@ ORDER BY "UnitPrice" * "UnitsInStock" DESC
 LIMIT 5;
 ```
 
+{/* Same treatment as the table above: the second heading is still the database's shrug. */}
+
+<div className="[&_thead_th:nth-child(2)]:bg-[rgb(var(--hl-fault))] [&_thead_th:nth-child(2)]:text-[#fdf6e3] [&_thead_th:nth-child(2)]:font-black">
+
 | Product | ?column? |
 | ------- | -------: |
 | Mishi Kobe Niku | 2813 |
@@ -70,6 +81,8 @@ LIMIT 5;
 | Chef Antons Cajun Seasoning | 1166 |
 | Ikura | 961 |
 | Tofu | 813.75 |
+
+</div>
 
 **One heading fixed, one to go.** Nothing about the data changed — same five products, same order, same numbers. Only what the first column is *called* on the way out.
 
@@ -99,9 +112,10 @@ ORDER BY "Stock value" DESC
 LIMIT 5;
 ```
 
-{/* The same highlight as the video: the Stock value column in blue, with Mishi Kobe Niku also called out. */}
+{/* The same highlight as the video: the Stock value HEADING in blue, with Mishi Kobe Niku's row
+    called out. The column's cells stay plain — only the heading and the row are lit. */}
 
-<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))] [&_thead_th:nth-child(2)]:bg-[rgb(var(--hl-pick)/var(--hl-head))] [&_tbody_td:nth-child(2)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_td:nth-child(2)]:font-bold [&_tbody_td:nth-child(2)]:text-[rgb(var(--hl-pick-ink))]">
+<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))] [&_thead_th:nth-child(2)]:bg-[rgb(var(--hl-pick)/var(--hl-head))]">
 
 | Product | Stock value |
 | ------- | ----------: |
@@ -191,7 +205,6 @@ LIMIT 5;
 | ------- | -----------: |
 | Thuringer Rostbratwurst | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">113.106923</span> |
 | Mishi Kobe Niku | 88.6289 |
-
 | Gnocchi di nonna Alice | 34.7206 |
 | Camembert Pierrot | 31.0658 |
 | Ikura | 28.3247 |
@@ -313,17 +326,17 @@ ORDER BY "Country";
 | France |
 | Germany |
 | Italy |
-
-</div>
 | Mexico |
 | Sweden |
 | UK |
 | USA |
 | Venezuela |
 
+</div>
+
 **10.** `DISTINCT` goes immediately after `SELECT`, and it throws away any row that is a copy of one already returned. 11 German customers collapse into a single row saying Germany.
 
-## The wrong answer that looks right
+## DISTINCT counts the whole row
 
 Your list goes round. It is useful. And somebody writes back: *this is great — can we see which cities, too?*
 
@@ -382,7 +395,12 @@ That is also why `DISTINCT` is a poor tool for "getting rid of duplicates" in ge
 
 ### When two columns *is* what you meant
 
-None of that makes `SELECT DISTINCT "Country", "City"` a mistake. It is the right query for **"which towns, in which countries, do we have customers in?"** — 24 is the correct answer to *that* question. The trap was never the second column; it was the heading that no longer matched the query underneath it.
+None of that makes `SELECT DISTINCT "Country", "City"` a mistake. Put `DISTINCT` on **exactly the columns that together define one row of your answer**:
+
+- one row per country → `SELECT DISTINCT "Country"` — 10 rows;
+- one row per country-and-city pair → `SELECT DISTINCT "Country", "City"` — 24 rows.
+
+Both are correct; they answer different questions. Here 24 is right for *"which towns, in which countries, do we have customers in?"* Add a column and one row means something new, so you are answering a new question — make sure it is the one you were asked.
 
 <Callout>
 **One more engine difference.** With `SELECT DISTINCT`, anything you sort by has to appear in the select list. `SELECT DISTINCT "Country" FROM "Customers" ORDER BY "CustomerID"` is rejected by PostgreSQL (`42P10`) and accepted by DuckDB. The reason is fair enough once you see it: the rows have already been collapsed, so `"CustomerID"` no longer has a single value to sort by.
@@ -402,19 +420,13 @@ ORDER BY "UnitPrice" DESC
 LIMIT 5;
 ```
 
-{/* The same highlight as the video: Tofu in blue with a ring on 21.24 — report-result's LOOK tone */}
-
-<div className="[&_tbody_tr:nth-child(5)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(5)_td]:font-bold [&_tbody_tr:nth-child(5)_td]:text-[rgb(var(--hl-pick-ink))]">
-
 | Product | List price | Price in EUR |
 | ------- | ---------: | -----------: |
 | Gnocchi di nonna Alice | 38 | 34.72 |
 | Camembert Pierrot | 34 | 31.07 |
 | Ikura | 31 | 28.32 |
 | Uncle Bobs Organic Dried Pears | 30 | 27.41 |
-| Tofu | 23.25 | <span className="rounded-md border-2 border-[rgb(var(--hl-pick)/var(--hl-ring))] bg-[rgb(var(--hl-pick)/var(--hl-head))] px-2.5 py-0.5">21.24</span> |
-
-</div>
+| Tofu | 23.25 | 21.24 |
 
 Three named headings, a rounded calculation, a filter and a sort. Nothing to explain and nothing to apologise for.
 

@@ -19,10 +19,10 @@ You ran `SELECT *` on `"Categories"` last lesson and got this back:
 
 | CategoryID | CategoryName | Description | Picture |
 | ---------: | ------------ | ----------- | ------- |
-| 1 | Beverages | Soft drinks, coffees, teas, beers, and ales | NULL |
-| 2 | Condiments | Sweet and savory sauces, relishes, spreads, and seasonings | NULL |
-| 3 | Confections | Desserts, candies, and sweet breads | NULL |
-| 4 | Dairy Products | Cheeses | NULL |
+| 1 | Beverages | Soft drinks, coffees, teas, beers, and ales | `[NULL]` |
+| 2 | Condiments | Sweet and savory sauces, relishes, spreads, and seasonings | `[NULL]` |
+| 3 | Confections | Desserts, candies, and sweet breads | `[NULL]` |
+| 4 | Dairy Products | Cheeses | `[NULL]` |
 
 </div>
 
@@ -170,10 +170,11 @@ FROM "Customers"
 LIMIT 8;
 ```
 
-{/* The same highlight as the video: the seventh row, Leipzig, tinted in terracotta as the
-    postal-result slide lights it, with a ring on 04179, the leading zero the text is about. */}
+{/* The same highlight as the video: the seventh row, Leipzig, lit in the videos' blue "look"
+    tone — 04179 is a correct, interesting value, not a fault — with a ring on 04179, the leading
+    zero the text is about. */}
 
-<div className="[&_tbody_tr:nth-child(7)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(7)_td]:font-bold [&_tbody_tr:nth-child(7)_td]:text-[rgb(var(--hl-fault-ink))]">
+<div className="[&_tbody_tr:nth-child(7)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(7)_td]:font-bold [&_tbody_tr:nth-child(7)_td]:text-[rgb(var(--hl-pick-ink))]">
 
 | CompanyName | City | PostalCode |
 | ----------- | ---- | ---------- |
@@ -183,7 +184,7 @@ LIMIT 8;
 | Frankenversand | München | 80805 |
 | Königlich Essen | Brandenburg | 14776 |
 | Lehmanns Marktstand | Frankfurt a.M. | 60528 |
-| Morgenstern Gesundkost | Leipzig | <span className="rounded-md border-2 border-[rgb(var(--hl-fault)/var(--hl-ring))] bg-[rgb(var(--hl-fault)/var(--hl-head))] px-2.5 py-0.5">04179</span> |
+| Morgenstern Gesundkost | Leipzig | <span className="rounded-md border-2 border-[rgb(var(--hl-pick)/var(--hl-ring))] bg-[rgb(var(--hl-pick)/var(--hl-head))] px-2.5 py-0.5">04179</span> |
 | Ottilies Käseladen | Köln | 50739 |
 
 </div>

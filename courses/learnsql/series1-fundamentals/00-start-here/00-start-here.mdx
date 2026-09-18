@@ -165,6 +165,10 @@ WHERE OrderDate >= DATE '2024-06-01'
   AND OrderDate <  DATE '2024-07-01';
 ```
 
+<Callout>
+This exact query works in DuckDB and fails in PostgreSQL. DuckDB ignores case when matching names; Postgres lowercases them and finds neither `orders` nor `orderdate`.
+</Callout>
+
 In DuckDB, say while you're doing the koans, this works fine: DuckDB ignores case, so `orders` finds `"Orders"` and `OrderDate` finds `"OrderDate"`. Paste that same unquoted query into CloudBeaver against PostgreSQL, though, and it falls over. Postgres lowercases the unquoted names, goes looking for a table called `orders` and a column called `orderdate`, and finds neither. Same SQL, different outcome.
 
 That's why the quoted version is the one to write. Double-quoted names match the stored name exactly, and a `DATE` literal is read the same way everywhere, so the quoted query behaves identically on DuckDB and PostgreSQL.

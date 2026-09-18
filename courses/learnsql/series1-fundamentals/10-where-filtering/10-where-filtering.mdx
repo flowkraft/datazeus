@@ -165,11 +165,17 @@ This is the one thing in this lesson that silently produces wrong answers in rea
 the requirement is: *"beverages or condiments, under 15"*. The obvious translation looks right
 and is wrong:
 
+{/* The stamp is centred at top:50% on every block. This query's third line is long enough to run
+    under it, so nudge the stamp up 14px FOR THIS BLOCK ONLY — the SQL stays exactly as written. */}
+<div className="[&>figure>div>div[aria-hidden]]:!top-[calc(50%_-_14px)]">
+
 ```sql file=./scripts/products-trap-no-parens.sql {3}
 SELECT "ProductName", "UnitPrice"
 FROM "Products"
 WHERE "CategoryID" = 1 OR "CategoryID" = 2 AND "UnitPrice" < 15;
 ```
+
+</div>
 
 {/* The same highlight as the video: Chai and Chang tinted in terracotta as the trap-result slide
     lights them, with a ring on each price — the 2 over the cap the query was meant to set. */}
@@ -264,11 +270,17 @@ WHERE "Country" IN ('Mexico', 'Venezuela', 'Argentina');
 
 5 customers. And the flip side, `NOT IN`, keeps everyone the list does not name:
 
+{/* As with the trap query above: the stamp is centred at top:50%, and this third line is long
+    enough to run under it, so nudge the stamp up 14px for this block only. */}
+<div className="[&>figure>div>div[aria-hidden]]:!top-[calc(50%_-_14px)]">
+
 ```sql file=./scripts/customers-not-in-list.sql {3}
 SELECT count(*)
 FROM "Customers"
 WHERE "Country" NOT IN ('Mexico', 'Venezuela', 'Argentina');
 ```
+
+</div>
 
 **20** — 25 minus the 5 above. The moment you catch yourself writing the same
 column with `= … OR … = … OR … =`, that is `IN` asking to be used.
