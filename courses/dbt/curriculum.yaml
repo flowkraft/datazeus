@@ -117,42 +117,43 @@ title: Analytics Engineering with dbt
 #   D2 northwind_co_changes replayable daily/event feed for freshness, incremental models, snapshots, and bad-load tests
 #   D3 crm_export           optional second source for conformance examples when the project consumes CRM data
 #   D5 northwind_co_dw_*    optional warehouse target for cross-course reconciliation, not dbt's raw starting point
-#   D6 northwind_co_raw_*   learner-produced all-text landed copy, the actual dbt source contract
+#   D6 northwind_co_raw_*   all-text landed copy (every column text, plus _loaded_at, _source_file,
+#                           _batch_id): the dbt source contract
 #
-# D6 is intentionally NOT a prebuilt dataset: ETL produces it from D1/D3/D4, and dbt then proves that its
-# staging models cast/clean it back to the Company truth. The curriculum correctly keeps D6-dependent
-# episodes partial/MISSING until the ETL project, D2 feed, manifests, and verifiers exist.
-# D1 currently exists only at S. D1-M/L, D6-M, and the ClickHouse path are planned requirements for Series 3,
-# so their volume-dependent lessons remain MISSING. The existing Java fact_sales star is not a dbt source or
+# UPDATED 2026-09-19: D6 is now an install, not only the learner's ETL output. academy-northwind-co-raw-install
+# builds it from D1 and lands D2's days on top (THROUGH_DAY), and its verifier re-checks every table. So this
+# course starts from a copy it installs itself; a learner who built one in ETL Series 1 can point dbt at theirs
+# instead. That is an invitation, not a prerequisite (CONTRIBUTING.md, "Promises between lessons").
+# D1 exists at S, M and L; D2, D5 and D6 are real scripts. D3 (crm_export) and D4 (files-export) are not
+# finished yet, so episodes that need them stay partial. The existing Java fact_sales star is not a dbt source or
 # D5 answer key.
 #
-# Supporting comment-only dataset drafts:
-# C:\Projects\reportburster\asbl\src\main\external-resources\db-template\db\scripts\academy-northwind-co-changes.groovy
-# C:\Projects\reportburster\asbl\src\main\external-resources\db-template\db\scripts\academy-northwind-co-dw-install.groovy
-# C:\Projects\reportburster\asbl\src\main\external-resources\db-template\db\scripts\academy-files-export.groovy
-# There is deliberately no raw-install script: D6 is the learner's ETL output. Provide a D6 verifier/contract
-# instead, and only upgrade fit after the learner output can be checked by row counts and checksums.
+# Scripts, all under datasets/scripts/ in this repo:
+#   academy-northwind-co-install.groovy (D1), academy-northwind-co-changes.groovy (D2),
+#   academy-northwind-co-dw-install.groovy (D5), academy-northwind-co-raw-install.groovy (D6),
+#   academy-crm-export-install.groovy (D3) and academy-files-export.groovy (D4), both unfinished
 
-# Two real prerequisites, and dbt is the one track in the academy where a second one is honest:
-# dbt is SQL plus a project structure, and it starts AFTER the raw data has landed. Someone who
-# has never loaded a table has nothing for dbt to build on.
+# Two prerequisites, and dbt is the one track in the academy where a second one is honest:
+# dbt is SQL plus a project structure, and it starts AFTER the raw data has landed. The second
+# one is for understanding where that raw data comes from; the data itself this course installs.
 prerequisites:
   - course: learn-sql
     needs: "Series 2"
     why: >-
       A dbt model IS a SELECT. CTEs especially — the staging/marts split is CTEs promoted to
-      files, and Series 2 · 20 is where you learn to read one.
+      files, and Series 2 is where you learn to read one.
   - course: learn-etl-pipelines
     needs: "Series 1"
     why: >-
-      dbt does the T and neither the E nor the L. Series 1 there is what puts raw Northwind in
-      front of it; without that this track has nothing to transform.
+      dbt does the T and neither the E nor the L. Series 1 there teaches the extract and load
+      that come before it. You can start here without it: this course installs its own raw copy
+      of Northwind Co to transform.
 
 excludes:
   - topic: "Extract and Load — dbt does neither"
     where: "covered in ETL & Data Pipelines; dbt starts once the raw data has landed"
   - topic: "The warehouse engine itself — MergeTree internals, partitions, sort keys, storage, tuning"
-    where: "covered in Data Warehousing, Series 2 · 10 for MergeTree and Data Warehousing, Series 2 · 15 for partitions and sort keys. In this course, Series 3 runs dbt ON that engine — what the adapter can and cannot express, which is a different subject"
+    where: "covered in Data Warehousing, Series 2, for MergeTree, partitions and sort keys. In this course, Series 3 runs dbt ON that engine — what the adapter can and cannot express, which is a different subject"
   - topic: "Dimensional design decisions — grain, SCD type, star vs snowflake"
     where: "covered in Data Modeling; here you implement the model you already chose"
 
@@ -160,7 +161,7 @@ excludes:
     where: "covered in Learn SQL — a dbt model is a SELECT, and this track is the project around it"
   # The near-collision worth naming: dbt 3 · 10 and BI 2 · 40 are both called the semantic layer.
   - topic: "Agreeing with the business what a metric MEANS, and governing it"
-    where: "covered in BI & Data Visualization, Series 2 · 40, which is where the business agrees what a metric means. In this course, Series 3 · 30 expresses that agreed definition as code"
+    where: "covered in BI & Data Visualization, Series 2, which is where the business agrees what a metric means. In this course, Series 3 · 30 expresses that agreed definition as code"
   - topic: "Dashboards themselves"
     where: "covered in BI & Data Visualization — exposures here only record that a dashboard depends on a model"
 
@@ -377,8 +378,8 @@ series:
         data:
           source: [northwind_co_raw_s, northwind_co_changes]
           tables: ["Orders._loaded_at", "Orders", "WebOrders", "CourierConfirmations"]
-          fit: MISSING
-          reason: "Declaring sources runs on northwind_co_s today, but freshness cannot be taught on it: every timestamp stops at 2024-12-31, so every source is equally about two years stale and no feed can be told apart as the stale one. It needs D6's _loaded_at on every raw row, and D2 applied day by day, with the apply script stamping _loaded_at relative to the moment the learner applies a day (kept out of the checksum) so freshness reads true on any date. Plant that one feed (WebOrders) stops arriving after a given day while Orders keeps loading, with noise from normal overnight gaps. ETL S2 (a feed that stopped) and Data Warehousing S3 can reuse it."
+          fit: good
+          reason: "D6 lands every raw row with a _loaded_at on today's calendar, which is what makes freshness answerable at all: in the S build of 2026-09-20, landed through day 90, the last Orders row landed 2026-09-19 while the last WebOrders row landed 2026-08-30, because D2 stops the WebOrders feed after day 70 while Orders keep arriving. So one source is twenty days stale beside others that are current, and dbt source freshness has something true to fail on. Verified with academy-verify (all 22 tables)."
         status: planned
       - n: "15"
         slug: incremental-models
@@ -496,7 +497,7 @@ series:
           source: northwind_co_s
           tables: ["Orders", "Order Details", "Invoices", "Shippers", "Customers", "CourierConfirmations", "Orders.Freight"]
           fit: good
-          reason: "The 200-line query is Learn SQL S2's outage investigation in one SELECT (shipped orders without invoices, by courier and month, confirmed or not), with the same subquery pasted three times. For the honest beat, the old query can carry the real freight fan-out bug: Orders.Freight summed after joining Order Details, which D1 exposes because orders average ~2.5 lines. koan:equivalent reproduces the bug first, and the fix goes in a separate commit."
+          reason: "The 200-line query is handed over in the lesson, whole: an investigation of shipped orders that never got an invoice, by courier and month, confirmed by the courier or not, with the same subquery pasted three times. The data makes it worth asking, since a fifth of Speedy Express ship dates in 2024-03 to 2024-08 were never recorded, and the lesson says so in one sentence. For the honest beat, the old query can carry the real freight fan-out bug: Orders.Freight summed after joining Order Details, which D1 exposes because orders average ~2.5 lines. koan:equivalent reproduces the bug first, and the fix goes in a separate commit."
         status: planned
       - n: "45"
         slug: environments-and-targets
@@ -523,8 +524,8 @@ series:
         data:
           source: [northwind_co_raw_s, northwind_co_changes]
           tables: ["Orders", "Order Details", "Customers", "Orders._loaded_at"]
-          fit: MISSING
-          reason: "The graded bad load is D2's day 45, not built: a duplicate OrderID, a negative Order Details.Quantity and an order for a CustomerID that does not exist, loaded through D6's raw copy so staging and tests see them as a real load. Surround it with legitimate noise the tests must NOT flag: late rows (3% arriving 1-5 days late) and the 0.5% sent twice that staging dedupes. Add one row per failure mode, so each test catches exactly one thing. D1 alone can only replay the outage (the not_null ship-date check), which is 05's lesson, not a bad load. ETL S2 uses the same day 45."
+          fit: good
+          reason: "The graded bad load is D2's day 45, and it is built: a second Orders row for OrderID 10330, a negative Quantity on order 10334, order 10338 for CustomerID ALPIX, which does not exist, and a status typed 'shipped ' by hand the same day. The legitimate noise the tests must not flag is there too — 66 transactions arriving 1 to 5 days late and 9 sent twice, which staging dedupes. It reaches the project through D6's raw copy, so staging and tests see it as a real load. Built and verified on DuckDB 2026-09-20."
         status: planned
   - slug: series3-analytics-engineering-at-scale
     title: Analytics Engineering at Scale
@@ -559,7 +560,7 @@ series:
           source: northwind_co_raw_m
           tables: ["Orders", "Order Details", "Orders._loaded_at"]
           fit: MISSING
-          reason: "koan:equivalent (same project, same numbers on DuckDB and ClickHouse) could prove itself at S, but count:scanned is the reason anyone moves, and it needs volume: M's ~1.25M order lines against a columnar read of two columns. Needed: D1-M (500,000 orders, 6,000 customers, the same planted facts scaled) and D6-M landed in ClickHouse, which means ClickHouse support in the install/raw scripts (today they refuse any vendor except POSTGRES and DUCKDB). Data Warehousing S2/S3 needs the same ClickHouse path."
+          reason: "koan:equivalent (the same project, the same numbers on DuckDB and ClickHouse) could prove itself at S, but count:scanned is the reason anyone moves, and that needs volume: Company M is 100,000 orders and 250,834 order lines — not the 500,000 orders and 1.25M lines an earlier plan assumed — and it installs and verifies on DuckDB today, as does its star. What is absent is the engine, not the rows: the install, changes and raw scripts all take ClickHouse, and none of them has ever been run on it. This stays MISSING until D1-M and D6-M are landed in ClickHouse and verified there. Data Warehousing S2 and S3 wait on the same first run."
         status: planned
       # ADDED 2026-08-24. The first thing that breaks after the move, and it breaks quietly.
       # `view` on ClickHouse is not the cheap pointer it is on DuckDB or Postgres, and a
@@ -579,7 +580,7 @@ series:
           source: northwind_co_raw_m
           tables: ["Order Details", "Orders"]
           fit: MISSING
-          reason: "A staging view over raw Order Details re-read on every query is the expensive habit, and count:scanned only persuades at M (~1.25M lines, read again for each downstream query). A materialized view as an INSERT trigger needs rows inserted after it is created, which one D2 day at M supplies. Needs D1-M, D6-M in ClickHouse, and D2 at M (planned ≈ 215,000 events)."
+          reason: "A staging view over raw Order Details, re-read on every query, is the expensive habit, and count:scanned only persuades at volume: M's 250,834 order lines, read again for each downstream query. A materialized view acting as an INSERT trigger needs rows inserted after it exists, which one D2 day at M supplies — D2 generates at M from the same script, 6,142 events at S. The blocker is the engine: ClickHouse has never been run. This stays MISSING until D1-M and D6-M are in ClickHouse with D2 applied there."
         status: planned
       # ADDED 2026-08-24, absorbing the old 3 · 05 "Incremental Strategies — merge,
       # insert_overwrite, append", which listed three strategies in the abstract. On a real
@@ -602,7 +603,7 @@ series:
           source: [northwind_co_raw_m, northwind_co_changes]
           tables: ["Orders.OrderDate", "Orders.CreatedAt", "Orders.UpdatedAt", "Order Details"]
           fit: MISSING
-          reason: "insert_overwrite by month partition needs late rows landing in an already-built month, and updates to orders in it: D2 at M (late and doubled orders, ship dates filled), applied between two runs so koan:rerun can show totals not doubling. Plant a few late orders dated in the previous month on a month boundary, so choosing the partition key on CreatedAt instead of OrderDate gives a wrong answer. Needs D1-M, D6-M in ClickHouse and D2 at M."
+          reason: "insert_overwrite by month partition needs late rows landing in a month already built, and updates to orders inside it: D2 supplies both — 66 transactions arriving 1 to 5 days late, 9 doubled, ship dates filled in later — and it plants the month boundary too, with order 10231 dated 2025-01-31 but keyed on 2025-02-01 and order 10452 dated 2025-02-28 and keyed 2025-03-03, so partitioning on the keyed date instead of OrderDate gives a visibly wrong answer. All of it is built and verified at S; M is a scale parameter. The blocker is ClickHouse, which has never been run. This stays MISSING until D6-M is landed there and D2 applied between two runs."
         status: planned
       # ADDED 2026-08-24. Series 2 · 20 taught snapshots as the way to keep history, and on
       # this engine that tool is largely gone — snapshots need the same UPDATE the episode
@@ -623,7 +624,7 @@ series:
           source: [northwind_co_raw_m, northwind_co_changes]
           tables: ["Orders.OrderID", "Orders.UpdatedAt", "Orders.Status", "CustomerChanges"]
           fit: MISSING
-          reason: "ReplacingMergeTree needs several versions of the same key inserted over time, so the table shows duplicates until a merge: D2's order updates (Open to Shipped, a ship date filled, a cancellation) as new rows with a later UpdatedAt, and customer changes as new versions. koan:predict turns on 'it depends when you ask', and at M there are enough parts that a merge has not happened yet. Needs D1-M, D6-M in ClickHouse and D2 at M."
+          reason: "ReplacingMergeTree needs several versions of one key inserted over time, so the table shows duplicates until a merge happens: D2's order updates (Open to Shipped, a ship date filled, a cancellation) arrive as new rows with a later UpdatedAt, and its customer changes as new versions — 1,406 updates in the S log, all built and verified. koan:predict turns on 'it depends when you ask', which needs enough parts that a merge has not yet run, and that needs both M and the engine. ClickHouse has never been run. This stays MISSING until D1-M and D6-M are landed there."
         status: planned
       # ADDED 2026-08-24, and it is the episode that keeps the reader employed. Series 2 · 00
       # taught `unique` and `not_null` and taught them as free. On a billion-row table `unique`
@@ -645,7 +646,7 @@ series:
           source: northwind_co_raw_m
           tables: ["Order Details", "Orders.OrderID", "Orders.OrderDate", "Order Details._batch_id"]
           fit: MISSING
-          reason: "unique over all of history against unique over yesterday's partition is a count:scanned comparison that only matters at volume: M's ~1.25M order lines and 500,000 orders. The 'yesterday' window needs daily load partitions (D6's _batch_id/_loaded_at, filled day by day from D2 at M). Plant one duplicate inside the recent window and one old duplicate outside it, so the windowed test's blind spot is visible and the trade-off is honest."
+          reason: "unique over all of history against unique over yesterday's partition is a count:scanned comparison that only matters at volume: M's 250,834 order lines and 100,000 orders (not the 1.25M and 500,000 an earlier plan assumed). The 'yesterday' window needs daily load partitions, which D6 already gives as _batch_id and _source_file per arrival day, filled day by day from D2 — proven at S, landed through day 90 and verified. The duplicates the comparison turns on are planted and checked: at S the landed Orders carries ten repeated OrderIDs, and exactly one of them (D2's duplicate-in-last-batch) has both copies inside d2-day-090, so the windowed test catches that one and misses the other nine — which is the blind spot the episode has to show. The blocker is the engine: ClickHouse has never been run."
         status: planned
       - n: "25"
         slug: packages
@@ -769,5 +770,5 @@ series:
           source: [northwind_co_raw_m, northwind_co_changes]
           tables: ["Orders", "Order Details", "Customers", "Products", "Invoices", "SalesTargets", "Orders._loaded_at"]
           fit: MISSING
-          reason: "The production project on ClickHouse: raw M to staging to marts to the revenue metric, with a partition-replace incremental and a ReplacingMergeTree history model refreshed from the change feed. Needs D1-M, D6-M landed in ClickHouse and D2 at M. The planted facts (outage, phantom sales, late-keyed orders) must be scaled into M, so the metric's reconciliation against invoices means the same thing it did at S."
+          reason: "The production project on ClickHouse: raw M to staging to marts to the revenue metric, with a partition-replace incremental and a ReplacingMergeTree history model refreshed from the change feed. Every piece exists on DuckDB and verifies — Company M and its star, D2's 6,142-event log with its planted outage, late-keyed orders and doubled deliveries, and D6's landed raw copy with _batch_id and _loaded_at per arrival day — and M is a scale parameter on each script. What does not exist is the engine: nothing has ever been installed on ClickHouse. This stays MISSING until D1-M and D6-M are landed there and the metric reconciles against invoices as it does at S."
         status: planned

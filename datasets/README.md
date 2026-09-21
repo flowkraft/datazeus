@@ -49,7 +49,7 @@ Know its limits before you build a lesson on it:
 
 Used by: Learn SQL Series 1 and 4 · Data Modeling Series 1 · Python for Data · Java & Groovy.
 
-### Northwind Company (`northwind_co_*`) — scale S BUILT (v1, 2026-09-17); M and L not yet
+### Northwind Company (`northwind_co_*`) — scale S BUILT (v1, 2026-09-17); M and L built on DuckDB (2026-09-19)
 
 One simulated company, 2020 to 2024, with the same table names as Northwind plus what the
 data-engineering courses need: order updates over time, dated customer and price changes,
@@ -60,8 +60,12 @@ large one:
 | scale | schema | orders | order lines | customers |
 |---|---|---|---|---|
 | S | `northwind_co_s` | 10,000 | ~25,000 | 120 |
-| M | `northwind_co_m` | 500,000 | ~1.25M | 6,000 |
-| L | `northwind_co_l` | 5,000,000 | ~12.5M | 100,000 |
+| M | `northwind_co_m` | 100,000 | ~250,000 | 2,000 |
+| L | `northwind_co_l` | 1,000,000 | ~2.5M | 20,000 |
+
+M and L are the defaults at the top of `academy-northwind-co-install.groovy`; its comments say what else is worth
+trying (for example L at 5,000,000 orders). Measured on DuckDB on a laptop: M ≈ 20 s and 31 MB, L ≈ 2 min and
+250 MB, both under 250 MB of Java heap. Not yet measured on PostgreSQL.
 
 Derived from it, also planned: a 90-day change feed, a second source system (a CRM export), file
 exports (CSV feeds, an Excel workbook, Parquet), a star schema **built from** the company's
@@ -74,7 +78,7 @@ Pipelines · Analytics Engineering with dbt.
 PriceChanges 255 · Shippers 4 · Employees 12 · EmployeeTerritories 45 · Customers 120 · CustomerChanges 154 ·
 Orders 10,000 · Order Details 25,233 · Invoices 9,532 · StockMovements 29,264 · SalesTargets 488 ·
 CourierConfirmations 173 · WebOrders 2,765. Identical on PostgreSQL and DuckDB (every table's checksum). M and L
-figures are still design targets. **Until a lesson's spec asserts a figure on both PostgreSQL and DuckDB, do not
+are for timing, plans and volume: lessons quote figures from S only. **Until a lesson's spec asserts a figure on both PostgreSQL and DuckDB, do not
 quote it.**
 
 **`northwind-co/northwind_co.duckdb`** is scale S exactly as the install script writes it on a DuckDB connection
@@ -90,16 +94,32 @@ by running the install script, never by hand, and only while no published lesson
 ### How Tier 1 datasets are installed
 
 Northwind ships with DataPallas (the starter packs and the DuckDB file). Northwind Company is
-installed with **Groovy scripts run from the Seed Data tab** of a database connection in
-DataPallas, or from the command line with `connection run-seed --id <connection> --script-file <script>`:
-- **Academy Northwind Co Install** (`academy-northwind-co-install.groovy`) — installs the dataset;
-- **Academy Verify** (`academy-verify.groovy`) — re-checks an install against its checksums, and says which table
-  differs if one does;
-- **Academy Uninstall** (`academy-uninstall.groovy`) — drops an academy schema (and refuses any other).
+installed with the **Groovy scripts in `datasets/scripts/`**, run against a database connection:
 
-In the tab: Edit the connection → **Seed Data** → (Test Connection) → **Example** → pick the template → copy it →
-**My Script** → paste → **Run Script**. The committed DuckDB copy above is that script's own output, so a learner's
-rows, a koan's rows and a video's rows are identical.
+```
+connection run-seed --id <connection> --script-file datasets/scripts/academy-northwind-co-install.groovy -p SCALE=S
+```
+
+- **`academy-northwind-co-install.groovy`** — installs the dataset (`-p SCALE=S|M|L`);
+- **`academy-verify.groovy`** — re-checks an install against its checksums, and says which table
+  differs if one does. Run this first when a learner's numbers do not match a lesson: if it says OK,
+  the data is right and the difference is in the query;
+- **`academy-uninstall.groovy`** — drops an academy schema (and refuses any other).
+
+In a DataPallas install these arrive at `db/datazeus/datasets/scripts/`, and the connection's
+**Seed Data** tab runs any script you paste into **My Script**.
+
+**They are deliberately NOT in the Seed Data tab's Example dropdown.** That dropdown is
+`GenericSeedExecutor.listTemplates()` scanning `db/scripts/*.groovy`, and these scripts used to live
+there — which meant every DataPallas user, most of whom will never open a course, got ten academy
+entries in a product menu ahead of the two that are actually about their data. DataPallas is a BI
+platform that the courses exist to promote, not a learning platform, so the courses do not get to
+colonise its UI. Keeping them here also puts each generator beside the dataset it produces and the
+spec that checks it, in the one repo that ships to learners. **Do not move them back into
+`db/scripts/`** to get the dropdown entry; pass `--script-file` instead.
+
+The committed DuckDB copy above is the install script's own output, so a learner's rows, a koan's
+rows and a video's rows are identical.
 
 Each install creates **its own schema** (Northwind's table names inside it), writes a
 `_dataset_info` table (dataset, version, scale, and per table a row count and a checksum), and can

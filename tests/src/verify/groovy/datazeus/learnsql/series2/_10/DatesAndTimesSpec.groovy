@@ -252,19 +252,14 @@ class DatesAndTimesSpec extends NorthwindCoGateSpec {
         e.message.contains("Cannot compare values of type INTERVAL")
     }
 
-    def "the article's aside: PostgreSQL averages an INTERVAL, the DuckDB the koans run on refuses"() {
+    // DuckDB 1.1.3 refuses AVG(INTERVAL) and 1.4+ answers, so only PostgreSQL's figure is asserted:
+    // the article quotes PostgreSQL's and makes no claim about DuckDB (reworded 2026-09-19).
+    def "the article's aside: PostgreSQL averages an INTERVAL"() {
         when:
         def pg = sqlFor("postgres").firstRow('SELECT AVG("ShippedDate" - "OrderDate") AS a FROM "Orders"').a
 
         then:
         pg.toString().contains("4 days 19 hours")
-
-        when:
-        sqlFor("duckdb").rows('SELECT AVG("ShippedDate" - "OrderDate") AS a FROM "Orders"')
-
-        then:
-        SQLException e = thrown()
-        e.message.contains("avg(INTERVAL)")
     }
 
     @Unroll

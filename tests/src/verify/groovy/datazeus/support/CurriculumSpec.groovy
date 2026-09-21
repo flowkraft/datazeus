@@ -522,6 +522,29 @@ class CurriculumSpec extends Specification {
                                               "northwind_co_dw_s", "northwind_co_dw_m", "northwind_co_dw_l",
                                               "northwind_co_raw_s", "northwind_co_raw_m", "library", "messy", "generated", "none"]
 
+    /**
+     * WHAT `fit:` MEANS. Three words were being validated here without anyone saying what they
+     * meant, and the two places that did try to say it disagreed: learnsql's header dated the
+     * rule to the repository state of 2026-09-17, datawarehousing's to "installed and verified
+     * on the engine the lesson uses". A track author picking either one in good faith got a
+     * different answer, so `fit: good` came to mean "the author was confident", which is not a
+     * fact anyone can check. Both header copies are now deleted in favour of this one.
+     *
+     * The question `fit` answers is only ever: CAN A LEARNER RUN THIS EPISODE TODAY, on the
+     * engine its own lesson uses? Not whether the dataset is a good teaching fit — `reason`
+     * covers that in prose.
+     *
+     *   good     the dataset is installed AND verified (academy-verify) on the engine THIS
+     *            lesson uses. A dataset proven on DuckDB does not make a ClickHouse lesson
+     *            `good`; the engine is part of the claim.
+     *   partial  it runs, but something the lesson leans on is absent or substituted, and
+     *            `reason` names what. The episode is publishable; the gap is disclosed.
+     *   MISSING  a learner cannot run it today. Upper case on purpose — it is the one value
+     *            that blocks publishing, so it should be visible when skimming the file.
+     *
+     * `reason` must always say what was measured and what is still waiting, because that is
+     * the sentence the next person needs in order to move the value.
+     */
     def "#track: every episode traces its data, in the known vocabulary"() {
         given:
         def doc = load(new File(COURSES, track))
@@ -745,6 +768,196 @@ class CurriculumSpec extends Specification {
 
         where:
         track << trackDirs()*.name
+    }
+
+    // ══════════════════════════════════════════════════════════════════════
+    //  Promises between lessons — CONTRIBUTING.md, "Promises between lessons"
+    // ══════════════════════════════════════════════════════════════════════
+    //
+    // A series is one story; a course is a shelf of them. Inside a series, lessons build on each
+    // other and may point at each other by number. Across series and courses the link is the
+    // data, never a promise: another course is named, its episodes are not, because they get
+    // renumbered, rewritten or cut and the pointer goes stale in a file nobody is editing.
+    // (Decided 2026-09-19. Before that, the rule below this block REQUIRED cross-course episode
+    // numbers to name their course; that rule still stands for this course's own numbers.)
+    //
+    // What stays with a human, because no regex can judge it: whether a promise inside a series
+    // is KEPT ("the next lessons cover contacts", and they don't), and whether a sentence
+    // promises a plot or a figure without citing any number. The episode build brief's
+    // "PROMISES KEPT" step is where that is checked.
+
+    /** Every course title, and its "Learn …" form, longest first so the longer name wins. */
+    static List<String> courseNames() {
+        def titles = trackDirs().collect { load(it).title }
+        (titles + titles.collect { "Learn " + it }).unique().sort { -it.length() }
+    }
+
+    /** The course a name refers to (either form), or null. */
+    static Map courseNamed(String name) {
+        trackDirs().collect { load(it) }.find { it.title == name || "Learn " + it.title == name }
+    }
+
+    /** A written lesson's text after its front-matter; null for a brief or a missing file. */
+    static String lessonBody(File dir, s, ep) {
+        def f = new File(dir, "${s.slug}/${ep.n}-${ep.slug}/${ep.n}-${ep.slug}.mdx")
+        if (!f.exists()) return null
+        def parts = f.text.split(/(?m)^---\s*$/, 3)
+        parts.length == 3 ? parts[2] : f.text
+    }
+
+    /** Written (no `_todo-` prefix) and not held back by `published: false`. */
+    static boolean isLive(File dir, s, ep) {
+        def f = new File(dir, "${s.slug}/${ep.n}-${ep.slug}/${ep.n}-${ep.slug}.mdx")
+        f.exists() && !(f.text =~ /(?m)^published:\s*false\s*$/)
+    }
+
+    @Unroll
+    def "#track: excludes and prerequisites name another course's series, never its episode"() {
+        // These render verbatim on the course page ("Not here, on purpose", "Where this leads").
+        // Before this rule, about a hundred of them pinned another course's episode — "Data Ops,
+        // Series 1 · 35", "BI & Data Visualization, Series 2 · 40", "INSERT from Series 2 · 55" —
+        // and every one of those courses was still being planned. "Covered in Data Ops" or
+        // "Data Modeling, Series 3" stays true through any renumbering; an episode number
+        // does not. This course's OWN episodes ("In this course, Series 1 · 20") are fine:
+        // they live in this file, and the resolve rule above checks them.
+        given:
+        def doc = load(dir)
+        def others = courseNames().findAll { it != doc.title && it != "Learn " + doc.title }
+        def alt = others.collect { java.util.regex.Pattern.quote(it) }.join("|")
+        def bad = []
+
+        (doc.excludes ?: []).each { x ->
+            (x.where as String ?: "").findAll(/(?:${alt}),?\s+Series \d+\s*·\s*\d+/).each {
+                bad << "exclude \"${x.topic}\": '${it}' — name the course or its series, not the episode"
+            }
+        }
+        (doc.prerequisites ?: []).each { p ->
+            // A bare number in a prerequisite belongs to the course being required.
+            [p.needs, p.why].each { t ->
+                (t as String ?: "").findAll(/Series \d+\s*·\s*\d+/).each {
+                    bad << "prerequisite ${p.course}: '${it}' — say what the learner must be able to do, " +
+                           "and which series teaches it, not which episode"
+                }
+            }
+        }
+
+        if (track in EPISODE_POINTERS_STILL_TO_REMOVE) {
+            // Allowed to fail until someone works on this course; once it's clean, remove it from the list.
+            bad = bad ? [] : ["${track} has no episode pointers left — remove it from EPISODE_POINTERS_STILL_TO_REMOVE"]
+        }
+
+        expect:
+        bad.isEmpty()
+
+        where:
+        dir << trackDirs()
+        track = dir.name
+    }
+
+    /**
+     * Courses that still cite other courses' episodes in their excludes or prerequisites. When this
+     * rule arrived (2026-09-19), 34 courses had about 100 such pointers. The five data courses (Learn
+     * SQL, Data Modeling, Data Warehousing, ETL, dbt) were cleaned the same day; these are still
+     * being planned, and each is cleaned the next time someone works on it. The list can only
+     * shrink: a course that becomes clean fails until its entry is removed, and a course not on
+     * the list fails as soon as it adds a pointer.
+     */
+    static final Set<String> EPISODE_POINTERS_STILL_TO_REMOVE = [
+            "airflow", "beam", "bi", "cassandra", "clickhouse", "cockroachdb", "continuousdelivery",
+            "dataops", "distributedsql", "duckdb", "elasticsearch", "erpcrm", "flink", "iceberg",
+            "javagroovy", "kafka", "kubernetes", "mongodb", "neo4j", "nosql", "oracle", "polars", "postgresql",
+            "redis", "spark", "sqlite", "storage", "terraform", "trino", "virtualization",
+    ] as Set
+
+    @Unroll
+    def "#track: a written lesson points at another series or course by name, never by episode"() {
+        // Inside a series, "Series 1 · 45 covers why" is a promise the series keeps; its lessons
+        // are written and renumbered together. The same sentence pointing into ANOTHER series or
+        // course is a promise nobody working on that series knows exists. Briefs (_todo-) are
+        // skipped: they are the author's notes, not what a learner reads.
+        given:
+        def doc = load(dir)
+        def names = courseNames()
+        def alt = names.collect { java.util.regex.Pattern.quote(it) }.join("|")
+        def bad = []
+
+        doc.series.each { s ->
+            def own = (s.slug =~ /^series(\d+)/)[0][1]
+            s.episodes.each { ep ->
+                def body = lessonBody(dir, s, ep)
+                if (!body) return
+                (body =~ /(?:(${alt}),?\s+)?Series (\d+)\s*·\s*(\d+)/).each { g ->
+                    def named = g[1] ? courseNamed(g[1]) : null
+                    if (named && named.course != doc.course) {
+                        bad << "${s.slug}/${ep.n}: '${g[0]}' — another course's episode; name the course instead"
+                    } else if (g[2] != own) {
+                        bad << "${s.slug}/${ep.n}: '${g[0]}' — another series' episode; name the series or the subject instead"
+                    }
+                }
+            }
+        }
+
+        expect:
+        bad.isEmpty()
+
+        where:
+        dir << trackDirs()
+        track = dir.name
+    }
+
+    /**
+     * Live lessons that link to a lesson not live yet, each ALREADY published and frozen when this
+     * rule arrived. Listed rather than hidden: the link 404s today and fixes itself when its target
+     * is published — at which point the rule fails until the entry is removed, so this list can
+     * only shrink. Never add to it; a new lesson with a dead link is fixed, not listed.
+     * Empty since 2026-09-19: 1 · 20 now links to the Series 2 section of the course page.
+     */
+    static final Set<String> KNOWN_EARLY_LINKS = [] as Set
+
+    @Unroll
+    def "#track: a live lesson links only to live lessons"() {
+        // Learn SQL 1 · 20 went live linking to Series 2 · 15, which was still a draft: a 404 on
+        // a published page, and nothing in the build noticed. A link is the hardest promise
+        // there is — it is either there or it isn't.
+        given:
+        def doc = load(dir)
+        def byCourse = trackDirs().collectEntries { d -> [(load(d).course): d] }
+        def bad = []
+        def seen = [] as Set
+
+        doc.series.each { s ->
+            s.episodes.each { ep ->
+                if (!isLive(dir, s, ep)) return
+                (lessonBody(dir, s, ep) =~ /\/academy\/([a-z0-9-]+)\/([a-z0-9-]+)/).each { g ->
+                    def targetDir = byCourse[g[1]] as File
+                    if (!targetDir) return   // not a course page (another part of the site)
+                    def target = load(targetDir)
+                    def key = "${dir.name}/${ep.slug} -> ${g[1]}/${g[2]}".toString()
+                    def ts = target.series.find { ts -> ts.episodes.any { it.slug == g[2] } }
+                    def te = ts?.episodes?.find { it.slug == g[2] }
+                    boolean live = te && isLive(targetDir, ts, te)
+                    if (key in KNOWN_EARLY_LINKS) {
+                        seen << key
+                        if (live) bad << "${key}: the target is live now — remove it from KNOWN_EARLY_LINKS"
+                    } else if (!te) {
+                        bad << "${s.slug}/${ep.n}: links to /academy/${g[1]}/${g[2]}, which is no episode of ${target.title}"
+                    } else if (!live) {
+                        bad << "${s.slug}/${ep.n}: links to /academy/${g[1]}/${g[2]}, which is not published yet — " +
+                               "name the lesson without a link until it is"
+                    }
+                }
+            }
+        }
+        KNOWN_EARLY_LINKS.findAll { it.startsWith(dir.name + "/") && !(it in seen) }.each {
+            bad << "${it}: no longer found — remove it from KNOWN_EARLY_LINKS"
+        }
+
+        expect:
+        bad.isEmpty()
+
+        where:
+        dir << trackDirs()
+        track = dir.name
     }
 
     /**

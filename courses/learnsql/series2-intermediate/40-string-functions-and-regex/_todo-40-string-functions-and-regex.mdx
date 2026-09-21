@@ -45,9 +45,11 @@ published: false
 
     ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
     No case in this episode (the old "call sheet" is dropped).
-    LESSON DATA — A DATASET REQUIREMENT: Northwind Company's generator currently writes every phone in one clean
-    format. This lesson needs mess to clean, so the dataset must PLANT it (and say so): phones in several formats,
-    a few stray spaces and case variants in names and cities. "QuantityPerUnit" is already free text
+    LESSON DATA — THE MESS IS PLANTED (measured on Northwind Company S, DuckDB, 2026-09-19): "Customers"."Phone"
+    comes in 13 digit patterns ("+49 …", "(…) …-…", "….….…" and more); 3 cities have a trailing space and 3 are
+    in capitals (BERGEN, LYON, PORTO). Say in the lesson that the mess was planted. Contact and company names are
+    clean: the generator lower-cases three contact names, but the customer-change step overwrites them, so a
+    name-cleaning example needs a generator change first. "QuantityPerUnit" is already free text
     ("10 boxes x 20 bags", "24 - 12 oz bottles") — pull out the pack size.
     NO REGEX PUZZLES — a pattern earns its place only if people write it at work.
     WHAT GOES WRONG candidates: a case-sensitive match that silently misses rows; STRING_AGG without ORDER BY
@@ -60,7 +62,7 @@ published: false
 
     ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
     Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
-    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 17 episodes, never whole
     episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
     KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
     WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or

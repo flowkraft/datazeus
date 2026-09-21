@@ -36,7 +36,7 @@ published: false
     correctly, end to end — not a drill, and not a question that hands you its own
     answer.
     SQL: NOTHING NEW, and say so out loud in the article. Subqueries (00) and EXISTS (25), multi-table joins and their grain
-    (15), a CTE to name the steps (20), CASE for the buckets (05),
+    (15), a CTE to name the steps (20), ROLLUP to total the closing table (50), CASE for the buckets (05),
     a date range with the right boundaries (10), a window function for the rank or the
     running total (35/45). A project introduces no syntax; that is what makes it one.
 
@@ -51,7 +51,8 @@ published: false
     the series asks, and "bought in Q1 and not since" is not churn on this data.)
 
     ── END ON THE HABIT, NOT THE QUERY ─────────────────────────────────────
-    The last beat is the check, not the answer: after the join, did the number of
+    The last SQL beat is the check, not the answer (only the DataPallas invoices come after it, as the Excel
+    report did in Series 1 · 50): after the join, did the number of
     distinct customers change? Three lines, transferable to every tool, and it is what
     would have caught the wrong answer above. Java & Groovy Series 1 · 40 and Python
     Series 1 · 35 close on the same check on purpose — a reader who does two of these
@@ -60,7 +61,8 @@ published: false
     ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
     Take a real question end to end: steps that each run on their own, the row-count and total checks after
     every join, a query someone can re-run, and a written recommendation that says what the numbers do and do
-    not prove. Nothing new in the SQL — say so.
+    not prove; then act on it: the checked query becomes the documents the business sends (DataPallas, as in
+    Series 1 · 50). Nothing new in the SQL — say so.
 
     ── THE SERIES CASE — THE WHOLE CASE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
     THE QUESTION: in Northwind Company, 2024's ordered sales grew while invoiced sales fell. Where did the money
@@ -75,14 +77,42 @@ published: false
       WHAT ONLY THE PROJECT FINDS — orders still 'Open' long after they should have shipped: cancelled by the
       customer and never updated, phantom revenue in the ordered report (LOCKED: 43 orders, €59,611.41); and the claim
       deadline: 12 months from the order, the earliest expiring 2025-03-08.
+    THE WHOLE GAP, ACCOUNTED FOR — THE PROJECT'S CLOSING TABLE (owner review, 2026-09-19). The outage is only 59% of
+    the 2024 gap, so the project must not stop at it: ordered 2024 − invoiced 2024 = €438,199.86 (by order year and
+    by invoice year), and the outage is €256,894.67. A careful learner will ask where the other ≈ €181k went; the
+    project answers before they ask. Measured (DuckDB, 2026-09-19; re-assert on PostgreSQL), and it closes to the cent:
+      the outage (Speedy Express, shipped, no ship date, 2024-03-04..08-30)   177 orders   +256,894.67
+      still open at year end — placed 15–31 Dec 2024, not shipped yet         62 orders    +91,947.73
+      cancelled, status recorded                                              40 orders    +62,816.44
+      phantom 'Open' orders (cancelled, never updated)                        43 orders    +59,611.41
+      one lapse outside the outage window                                      1 order        +424.98
+      Dec 2023 orders invoiced in Jan 2024                                    28 orders    −33,494.31
+      rounding: invoices round each line to the cent                                          −1.07
+      total                                                                                438,199.85
+    Build it as one CTE per row (Series 2 · 20) and total it with ROLLUP (Series 2 · 50), so the late episodes earn
+    their place in the project. Only the outage and the phantom orders are problems: year-end timing and recorded
+    cancellations are the normal gap between ordered and invoiced (2023's was €36,829.30), and saying so is part of
+    the answer.
     THE RECOMMENDATION, not a verdict: invoice the confirmed orders now; file claims for the unconfirmed before
     the windows close; restate the phantom sales; make every report say whether it counts ordered or delivered;
     say plainly what the data cannot prove. The stake (figures sheet .docs/plan-academy-figures-northwind-co-s.md; first
     measurement → LOCKED at gate 2: 177 outage orders, €256,895 never invoiced; ≈ €247k protected).
+    THE PROJECT ENDS BY ACTING ON IT — GENERATE THE MISSING INVOICES IN DATAPALLAS (owner, 2026-09-19). Series 1 · 50
+    ended by turning its checked query into an Excel report in DataPallas; this project ends the same way, one step
+    further: the first recommendation is "invoice the confirmed orders now", so do it. The query that found the
+    confirmed orders (Series 2 · 48's INTERSECT) becomes the data source, and DataPallas generates one PDF invoice per
+    order, ready to send. Measured (DuckDB, 2026-09-19): 164 invoices, 49 customers, €242,383.04 in total. Order of
+    beats: the checks first, then the PDFs; check the total of the generated invoices against €242,383.04 before
+    anything is sent. Keep Series 1 · 50's point: DataPallas formats the numbers, the query decides them, and a wrong
+    invoice looks just as finished as a right one. Plan the step here only; how DataPallas builds it is for whoever
+    writes the lesson.
+    WHY INVOICES, NOT A DASHBOARD: the story ends on an action with a deadline, and the invoices are that action;
+    they bring in the money. A dashboard watches for the next incident, a different job, with one live number
+    (shipped orders with no ship date, per week).
     ORDERED SALES WERE NOT WRONG (owner, 2026-09-16): they measure demand and answered that question right.
     THE WRONG ANSWERS THAT LOOKED RIGHT, named in the article: "sales are fine, orders are up"; "customers are
-    paying late" (finance's first explanation); "it's seasonal"; "Speedy Express lost 177 orders" (the
-    confirmations say otherwise); "switch courier".
+    paying late" (finance's first explanation); "it's seasonal"; "the whole gap is the outage" (it is 59% of it;
+    the closing table above); "Speedy Express lost 177 orders" (the confirmations say otherwise); "switch courier".
     KOANS: a different question on different tables, as Series 1 · 50's koans did, ending on the habit check (the
     key count survives every join). Measure first.
     RULES: "in Northwind Company"; no person blamed; a recommendation, not a verdict.
@@ -94,7 +124,7 @@ published: false
 
     ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
     Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
-    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 17 episodes, never whole
     episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: MAIN EXAMPLE — the whole case.
     A SEGMENT IS ONE QUERY of the shape the lesson just taught, and ONE finding, after a full lesson — using
     nothing the learner has not met yet. If it needs more, it belongs to a later episode or to the project.
@@ -112,8 +142,10 @@ published: false
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     The last episode of the series; it may use anything above it.
-    DATA: every figure of the case is in .docs/plan-academy-course-stories-artefacts.md Appendix A (DuckDB, 2026-09-15) —
-    re-assert each on PostgreSQL in the spec before the article uses it.
+    DATA: every figure of the case is LOCKED in .docs/plan-academy-figures-northwind-co-s.md (Northwind Company S,
+    gate 2, 2026-09-17); the story map is .docs/plan-academy-course-stories-artefacts.md §3.2.1. Re-assert each
+    figure on PostgreSQL in the spec before the article uses it. (Appendix A of the stories sheet is the
+    superseded frozen-Northwind case — do not take figures from it.)
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:author

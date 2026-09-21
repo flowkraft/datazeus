@@ -1,0 +1,421 @@
+# The promise gate's whitelist. Read by tests/src/verify/.../support/PromisesSpec.groovy.
+#
+# PromisesSpec flags sentences that point beyond their own lesson: another series ("Series 3"),
+# another course ("Data Ops"), a link to either, or a hand-over ("next lesson", "a lesson of its
+# own"). A flagged sentence fails the build until you either reword it or list it here.
+# The rules are in CONTRIBUTING.md, "Promises between lessons".
+#
+# Each entry names the file (from courses/), the rule it answers, and a quote: any stretch of the
+# sentence, whitespace-insensitive. An entry that matches nothing any more fails too, so remove
+# it when the sentence changes or goes.
+#
+#   not_a_promise  Read it, it promises nothing. `why:` is required.
+#   kept           A hand-over inside the series, and the later lesson that keeps it:
+#                  `kept_by: "1 · 45"` and `about:` (a word that lesson must contain). The gate
+#                  checks both, and that the keeper is live whenever the promising lesson is.
+#   covered        Names what ANOTHER series or course teaches: "query speed is covered in
+#                  Series 3". Safe only when that series certainly covers it, so the gate checks
+#                  its plan: `series: 3` (plus `course:` for another course) and `about:`, words
+#                  that series' part of curriculum.yaml must contain.
+#   unreviewed     Reviewed 2026-09-19 and judged NOT safe: each is specific across series or
+#                  courses (a named episode, a plot, or something the learner built elsewhere).
+#                  Passes for now so the build stays green. Fix each by rewording the sentence,
+#                  then delete the entry. Nothing new goes here.
+#
+# What is safe across series and courses: naming a subject that series certainly covers (and
+# `covered:` proves it), and looking back at a lesson that is published and frozen.
+# What is not: an episode, a plot or a figure another series must
+# deliver, or anything the learner must have built elsewhere.
+#
+# When the gate fails, it writes ready-to-paste entries to
+# tests/target/promises-uncovered-<course>-<cross|forward>.yaml.
+
+# The courses the gate reads. Add one when its lessons start being written.
+tracks: [learnsql, datamodeling, datawarehousing, etlpipelines, dbt]
+
+not_a_promise:
+  - file: learnsql/series1-fundamentals/50-select-sum-join-group-by-order-by-limit-project/50-select-sum-join-group-by-order-by-limit-project.mdx
+    rule: forward
+    quote: 'The answer needs four things, and each one had a lesson of'
+    why: "Looks back: the project lesson recalls the four lessons it builds on."
+
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    rule: other-series
+    quote: 'The top 10 customers report from the last lesson of Series 1'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    rule: cross-link
+    quote: 'The top 10 customers report from the last lesson of Series 1'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    rule: other-series
+    quote: 'Without SQL beyond Series 1, the only way to answer it is'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    rule: other-series
+    quote: 'Series 1 ran on Northwind: 79 orders over 18 months, 25 customers'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    rule: other-series
+    quote: 'Every Series 1 query runs on it unchanged; the answers are just'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    rule: other-series
+    quote: 'It installs into a schema of its own, `northwind_co_s`, so Series 1''s'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    rule: cross-link
+    quote: 'This is the rule from the HAVING vs WHERE lesson .'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    rule: cross-link
+    quote: 'This is the repeated-rows problem from the report lesson , seen from'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/05-case-expressions/05-case-expressions.mdx
+    rule: other-series
+    quote: 'With Series 1 alone, this takes three queries, one `WHERE` per band,'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/05-case-expressions/05-case-expressions.mdx
+    rule: cross-link
+    quote: 'It is an expression, like the calculated columns from the aliases and'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/05-case-expressions/05-case-expressions.mdx
+    rule: cross-link
+    quote: 'Every one of them is labelled NULL, and this is the rule'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/05-case-expressions/05-case-expressions.mdx
+    rule: other-series
+    quote: 'Here it turns the courier number in `"ShipVia"` into a name, written'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/05-case-expressions/05-case-expressions.mdx
+    rule: cross-link
+    quote: 'The NULL lesson used `COALESCE` to put a stand-in where a value'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
+    rule: other-series
+    quote: 'It sounds like something Series 1 already covered.'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
+    rule: cross-link
+    quote: 'The GROUP BY lesson used `EXTRACT` to pull the month out of'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
+    rule: cross-link
+    quote: 'This is the half-open range from the WHERE lesson , and here'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
+    rule: cross-link
+    quote: 'This is why the NULL lesson cast both sides when it measured'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
+    rule: cross-link
+    quote: '`generate_series` produces one timestamp per month from January to December, and a'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
+    rule: cross-link
+    quote: 'On an empty month `o."OrderID"` is NULL, and count of a column'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
+    rule: other-series
+    quote: 'In the last lesson of Series 1 , a join multiplied the'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
+    rule: cross-link
+    quote: 'In the last lesson of Series 1 , a join multiplied the'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
+    rule: cross-link
+    quote: '"Every product" means a `LEFT JOIN` from `"Products"`, as in the JOINs'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
+    rule: other-series
+    quote: 'It is the customer report from the end of Series 1 with'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
+    rule: other-series
+    quote: 'Check it the way Series 1 taught, with a second query.'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
+    rule: other-series
+    quote: 'Series 1 fixed a multiplied count with `DISTINCT`, so it is tempting'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
+    rule: other-series
+    quote: 'Before adding up a column after a join, ask the question from'
+    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+  - file: datamodeling/series1-modeling-fundamentals/00-start-here/00-start-here.mdx
+    rule: other-course
+    quote: 'If you took the Learn SQL course, you have queried Northwind for'
+    why: "Speaks to learners who took Learn SQL, and assumes nothing of those who didn't."
+  - file: datamodeling/series1-modeling-fundamentals/00-start-here/00-start-here.mdx
+    rule: cross-link
+    quote: 'If you took the Learn SQL course, you have queried Northwind for'
+    why: "Speaks to learners who took Learn SQL, and assumes nothing of those who didn't."
+  - file: datamodeling/series1-modeling-fundamentals/00-start-here/00-start-here.mdx
+    rule: other-course
+    quote: 'All through Learn SQL, an error meant you had done something wrong.'
+    why: "Speaks to learners who took Learn SQL, and assumes nothing of those who didn't."
+  - file: datamodeling/series1-modeling-fundamentals/00-start-here/00-start-here.mdx
+    rule: other-course
+    quote: 'There is a person hiding inside the Customers table you queried all'
+    why: "Speaks to learners who took Learn SQL, and assumes nothing of those who didn't."
+  - file: datamodeling/series1-modeling-fundamentals/15-grain-and-keys/15-grain-and-keys.mdx
+    rule: other-course
+    quote: 'In the report lesson of Learn SQL, a count said Alfreds Futterkiste'
+    why: "Looks back at a published, frozen Learn SQL lesson, and restates the fact in place (eleven counted, five real)."
+  - file: datamodeling/series1-modeling-fundamentals/15-grain-and-keys/15-grain-and-keys.mdx
+    rule: cross-link
+    quote: 'In the report lesson of Learn SQL, a count said Alfreds Futterkiste'
+    why: "Looks back at a published, frozen Learn SQL lesson, and restates the fact in place (eleven counted, five real)."
+  - file: etlpipelines/curriculum.yaml
+    rule: other-course
+    quote: 'Build D4''s daily order CSVs cut from D1-S Orders (one file per'
+    why: "Authoring note on dataset reuse; data.reason is not shown to learners, and the data link is what the rules allow."
+  - file: etlpipelines/curriculum.yaml
+    rule: other-course
+    quote: 'Missing is the episode''s own title case, a boolean spelled Y/yes/1/true: build'
+    why: "Authoring note on dataset reuse; data.reason is not shown to learners, and the data link is what the rules allow."
+  - file: etlpipelines/curriculum.yaml
+    rule: other-course
+    quote: 'Rows stay D1''s, so a drifted load is caught by reconciling to'
+    why: "Authoring note on dataset reuse; data.reason is not shown to learners, and the data link is what the rules allow."
+  - file: etlpipelines/curriculum.yaml
+    rule: other-course
+    quote: 'Serves Data Warehousing S3 federation and dbt source conformance.'
+    why: "Authoring note on dataset reuse; data.reason is not shown to learners, and the data link is what the rules allow."
+  - file: etlpipelines/curriculum.yaml
+    rule: other-course
+    quote: 'Also serves Data Warehousing S1 (late-arriving dimensions) and dbt snapshots.'
+    why: "Authoring note on dataset reuse; data.reason is not shown to learners, and the data link is what the rules allow."
+  - file: etlpipelines/curriculum.yaml
+    rule: other-course
+    quote: 'Order Details has no UpdatedAt, so line deletes are exactly what polling'
+    why: "Authoring note on dataset reuse; data.reason is not shown to learners, and the data link is what the rules allow."
+  - file: etlpipelines/curriculum.yaml
+    rule: other-course
+    quote: 'Build L via the planned bulk path (write CSV, then COPY), and'
+    why: "Authoring note on dataset reuse; data.reason is not shown to learners, and the data link is what the rules allow."
+  - file: dbt/curriculum.yaml
+    rule: other-course
+    quote: 'ETL S2 (a feed that stopped) and Data Warehousing S3 can reuse'
+    why: "Authoring note on dataset reuse; data.reason is not shown to learners, and the data link is what the rules allow."
+  - file: dbt/curriculum.yaml
+    rule: other-course
+    quote: 'Needed: D2''s daily customer change and weekly price changes (planned) applied between'
+    why: "Authoring note on dataset reuse; data.reason is not shown to learners, and the data link is what the rules allow."
+  - file: dbt/curriculum.yaml
+    rule: other-course
+    quote: 'Data Warehousing S2/S3 needs the same ClickHouse path.'
+    why: "Authoring note on dataset reuse; data.reason is not shown to learners, and the data link is what the rules allow."
+  - file: etlpipelines/curriculum.yaml
+    rule: other-series
+    quote: 'The landed side is installed by the lesson (academy-northwind-co-raw-install, D6 at S),'
+    why: "An invitation, not a dependency: the lesson installs its own raw copy, and a learner's own Series 1 copy is optional (CONTRIBUTING.md, the DO column)."
+
+kept:
+  - file: learnsql/series1-fundamentals/00-start-here/00-start-here.mdx
+    rule: forward
+    quote: '(There''s a lesson of its own on this later in the series.)'
+    kept_by: "1 · 15"
+    about: "ORDER BY"
+  - file: learnsql/series1-fundamentals/05-select-fetch-your-data/05-select-fetch-your-data.mdx
+    rule: forward
+    quote: 'While you are only looking at a table''s shape any five will'
+    kept_by: "1 · 15"
+    about: "LIMIT"
+  - file: learnsql/series1-fundamentals/05-select-fetch-your-data/05-select-fetch-your-data.mdx
+    rule: forward
+    quote: 'Look back at the tables on this page: the ids came back'
+    kept_by: "1 · 07"
+    about: "data type"
+  - file: learnsql/series1-fundamentals/07-data-types/07-data-types.mdx
+    rule: forward
+    quote: 'The `WHERE table_name = ''Products''` line is a filter — you will'
+    kept_by: "1 · 10"
+    about: "WHERE"
+  - file: learnsql/series1-fundamentals/07-data-types/07-data-types.mdx
+    rule: forward
+    quote: 'Naming it yourself is a later lesson.'
+    kept_by: "1 · 20"
+    about: "alias"
+  - file: learnsql/series1-fundamentals/07-data-types/07-data-types.mdx
+    rule: forward
+    quote: 'Missing values change how comparisons behave, which is a lesson of its'
+    kept_by: "1 · 45"
+    about: "NULL"
+  - file: learnsql/series1-fundamentals/07-data-types/07-data-types.mdx
+    rule: forward
+    quote: 'Next lesson: **`WHERE`** — keeping only the rows you want.'
+    kept_by: "1 · 10"
+    about: "WHERE"
+  - file: learnsql/series1-fundamentals/10-where-filtering/10-where-filtering.mdx
+    rule: forward
+    quote: 'There is one other, and it is worth knowing the name of'
+    kept_by: "1 · 45"
+    about: "NULL"
+  - file: learnsql/series1-fundamentals/10-where-filtering/10-where-filtering.mdx
+    rule: forward
+    quote: 'Next lesson: putting the survivors in order and keeping the top of'
+    kept_by: "1 · 15"
+    about: "ORDER BY"
+  - file: learnsql/series1-fundamentals/15-order-by-and-top-n/15-order-by-and-top-n.mdx
+    rule: forward
+    quote: '`GROUP BY` is a different clause that *collapses* rows into one line'
+    kept_by: "1 · 30"
+    about: "GROUP BY"
+  - file: learnsql/series1-fundamentals/15-order-by-and-top-n/15-order-by-and-top-n.mdx
+    rule: forward
+    quote: 'Next lesson: **aliases, expressions and `DISTINCT`** — because you can now sort'
+    kept_by: "1 · 20"
+    about: "DISTINCT"
+  - file: learnsql/series1-fundamentals/20-distinct-aliases-expressions/20-distinct-aliases-expressions.mdx
+    rule: forward
+    quote: 'Next lesson: **`COUNT`, `SUM`, `AVG`, `MIN` and `MAX`** — because you can'
+    kept_by: "1 · 25"
+    about: "SUM"
+  - file: learnsql/series1-fundamentals/25-aggregate-functions/25-aggregate-functions.mdx
+    rule: forward
+    quote: 'The clause for filtering on an aggregate is `HAVING`, and it has'
+    kept_by: "1 · 35"
+    about: "HAVING"
+  - file: learnsql/series1-fundamentals/25-aggregate-functions/25-aggregate-functions.mdx
+    rule: forward
+    quote: 'For now, read `[NULL]` as "there is nothing here"; the word itself'
+    kept_by: "1 · 45"
+    about: "NULL"
+  - file: learnsql/series1-fundamentals/25-aggregate-functions/25-aggregate-functions.mdx
+    rule: forward
+    quote: '**To get one number per group** — per country, per customer, per'
+    kept_by: "1 · 30"
+    about: "GROUP BY"
+  - file: learnsql/series1-fundamentals/25-aggregate-functions/25-aggregate-functions.mdx
+    rule: forward
+    quote: 'Next lesson: **`GROUP BY`** — the same five functions, but one number'
+    kept_by: "1 · 30"
+    about: "GROUP BY"
+  - file: learnsql/series1-fundamentals/30-group-by/30-group-by.mdx
+    rule: forward
+    quote: 'It is a perfectly good question asked one clause too early, and'
+    kept_by: "1 · 35"
+    about: "HAVING"
+  - file: learnsql/series1-fundamentals/30-group-by/30-group-by.mdx
+    rule: forward
+    quote: 'Next lesson: **`HAVING` vs `WHERE`** — because you can build totals now,'
+    kept_by: "1 · 35"
+    about: "HAVING"
+  - file: learnsql/series1-fundamentals/40-joins/40-joins.mdx
+    rule: forward
+    quote: 'What `NULL` then does to comparisons, and why `= NULL` matches nothing'
+    kept_by: "1 · 45"
+    about: "= NULL"
+  - file: learnsql/series1-fundamentals/40-joins/40-joins.mdx
+    rule: forward
+    quote: 'The next lesson is how those empty cells behave once they are'
+    kept_by: "1 · 45"
+    about: "= NULL"
+  - file: learnsql/series1-fundamentals/45-null-and-three-valued-logic/45-null-and-three-valued-logic.mdx
+    rule: forward
+    quote: 'Next lesson: **`SELECT` + `JOIN` + `GROUP BY`** — the last of'
+    kept_by: "1 · 50"
+    about: "GROUP BY"
+  - file: learnsql/series1-fundamentals/45-null-and-three-valued-logic/45-null-and-three-valued-logic.mdx
+    rule: forward
+    quote: 'The next lesson closes Series 1 · SQL Fundamentals, and it is'
+    kept_by: "1 · 50"
+    about: "JOIN"
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    rule: forward
+    quote: 'A later lesson in this series gives each step a name, so'
+    kept_by: "2 · 20"
+    about: "WITH"
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    rule: forward
+    quote: 'The next lesson is **CASE**: how a query turns a value into'
+    kept_by: "2 · 05"
+    about: "CASE"
+  - file: learnsql/series2-intermediate/05-case-expressions/05-case-expressions.mdx
+    rule: forward
+    quote: 'The next lesson is **dates and times**: grouping by real months and'
+    kept_by: "2 · 10"
+    about: "date"
+  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
+    rule: forward
+    quote: 'The next lesson is **several tables at once**, and the case''s next'
+    kept_by: "2 · 15"
+    about: "invoice"
+  - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
+    rule: forward
+    quote: 'The query is also hard to read, and May''s range is written'
+    kept_by: "2 · 20"
+    about: "WITH"
+  - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
+    rule: forward
+    quote: 'It does not say whether those orders were delivered: the data has'
+    kept_by: "2 · 48"
+    about: "delivered"
+  - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
+    rule: forward
+    quote: 'The next lesson is **CTEs**: `WITH`, which gives each step of a'
+    kept_by: "2 · 20"
+    about: "WITH"
+  - file: learnsql/series2-intermediate/20-ctes/20-ctes.mdx
+    rule: forward
+    quote: 'The next lesson is **views**: a step with a name that outlives'
+    kept_by: "2 · 22"
+    about: "view"
+  - file: datamodeling/series1-modeling-fundamentals/00-start-here/00-start-here.mdx
+    rule: forward
+    quote: 'Go and look at its columns again before the next lesson.'
+    kept_by: "1 · 05"
+    about: "Contact"
+  - file: datamodeling/series1-modeling-fundamentals/10-relationships-cardinality-optionality/10-relationships-cardinality-optionality.mdx
+    rule: forward
+    quote: 'Where such a line actually goes in a database has a lesson'
+    kept_by: "1 · 20"
+    about: "junction"
+  - file: datamodeling/series1-modeling-fundamentals/10-relationships-cardinality-optionality/10-relationships-cardinality-optionality.mdx
+    rule: forward
+    quote: 'Making the database enforce these lines has a lesson of its own.'
+    kept_by: "1 · 45"
+    about: "foreign key"
+
+covered:
+  - file: learnsql/series1-fundamentals/50-select-sum-join-group-by-order-by-limit-project/50-select-sum-join-group-by-order-by-limit-project.mdx
+    rule: other-series
+    quote: 'Series 2, Intermediate SQL, starts where this lesson ends: joining more tables,'
+    series: 2
+    about: ["JOINs", "Subqueries", "CTEs", "Window Functions"]
+  - file: learnsql/series2-intermediate/20-ctes/20-ctes.mdx
+    rule: other-series
+    quote: 'A CTE is for the person reading the query, and query speed'
+    series: 3
+    about: ["EXPLAIN", "Indexes"]
+  - file: etlpipelines/curriculum.yaml
+    rule: other-series
+    quote: 'The decision needs no event log; Series 4 does.'
+    series: 4
+    about: ["event log"]
+  - file: learnsql/series1-fundamentals/15-order-by-and-top-n/15-order-by-and-top-n.mdx
+    rule: other-series
+    quote: 'That is the whole of it for now; Series 4 is where'
+    series: 4
+    about: ["Portable Paging"]   # 4 · 05; its brief: "FETCH FIRST vs LIMIT vs TOP vs ROWNUM"
+  - file: learnsql/series1-fundamentals/20-distinct-aliases-expressions/20-distinct-aliases-expressions.mdx
+    rule: other-series
+    quote: 'Series 2 · Intermediate SQL comes back to exactly that.'
+    series: 2
+    about: ["Multi-Table JOINs"]   # 2 · 15
+  - file: learnsql/series1-fundamentals/45-null-and-three-valued-logic/45-null-and-three-valued-logic.mdx
+    rule: other-course
+    quote: '**Whether a column should allow `NULL` at all** is a design decision,'
+    course: datamodeling
+    series: 1
+    about: ["Nullable"]   # 1 · 52, "Nullable, Missing Row or Separate Table"
+
+unreviewed:
+  - file: datamodeling/curriculum.yaml
+    rule: other-series
+    quote: 'The learner builds the star from Series 1 views and reconciles it'
+  - file: datamodeling/curriculum.yaml
+    rule: other-series
+    quote: 'The complete S-scale Company dataset plus the learner''s Series 1 views supports'

@@ -39,6 +39,11 @@ published: false
     Rank rows within groups (ROW_NUMBER, RANK, DENSE_RANK and when each is right), the first/latest row per
     group, top N per group, a detail row beside its group's total or average (SUM/AVG OVER PARTITION BY), and
     removing duplicate rows with ROW_NUMBER — keep one per key.
+    ONE LINE EACH (added 2026-09-19):
+      LATERAL  top N per group as JOIN LATERAL (… ORDER BY … LIMIT 3) — the other way to write it, on
+               PostgreSQL and DuckDB.
+      QUALIFY  filters on a window function without the CTE, but PostgreSQL does not have it. A line,
+               never a koan: the koans run on DuckDB, which accepts it.
 
     ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
     No case in this episode (the old case's "oldest open order per customer" and "top 10 on delivered sales" are
@@ -55,7 +60,7 @@ published: false
 
     ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
     Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
-    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 17 episodes, never whole
     episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
     KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
     WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or

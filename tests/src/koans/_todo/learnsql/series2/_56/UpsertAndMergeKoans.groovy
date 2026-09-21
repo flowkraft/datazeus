@@ -1,18 +1,18 @@
-package datazeus.learnsql.series2._55
+package datazeus.learnsql.series2._56
 
 import datazeus._internal.KoanBase
 import spock.lang.Stepwise
 
 /**
  * ╔══════════════════════════════════════════════════════════════════════╗
- * ║  SQL KOANS — Learn SQL · Series 2 · 55
+ * ║  SQL KOANS — Learn SQL · Series 2 · 56
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
- * INSERT, UPDATE, DELETE & Transactions — Change the Data, Safely
+ * UPSERT & MERGE — Insert or Update in One Statement, and Loads You Can Run Twice
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into
- * src/koans/groovy/datazeus/learnsql/series2/_55/ when it is real.
+ * src/koans/groovy/datazeus/learnsql/series2/_56/ when it is real.
  *
  *     zeus.bat koans learnsql series2 _48     (Windows)
  *     ./zeus.sh koans learnsql series2 _48    (macOS/Linux)
@@ -33,27 +33,20 @@ import spock.lang.Stepwise
  *     count is not.
  *
  * ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
- * GOAL: change data on purpose, and be able to undo it.
- * SQL: INSERT (single, multi-row, INSERT … SELECT), UPDATE … WHERE, DELETE … WHERE, BEGIN,
- * COMMIT, ROLLBACK.
- * PLACED LATE ON PURPOSE, and this is the reason: the failure mode of teaching UPDATE early is a
- * learner who runs it without a WHERE. By here, filtering is second nature.
- * Teach the SELECT-first habit: write the WHERE as a SELECT, look at the rows, then change the
- * verb. BOUNDARY: isolation levels and locking are Data Ops; COMMIT/ROLLBACK basics are here.
+ * GOAL: insert-or-update in one statement, and an insert you can run twice.
+ * SQL: INSERT … ON CONFLICT DO NOTHING, ON CONFLICT (key) DO UPDATE SET … = EXCLUDED.…, MERGE.
+ * Split from 55 on 2026-09-19.
  *
- * ── KOANS AND THE SERIES CASE (.docs/plan-academy-course-stories-artefacts.md §1, §3.2) ─────────────
- * The LESSON's main example applies (supposed) courier confirmations to "Orders" inside a transaction and rolls
- * back. The KOANS run on the throwaway copy KoanBase opens, and on OTHER tables — a price change on
- * "Products" with the SELECT-first habit, INSERT … SELECT, a DELETE with the right WHERE, and the
- * UPDATE-without-WHERE diagnose koan. Standalone after Series 1. (The ON CONFLICT koans moved to _56 on
- * 2026-09-19.)
+ * ── THE KOANS ───────────────────────────────────────────────────────────
+ * On the throwaway copy KoanBase opens: a supplier's price list against "Products" — re-run an INSERT with
+ * DO NOTHING and predict the row count; DO UPDATE the prices that changed; the same upsert as MERGE (MERGE INTO needs
+ * DuckDB 1.4+: upgrade tests/pom.xml's duckdb.version from 1.1.3 to 1.4.4.0 first).
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
- * LEVEL ●● of ●●●●. Late on purpose (see above). Renumbered from 40 on 2026-09-14 and from 48 on 2026-09-15 — Learn Data
- * Modeling's prerequisites ask for "INSERT from Series 2 · 55".
+ * LEVEL ●● of ●●●●. BUILDS ON: Series 2 · 55 (INSERT … SELECT, transactions), 2 · 22 (CREATE TABLE AS).
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
-class InsertUpdateDeleteKoans extends KoanBase {
+class UpsertAndMergeKoans extends KoanBase {
 
     // TODO: koans, one per idea in the lesson, in the same order.
     //

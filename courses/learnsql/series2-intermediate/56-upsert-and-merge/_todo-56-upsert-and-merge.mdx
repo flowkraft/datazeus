@@ -1,11 +1,11 @@
 ---
-title: "Window Functions II: LAG/LEAD, Running Totals & Frames — Month-over-Month Growth in One Query"
+title: "UPSERT & MERGE — Insert or Update in One Statement, and Loads You Can Run Twice"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
 topic: "learn-sql"
 tags: []
 level: "intermediate"
 module: "series2-intermediate"
-order: 45
+order: 56
 published: false
 ---
 
@@ -25,49 +25,49 @@ published: false
       - the koans mirror the lesson beat for beat
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
-    GOAL: compare a row to the one before it, and build a running total.
-    SQL: LAG, LEAD, SUM() OVER (ORDER BY …), frame clauses (ROWS/RANGE BETWEEN), month-over-month.
-    Frames are where people get quietly wrong answers — the default frame with ORDER BY is not the
-    one most readers assume. Show the default, then show it stated explicitly.
+    NEW 2026-09-19, split from Series 2 · 55, which carried too much. The curriculum.yaml comment above this
+    episode has the full reasoning.
+    GOAL: insert-or-update in one statement, and an insert you can run twice.
+    SQL: INSERT … ON CONFLICT DO NOTHING; ON CONFLICT (key) DO UPDATE SET … = EXCLUDED.…; MERGE.
+    THE FAILURE THAT EARNS IT: an import script run twice. Without ON CONFLICT the second run either
+    duplicates every row or dies on the unique constraint, and the beginner's instinct is SELECT-then-INSERT,
+    which is a race. DO NOTHING is the idempotent load; DO UPDATE is upsert in one statement.
+    MERGE, ONE BEAT: the standard spelling (SQL:2003; PostgreSQL 15+, DuckDB 1.4+, and the only one on SQL
+    Server and Oracle). Write the same upsert as MERGE. Its koan needs the koan runner's DuckDB upgraded from
+    1.1.3 to 1.4.4.0 first (tests/pom.xml; curriculum.yaml, Series 2 header). The other engines' spellings (MySQL's ON DUPLICATE KEY UPDATE and the rest) are Series 4 · 05's.
+    THE EXAMPLE: a supplier's price list — some products already exist (update the price), some are new
+    (insert them). Practice on a copy made with Series 2 · 22's CREATE TABLE AS, with its key added: ON
+    CONFLICT needs a key to conflict on, and a CREATE TABLE AS copy has none until you add it.
+    DO NOT LET IT GROW INTO A PIPELINE LESSON: ETL & Data Pipelines, Series 1 · 25 owns re-runnable loads at
+    the scale of a scheduled job. This episode owes the statement and what it does to one table.
 
     ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
-    Compare a row with the one before or after it (LAG, LEAD), running totals, month-over-month change,
-    moving averages, and frames — the default frame with ORDER BY is RANGE UNBOUNDED PRECEDING, which is not
-    what most readers assume (ties share a running total; LAST_VALUE returns the current row).
+    Insert-or-update in one statement (ON CONFLICT … DO UPDATE); make an insert safe to re-run (DO NOTHING);
+    read and write a MERGE.
 
     ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
-    No case in this episode (the old reorder-rhythm evidence and running total are dropped; the soft-evidence beat
-    lives in Series 2 · 25 now). The lesson teaches LAG/LEAD, running totals, month-over-month, moving averages and
-    the default frame on its own best examples.
-    OFF-STORY, KEPT — WHAT GOES WRONG: LAG gives the previous ROW, not the previous MONTH. It fires naturally on
-    Northwind Company S (DuckDB, 2026-09-19): Austria has 42 orders spread over only 29 of the 60 months, so
-    "sales vs the previous month" per month for Austria silently compares against months that are further back.
-    THE FIX REUSES SERIES 2 · 10's MONTH SPINE (generate_series + LEFT JOIN, the empty months as 0), so the
-    episode adds no new syntax. (CROSS JOIN is not taught before this episode; decided 2026-09-19.)
-    GAPS AND ISLANDS, one line pointing forward: "runs of consecutive weeks" is Series 3 · 12, built on this
-    episode's LAG and running SUM.
+    No case in this episode. The price list is the lesson's own example.
 
-    DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
-    academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
-    came from the frozen Northwind is to be RE-FOUND on it: the lesson beat stays, the numbers move. First
-    measurements are DuckDB only (stories sheet §3.2.2); every figure is re-asserted on PostgreSQL in the spec.
+    DATA: NORTHWIND COMPANY S (schema northwind_co_s). Every write runs on a throwaway copy or inside
+    BEGIN … ROLLBACK, so nobody changes the Northwind every other lesson's numbers depend on.
 
     ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
     Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
     story (the Speedy Express recording outage) goes along from time to time — in 8 of 17 episodes, never whole
     episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
-    KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
-    WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
-    repeats itself does the opposite. Checking in the brief is cheaper than re-cutting a published video.
+    KEEP IT NONE: no case file here, not even a recap line.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
-    LEVEL ●●●● of ●●●●. BUILDS ON: Series 2 · 35, and 2 · 10 — month-over-month needs date_trunc
-    to build the months before LAG can compare them.
+    LEVEL ●● of ●●●●. BUILDS ON: Series 2 · 55 (INSERT … SELECT, transactions), 2 · 22 (CREATE TABLE AS).
+    core: true — the most common write in production, and before this split the core path never met it.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:predict
       koan:complete
-      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_45/WindowFunctionsIiKoans.groovy
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_56/UpsertAndMergeKoans.groovy
+
+    `predict` on the row count after the second run, with and without DO NOTHING. `complete` on the
+    DO UPDATE and on the same upsert written as MERGE.
    ========================================================================== */}
 
 ## The situation this lesson prepares you for

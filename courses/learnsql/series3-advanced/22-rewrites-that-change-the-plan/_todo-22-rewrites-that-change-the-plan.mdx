@@ -40,11 +40,10 @@ published: false
          JOIN           finds every match, so it can MULTIPLY your rows — Series 2 · 15's
                         fan-out arriving as a performance problem instead of a wrong total
 
-       AND THE CORRECTNESS BOMB, which is why this pattern leads:
-       NOT IN (subquery) RETURNS NO ROWS AT ALL IF THE SUBQUERY PRODUCES A SINGLE NULL.
-       Not fewer rows — none. It is Series 1 · 45's three-valued logic detonating inside a
-       construct that looks nothing like a NULL comparison, it is silent, and it is common.
-       NOT EXISTS does not behave this way. Teach the habit: NOT EXISTS, always.
+       THE NOT IN TRAP IS A RECAP, NOT A LESSON (2026-09-19): Series 2 · 25 owns the
+       correctness (a single NULL in the list and NOT IN returns no rows). Here it gets one
+       line pointing back there; the new content is the plans — COUNT(*) > 0, EXISTS and
+       the JOIN side by side, and what each one reads.
 
     2. DISTINCT AS A PLASTER — ask the diagnostic question: did you add DISTINCT because
        you wanted unique values, or because you were getting duplicates? The second is a
@@ -121,9 +120,9 @@ TODO
 
 {/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns its
     place by preventing a number that is wrong and looks right.
-    The one to write: NOT IN against a column that is usually populated. It worked for a
-    year, somebody left a supplier's region blank, and the exception report has returned
-    zero rows ever since — which reads as "nothing to report" rather than as a failure,
-    and nobody investigates good news. */}
+    The one to write: keyset paging over an ORDER BY that does not end in something unique.
+    Rows that tie on the sort key land on two pages or on none, every page looks complete,
+    and the export has quietly lost or doubled rows. (The NOT IN trap was the candidate
+    until 2026-09-19; it belongs to Series 2 · 25.) */}
 
 TODO

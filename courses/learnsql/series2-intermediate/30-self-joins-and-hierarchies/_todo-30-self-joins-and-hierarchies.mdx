@@ -27,11 +27,10 @@ published: false
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
     GOAL: relate rows in one table to other rows in the same table.
     SQL: joining a table to itself, aliasing both sides, the manager/employee shape.
-    Northwind's "Employees" is thin (3 rows) — say so rather than pretending. It has exactly enough
-    for the one idea (checked 2026-09-14): Nancy and Janet report to Andrew, and Andrew's
-    "ReportsTo" is NULL. So "each employee beside their manager" loses Andrew under a plain JOIN and
-    keeps him under a LEFT JOIN — Series 1 · 40's rule, on a table joined to itself. If the lesson
-    needs depth, use a richer example rather than inventing Northwind rows.
+    Northwind Company's "Employees" has 12 rows in three levels (DuckDB, 2026-09-19): Maya Bauer, the CEO,
+    whose "ReportsTo" is NULL; Anna Jansen and Hugo Vargas, sales managers, who report to her; and 9 sales
+    reps under them. So "each employee beside their manager" loses Maya under a plain JOIN (11 rows) and
+    keeps her under a LEFT JOIN (12) — Series 1 · 40's rule, on a table joined to itself.
     Recursive walking is Series 3 · 10.
 
     ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
@@ -42,9 +41,15 @@ published: false
     ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
     No case in this episode. Its best examples: employee and manager — Northwind Company has three levels (CEO →
     2 sales managers → 9 reps), so a LEFT JOIN keeps the CEO and a self-join per level shows the chain.
-    PROPOSED, NOT DECIDED (curriculum.yaml, Series 2 header, OPEN QUESTIONS): "products bought together" as the main
-    example with mirrored pairs as the trap — the old figures (495 rows, 302 mirrored, 151 pairs) are from the
-    frozen Northwind; re-find on Northwind Company S.
+    DECIDED 2026-09-19 — THE MAIN EXAMPLE IS "PRODUCTS BOUGHT TOGETHER" (the org chart alone made a thin
+    episode; it stays as the opener and the LEFT JOIN beat). "Order Details" joined to itself on "OrderID"
+    (Northwind Company S, DuckDB, 2026-09-19, all five years):
+      every line matched, itself included          81,763 rows
+      a."ProductID" <> b."ProductID"               56,530 — each pair still there twice (A + B and B + A)
+      a."ProductID" <  b."ProductID"               28,265 real pairs
+    THE TRAP: counting the 56,530 doubles every pair's count, and nothing errors. Top pair: Island Sausages +
+    Rustic Granola, on 137 orders — the top five sit within 8 of each other, so say "bought together often",
+    not "a strong affinity". Use a smaller slice (one month) for the cards and re-measure it.
 
     DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
     academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
@@ -53,7 +58,7 @@ published: false
 
     ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
     Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
-    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 17 episodes, never whole
     episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
     KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
     WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
@@ -67,6 +72,7 @@ published: false
     hierarchy. Was 10 until the 2026-09-14 reorder, and 42 until 2026-09-15.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:predict
       koan:complete
       koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_30/SelfJoinsAndHierarchiesKoans.groovy
    ========================================================================== */}
@@ -95,7 +101,7 @@ TODO
 
 {/* BEAT 4 — the wrong answer this prevents. Every episode in this track earns its
     place by preventing a number that is wrong and looks right.
-    The one to write: the org chart that lost its boss. A plain self-JOIN drops Andrew,
-    because his "ReportsTo" is empty — and the chart of three people now shows two. */}
+    The one to write: the org chart that lost its boss. A plain self-JOIN drops Maya Bauer, the CEO,
+    because her "ReportsTo" is empty — and the chart of twelve people now shows eleven. */}
 
 TODO

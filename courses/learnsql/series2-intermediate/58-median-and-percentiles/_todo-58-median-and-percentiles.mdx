@@ -86,8 +86,9 @@ published: false
     ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
     No case in this episode (the old "late defined from the data" and median reorder gaps are dropped).
     MAIN EXAMPLE STAYS: the average vs the median order value — re-measure on Northwind Company S (first
-    measurement: the average order is €1,500.56; the median to be measured). Its skew is planted (a long tail of
-    large orders), so the gap between the two should be visible; if it is not, the dataset is tuned.
+    measurement, DuckDB, 2026-09-19: the average order is €1,501.70 and the median €1,320.88, so the average sits
+    14% above the typical order). Its skew is planted (a long tail of large orders), so the gap between the two
+    is visible; say whether 14% is enough to make the point before building the lesson on it.
 
     DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
     academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
@@ -96,7 +97,7 @@ published: false
 
     ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
     Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
-    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 17 episodes, never whole
     episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
     KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
     WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
@@ -105,10 +106,11 @@ published: false
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     LEVEL ●●●● of ●●●●. BUILDS ON: Series 2 · 35 (the MySQL workaround), Series 1 · 25 (AVG, and the
     STDDEV it promised to Series 2 — one line, beside the median).
-    THE SHIPPED DATA MAKES THE POINT WITHOUT AN INVENTED ORDER (DuckDB, 2026-09-14): the average order
-    value is 736.12 and the median is 506.17 — the average sits 45% above the typical order. Freight
-    is the calm contrast: average 50.49, median 47.93. 79 orders is an ODD count, so CONT and DISC
-    agree over the whole table; the difference has to be shown on an even-sized group.
+    THE SHIPPED DATA MAKES THE POINT WITHOUT AN INVENTED ORDER (Northwind Company S, DuckDB, 2026-09-19):
+    the average order value is 1,501.70 and the median 1,320.88 (see THE SERIES CASE above). Freight is NOT a
+    calm contrast here: average 52.74, median 44.86, more skewed than the order value. 10,000 orders is an EVEN
+    count, so CONT and DISC differ over the whole table, but only by 2 cents (1,320.88 vs 1,320.86); the
+    difference is clearer on a small even-sized group.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:predict

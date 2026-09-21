@@ -1,11 +1,11 @@
 ---
-title: "PIVOT & UNPIVOT — Turn Rows into a Cross-Tab Report, the Portable Way"
+title: "Gaps & Islands — Find Streaks, Runs and Missing Periods"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
 topic: "learn-sql"
 tags: []
 level: "advanced"
 module: "series3-advanced"
-order: 0
+order: 12
 published: false
 ---
 
@@ -25,27 +25,42 @@ published: false
       - the koans mirror the lesson beat for beat
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
-    GOAL: turn rows into a cross-tab a person can read.
-    SQL: conditional aggregation (SUM(CASE WHEN …)) as the PORTABLE pivot, and a note on vendor
-    PIVOT syntax. Portable first, because Series 4 exists.
-    THE PIVOT ITSELF IS A RECAP (2026-09-19): Series 2 · 05 already taught SUM(CASE …) as one
-    column per value. Give it a few minutes, then spend the episode on what is new:
-      UNPIVOT          columns back into rows — UNION ALL, or a LATERAL VALUES list (Series 2 · 35)
-      THE COLUMN LIST  you must name every pivot value; what to do when next month brings a new one
-      VENDOR SYNTAX    PIVOT / UNPIVOT, crosstab — one line each, a pointer to Series 4
-    Honest framing: in practice pivoting often happens in the BI tool or in pandas — say that, and
-    say when doing it in SQL is right.
+    NEW 2026-09-19 — gaps and islands had no home in the course.
+    GOAL: find runs of consecutive periods — when a streak started, when it stopped, how long it lasted — and
+    the gaps between them.
+    SQL, TWO WAYS, PROVEN EQUIVALENT:
+      1. ROW_NUMBER over all the periods minus ROW_NUMBER over the flagged ones is constant within a run,
+         so GROUP BY that difference gives one row per island.
+      2. LAG marks where a run starts (1 when the previous period was not flagged), and a running SUM of
+         the marks numbers the islands.
+    The first is shorter; the second is the one people can read back a month later. Teach both.
+
+    THE OPENER, A ONE-LINE RECAP OF SERIES 2 · 10: its weekly finding ("it started and it stopped"), now
+    computed rather than read off a chart (Northwind Company S, DuckDB, 2026-09-19). Weeks of 2024 with
+    'Shipped' orders and no ship date form TWO islands:
+      2024-03-04 to 2024-08-26    26 weeks    177 orders    the outage
+      2024-10-28                   1 week       1 order     the lapse
+    Then the lesson's own examples: a customer's longest run of ordering months; gaps in "OrderID".
+    THE TRAP: a period with no rows at all is not a zero, it is missing — and it silently joins two runs
+    into one. Series 2 · 10's spine first, then the islands.
+
+    ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
+    Find streaks and runs (consecutive days, weeks or months), their start, end and length; find the gaps
+    between them; fill missing periods before looking.
+
+    DATA: NORTHWIND COMPANY S (schema northwind_co_s). No bulk data needed.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
-    LEVEL ●● of ●●●● — the gentlest step in Series 3, which is why it opens it.
-    BUILDS ON: Series 2 · 05 (the portable pivot is SUM(CASE …)), 2 · 50 (subtotals).
-    SETS UP: Series 3 · 15 (a cohort grid is a pivot). Runs on Northwind; no bulk data needed.
-    Was 05 until the 2026-09-14 reorder.
+    LEVEL ●●● of ●●●●. BUILDS ON: Series 2 · 10 (date_trunc, the spine), 2 · 20 (CTEs), 2 · 35 (ROW_NUMBER),
+    2 · 45 (LAG, running SUM). SETS UP: Series 3 · 15 (retention is runs of months).
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:equivalent
-      koan:complete
-      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_00/PivotAndUnpivotKoans.groovy
+      koan:predict
+      koan file: tests/src/koans/groovy/datazeus/learnsql/series3/_12/GapsAndIslandsKoans.groovy
+
+    `equivalent` on the two methods. `predict` on how many islands there are once an empty week is
+    filled in.
    ========================================================================== */}
 
 ## The situation this lesson prepares you for

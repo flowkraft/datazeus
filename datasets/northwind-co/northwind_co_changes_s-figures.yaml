@@ -1,0 +1,52 @@
+# Emitted by academy-northwind-co-changes.groovy — do not hand-edit, re-run the script.
+# CurriculumSpec checks every figure quoted in a curriculum reason against this file.
+dataset: northwind_co_changes
+version: 1
+scale: S
+figures:
+  events: 6142
+  offsets: 6126
+  arrival_days: 91
+  op_create: 4725
+  op_update: 1406
+  op_delete: 6
+  op_unknown: 5
+  late_by_days: 66
+  out_of_order_by_minutes: 104
+  sent_twice: 9
+  resent_late: 3
+  redelivered: 16
+  redelivered_offset_first: 4197
+  redelivered_offset_last: 4212
+  rejects: 20
+  reject_op_create: 15
+  reject_op_unknown: 5
+  poison: 1
+  control_totals: 90
+  bad_day: 45
+  web_feed_last_day: 70
+  redelivery_day: 60
+plants:
+  as-of-price: 1
+  as-of-price-order: 1
+  as-of-segment: 1
+  as-of-segment-order: 1
+  bad-duplicate-order-id: 1
+  bad-negative-quantity: 1
+  bad-typed-status: 1
+  bad-unknown-customer: 1
+  dimension-never-arrives: 1
+  duplicate-in-last-batch: 1
+  fact-before-dimension: 2
+  keyed-in-error: 1
+  late-arrivals: 1
+  line-deleted: 1
+  month-boundary: 2
+  poison: 1
+  redelivery: 1
+  reinstated: 1
+  reject-burst: 1
+  resent-late: 3
+  sent-twice: 1
+  watermark-tie: 3
+  web-feed-stops: 1

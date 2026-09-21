@@ -75,9 +75,9 @@ published: false
     ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
     No case in this episode (the old rep × courier "twist" is dropped: it was a generator artefact). The lesson
     teaches subtotals and grand totals on its own best example (sales by category and quarter, say).
-    OFF-STORY, KEPT — THE TRAP: a real NULL vs the subtotal NULL. A DATASET REQUIREMENT: Northwind Company's
-    "Customers"."Region" is currently NULL on every row; the trap needs SOME regions filled and some NULL (e.g.
-    states for USA, Canada and Brazil, NULL elsewhere) — the dataset must plant that.
+    OFF-STORY, KEPT — THE TRAP: a real NULL vs the subtotal NULL. The data already has it (DuckDB, 2026-09-19):
+    "Customers"."Region" is filled for the 15 customers in the USA, Canada and Brazil and NULL for the other 105,
+    so a ROLLUP over country and region shows real NULL regions beside the subtotal NULLs.
 
     DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
     academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
@@ -86,7 +86,7 @@ published: false
 
     ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
     Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
-    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 17 episodes, never whole
     episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
     KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
     WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
@@ -95,7 +95,7 @@ published: false
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────
     LEVEL ●●● of ●●●●. BUILDS ON: Series 2 · 48 (UNION ALL), 2 · 05 (the CASE labelling idiom),
     Series 1 · 45 (NULL).
-    DATA NOTE (2026-09-14): "Region" is NULL for 21 of the 25 customers, so the collision between a
+    DATA NOTE (2026-09-19): "Region" is NULL for 105 of the 120 customers, so the collision between a
     real NULL and a subtotal NULL can be shown on the shipped data, with nothing invented.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────

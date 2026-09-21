@@ -68,26 +68,34 @@ title: ETL & Data Pipelines
 #   D5 northwind_co_dw_<scale>    derived star target for star/SCD2/backfill/warehouse loads
 #   D6 northwind_co_raw_<scale>   learner-produced raw landed copy, especially the Series 1 project and dbt seam
 #
-# D1-D5 are source/target contracts, not all currently implemented generators. The D2/D3/D4 comment-only
-# drafts are under C:\Projects\reportburster\asbl\src\main\external-resources\db-template\db\scripts\:
-# academy-northwind-co-changes.groovy, academy-crm-export-install.groovy, and academy-files-export.groovy.
-# D5's comment-only draft is academy-northwind-co-dw-install.groovy. D6 should be produced by the learner's
-# ETL project, not pre-seeded, so checksums can prove that the pipeline made the raw copy correctly.
+# Every one of them has a working generator under datasets/scripts/ in this repo: D2 is
+# academy-northwind-co-changes.groovy, D3 academy-crm-export-install.groovy, D4 academy-files-export.groovy,
+# D5 academy-northwind-co-dw-install.groovy, D6 academy-northwind-co-raw-install.groovy. (They were described
+# here as "comment-only drafts" until 2026-09-20; they are not, and had not been for some time — the smallest
+# of them is 290 lines of code. Per-dataset status belongs in each episode's `reason`, which is maintained;
+# a status summary in a header is a second copy that silently goes stale.) D6 is TWO things (updated 2026-09-19):
+# in Series 1 the learner's project produces it, and the checksums prove the pipeline made it correctly; for every
+# later series it is also an install (academy-northwind-co-raw-install), so no later series depends on the
+# learner's Series 1 output. Using their own copy is an invitation (CONTRIBUTING.md, "Promises between lessons").
 #
-# REQUIRED EXTENSIONS BEFORE MARKING THE REMAINING MISSING/PARTIAL SOURCES GOOD:
-# - D2 must include hard deletes, new-customer events, control totals, poison records, redeliveries, and
-#   stable offsets/event_time/arrival_time. The planted day 45 remains the shared bad-load fixture.
+# WHAT EACH DATASET MUST KEEP PROVIDING. These are contracts, not a to-do list: if a regenerated dataset
+# stops meeting one, the episodes leaning on it break.
+# - D2 delivers hard deletes, new-customer events, daily control totals, a poison record, redeliveries, and
+#   stable offsets/event_time/arrival_time. The planted day 45 is the shared bad-load fixture. Every count
+#   this course quotes off that log is emitted by the script itself into
+#   datasets/northwind-co/northwind_co_changes_s-figures.yaml, and DatasetsSpec checks the prose against it —
+#   so re-run the script rather than hand-editing a figure in a `reason`.
 # - D3 must preserve the documented 120 matches, 12 duplicate identities, 3 CRM-only prospects, and mixed
 #   active/phone/date/credit-limit representations.
 # - D4 must include clean daily CSVs, four schema drifts, the row-4 workbook header, sorted/unsorted Parquet,
 #   and an API-shaped paginated JSON fixture if Series 1 · 10 remains explicitly hands-on with an API.
 # - D1 needs a dated customer-entry extension (or equivalent D2 new-customer events) for inferred-member and
 #   late-dimension lessons, plus the PII extension fields documented in Series 2 · 27.
-# - D5 must be generated from D1, not substituted with the legacy disconnected fact_sales Java demo.
-# - The Series 3 · 05 title says SQLite, but the Company installer supports PostgreSQL and DuckDB. Retitle it
-#   to the actual source or add a deliberate SQLite export; do not imply a source engine that is absent.
+# - D5 is generated from D1. It is NOT the legacy disconnected fact_sales Java demo; do not substitute it.
 #
-# Keep fit: MISSING/PARTIAL until the relevant generator, manifest/checksum contract, and verifier exist.
+# What `fit: good|partial|MISSING` means is defined once, in CurriculumSpec. The short version: `good` means
+# a learner can run the episode today on the engine THAT lesson uses — proof on DuckDB does not make a
+# ClickHouse lesson good.
 
 # Assumes Learn SQL, and always has without saying so: Series 1 · 20 is "Transform with SQL",
 # and every load in the track is checked by counting rows. Data Modeling is NOT required — you
@@ -115,7 +123,7 @@ excludes:
   # Read", with Series 1 · 32 next door for the connection failure that turns out to be
   # credentials. The gap was the POINTER, not the teaching.
   - topic: "Where the credentials live — environment variables, secret stores, and file permissions"
-    where: "covered in Data Ops, Series 1 · 35, with Data Ops, Series 1 · 32 for telling a credentials failure apart from a firewall one. In this course a connection is something you are handed, already configured"
+    where: "covered in Data Ops, Series 1, along with telling a credentials failure apart from a firewall one. In this course a connection is something you are handed, already configured"
 
   # The language the pipeline is written in. Series 2 · 00 uses Groovy, but the track is about
   # the SHAPE of a load, not the syntax — and a reader who wants the language should be sent.
@@ -131,7 +139,7 @@ excludes:
   # ETL 2 · 45 and Data Ops 3 · 00 are both about orchestrators, and a reader who meets the
   # second one needs to be told these are two questions, not one subject twice.
   - topic: "Choosing and running the scheduler itself — cron vs systemd vs an orchestrator"
-    where: "covered in Data Ops, Series 3 · 00, which is choosing and running the scheduler. In this course, Series 2 · 45 is expressing your pipeline as a DAG, whatever ends up running it"
+    where: "covered in Data Ops, Series 3, which is choosing and running the scheduler. In this course, Series 2 · 45 is expressing your pipeline as a DAG, whatever ends up running it"
 
 series:
   - slug: series1-etl-fundamentals
@@ -174,8 +182,8 @@ series:
         data:
           source: northwind_co_files
           tables: ["orders_YYYY-MM-DD.csv", "Orders", "Order Details"]
-          fit: MISSING
-          reason: "A first load needs a clean CSV that ARRIVES from somewhere, and D4 (northwind_co_files) is not built; messy/orders-export.csv is classic-Northwind rows with eight defects, wrong for a first pipeline and not the one company. Build D4's daily order CSVs cut from D1-S Orders (one file per day, header row, comma-delimited, UTF-8), days 1-10 clean before the planned drift starts on day 11, so the loaded rows reconcile to Orders by OrderID; the same files serve Data Warehousing S2 and dbt sources."
+          fit: good
+          reason: "academy-files-export writes orders/: 30 daily CSVs for 2024-12-02 to 2024-12-31, cut from D1-S Orders — one file per day, header row, comma-delimited, UTF-8, LF, an empty field for NULL, 247 orders in all at S and 2,522 at M. Days 1–10 are layout v1 and clean, which is exactly a first load, and every row reconciles back to Orders by OrderID. Exported and read back on DuckDB 2026-09-20; manifest.json lists each file with its size and SHA-256. The classic-Northwind messy/orders-export.csv stays out of it: wrong company, wrong shape."
         status: planned
       # ALSO NAME THE SPREADSHEET, because a surprising share of real pipelines start with one
       # and this episode is the catalogue of what a source can be.
@@ -360,8 +368,8 @@ series:
         data:
           source: northwind_co_files
           tables: ["orders_YYYY-MM-DD.csv"]
-          fit: MISSING
-          reason: "Needs the four drifts on one feed, and D4 (northwind_co_files) is not built. Build its 30 daily order CSVs as designed: day 11 a column ADDED (Channel, from Orders.Channel), day 18 one RENAMED (ShipVia to ShipperID), day 24 one RETYPED (Freight with a decimal comma), day 27 one REORDERED (a column inserted mid-file, the read-by-position trap); noise: normal daily volume swings and a quoted field containing a comma on days that did not drift. Rows stay D1's, so a drifted load is caught by reconciling to Orders; Data Warehousing and dbt contract lessons can reuse the feed."
+          fit: good
+          reason: "The four drifts arrive on one feed, as designed: orders/ changes layout on day 11 (ADDED Channel as the last column), day 18 (RENAMED ShipVia to ShipperID), day 24 (RETYPED Freight with a decimal comma) and day 27 (REORDERED, Channel moving to just after CustomerID) — manifest.json's daily_orders.layouts names each version, its first day and its columns. Daily volumes swing too (3 to 14 orders a day at S, 65 to 98 at M), and DeliveryNotes carries a comma, so a quoted field turns up on days with no layout change at all. Exported on DuckDB 2026-09-20."
         status: planned
       - n: "10"
         slug: data-quality-gates
@@ -372,7 +380,7 @@ series:
           source: northwind_co_s
           tables: ["Orders.ShippedDate", "Orders.Status", "Invoices", "CourierConfirmations", "Customers.Region"]
           fit: partial
-          reason: "Nulls are real and planted: Speedy Express orders marked Shipped with no ShippedDate (the Learn SQL S2 outage, the cross-course 'check that would have caught it'), beside a legitimate NULL in Customers.Region. Missing: range and referential violations, since S has no negative quantities and no orphan keys; those arrive with D2 (northwind_co_changes) day 45 as designed (a duplicate OrderID, a negative Quantity, an order for a CustomerID that does not exist), surrounded by normal days."
+          reason: "Nulls are real and planted: for 26 weeks from 2024-03-04, a fifth of Speedy Express ship dates were never recorded, so those orders say Shipped with no ShippedDate and no invoice, while CourierConfirmations proves they left. The lesson states that in one sentence and builds the gate that would have caught it on the first night, beside a legitimate NULL in Customers.Region. Missing: range and referential violations, since S has no negative quantities and no orphan keys; those arrive with D2 (northwind_co_changes) day 45 as designed (a duplicate OrderID, a negative Quantity, an order for a CustomerID that does not exist), surrounded by normal days."
         status: planned
       # ADDED 2026-09-02, and it is the gap a working engineer hits WEEKLY. A coverage audit
       # found no episode anywhere on testing a pipeline, and the excludes hand "tested models"
@@ -426,8 +434,8 @@ series:
         data:
           source: [crm_export, northwind_co_s]
           tables: ["crm_customers", "Customers", "Customers.CompanyName", "Customers.Phone"]
-          fit: MISSING
-          reason: "S has no duplicate customers (company names are unique) and only one exact duplicate row, in CourierConfirmations; the lesson needs D3 (crm_export), not built. Build it as designed: 120 customers matching D1-S plus 12 duplicated under other spellings (legal suffix added, capitals, stray spaces, phone in another format, one still on a City that CustomerChanges later replaced) and 3 CRM-only prospects, keyed CRM-000001; plant as noise two DIFFERENT customers with near names (same first word, one Foods, one Food Hall) so a loose fuzzy match over-merges. Serves Data Warehousing S3 federation and dbt source conformance."
+          fit: good
+          reason: "D3 installs and verifies as its own schema (academy-verify, DuckDB 2026-09-20): 135 rows — 120 customers, 8 of them with no ERP account, 12 of them exported a second time under another spelling, and 3 prospects who are not customers at all. Its _plants table names all 49 planted rows: 12 duplicates, 12 address and phone format variants, 12 email variants and 2 near-identical company names. So matching on name alone fails in both directions, which is the lesson, and Company S stays the conformed side."
         status: planned
       # ALSO OWNS LATE-ARRIVING DIMENSIONS, a DIFFERENT problem from late-arriving facts with
       # a different fix. Both belong in this episode; do not split them.
@@ -705,7 +713,7 @@ series:
           source: northwind_co_s
           tables: ["WebOrders.Payload", "Orders", "Order Details"]
           fit: good
-          reason: "The same WebOrders-to-order-lines transform can run in the pipeline or be pushed down as SQL after landing raw, and rows scanned and moved differ visibly even at S; the decision needs no volume. The landed side is the learner's own raw copy from Series 1 (northwind_co_raw_s when built)."
+          reason: "The same WebOrders-to-order-lines transform can run in the pipeline or be pushed down as SQL after landing raw, and rows scanned and moved differ visibly even at S; the decision needs no volume. The landed side is installed by the lesson (academy-northwind-co-raw-install, D6 at S), so the series starts from a copy it can check; a learner whose Series 1 project landed its own raw copy can use that instead."
         status: planned
       # SOURCE (kimball): Loading a star designed by Kimball's method — see Data Modeling, Series 3.
       - n: "05"
@@ -783,8 +791,8 @@ series:
         data:
           source: northwind_co_changes
           tables: ["events: orders", "events: order_details", "events: customers"]
-          fit: MISSING
-          reason: "The point is that a log sees deletes a watermark cannot, and D2 is not built. Build D2 as a log-shaped feed (op c/u/d, before and after images, event_time, arrival_time, offset) with hard deletes, an order line removed from an open order, and an order keyed in error and deleted the same day, among normal inserts and updates. Order Details has no UpdatedAt, so line deletes are exactly what polling Orders.UpdatedAt misses; the same feed serves dbt incremental models and Data Warehousing S3."
+          fit: good
+          reason: "D2 is the log-shaped feed this needs, and it verifies: 6,142 events over 91 arrival days, each with an op (4,725 creates, 1,406 updates, 6 deletes, and 5 whose op is none of the three — the tail of day 58's reject burst), before and after images, an event_time, an arrival_time and an offset. The deletes are the point, because a watermark cannot see them: a line removed from open order 10145 on day 21 without Orders.UpdatedAt moving, and order 10242 keyed in error on day 33 and deleted 25 minutes later with its lines. Built and verified on DuckDB 2026-09-20."
         status: planned
       # ADDED 2026-09-02, into a slot that was already EMPTY — this series ran 15 then 25 with
       # no comment explaining the gap. It fills it because TWO EPISODES ALREADY LEAN ON A
@@ -865,8 +873,8 @@ series:
         data:
           source: [northwind_co_m, northwind_co_s]
           tables: ["Orders", "Order Details", "Invoices", "CourierConfirmations", "Orders.ShippedDate"]
-          fit: MISSING
-          reason: "A backfill is a volume lesson (a month at M is ~8,300 orders by design, against ~200 at S) and scale M is not built: extend the install to SCALE M with the same rules and rates. The reason to backfill already exists and must stay proportional at M: the Speedy Express outage (ShippedDate lost for 20% of its orders placed 2024-03-04..08-30) repaired from CourierConfirmations, after which six months of Invoices and every downstream total are rewritten without double-counting."
+          fit: good
+          reason: "Company M installs and verifies with SCALE 'M' (academy-verify, DuckDB 2026-09-20): 100,000 orders and 250,834 lines over 60 months — 1,916 orders in June 2024 against 177 at S — so a month-sized backfill is a volume job rather than a demonstration. The reason to backfill is in the rows and stays proportional at M: the Speedy Express outage loses ShippedDate for 302 of its 1,443 March 2024 orders and 288 of its 1,430 in April, against 34 in February."
         status: planned
       - n: "30"
         slug: idempotent-merge-at-scale
@@ -875,8 +883,8 @@ series:
         data:
           source: [northwind_co_m, northwind_co_changes]
           tables: ["Order Details", "Orders", "Orders.UpdatedAt", "events: orders"]
-          fit: MISSING
-          reason: "Needs volume for MERGE's scan cost to matter and a delta batch to merge, and neither M nor D2 is built. Build M (~1.25M order lines, composite key OrderID+ProductID) and D2 with its planned 0.5% of orders sent twice, so one batch holds two source rows for one target key: PostgreSQL MERGE errors, INSERT ... ON CONFLICT cannot touch a row twice in one statement, ClickHouse ReplacingMergeTree dedups only eventually. The design sheet names L for MERGE; M is the smallest scale that shows it."
+          fit: good
+          reason: "Both halves are built and verified on DuckDB 2026-09-20: Company M (100,000 orders, 250,834 order lines on the composite key OrderID + ProductID) for MERGE's scan cost, and D2 for the delta batch to merge, where 9 transactions are delivered twice — the same event_id, a new offset — so one batch can hold two source rows for one target key. That is the case PostgreSQL MERGE errors on, INSERT ... ON CONFLICT cannot touch a row twice in one statement, and ClickHouse ReplacingMergeTree only settles eventually. M is 250,834 lines, not the 1.25M an earlier plan assumed."
         status: planned
       # ALSO OWNS THE AUDIT DIMENSION, folded in because the SKILL is daily even though
       # Kimball's particular implementation is only one way to get it.
@@ -913,8 +921,8 @@ series:
         data:
           source: [northwind_co_l, northwind_co_files]
           tables: ["Order Details", "Orders", "StockMovements", "order_lines/month=YYYY-MM"]
-          fit: MISSING
-          reason: "Throughput is the lesson, so it needs L (~12.5M order lines by design), and neither L nor D4's file exports is built. Build L via the planned bulk path (write CSV, then COPY), and D4's order lines as month-partitioned files (CSV and Parquet, 60 months) so JDBC batches vs COPY and one loader vs one per partition can be timed; the same files serve Data Warehousing S2 and Learn SQL S3 Block B."
+          fit: good
+          reason: "Company L installs and verifies with SCALE 'L' (academy-verify, DuckDB 2026-09-20): 1,000,000 orders and 2,510,619 order lines, which is the throughput to move. D4 supplies the file side at any scale: order_lines/ as 60 month-partitioned Parquet files and order_lines_csv/ as the same 60 months in CSV, so JDBC batches against COPY, and one loader against one per partition, can both be timed. Exported and read back at S and M on DuckDB 2026-09-20 (250,834 lines at M in 88 seconds); rerun it at SCALE L for the files this episode loads."
         status: planned
       # MOVED HERE FROM 20 ON 2026-09-02. IT IS THE GATE, AND A GATE BELONGS NEXT TO THE DOOR
       # IT GATES — Series 4 begins immediately after the project, and this is the episode that
@@ -1064,8 +1072,8 @@ series:
         data:
           source: northwind_co_changes
           tables: ["events: orders", "event_time", "arrival_time"]
-          fit: MISSING
-          reason: "Needs events carrying both an event time and an arrival time, and D2's event log is not built. Build D2's JSONL log for Jan-Mar 2025 with event_time (order placed), arrival_time (reached the log), and offset, keeping the planned 3% arriving 1-5 days late plus some out of order within the hour, so windows by event time and by processing time give different totals. For session windows, keep a few customers placing web orders minutes apart (the Channel=Web share)."
+          fit: good
+          reason: "Every D2 event carries both times: event_time, when the order was keyed, and arrival_time, when the record reached the log, to the second, plus an offset. 66 transactions arrive 1 to 5 days late and 104 a few minutes out of order, so a window by event time and the same window by processing time genuinely disagree, and a watermark has something to be late for. 6,142 events over 91 arrival days, verified on DuckDB 2026-09-20."
         status: planned
       # COUNTERPART: Series 1 · 15, Staging.
       # COVER: where "raw" lives when there is no landing table. THE LOG IS YOUR STAGING AREA —
@@ -1081,8 +1089,8 @@ series:
         data:
           source: northwind_co_changes
           tables: ["events: orders", "offset"]
-          fit: MISSING
-          reason: "Needs a replayable log with offsets over enough days to make retention a decision, and D2 is not built. The designed 90-day JSONL log does it; plant one transform bug whose effect is noticed only ~10 days in, so a 7-day retention can no longer re-derive it and a 30-day one can."
+          fit: good
+          reason: "D2 is the replayable log: 6,142 events over 91 arrival days as JSONL, an offset on every record, so how long to keep it becomes a decision a learner can test — a 7-day window can no longer re-derive what a 30-day one still can. Built and verified on DuckDB 2026-09-20. The transform bug whose effect is noticed ten days in stays out of the generator on purpose: it is the lesson's own code, not something planted in the data."
         status: planned
       # COUNTERPART: Series 2 · 10 (Data Quality Gates) and 2 · 25 (Errors, Retries & Dead
       # Letters).
@@ -1099,8 +1107,8 @@ series:
         data:
           source: northwind_co_changes
           tables: ["events: orders", "events: order_details"]
-          fit: MISSING
-          reason: "D2 is not built. Its planned day 45 bad load supplies the rejects (duplicate OrderID, negative Quantity, unknown CustomerID); add one POISON record (truncated, unparseable JSON) that stops a naive consumer, and a short burst where the rejected share jumps, so a gate on the proportion has something to catch. The same day serves dbt S2's bad-load project."
+          fit: good
+          reason: "Day 45's bad load is in D2: a second Orders row for OrderID 10330, a negative Quantity on order 10334, and order 10338 for CustomerID ALPIX, which does not exist. The poison record is day 52 — one truncated, unparseable line with the intact event straight after it — and day 58, 14:00 to 14:20, is the burst: 20 records with no usable key, op, table or row, a jump in the rejected share for a gate to catch. D6 lands all 21 in _rejects with the reason (5 no row, 5 unknown op, 5 no key, 5 unknown table, 1 not JSON). Built and verified on DuckDB 2026-09-20."
         status: planned
       # COUNTERPART: Series 2 · 15, Deduplication & Conformance.
       # COVER: batch dedup scans the table. A stream cannot, so dedup becomes KEYED STATE plus
@@ -1115,8 +1123,8 @@ series:
         data:
           source: northwind_co_changes
           tables: ["events: orders", "OrderID"]
-          fit: MISSING
-          reason: "D2 is not built. Its planned 0.5% of orders sent twice gives duplicates inside a window; also plant a few re-sent 8-10 days later, outside a 7-day dedup window, so the window's size visibly becomes a business decision (those slip through)."
+          fit: good
+          reason: "D2 delivers 9 transactions twice inside the window — the same event_id, a new offset — and sends orders 10281, 10297 and 10305 again 8 to 10 days after they first arrived. So a 7-day dedup window catches the first kind and lets those three through, and the window's size is visibly a business decision rather than a default. Built and verified on DuckDB 2026-09-20."
         status: planned
       # COUNTERPART: Series 2 · 35, Load Order — Dimensions First, Then Facts.
       # COVER: in batch you control the order and load dimensions first. In a stream YOU DO NOT
@@ -1132,8 +1140,8 @@ series:
         data:
           source: northwind_co_changes
           tables: ["events: customers", "events: orders"]
-          fit: MISSING
-          reason: "D2 is not built, and its design has customer CHANGES but no NEW customers. Add a few new-customer events in Jan-Mar 2025 (continuing D1's joiners) whose first order event reaches the log minutes to hours before the customer event, and one whose customer event never arrives, so buffer-with-timeout, placeholder-then-correct and reject each give a different result."
+          fit: good
+          reason: "D2 plants both halves, with minutes to work in: order 10315 keyed at 08:29 on day 43 while customer RIVE2's record arrives at 10:37, and order 10331 at 08:09 on day 45 while customer KEST5's arrives at 08:40 — so buffer-with-timeout and placeholder-then-correct behave differently. Customer UPLA8 is the harder one: created in the source, its event never reaches the log, though its orders do. The log carries 4 new-customer events besides, so this is no longer only about changed customers. Built and verified on DuckDB 2026-09-20."
         status: planned
       # COUNTERPART: Series 2 · 30, Surrogate Keys & Dimension Lookups.
       # COVER: a batch lookup joins against a dimension that is standing still. A streaming
@@ -1150,8 +1158,8 @@ series:
         data:
           source: northwind_co_changes
           tables: ["events: customers", "events: price_changes", "events: orders"]
-          fit: MISSING
-          reason: "D2 is not built. Its customer changes and weekly price changes are the changing dimension; plant orders whose event_time precedes a segment or price change but which arrive after it, so a processing-time lookup picks the wrong version and an as-of-event-time join the right one. Continues D1's CustomerChanges and PriceChanges, so versions line up with ETL 3 · 10's SCD2 dimension."
+          fit: good
+          reason: "D2 plants the two as-of cases by name: on day 47 GOLD4, the biggest buyer, moves from Wholesale to Restaurant, and order 10312 — keyed 2025-02-11, before the change — arrives after it; on day 50 product 77 goes from 9.62 to 10.39, with order 10364, keyed the day before, arriving after. A lookup at processing time picks the wrong version and an as-of-event-time join the right one, and the difference has a customer and a price attached. Continues D1's CustomerChanges and PriceChanges; built and verified on DuckDB 2026-09-20."
         status: planned
       # COUNTERPART: Series 1 · 30, Idempotency — Re-Runnable Loads.
       # COVER: exactly-once inside an engine is real; EXACTLY-ONCE ENDS AT THE EDGE. The moment
@@ -1168,8 +1176,8 @@ series:
         data:
           source: northwind_co_changes
           tables: ["events: orders", "OrderID", "offset"]
-          fit: MISSING
-          reason: "D2 is not built. Beyond its 0.5% sent twice by the source, plant a redelivery: a stretch of offsets delivered again, as a consumer restart would, so an append-only sink double-counts and an upsert on OrderID does not."
+          fit: good
+          reason: "Beyond the 9 transactions the source itself sends twice, D2 plants the consumer's own failure: on day 60 at 00:30, offsets 4197 to 4212 are delivered again, exactly as a restart would. An append-only sink double-counts those 16; an upsert on OrderID does not. Built and verified on DuckDB 2026-09-20."
         status: planned
       # COUNTERPART: Series 1 · 40, Row Counts & Logging — Proving the Load Did What You Think.
       # COVER: you cannot count the rows of a thing with no end. So reconciliation becomes
@@ -1184,8 +1192,8 @@ series:
         data:
           source: [northwind_co_changes, northwind_co_s]
           tables: ["events: orders", "Orders"]
-          fit: MISSING
-          reason: "Needs a source-side count for a closed window, and D2 is not built. Add to D2 a daily control-total event (orders and amount per event-time day, as the source system reports it) and keep the late arrivals, so a window reconciled before its watermark passes comes up short; D1-S Orders anchors the totals up to 2024-12-31."
+          fit: good
+          reason: "D2 carries the source's own count for every closed window: 90 daily control-total events (orders, order lines and amount, as the source system reports them). Because 66 transactions arrive 1 to 5 days late, a window reconciled before its watermark passes comes up short, and reconciled after it agrees — which is the whole lesson. D1-S anchors the totals up to 2024-12-31. Both built and verified on DuckDB 2026-09-20."
         status: planned
       # COUNTERPART: Series 3 · 25, Backfills & Reprocessing.
       # COVER: replay from an offset or a savepoint instead of re-running a date range. What
@@ -1201,8 +1209,8 @@ series:
         data:
           source: northwind_co_changes
           tables: ["events: orders", "offset"]
-          fit: MISSING
-          reason: "D2 is not built. A replayable JSONL log with offsets, starting from the D1-S snapshot, is what replay from an offset needs; reuse the transform bug planted for 4 · 05 as the reason to reprocess into a parallel output and switch over, with the redelivered offsets from 4 · 30 as the double-count risk."
+          fit: good
+          reason: "D2 is replayable by construction: a JSONL log starting from the D1-S snapshot of 2024-12-31, an offset on each of its 6,142 events, and a deterministic generator, so a replay lands the same rows twice. Day 60's redelivered offsets (4197 to 4212) are the double-count risk when reprocessing into a parallel output and switching over. Built and verified on DuckDB 2026-09-20; as in 4 · 05, the transform bug that motivates the reprocess is the lesson's own code."
         status: planned
       # THE PROJECT, and it deliberately mirrors Series 1 · 50 ("A Load That Is Safe to Run
       # Twice") so the series closes on the same promise as the batch one.
@@ -1214,6 +1222,6 @@ series:
         data:
           source: northwind_co_changes
           tables: ["events: orders", "events: order_details", "events: customers", "events: price_changes"]
-          fit: MISSING
-          reason: "The whole series on one feed, and D2 is not built. Everything planted for 4 · 00-40 in the one 90-day log (late and out-of-order events, a poison record, duplicates and a redelivery, facts before their customer, control totals), so the pipeline is proved safe to replay by reconciling to the same totals twice."
+          fit: good
+          reason: "The whole series arrives on one feed, and it verifies: 6,142 events over 91 arrival days with 66 late and 104 out of order, 9 delivered twice and offsets 4197 to 4212 redelivered on day 60, a poison line on day 52 and a 20-record reject burst on day 58, facts before their customer on days 43 and 45, day 45's bad load, and 90 daily control totals to reconcile against — twice, to prove the pipeline safe to replay. _plants names all 29 incidents with the episode each belongs to. Built and verified on DuckDB 2026-09-20."
         status: planned

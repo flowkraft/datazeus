@@ -363,6 +363,10 @@ ORDER BY "Orders" DESC;
 
 Every order outside the status gets NULL, `count` of a column skips NULLs, and the result is the same table: Sales rep still has 61 cancelled. In the filter above, the missing `ELSE` was a bug. Here it does the counting. The difference is whether you meant the NULLs.
 
+### A shorter spelling: FILTER
+
+PostgreSQL and DuckDB have a third way to write the same column: `count(*) FILTER (WHERE "Status" = 'Cancelled')`. The `WHERE` inside `FILTER` narrows the rows for **that one count only**, so the other columns still see every order, and Sales rep still gets 61. It is the SQL standard's spelling, and it reads well. SQL Server, MySQL and Oracle do not have it, so this course keeps writing `SUM(CASE …)`, which runs everywhere.
+
 ## A share that comes back as 0
 
 Sales rep has the most cancelled orders. It also has by far the most orders, so 61 on its own says little. The fair comparison is **the share**: the cancelled count divided by all of that channel's orders. Add it as a fourth column:

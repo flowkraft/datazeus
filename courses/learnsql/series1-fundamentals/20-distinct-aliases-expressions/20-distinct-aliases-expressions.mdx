@@ -391,7 +391,7 @@ HAVING COUNT(*) > 1;
 
 Run it and you get a single row back. That is your missing 25th.
 
-That is also why `DISTINCT` is a poor tool for "getting rid of duplicates" in general. When a result has rows in it you did not expect, `DISTINCT` will often make them disappear — and it will have hidden the reason rather than fixed it. **The usual cause is a join.** When one row on one side matches several rows on the other, every match comes back, and the row count multiplies without anything looking wrong. The <a href="/academy/learn-sql/multi-table-joins-duplicate-rows" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Multi-Table JOINs &amp; Grain</a> lesson is about exactly that. Until then: when extra rows surprise you, find out where they came from before you reach for `DISTINCT`.
+That is also why `DISTINCT` is a poor tool for "getting rid of duplicates" in general. When a result has rows in it you did not expect, `DISTINCT` will often make them disappear — and it will have hidden the reason rather than fixed it. **The usual cause is a join.** When one row on one side matches several rows on the other, every match comes back, and the row count multiplies without anything looking wrong. <a href="/academy/learn-sql#series2-intermediate" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">Series 2 · Intermediate SQL</a> comes back to exactly that. Until then: when extra rows surprise you, find out where they came from before you reach for `DISTINCT`.
 
 ### When two columns *is* what you meant
 

@@ -1,5 +1,5 @@
 ---
-title: "VIEWs — Naming a Query So You Can Reuse It"
+title: "VIEWs, CREATE TABLE AS & Temp Tables — Save the Query, or Save Its Answer"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
 topic: "learn-sql"
 tags: []
@@ -25,14 +25,26 @@ published: false
       - the koans mirror the lesson beat for beat
 
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
-    GOAL: name a query once and reuse it.
-    SQL: CREATE VIEW, querying a view, when a view is a good idea and when it hides a problem.
+    GOAL: name a query once and reuse it — or keep its answer, and know which one you kept.
+    SQL: CREATE VIEW, querying a view, when a view is a good idea and when it hides a problem;
+    CREATE TABLE … AS and CREATE TEMP TABLE … AS.
     Materialized views are Data Warehousing — say so rather than half-teaching them.
+
+    SAVE THE QUERY OR SAVE THE ANSWER (added 2026-09-19 — temp tables and CREATE TABLE AS had no
+    home in the course):
+      VIEW                    stores the question; every read runs it again on today's rows
+      CREATE TABLE … AS       stores the answer; a snapshot that does NOT change when the orders do
+      CREATE TEMP TABLE … AS  the same snapshot, gone when the session ends — the scratch table for a
+                              long piece of analysis, and the throwaway copy 55 and 56 practise on
+    SECOND TRAP: the snapshot read as live — a table built on Monday, reported from on Friday.
+    Designing tables (types, keys, constraints) stays Learn Data Modeling's; the SQL Server course
+    owns temp tables against table variables.
 
     ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
     Save a query as a named, reusable object (CREATE VIEW, querying it, replacing it); know the grain of a
     view before summing from it; what a view does NOT do (store data, speed things up); materialized views
-    are Data Warehousing's — name them, do not teach them.
+    are Data Warehousing's — name them, do not teach them. Save a result as a table or a temp table, and know
+    it will not update.
 
     ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
     No case in this episode. The trap keeps its own example: a view built on order lines, summed again by
@@ -47,7 +59,7 @@ published: false
 
     ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
     Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
-    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 17 episodes, never whole
     episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
     KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
     WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
@@ -69,6 +81,7 @@ published: false
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:equivalent
+      koan:predict
       koan file: tests/src/koans/groovy/datazeus/learnsql/series2/_22/ViewsKoans.groovy
    ========================================================================== */}
 

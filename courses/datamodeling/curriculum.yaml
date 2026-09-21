@@ -163,7 +163,7 @@ title: Data Modeling
 # "one series and one statement", so say exactly that.
 prerequisites:
   - course: learn-sql
-    needs: "Series 1 entire, plus INSERT from Series 2 · 55"
+    needs: "Series 1 entire, plus INSERT … SELECT from Series 2"
     why: >-
       Series 1 models Northwind, the business you queried all through Learn SQL: you decide what
       its tables should be, load its real rows into them, and run your first report again on
@@ -184,7 +184,7 @@ excludes:
   - topic: "EXPLAIN, index internals and making a slow query fast"
     where: "covered in Learn SQL, Series 3. In this course, Series 2 · 40 makes only the design call, before the query exists"
   - topic: "NULL semantics — three-valued logic, and why `= NULL` never matches"
-    where: "covered in Learn SQL, Series 1 · 45, which is what NULL does to a query. In this course, Series 1 · 52 is whether the column should allow NULL at all — a different question that happens to share the word"
+    where: "covered in Learn SQL, Series 1, which is what NULL does to a query. In this course, Series 1 · 52 is whether the column should allow NULL at all — a different question that happens to share the word"
   - topic: "Querying JSON once it is in a column"
     where: "covered in Learn SQL, Series 3, which queries JSON once it is there. In this course, Series 2 · 42 asks only whether it should be JSON in the first place"
   # NEAR-DUPLICATES with Data Model Patterns: we teach the TECHNIQUE and how to choose; that
@@ -196,9 +196,9 @@ excludes:
   # MOVED OUT 2026-09-14, both to Schema Teardowns: each could only be taught from real systems
   # much larger than either of this course's datasets.
   - topic: "Subject areas and bounded contexts — finding your way around a 200-table schema"
-    where: "covered in Schema Teardowns, Series 1 · 00, on real schemas of that size"
+    where: "covered in Schema Teardowns, Series 1, on real schemas of that size"
   - topic: "Multi-tenancy — how one product keeps its customers' data apart"
-    where: "covered in Schema Teardowns, Series 2 · 25, from products that live the decision"
+    where: "covered in Schema Teardowns, Series 2, from products that live the decision"
   - topic: "How real shipped applications actually modelled it"
     where: "covered in Schema Teardowns — that track is field evidence, this one is method"
 
@@ -999,10 +999,10 @@ series:
         core: true
         status: planned
         data:
-          source: northwind_co_s
-          tables: ["Orders.OrderDate", "Orders.RequiredDate", "Orders.ShippedDate"]
+          source: [northwind_co_s, generated]
+          tables: ["Orders.OrderDate", "Orders.RequiredDate", "Orders.ShippedDate", "dim_time"]
           fit: good
-          reason: "Five years of order, required, and shipped dates support one conformed calendar used in three roles, including NULL/unshipped orders. Minimum: 24 months, one partial boundary period, and at least one missing shipped date."
+          reason: "Five years of order, required, and shipped dates support one conformed calendar used in three roles, including NULL/unshipped orders. Minimum: 24 months, one partial boundary period, and at least one missing shipped date. The generated star in the classic northwind.duckdb is judged here: its dim_time stops at day 28 of every month, so an order on the 30th has no date to join to."
       # DEGENERATE: the order number lives IN the fact with no table of its own — people invent a
       # dim_order for it. JUNK: a handful of low-cardinality flags (shipped?, discounted?,
       # discontinued product?) collapsed into one small dimension instead of columns on the fact.
@@ -1126,10 +1126,10 @@ series:
         dataset: northwind:star
         status: planned
         data:
-          source: [northwind_co_s, generated]
+          source: northwind_co_s
           tables: ["Customers", "Orders", "Order Details", "Products", "CustomerChanges", "PriceChanges"]
           fit: good
-          reason: "Northwind Company S supplies realistic changing-source rows for hubs, links, and satellites; the existing generated star gives a small comparison target for when a dimensional model is preferable. Minimum: 20 customers, 50 orders, two changed attributes, and one many-to-many relationship."
+          reason: "Northwind Company S supplies realistic changing-source rows for hubs, links, and satellites; the learner's own reconciled star from this series is the comparison for when a dimensional model is preferable. (Not the generated star: it reconciles with nothing, so it cannot show two models answering the same question.) Minimum: 20 customers, 50 orders, two changed attributes, and one many-to-many relationship."
       # The analytics-engineering shift, judged honestly: on a columnar engine a wide, denormalised
       # table is often fine and sometimes best. The shipped main.vw_sales_detail already is one.
       # What columnar storage did NOT change: grain, additivity, history — a wide table still needs

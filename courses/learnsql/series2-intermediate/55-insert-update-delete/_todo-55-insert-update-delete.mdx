@@ -1,5 +1,5 @@
 ---
-title: "INSERT, UPDATE, DELETE, UPSERT & Transactions — Change the Data, Safely"
+title: "INSERT, UPDATE, DELETE & Transactions — Change the Data, Safely"
 description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title."
 topic: "learn-sql"
 tags: []
@@ -27,13 +27,9 @@ published: false
     ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
     GOAL: change data on purpose, and be able to undo it.
     SQL: INSERT (single, multi-row, INSERT … SELECT), UPDATE … WHERE, DELETE … WHERE, BEGIN,
-    COMMIT, ROLLBACK, INSERT … ON CONFLICT DO NOTHING / DO UPDATE.
-    ON CONFLICT IS NOT OPTIONAL HERE — see the curriculum note above this episode. The
-    failure that earns it: an import script run twice. Without ON CONFLICT the second run
-    either duplicates every row or dies on the unique constraint, and the beginner's
-    instinct is SELECT-then-INSERT, which is a race. DO NOTHING is the idempotent load;
-    DO UPDATE is upsert in one statement. Portability (MERGE elsewhere) is Series 4 · 05's
-    job, not this episode's — teach the PostgreSQL form and say the other spellings exist.
+    COMMIT, ROLLBACK.
+    UPSERT MOVED TO SERIES 2 · 56 ON 2026-09-19 (ON CONFLICT and MERGE): this episode carried too much.
+    Close on a one-line hand-over — "and when the row might already be there: next episode".
     PLACED LATE ON PURPOSE, and this is the reason: the failure mode of teaching UPDATE early is a
     learner who runs it without a WHERE. By here, filtering is second nature.
     Teach the SELECT-first habit: write the WHERE as a SELECT, look at the rows, then change the
@@ -42,7 +38,7 @@ published: false
     ── WORKPLACE SKILL — what a working person must be able to do after this episode ──────────
     Change data safely: write the WHERE as a SELECT first; INSERT (one row, many rows, INSERT … SELECT — Learn
     Data Modeling's prerequisite); UPDATE … WHERE and updating rows from a list somebody sends; DELETE … WHERE;
-    BEGIN / COMMIT / ROLLBACK; INSERT … ON CONFLICT DO NOTHING / DO UPDATE (the upsert every import needs).
+    BEGIN / COMMIT / ROLLBACK. (Insert-or-update is Series 2 · 56.)
     STANDALONE: uses only Series 1 skills (plus, optionally, a subquery) — say "you can take this one straight
     after Series 1".
     PRACTICE SAFETY: every write in the lesson and the koans runs inside BEGIN … ROLLBACK (koans on a throwaway
@@ -56,7 +52,7 @@ published: false
     so nobody changes the data every lesson depends on).
     WHAT GOES WRONG: an UPDATE without "ShippedDate" IS NULL in its WHERE overwrites ship dates that were already
     recorded — the report looks better and history is gone. The SELECT-first habit catches it.
-    KEEP IT LIGHT: UPSERT (ON CONFLICT), DELETE and "update rows from a list" beyond the case keep their own
+    KEEP IT LIGHT: DELETE and "update rows from a list" beyond the case keep their own
     examples; the lesson's non-case examples still need only Series 1 skills.
 
     DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
@@ -66,7 +62,7 @@ published: false
 
     ── REMINDER: CURRICULUM FIRST, THE STORY FROM TIME TO TIME (owner, 2026-09-17) ─────────
     Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
-    story (the Speedy Express recording outage) goes along from time to time — in 8 of 16 episodes, never whole
+    story (the Speedy Express recording outage) goes along from time to time — in 8 of 17 episodes, never whole
     episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: MAIN EXAMPLE — the fix, safely.
     A SEGMENT IS ONE QUERY of the shape the lesson just taught, and ONE finding, after a full lesson — using
     nothing the learner has not met yet. If it needs more, it belongs to a later episode or to the project.

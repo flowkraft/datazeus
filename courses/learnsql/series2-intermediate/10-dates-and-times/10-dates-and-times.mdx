@@ -343,7 +343,7 @@ FROM "Orders";
 | ------------ | ------- |
 | 4.8          | 24      |
 
-A normal shipment here takes 2 to 7 days; the 193 slow ones took 15 to 24. PostgreSQL can also average the interval itself (`4 days 19:54:48…`), and has an `AGE()` function that describes the gap between two timestamps in years, months and days. Both are PostgreSQL's own. The DuckDB the koans run on refuses to average an interval, so this course casts to `DATE` and works in days.
+A normal shipment here takes 2 to 7 days; the 193 slow ones took 15 to 24. PostgreSQL can also average the interval itself (`4 days 19:54:48…`), and has an `AGE()` function that describes the gap between two timestamps in years, months and days. This course casts to `DATE` and works in days instead, because a whole number of days is what a report shows.
 
 ### Comparing two timestamps needs no arithmetic
 
