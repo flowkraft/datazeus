@@ -1,6 +1,6 @@
 package datazeus.learnsql.series3._10
 
-import datazeus._internal.KoanBase
+import datazeus._internal.NorthwindCoKoanBase
 import spock.lang.Stepwise
 
 /**
@@ -18,7 +18,7 @@ import spock.lang.Stepwise
  *     ./zeus.sh koans learnsql series3 _10    (macOS/Linux)
  *
  * ── READ THESE FIRST ────────────────────────────────────────────────────
- *   KoanBase                                  shouldReturn, the ___ blank, the dataset
+ *   NorthwindCoKoanBase                       shouldReturn, the ___ blank, Northwind Company S
  *   learnsql/series1/_10/WhereFilteringKoans   the worked example: twelve koans, one per idea
  *
  * ── THE RULES ───────────────────────────────────────────────────────────
@@ -35,17 +35,25 @@ import spock.lang.Stepwise
  * ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
  * GOAL: walk a hierarchy of unknown depth.
  * SQL: WITH RECURSIVE, the anchor and recursive terms, UNION ALL, a depth guard.
- * seed: bulk — needs the larger dataset; Northwind's 3-row Employees cannot demonstrate depth.
+ * DATA: Northwind Company S ("Employees", 29 rows) — Northwind's 3-row Employees cannot
+ * demonstrate depth, and S's org chart was deepened for this episode (curriculum.yaml, DEPTH):
+ *   - 1 Maya Bauer, the CEO, "ReportsTo" NULL: the anchor.
+ *   - sales stops at level 3 (managers 2 and 3, reps 4 to 12); finance at level 4 (14 → 17 →
+ *     21 and 22); operations at level 6 (13 → 15 → 18 → 23 → 25 and 26; 15 → 19 → 24 → 27;
+ *     13 → 16 → 20). One depth per branch, so no fixed number of self-joins is right.
+ *   - from a warehouse operative (25, 26 or 27) the walk UP to Maya is five steps.
+ *   - 28 and 29, interim sales managers, report to each other: a walk DOWN from Maya never
+ *     meets them (27 rows), a walk UP from either never ends without the depth guard.
  * Always show the termination condition. A recursive CTE without one is an outage.
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
  * LEVEL ●●● of ●●●●. BUILDS ON: Series 2 · 20 (WITH), 2 · 30 (the self-join it repeats level
  * after level), 2 · 48 (UNION ALL joins the anchor to the recursive term).
  * ALSO: it builds Series 2 · 10's date spine on engines without generate_series — say so.
- * DATA: seed: bulk, which is not built yet (see curriculum.yaml). Was 00 until the 2026-09-14 reorder.
+ * Was 00 until the 2026-09-14 reorder.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait
-class RecursiveCtesKoans extends KoanBase {
+class RecursiveCtesKoans extends NorthwindCoKoanBase {
 
     // TODO: koans, one per idea in the lesson, in the same order.
     //

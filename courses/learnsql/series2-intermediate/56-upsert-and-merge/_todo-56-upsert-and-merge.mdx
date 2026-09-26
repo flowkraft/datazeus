@@ -32,9 +32,8 @@ published: false
     THE FAILURE THAT EARNS IT: an import script run twice. Without ON CONFLICT the second run either
     duplicates every row or dies on the unique constraint, and the beginner's instinct is SELECT-then-INSERT,
     which is a race. DO NOTHING is the idempotent load; DO UPDATE is upsert in one statement.
-    MERGE, ONE BEAT: the standard spelling (SQL:2003; PostgreSQL 15+, DuckDB 1.4+, and the only one on SQL
-    Server and Oracle). Write the same upsert as MERGE. Its koan needs the koan runner's DuckDB upgraded from
-    1.1.3 to 1.4.4.0 first (tests/pom.xml; curriculum.yaml, Series 2 header). The other engines' spellings (MySQL's ON DUPLICATE KEY UPDATE and the rest) are Series 4 · 05's.
+    MERGE, ONE BEAT: the standard spelling (SQL:2003; PostgreSQL 15+, recent DuckDB, and the only one on SQL
+    Server and Oracle). Write the same upsert as MERGE; the koan runner's DuckDB parses it. The other engines' spellings (MySQL's ON DUPLICATE KEY UPDATE and the rest) are Series 4 · 05's.
     THE EXAMPLE: a supplier's price list — some products already exist (update the price), some are new
     (insert them). Practice on a copy made with Series 2 · 22's CREATE TABLE AS, with its key added: ON
     CONFLICT needs a key to conflict on, and a CREATE TABLE AS copy has none until you add it.
@@ -55,6 +54,12 @@ published: false
     Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
     story (the Speedy Express recording outage) goes along from time to time — in 8 of 17 episodes, never whole
     episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
+
+    ── THE HANDOVER LADDER ── who drives this one (stories plan §3.2.1a, 2026-09-21) ──
+    NO CASE FILE HERE, AND THE LADDER DOES NOT PAUSE FOR IT. Split out of 55 so the fix stays
+    readable; UPSERT and MERGE get their own examples. Mnemosyne is at DOUBTING — by this point in
+    the series she asks how sure he is and he has an answer ready. Do not walk that back for the
+    sake of a clean teaching exchange.
     KEEP IT NONE: no case file here, not even a recap line.
 
     ── PLACE IN THE SERIES ─────────────────────────────────────────────────

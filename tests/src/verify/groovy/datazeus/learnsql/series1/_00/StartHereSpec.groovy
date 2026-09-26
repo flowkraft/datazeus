@@ -1,6 +1,6 @@
 package datazeus.learnsql.series1._00
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 import java.sql.SQLException
@@ -16,7 +16,7 @@ import java.sql.SQLException
  * while the video said "get", and the SQL answered the video. Fixed 2026-08-25; if any of the
  * three ever drifts again, they are wrong, not the data.
  *
- * Each feature runs on BOTH engines (see NorthwindGateSpec): the bundled DuckDB and a real
+ * Each feature runs on BOTH engines (see GateSpec): the bundled DuckDB and a real
  * Postgres — so we prove the learner gets the SAME result whether they use the DuckDB CLI or
  * the Northwind PostgreSQL in CloudBeaver, not just that the data matches.
  *
@@ -25,7 +25,7 @@ import java.sql.SQLException
  * Convention: the spec runs the SAME *.sql files the lesson/video show, so the SQL is
  * authored in exactly one place (the lesson's scripts/) and verified here — no drift.
  */
-class StartHereSpec extends NorthwindGateSpec {
+class StartHereSpec extends GateSpec {
 
     @Unroll
     def "[#engine] the hero query: June received exactly four orders"() {

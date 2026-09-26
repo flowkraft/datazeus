@@ -6,5 +6,5 @@ WITH month_orders AS (
 )
 SELECT *
 FROM month_orders
-WHERE "CustomerID" = 'NORDI'
+WHERE "CustomerID" = 'QUAY3'
 ORDER BY "OrderID";

@@ -29,7 +29,7 @@ Every query below runs on the Northwind database on PostgreSQL. Type each one in
 
 You already have a way to do this. Filter to one country and count what is left:
 
-```sql file=./scripts/orders-count-germany.sql
+```sql file=./scripts/orders-count-germany.sql {3}
 SELECT count(*) AS "OrderCount"
 FROM "Orders"
 WHERE "ShipCountry" = 'Germany';
@@ -91,7 +91,7 @@ That has one consequence worth holding on to, because every mistake later in thi
 
 A group will answer more than one question at a time, and that is the moment a count turns into a report.
 
-```sql file=./scripts/country-report.sql
+```sql file=./scripts/country-report.sql {1-3,5}
 SELECT "ShipCountry", count(*) AS "OrderCount",
        sum("Freight") AS "TotalFreight",
        max("Freight") AS "DearestDelivery"
@@ -144,7 +144,7 @@ Somebody reads that report and asks a perfectly fair question: **which cities ar
 
 Before you read on, decide what happens. `"ShipCity"` is a real column, in the same table as the others, and nothing else was touched. Does asking for one more column break anything?
 
-```sql file=./scripts/country-with-city.sql {3}
+```sql file=./scripts/country-with-city.sql {3}#err
 SELECT "ShipCountry", "ShipCity", count(*) AS "OrderCount"
 FROM "Orders"
 GROUP BY "ShipCountry";
@@ -168,7 +168,7 @@ The engine cannot read your mind and know what you meant. What it can do is tell
 
 The report that was asked for is per city. So say that — group by the city itself, not the country:
 
-```sql file=./scripts/orders-per-city.sql
+```sql file=./scripts/orders-per-city.sql {3}
 SELECT "ShipCity", count(*) AS "OrderCount"
 FROM "Orders"
 GROUP BY "ShipCity"
@@ -277,7 +277,7 @@ This is the shape you will be asked for most, and it is the one that stops peopl
 
 So group by something you **compute**:
 
-```sql file=./scripts/freight-per-month-2024.sql
+```sql file=./scripts/freight-per-month-2024.sql {1,5}
 SELECT EXTRACT(MONTH FROM "OrderDate") AS "Month",
        sum("Freight") AS "TotalFreight"
 FROM "Orders"
@@ -339,7 +339,7 @@ It is not a data error. The UK has seven orders and its dearest delivery all yea
 
 The obvious next request is "only the countries with more than five orders". Put it in the `WHERE` and you get:
 
-```sql file=./scripts/where-with-count.sql
+```sql file=./scripts/where-with-count.sql {3}#err
 SELECT "ShipCountry", count(*) AS "OrderCount"
 FROM "Orders"
 WHERE count(*) > 5
@@ -384,7 +384,7 @@ LIMIT 5;
 
 Now ask the same piles a different question. Instead of counting the orders, add up what they cost us to ship:
 
-```sql file=./scripts/freight-per-customer.sql
+```sql file=./scripts/freight-per-customer.sql {1,3}
 SELECT "CustomerID", sum("Freight") AS "TotalFreight"
 FROM "Orders"
 GROUP BY "CustomerID"

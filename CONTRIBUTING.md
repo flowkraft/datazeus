@@ -175,8 +175,8 @@ Everywhere else is Northwind Company, and no series switches between the two hal
 `DatasetsSpec` enforces this in both directions (the classic dataset is used where it must be, and
 nowhere else), and its failure messages quote the reasons above. It checks each
 episode's `data.source`, the base class of every lesson spec and koan followed up its whole chain
-(`KoanBase` and `NorthwindGateSpec` open the classic file, `NorthwindCoKoanBase` and
-`NorthwindCoGateSpec` open Northwind Company), any direct use of the classic file's path or helpers,
+(`KoanBase` and `GateSpec` open the classic file, `NorthwindCoKoanBase` and
+`NorthwindCoGateSpec` open Northwind Company), any direct use of the classic file's path,
 and that the classic file still has what these lessons are built on: no declared
 keys, the empty tables, 25 / 79 / 193 / 20 rows, the 28-day calendar and the missing order number.
 To change a decision on purpose, edit `CLASSIC_SERIES` or `CLASSIC_EPISODES` in that spec, with the

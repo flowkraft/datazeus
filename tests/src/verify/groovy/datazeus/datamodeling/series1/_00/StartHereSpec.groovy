@@ -1,6 +1,6 @@
 package datazeus.datamodeling.series1._00
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 import java.sql.SQLException
@@ -26,7 +26,7 @@ import java.sql.SQLException
  * reference solution, and §6 proves each check can FAIL — a check no model can fail checks nothing.
  *
  * ── WHY A SCHEMA OF ITS OWN, NOT `practice` ──────────────────────────────────────────────
- * NorthwindEngines hands every spec in the JVM the SAME DuckDB copy and the SAME PostgreSQL, built
+ * GateEngines hands every spec in the JVM the SAME DuckDB copy and the SAME PostgreSQL, built
  * for read-only lessons. This lesson WRITES. So everything it builds lives in `dm_s1_00` — every
  * `practice` in the scripts, the checks and the reference is rewritten to it — and is dropped in
  * cleanupSpec. Nothing another spec reads is touched, and Northwind's own tables never are.
@@ -36,7 +36,7 @@ import java.sql.SQLException
  * what CloudBeaver prints and what a learner running the INSERT will compare against. DuckDB
  * words the same refusals differently; its wording is asserted too, so the article can quote it.
  */
-class StartHereSpec extends NorthwindGateSpec {
+class StartHereSpec extends GateSpec {
 
     static final String SCHEMA = "dm_s1_00"
 

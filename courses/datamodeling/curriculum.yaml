@@ -61,19 +61,31 @@
 # A model that does not match the business cannot accept the business's own rows.
 #
 # Do not add keys to main.*: 57 needs a schema that declares nothing, and the learner's model is
-# where constraints belong. schema.sql REBUILDS rather than ALTERs, because DuckDB (tested,
-# v1.5.4) cannot ADD FOREIGN KEY, ADD UNIQUE or ADD CHECK; it is re-runnable, which is why
-# `zeus practice reset` exists.
+# where constraints belong. schema.sql REBUILDS rather than ALTERs, because DuckDB cannot ADD
+# FOREIGN KEY, ADD UNIQUE or ADD CHECK — all three come back "Not implemented Error: No support
+# for that ALTER TABLE option yet!". RE-PROBED 2026-09-21 on 1.4.5.0, the version tests/pom.xml
+# and DataPallas both pin: still refused, and it is those three specifically — ADD PRIMARY KEY
+# and ADD COLUMN are accepted. It is re-runnable, which is why `zeus practice reset` exists.
 #
-# MEASURED on the shipped northwind.duckdb (DuckDB v1.5.5, 2026-09-14) — use these, not memory:
+# MEASURED on the shipped northwind.duckdb, and RE-MEASURED 2026-09-21 on DuckDB 1.4.5.0 — the
+# version tests/pom.xml and DataPallas both pin, so these are the numbers the learner's engine,
+# the koan runner and the video all produce. EVERY FIGURE BELOW CAME BACK IDENTICAL. (This header
+# used to read "DuckDB v1.5.5, 2026-09-14". On that date the koan runner was pinned at 1.1.3, and
+# 1.5 is the line this project deliberately skips — see the learnsql curriculum's upgrade note —
+# so it credited an engine nothing here has ever run on. The numbers were right; the provenance
+# was not.) USE THESE, NOT MEMORY:
 #   25 customers, 79 orders, 193 order lines, 20 products, 6 suppliers, 3 shippers, 3 employees,
-#   8 categories; order-line revenue 58153.31. Territories, EmployeeTerritories, Region and
-#   CustomerDemographics hold 0 rows. Customers.Email is NULL on every row; Region on 21 of 25.
+#   8 categories; order-line revenue 58153.31, which is sum("UnitPrice" * "Quantity" * (1 -
+#   "Discount")) over "Order Details", with Cactus Comidas para llevar the top customer.
+#   Territories, EmployeeTerritories, Region, CustomerDemographics and CustomerCustomerDemo hold
+#   0 rows. Customers.Email is NULL on every row; Region on 21 of 25.
 #   main.fact_sales / dim_* are a SEPARATE star ReportBurster generates for pivot-table volume
-#   (NorthwindOlapDataGenerator, seed 42): 30 invented customers, 16 products, net revenue
-#   4354846.73, no order number, a 28-day calendar. Decided 2026-09-14: it is never a reference
-#   answer — Series 3 reconciles against the OLTP tables — and it IS the "star somebody else
-#   built" that Series 3 · 25 and · 30 judge.
+#   (NorthwindOlapDataGenerator, seed 42): 30 invented customers, 16 products, 3 employees, 7937
+#   fact rows, net revenue 4354846.73 (gross 4752911.07), no order number, and a 28-day calendar
+#   — dim_time is 672 rows, 2023-01-01 to 2024-12-28, twenty-four months of exactly 28 days each.
+#   Two views, vw_sales_detail and vw_monthly_sales, ship on top of it. Decided 2026-09-14: it is
+#   never a reference answer — Series 3 reconciles against the OLTP tables — and it IS the "star
+#   somebody else built" that Series 3 · 25 and · 30 judge.
 #   THE SERIES 3 SEED (PART 0 of practice-template/star.sql, schema `seed`) adds what Northwind
 #   does not ship: stock movements, monthly sales targets, employee territories. main.* untouched.
 #
@@ -245,7 +257,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Categories", "Customers", "Suppliers", "Products", "Orders", "Order Details", "Employees"]
           fit: good
           reason: "The frozen Northwind rows are small enough to model by hand and rich enough to run fit/refuse/answer proofs. Minimum: the shipped 25 customers, 79 orders, 193 lines, 20 products, and 8 categories; the learner's practice schema is the artifact being built."
@@ -265,7 +277,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Customers", "Suppliers", "Products", "Categories", "Employees"]
           fit: good
           reason: "Northwind exposes business things and their descriptive attributes across several domains, with enough variation to distinguish entities from facts. Minimum: 5 customers, 3 products, 2 suppliers, and 2 categories."
@@ -286,7 +298,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Customers", "Orders", "Employees", "Orders.ShippedDate"]
           fit: good
           reason: "Orders provide mandatory customer/order relationships, employees provide manager relationships, and NULL shipped dates demonstrate optionality. Minimum: one parent with no children, one child with a parent, and one optional relationship value."
@@ -308,7 +320,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Orders", "Order Details", "Products", "Customers"]
           fit: good
           reason: "The order-line bridge gives a decisive composite grain: one row per order/product, not one row per order. Minimum: two orders, two products, one order with multiple lines, and one repeated product across orders."
@@ -325,7 +337,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Products", "Suppliers", "Order Details", "Orders"]
           fit: partial
           reason: "Order Details demonstrates a many-to-many order/product junction, but frozen Northwind has only Products.SupplierID and cannot prove several suppliers per product at different prices. Add a small ProductSuppliers bridge with at least one product and two suppliers; keep the shipped rows unchanged."
@@ -347,7 +359,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Customers", "Orders", "Order Details", "Products"]
           fit: good
           reason: "The three-table sales report can be flattened to show update, insert, and delete anomalies, then decomposed into 3NF tables. Minimum: 10 orders, 20 lines, repeated customers/products, and one changed customer fact."
@@ -365,7 +377,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Products.UnitPrice", "Order Details.UnitPrice", "Orders.ShipAddress", "Customers.Address"]
           fit: good
           reason: "Order-line price and copied ship-to address are genuine point-in-time facts, not necessarily update redundancy. Minimum: one product price change after an order and one customer address change with an historical order."
@@ -385,7 +397,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Customers", "Suppliers", "Shippers", "Employees"]
           fit: partial
           reason: "The four roles share contact-like attributes, enough to compare supertype, single-table, and subtype designs, but the frozen data has no shared party identity or overlapping person across roles. Add a small cross-role party fixture if the lesson needs a proof rather than a design discussion."
@@ -401,7 +413,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Customers", "Products", "Orders", "Order Details"]
           fit: good
           reason: "Existing text, dates, numeric prices, discounts, and booleans support type/domain trade-offs; PostgreSQL is needed for the DOMAIN demonstration while DuckDB can cover portable types. Minimum: 10 rows and at least one nullable text, decimal, date, and boolean value."
@@ -417,7 +429,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Customers", "Orders", "Products", "Order Details", "Employees"]
           fit: good
           reason: "The shipped rows are referentially clean, so valid loads succeed and deliberate orphan inserts refuse. Minimum: one parent/child pair, one empty parent, and one attempted orphan for each key relationship."
@@ -434,7 +446,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Customers.Region", "Customers.Email", "Products.UnitPrice", "Products.ProductName"]
           fit: good
           reason: "Real NULL regions/emails, a low product price, duplicate-prone names, and defaults let constraints be tested against reality rather than invented perfection. Minimum: one accepted NULL, one rejected negative/invalid value, and one real duplicate candidate."
@@ -451,7 +463,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Customers.Region", "Customers.Email", "Orders.ShippedDate", "Orders.ShipVia"]
           fit: good
           reason: "NULL regions/emails and unshipped orders distinguish an optional value, an unknown future fact, and a relationship with no applicable row. Minimum: one row in each of those three states."
@@ -469,7 +481,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Customers", "Orders", "Order Details", "Products"]
           fit: good
           reason: "The learner can translate the established ER decisions into DDL, quote the existing Order Details name, and reload the real rows. Minimum: the full frozen source is preferred; the 79-order set keeps load errors inspectable."
@@ -492,7 +504,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Customers", "Orders", "Order Details", "Products", "CustomerDemographics"]
           fit: good
           reason: "The undeclared shipped schema is a fair review target: missing keys, empty tables, mixed naming, a comma-list risk, and real grain questions are visible. Minimum: the complete frozen schema, including empty Territories and CustomerDemographics tables."
@@ -517,7 +529,7 @@ series:
         core: true
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Customers", "Orders", "Order Details", "Products", "Suppliers", "Employees"]
           fit: partial
           reason: "The frozen Northwind source supports the complete model/load/reconciliation loop, but the project also requires several contacts per customer and several suppliers per product at different prices, which are absent from the source. Add explicit fixture rows or the ProductSuppliers/CustomerContacts source extensions; minimum source remains 25 customers, 79 orders, and 193 lines."
@@ -567,7 +579,7 @@ series:
         core: true
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["lending-log.csv"]
           fit: good
           reason: "The brief and 26-row spreadsheet intentionally provide nouns, verbs, ambiguities, repeating author data, NULL returned values, and business questions before any schema exists. Minimum: the supplied 26 rows plus the unanswered questions in the brief."
@@ -584,7 +596,7 @@ series:
         core: true
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["lending-log.csv"]
           fit: good
           reason: "The lending log is sufficient to design and load a first library model, including a reference-only book that was incorrectly lent. Minimum: the supplied 26 rows, 10 members, 10 titles, and at least one rejected business-rule row."
@@ -605,7 +617,7 @@ series:
         core: true
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["lending-log.csv"]
           fit: good
           reason: "Repeated titles, editions with different ISBNs, ISBN-10/ISBN-13, missing ISBNs, and multiple physical copies make title/edition/copy and surrogate-key choices concrete. Minimum: two editions of one title, one no-ISBN title, and four copies of another title."
@@ -622,7 +634,7 @@ series:
         core: true
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["lending-log.csv"]
           fit: good
           reason: "Repeated member/copy loans demonstrate that a loan is an event with its own identity rather than a permanent member-copy relationship. Minimum: one member borrowing one copy twice and one open loan."
@@ -642,7 +654,7 @@ series:
         dataset: library
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["lending-log.csv"]
           fit: good
           reason: "Categories, nested subjects, children's age bands, and repeated authors provide a real hierarchy plus a second classification axis. Minimum: two parent categories, one child category, one deeper subject, and one item classified on the second axis."
@@ -663,7 +675,7 @@ series:
         core: true
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["lending-log.csv"]
           fit: good
           reason: "Joined dates, membership status, due/returned dates, fines, and the brief's lapse/restart ambiguity support valid-time and transaction-time decisions. Minimum: two membership periods, one changed fee/rule, and three loans at different lifecycle points."
@@ -680,7 +692,7 @@ series:
         core: true
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["lending-log.csv"]
           fit: good
           reason: "Open loans and the reference-only loan create cross-row and cross-table rules that cannot be solved by a single column alone. Minimum: one copy with an overlapping-loan attempt, one waiting/reservation case, and one non-lendable title."
@@ -697,7 +709,7 @@ series:
         dataset: library
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["lending-log.csv"]
           fit: good
           reason: "The left member with retained loans, deleted-like status, last_edited, and edited_by make system time and soft-delete costs visible. Minimum: one inactive member with historical children and two audit actors."
@@ -711,7 +723,7 @@ series:
         dataset: library
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["lending-log.csv"]
           fit: good
           reason: "Member status, categories, fine states, and staff-maintained values support the choice between CHECK/ENUM and editable lookup tables. Minimum: three values in one changing business vocabulary and one value that a non-developer should be able to add."
@@ -729,7 +741,7 @@ series:
         dataset: library
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["lending-log.csv"]
           fit: partial
           reason: "The library model is the right domain, but the supplied 26 rows do not guarantee a genuine BCNF violation with enough evidence for a durable lesson. Add one explicit functional-dependency case, such as instructor-to-room or branch-to-address, before publishing; otherwise merge this decision into the normalization lesson."
@@ -745,7 +757,7 @@ series:
         dataset: library
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["lending-log.csv"]
           fit: partial
           reason: "The 26-row log can motivate read patterns but cannot show measurable index/summary trade-offs. Add a generated lending log of at least 10,000 loans across 600 members, 4,000 books, and multiple years; keep the supplied rows as the correctness fixture."
@@ -760,7 +772,7 @@ series:
         dataset: library
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["lending-log.csv", "library schema"]
           fit: good
           reason: "The notes column has varied, row-specific attributes such as translator, original language, large print, board book, and series position, making the JSON-versus-columns boundary concrete. Minimum: 10 varied notes and at least one field that must remain relational."
@@ -780,7 +792,7 @@ series:
         core: true
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["library schema", "lending-log.csv"]
           fit: good
           reason: "The learner's existing library schema and acceptance suite provide the live artifact for additive, rename, split, backfill, and compatibility migrations. Minimum: one deployed schema, existing checks, and three changes covering an additive entity, a renamed attribute, and a split."
@@ -800,7 +812,7 @@ series:
         core: true
         status: planned
         data:
-          source: library
+          source: library_s
           tables: ["library schema", "lending-log.csv"]
           fit: good
           reason: "Ebooks, a second branch, and reservations are coherent change requests against the learner's model; they stress the physical-copy assumption, location, and one-loan-at-a-time rule. Minimum: one ebook, two branches, one reservation competing with a loan, and the full prior check suite."

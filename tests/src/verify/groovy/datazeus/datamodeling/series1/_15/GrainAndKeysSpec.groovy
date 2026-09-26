@@ -1,6 +1,6 @@
 package datazeus.datamodeling.series1._15
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 import java.sql.SQLException
@@ -29,10 +29,10 @@ import java.sql.SQLException
  * reference solution, and §7 proves those checks can FAIL on a broken model.
  *
  * ── A SCHEMA OF ITS OWN ─────────────────────────────────────────────────────────────────
- * NorthwindEngines hands every spec the SAME DuckDB copy and PostgreSQL; this lesson WRITES, so
+ * GateEngines hands every spec the SAME DuckDB copy and PostgreSQL; this lesson WRITES, so
  * everything it builds lives in `dm_s1_15` (every `practice` rewritten) and is dropped in cleanupSpec.
  */
-class GrainAndKeysSpec extends NorthwindGateSpec {
+class GrainAndKeysSpec extends GateSpec {
 
     static final String SCHEMA = "dm_s1_15"
 
@@ -73,7 +73,7 @@ class GrainAndKeysSpec extends NorthwindGateSpec {
             assert refused.message == 'duplicate key value violates unique constraint "Order Details_pkey"'
             assert refused.detail == 'Key ("OrderID")=(1) already exists.'
         } else {
-            assert refused.message.contains('PRIMARY KEY or UNIQUE constraint violated: duplicate key "1"')
+            assert refused.message.contains('PRIMARY KEY or UNIQUE constraint violation: duplicate key "1"')
         }
         (sqlFor(engine).firstRow(script("count-your-order-lines")).values().first() as int) == 0
 

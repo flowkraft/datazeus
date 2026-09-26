@@ -8,7 +8,7 @@ import spock.lang.Unroll
  * "CASE — SQL's If/Then for Labels & Buckets".
  *
  * THE DATA IS NORTHWIND COMPANY S (schema northwind_co_s), like the whole of Series 2 since step C
- * (2026-09-17). Both engines are re-checksummed against `_dataset_info` by NorthwindCoEngines before
+ * (2026-09-17). Both engines are re-checksummed against `_dataset_info` by GateEngines before
  * anything here runs, so every figure below is a figure of THE dataset, not of a lookalike.
  *
  * Every figure the video, the article, the trailer, the short and the koans put in front of a
@@ -29,9 +29,9 @@ import spock.lang.Unroll
  * written, on both engines (ported from Series 1 · 50 §8).
  *
  * ── THE EARN, AS ARITHMETIC ────────────────────────────────────────────────────────────────
- * Freight bands: 2446 light + 4156 medium + 3398 heavy = 10000. Swap the first two WHENs and light
- * is gone: 6602 medium (= 2446 + 4156), the same 3398 heavy. One WHEN and no ELSE: 4383 heavy and
- * 5617 NULL; filtering "not heavy" over that returns 0, and with an ELSE it returns the 5617.
+ * Freight bands: 2334 light + 3941 medium + 3725 heavy = 10000. Swap the first two WHENs and light
+ * is gone: 6275 medium (= 2334 + 3941), the same 3725 heavy. One WHEN and no ELSE: 4654 heavy and
+ * 5346 NULL; filtering "not heavy" over that returns 0, and with an ELSE it returns the 5346.
  * The short form written with Series 1's three couriers leaves ShipVia 4's 511 orders NULL; the
  * JOIN names all four.
  *
@@ -107,12 +107,12 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
     }
 
     @Unroll
-    def "[#engine] 2446 light, 4156 medium, 3398 heavy — every one of the 10000 orders gets a band"() {
+    def "[#engine] 2334 light, 3941 medium, 3725 heavy — every one of the 10000 orders gets a band"() {
         given:
         def rows = sqlFor(engine).rows(script("orders-per-band"))
 
         expect: "band-counts' card, in min(Freight) order"
-        rows.collect { [it.Band, it.Orders] } == [["light", 2446], ["medium", 4156], ["heavy", 3398]]
+        rows.collect { [it.Band, it.Orders] } == [["light", 2334], ["medium", 3941], ["heavy", 3725]]
         rows*.Orders.sum() == 10000
 
         and: "no freight is NULL, so no order escapes the bands"
@@ -150,15 +150,15 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
     // --- 2. THE FIRST TRUE WHEN WINS -----------------------------------------------------------------
 
     @Unroll
-    def "[#engine] swap the first two WHENs and light disappears: 6602 medium, 3398 heavy"() {
+    def "[#engine] swap the first two WHENs and light disappears: 6275 medium, 3725 heavy"() {
         given:
         def rows = sqlFor(engine).rows(script("orders-per-band-whens-swapped"))
 
         expect: "no-light-at-all's card"
-        rows.collect { [it.Band, it.Orders] } == [["medium", 6602], ["heavy", 3398]]
+        rows.collect { [it.Band, it.Orders] } == [["medium", 6275], ["heavy", 3725]]
 
-        and: "the 6602 is exactly the old light plus the old medium — nothing was lost, it was relabelled"
-        rows[0].Orders == 2446 + 4156
+        and: "the 6275 is exactly the old light plus the old medium — nothing was lost, it was relabelled"
+        rows[0].Orders == 2334 + 3941
 
         where:
         engine << ENGINES
@@ -167,23 +167,23 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
     // --- 3. NO ELSE MEANS NULL -----------------------------------------------------------------------
 
     @Unroll
-    def "[#engine] one WHEN and no ELSE: 4383 heavy and 5617 NULL — more than half the orders"() {
+    def "[#engine] one WHEN and no ELSE: 4654 heavy and 5346 NULL — more than half the orders"() {
         given:
         def rows = sqlFor(engine).rows(script("heavy-label-no-else"))
 
         expect: "unlabelled-nulls' card, NULL last; the short's evidence card"
-        rows.collect { [it.Label, it.Orders] } == [["heavy", 4383], [null, 5617]]
-        5617 * 2 > 10000
+        rows.collect { [it.Label, it.Orders] } == [["heavy", 4654], [null, 5346]]
+        5346 * 2 > 10000
 
         where:
         engine << ENGINES
     }
 
     @Unroll
-    def "[#engine] 'not heavy' is 0 without the ELSE and 5617 with it"() {
+    def "[#engine] 'not heavy' is 0 without the ELSE and 5346 with it"() {
         expect: "not-heavy-zero and always-else; the short's disputed 0 and its yield"
         sqlFor(engine).firstRow(script("not-heavy-no-else"))["Not heavy"] == 0
-        sqlFor(engine).firstRow(script("not-heavy-with-else"))["Not heavy"] == 5617
+        sqlFor(engine).firstRow(script("not-heavy-with-else"))["Not heavy"] == 5346
 
         where:
         engine << ENGINES

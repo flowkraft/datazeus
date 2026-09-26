@@ -87,7 +87,7 @@ SQL Error [23505]: ERROR: duplicate key value violates unique constraint "Order 
 
 Refused. Order 1's second line hit the key the first line had already used. Nobody told you the grain of this table; **the real rows just did**.
 
-DuckDB words the same refusal differently: *"Constraint Error: PRIMARY KEY or UNIQUE constraint violated: duplicate key "1""*. The `ORDER BY` is there so that both engines report the same key, 1.
+DuckDB words the same refusal differently: *"Constraint Error: PRIMARY KEY or UNIQUE constraint violation: duplicate key "1""*. The `ORDER BY` is there so that both engines report the same key, 1.
 
 How many order lines got in?
 

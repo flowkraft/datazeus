@@ -40,10 +40,16 @@ published: false
     teach it on. Speedy Express sends its delivery confirmations ("CourierConfirmations"):
       our un-dated Speedy Express orders placed 2024-03-04..08-30 INTERSECT the confirmed order IDs → delivered,
       invoice them; EXCEPT → never confirmed, claim them. LOCKED (gate 2, 2026-09-17, both engines):
-      177 un-dated · 164 confirmed (€242,383.04) · 13 not (€14,511.63); 173 confirmation rows, 172 distinct orders,
+      177 un-dated · 164 confirmed (€242,383.13) · 13 not (€14,511.63); 189 confirmation rows, 172 distinct orders,
       8 for orders that already have a ship date.
+      RE-MEASURED 2026-09-21, every figure held. WRITE THE PREDICATE DOWN: "un-dated" here means
+      o."Status" = 'Shipped' AND o."ShippedDate" IS NULL — an order the company calls shipped and has no
+      date for, which is what a recording outage leaves behind. Drop the Status test and the same window
+      holds 218 orders, because 41 more are 'Open' or 'Cancelled': never shipped, so never the courier's
+      to confirm. That reading gives 54 unconfirmed and €64,971.45, and it is the wrong lesson.
     The noise is part of the lesson: a few confirmations are for orders that already have a ship date (EXCEPT the
-    other way round finds them), and one confirmation was sent twice (UNION vs UNION ALL when counting them).
+    other way round finds them), and 14 orders were confirmed more than once — 189 rows for 172 orders, 17 of
+    them surplus (UNION vs UNION ALL when counting them; UNION quietly loses all 17).
     CORRECTED 2026-09-15: Series 1 · 40 has no UNION. The real callback: it says FULL OUTER JOIN earns its place
     in reconciling two lists; EXCEPT/INTERSECT are the set-based way to do it.
     WHAT GOES WRONG: UNION instead of UNION ALL when stacking two real sources — the duplicate confirmation
@@ -58,6 +64,18 @@ published: false
     Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
     story (the Speedy Express recording outage) goes along from time to time — in 8 of 17 episodes, never whole
     episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: MAIN EXAMPLE — reconciliation.
+
+    ── THE HANDOVER LADDER ── who drives this one (stories plan §3.2.1a, 2026-09-21) ──
+    THIS IS THE RUNG WHERE LEO CALLS HIS OWN EVIDENCE SOFT — and it is the hardest one to write,
+    because here the evidence finally goes his way. INTERSECT gives him 164 orders the courier
+    itself confirms it delivered, worth 242383.13. That is the moment an analyst stops checking.
+    HE MUST NOT. The beat: before Mnemosyne can raise it, Leo says what a confirmation actually is
+    — the courier's own word about its own performance — and turns straight to the EXCEPT side,
+    the 13 orders with no word at all, worth 14511.63, which is the part with a deadline on it.
+    HER JOB HERE IS TO DOUBT, NOT TO CORRECT. She pushes on whether the confirmation file can be
+    trusted (it has real noise in it: duplicates, and confirmations for orders that already had a
+    ship date). He has thought about it. She is running out of things to teach him, and the viewer
+    should feel that before anybody says it — nobody says it here; 60 does, once.
     A SEGMENT IS ONE QUERY of the shape the lesson just taught, and ONE finding, after a full lesson — using
     nothing the learner has not met yet. If it needs more, it belongs to a later episode or to the project.
     WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or

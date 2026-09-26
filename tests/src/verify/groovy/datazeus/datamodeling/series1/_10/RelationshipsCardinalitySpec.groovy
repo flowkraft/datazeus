@@ -1,6 +1,6 @@
 package datazeus.datamodeling.series1._10
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 /**
@@ -27,7 +27,7 @@ import spock.lang.Unroll
  *
  * READ-ONLY: nothing is created, so the shared engines need no schema of their own here.
  */
-class RelationshipsCardinalitySpec extends NorthwindGateSpec {
+class RelationshipsCardinalitySpec extends GateSpec {
 
     // --- 1. What the data says about the customer end ----------------------------------------
 

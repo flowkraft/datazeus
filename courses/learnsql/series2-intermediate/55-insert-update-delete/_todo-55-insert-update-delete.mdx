@@ -64,6 +64,18 @@ published: false
     Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
     story (the Speedy Express recording outage) goes along from time to time — in 8 of 17 episodes, never whole
     episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: MAIN EXAMPLE — the fix, safely.
+
+    ── THE HANDOVER LADDER ── who drives this one (stories plan §3.2.1a, 2026-09-21) ──
+    THIS IS THE RUNG WHERE LEO REFUSES TO RUN IT. The case's fix lands here — record the confirmed
+    ship dates, create the missing invoices — and it is the first time in the series that his SQL
+    CHANGES something. The beat is not that he writes the UPDATE correctly. It is that he will not
+    run it until he has a back-out and a count to check against, and SHE DOES NOT HAVE TO ASK HIM
+    FOR EITHER. Mnemosyne's only contribution is to let him finish.
+    THE TRAP IS HIS TO SPOT: an UPDATE without "ShippedDate" IS NULL overwrites dates that were
+    already recorded correctly. If she spots it, the rung is lost and the whole arc sags one episode
+    before the project. If the lesson needs the trap demonstrated by someone getting it wrong, let
+    him get it wrong inside the transaction and find it himself when the count comes back wrong —
+    which is precisely what the transaction is for.
     A SEGMENT IS ONE QUERY of the shape the lesson just taught, and ONE finding, after a full lesson — using
     nothing the learner has not met yet. If it needs more, it belongs to a later episode or to the project.
     WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or

@@ -75,9 +75,12 @@ Used by: Learn SQL Series 2 and 3 · Data Modeling Series 3 · Data Warehousing 
 Pipelines · Analytics Engineering with dbt.
 
 **Scale S, version 1, as built:** Region 4 · Territories 30 · Categories 8 · Suppliers 20 · Products 80 ·
-PriceChanges 255 · Shippers 4 · Employees 12 · EmployeeTerritories 45 · Customers 120 · CustomerChanges 154 ·
+PriceChanges 255 · Shippers 4 · Employees 29 · EmployeeTerritories 45 · Customers 120 · CustomerChanges 154 ·
 Orders 10,000 · Order Details 25,233 · Invoices 9,532 · StockMovements 29,264 · SalesTargets 488 ·
-CourierConfirmations 173 · WebOrders 2,765. Identical on PostgreSQL and DuckDB (every table's checksum). M and L
+CourierConfirmations 173 · WebOrders 2,765. Identical on PostgreSQL and DuckDB (every table's checksum).
+"Employees" went from 12 to 29 on 2026-09-26, before any lesson was published on it: operations and finance
+staff (six levels deep, for Learn SQL Series 3 · 10) and a planted reporting loop, added after the sales tree and on
+their own random streams, so employees 1 to 12 and every other table are unchanged. M and L
 are for timing, plans and volume: lessons quote figures from S only. **Until a lesson's spec asserts a figure on both PostgreSQL and DuckDB, do not
 quote it.**
 

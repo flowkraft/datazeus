@@ -171,7 +171,11 @@
 #           Fix the label; leave the identity alone.
 #           Topical tags belong in the lesson's own front-matter once it exists; guessing
 #           them here just creates a second source of truth that drifts.
-#   seed    bulk — needs the larger dataset (datasets/bulk/), not the 79-row Northwind.
+#   seed    bulk — needs a larger dataset than the 79-row Northwind. A MARKER, not an address:
+#           it says "this episode cannot run on the small data", and the episode's `data.source`
+#           names which one it means. Today every `seed: bulk` episode is Series 3 and every one
+#           of them sources `northwind_co_l` — 6 of that series' 11, the same 6 both ways. It read
+#           "(datasets/bulk/)" until 2026-09-21; that folder was a sketch and was never built.
 #
 # IDs are DERIVED, never repeated here: a lesson's Remotion composition, its mp4, the
 # videos.manifest.json key, public/videos/<id>/, the TTS assets under cli-remotion's
@@ -262,6 +266,11 @@ series:
         short: "Start Here: The SQL Thinking Loop — your first query"
         hands_on: ["koan:complete", "cloudbeaver"]
         core: true
+        data:
+          source: northwind_tiny
+          tables: ["Customers", "Orders"]
+          fit: good
+          reason: "Classic Northwind, the tiny one DataPallas ships: 25 customers, 79 orders and 193 order lines, so a beginner can check every result by eye. The lesson is published on it, and its gate runs on DuckDB and PostgreSQL."
         status: published
       - n: "05"
         slug: select-fetch-your-data
@@ -269,6 +278,11 @@ series:
         short: "SELECT & Column Lists — fetching a table's data"
         hands_on: ["koan:complete", "cloudbeaver"]
         core: true
+        data:
+          source: northwind_tiny
+          tables: ["Categories", "Employees", "Products"]
+          fit: good
+          reason: "Classic Northwind, the tiny one DataPallas ships: 25 customers, 79 orders and 193 order lines, so a beginner can check every result by eye. The lesson is published on it, and its gate runs on DuckDB and PostgreSQL."
         status: published
       # ADDED 2026-08-26, and it sits BEFORE WHERE on purpose. Episode 05 used to carry a
       # data-types arc — why a price prints as 18.0000, ROUND, information_schema, and the
@@ -306,6 +320,11 @@ series:
         short: "Data Types — what a column can hold"
         hands_on: ["koan:predict", "koan:complete"]
         core: true
+        data:
+          source: northwind_tiny
+          tables: ["Customers", "Orders", "Products"]
+          fit: good
+          reason: "Classic Northwind, the tiny one DataPallas ships: 25 customers, 79 orders and 193 order lines, so a beginner can check every result by eye. The lesson is published on it, and its gate runs on DuckDB and PostgreSQL."
         status: published
       - n: "10"
         slug: where-filtering
@@ -313,6 +332,11 @@ series:
         short: "WHERE, AND/OR/NOT, IN, BETWEEN — keep the rows you need"
         hands_on: ["koan:complete", "koan:predict"]
         core: true
+        data:
+          source: northwind_tiny
+          tables: ["Customers", "Orders", "Products"]
+          fit: good
+          reason: "Classic Northwind, the tiny one DataPallas ships: 25 customers, 79 orders and 193 order lines, so a beginner can check every result by eye. The lesson is published on it, and its gate runs on DuckDB and PostgreSQL."
         status: published
       # WRITTEN 2026-08-28. The episode earns its place on ONE failure: `LIMIT 5` with no
       # ORDER BY returns five real products at five real prices, raises nothing, and is not
@@ -354,6 +378,11 @@ series:
         short: "ORDER BY, LIMIT & FETCH FIRST — sort and keep the top"
         hands_on: ["koan:complete", "koan:predict"]
         core: true
+        data:
+          source: northwind_tiny
+          tables: ["Customers", "Orders", "Products"]
+          fit: good
+          reason: "Classic Northwind, the tiny one DataPallas ships: 25 customers, 79 orders and 193 order lines, so a beginner can check every result by eye. The lesson is published on it, and its gate runs on DuckDB and PostgreSQL."
         status: published
       - n: "20"
         slug: distinct-aliases-expressions
@@ -361,6 +390,11 @@ series:
         short: "Aliases, Expressions & DISTINCT — output like a report"
         hands_on: ["koan:complete", "koan:diagnose"]
         core: true
+        data:
+          source: northwind_tiny
+          tables: ["Customers", "Products"]
+          fit: good
+          reason: "Classic Northwind, the tiny one DataPallas ships: 25 customers, 79 orders and 193 order lines, so a beginner can check every result by eye. The lesson is published on it, and its gate runs on DuckDB and PostgreSQL."
         status: published
       # THE FIRST LESSON WHOSE RESULT IS A VALUE RATHER THAN ROWS, and the episode says so in
       # the first thirty seconds — SELECT, WHERE, ORDER BY and LIMIT all hand back rows, and
@@ -405,9 +439,14 @@ series:
       - n: "25"
         slug: aggregate-functions
         title: "Aggregate Functions: COUNT, SUM, AVG, MIN, MAX — Turning Many Rows Into One Number"
-        short: "Aggregate Functions — many rows, one number"
+        short: "COUNT, SUM, AVG (Aggregate Functions) — one number"
         hands_on: ["koan:complete", "koan:predict"]
         core: true
+        data:
+          source: northwind_tiny
+          tables: ["Orders", "Products"]
+          fit: good
+          reason: "Classic Northwind, the tiny one DataPallas ships: 25 customers, 79 orders and 193 order lines, so a beginner can check every result by eye. The lesson is published on it, and its gate runs on DuckDB and PostgreSQL."
         status: published
       # WRITTEN 2026-08-30. The episode earns its place on ONE failure, and it is caused by
       # OBEYING A CORRECT ERROR MESSAGE. `SELECT "ShipCountry", "OrderID", count(*) ... GROUP BY
@@ -444,6 +483,11 @@ series:
         short: "GROUP BY — one number per group"
         hands_on: ["koan:complete", "koan:predict"]
         core: true
+        data:
+          source: northwind_tiny
+          tables: ["Orders"]
+          fit: good
+          reason: "Classic Northwind, the tiny one DataPallas ships: 25 customers, 79 orders and 193 order lines, so a beginner can check every result by eye. The lesson is published on it, and its gate runs on DuckDB and PostgreSQL."
         status: published
       # Closes the aggregation arc inside Series 1 — grouping you can't filter is half a tool.
       - n: "35"
@@ -452,6 +496,11 @@ series:
         short: "HAVING vs WHERE — why WHERE can't filter totals"
         hands_on: ["koan:diagnose", "koan:predict"]
         core: true
+        data:
+          source: northwind_tiny
+          tables: ["Orders"]
+          fit: good
+          reason: "Classic Northwind, the tiny one DataPallas ships: 25 customers, 79 orders and 193 order lines, so a beginner can check every result by eye. The lesson is published on it, and its gate runs on DuckDB and PostgreSQL."
         status: published
       - n: "40"
         slug: joins
@@ -459,6 +508,11 @@ series:
         short: "JOINs: INNER, LEFT, RIGHT — fetch data from two tables"
         hands_on: ["koan:predict", "koan:complete"]
         core: true
+        data:
+          source: northwind_tiny
+          tables: ["Customers", "Employees", "Order Details", "Orders", "Products", "Shippers"]
+          fit: good
+          reason: "Classic Northwind, the tiny one DataPallas ships: 25 customers, 79 orders and 193 order lines, so a beginner can check every result by eye. The lesson is published on it, and its gate runs on DuckDB and PostgreSQL."
         status: published
       # Sits AFTER the JOINs episode on purpose: the learner has just manufactured NULLs
       # with a LEFT JOIN, so `WHERE col = NULL` returning nothing is demonstrable on data
@@ -479,6 +533,11 @@ series:
         short: "NULL & Three-Valued Logic — how missing values count"
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
+        data:
+          source: northwind_tiny
+          tables: ["Customers", "Orders", "Products"]
+          fit: good
+          reason: "Classic Northwind, the tiny one DataPallas ships: 25 customers, 79 orders and 193 order lines, so a beginner can check every result by eye. The lesson is published on it, and its gate runs on DuckDB and PostgreSQL."
         status: published
       - n: "50"
         # RENAMED FOR THE URL 2026-09-14 (was your-first-real-report), together with the lesson
@@ -492,6 +551,11 @@ series:
         hands_on: ["koan:author", "cloudbeaver"]
         core: true
         tags: ["project"]
+        data:
+          source: northwind_tiny
+          tables: ["Customers", "Order Details", "Orders"]
+          fit: good
+          reason: "Classic Northwind, the tiny one DataPallas ships: 25 customers, 79 orders and 193 order lines, so a beginner can check every result by eye. The lesson is published on it, and its gate runs on DuckDB and PostgreSQL."
         status: published
 
   - slug: series2-intermediate
@@ -530,7 +594,11 @@ series:
     #   15 JOINs & Grain ●●●      20 CTEs ●●                22 Views ●●
     #   25 EXISTS & correlated ●●● 30 Self-joins ●●         35 Windows I ●●●●
     #   40 Strings & regex ●      45 Windows II ●●●●        48 Set operations ●●
-    #   50 Grouping sets ●●●      55 INSERT/UPDATE/DELETE ●●  58 Median ●●●●    60 Project
+    #   50 Grouping sets ●●●      55 INSERT/UPDATE/DELETE ●●  56 UPSERT & MERGE ●●●
+    #   58 Median ●●●●            60 Project
+    # SEVENTEEN, which is the number the story block below quotes ("8 of 17"). 56 joined the series
+    # on 2026-09-19 and this table on 2026-09-21, having been missing from it in between; TocSpec
+    # (tests/src/verify/groovy/datazeus/support/TocSpec.groovy) now counts the rows for us.
     #
     # WHY SUBQUERIES OPEN IT, AND NOT CASE (the gentlest candidate). Series 1 · 50 closes, in the
     # video and in the article, on "Series 2 starts where today ended — queries built out of other
@@ -577,18 +645,54 @@ series:
     #   00–22  WHAT IS MISSING, WHERE, SINCE WHEN, AND HOW MUCH?
     #   25–60  WERE THOSE ORDERS DELIVERED — AND WHAT DO WE DO?
     # Ordered sales are NOT wrong (they measure demand); never "the report was wrong". No verdicts, nobody blamed,
-    # soft evidence said to be soft. Design, rules and the full map:
+    # soft evidence said to be soft.
+    #
+    # THE HANDOVER LADDER — WHO DRIVES THE CASE (owner, 2026-09-21; stories plan §3.2.1a).
+    # The map above says WHERE the story appears. This says WHO DRIVES IT, and it is what Series 2 adds to
+    # Series 1's model. Series 1 ran an ACCUMULATION arc: Leo asked "who is our biggest customer?" at 10, every
+    # lesson gave him one piece, 50 assembled them. That is about TOOLS. It is kept — 60 still lists which
+    # episode each piece came from — but it cannot deliver this ending on its own, because a learner who is LED
+    # to an answer does not feel they found it. So Mnemosyne WITHDRAWS across the series: she starts as the one
+    # who says what to look at and ends as the one asking whether he is sure.
+    # TWO SIGNALS, BOTH CHECKABLE IN THE SCRIPT — who OPENS the segment, and who STATES THE LIMIT (the thing the
+    # data cannot prove). At 00 both are hers. By 25 both must be his, or the project does not land.
+    #   00  handed the question; he does not know what a subquery is       opens: her    limit: her
+    #   05  names the method before she describes it                       opens: her    limit: her
+    #   10  ASKS THE NEXT QUESTION HIMSELF — first rung of agency          opens: LEO    limit: her
+    #   15  states his own limit before she can; she confirms              opens: Leo    limit: LEO
+    #   25  designs the test; she checks it and makes him tighten it       opens: Leo    limit: Leo
+    #   48  calls his own evidence soft while it runs in his favour        opens: Leo    limit: Leo
+    #   55  refuses to run it without a back-out; she need not ask         opens: Leo    limit: Leo
+    #   60  presents it; SHE asks "are you sure?" and he answers           opens: Leo    limit: Leo
+    # HER FOUR MOVES, IN ORDER: 00–05 she TELLS · 10–15 she ASKS · 25–48 she CHECKS · 55–60 she DOUBTS.
+    # THE LADDER RUNS THROUGH THE NINE STORY-FREE EPISODES TOO, on their own examples: it is about who drives,
+    # not about the case. If Leo is back to "what do I do next?" at 35, the case cannot return at 48 as his.
+    # FOUR RULES so it costs the lesson nothing and does not turn sentimental: (1) growth is SHOWN, never
+    # announced — no praise for its own sake; her one backward-looking line in the whole series is at 60 and it
+    # names a fact, not a feeling. (2) Withdrawing is not going quiet — she may still talk more than him; what
+    # changes is that instructions become questions, then challenges. (3) The ladder never buys time from the
+    # lesson: if a rung needs an extra slide, the rung is wrong. (4) He is never right because he is the hero —
+    # when he proposes something weak she says so and he fixes it (25 is built on exactly that).
+    # Design, rules and the full map:
     # .docs/plan-academy-course-stories-artefacts.md (§1 rules, §3.2 the case, §3.2.1 the map, §3.2.2 first
     # measurements, Appendix A the superseded Northwind case). Data and planted amounts: .docs/plan-academy-datasets.md.
     # The previous case ("a third of what we sold has no shipping record", on the frozen Northwind) was a generator
     # artefact (the round-robin `i % 3` in NorthwindDataGenerator); the five drafts 00–20 still show it until step C.
     #
-    # TO DO BEFORE THE 56 KOANS — UPGRADE THE KOAN RUNNER'S DuckDB (noted 2026-09-19): tests/pom.xml pins
-    # <duckdb.version>1.1.3</duckdb.version>; bump it to 1.4.4.0, the version DataPallas already ships
-    # (reportburster pom.xml). WHY: 56's MERGE needs DuckDB 1.4+; on 1.1.3 MERGE INTO does not parse.
-    # SIDE EFFECT, checked on both jars: 1.4 also averages an INTERVAL (AVG(interval) = '1 day 12:00:00'),
-    # which 1.1.3 refused. The 10 lesson and DatesAndTimesSpec were reworded the same day so they no longer
-    # depend on that refusal. After the bump, run every Series 1 and 2 spec and koan once on the new version.
+    # KOAN RUNNER'S DuckDB UPGRADED, 1.1.3 -> 1.4.5.0 (noted 2026-09-19, DONE 2026-09-21): tests/pom.xml and
+    # tests/python/requirements.txt (duckdb==1.4.5). DataPallas moved 1.4.4.0 -> 1.4.5.0 the same day
+    # (reportburster pom.xml), so the learner's, the koan's and the video's engine stay ONE version.
+    # WHY 1.4.5.0: 56's MERGE needs DuckDB 1.4+ (on 1.1.3 MERGE INTO does not parse; on 1.4.5.0 it parses and
+    # runs), and 1.4.5.0 is the newest patch of the 1.4 'Andium' LTS line, so it is 1.4 plus security and
+    # correctness fixes. 1.5 is skipped on purpose: it is the non-LTS line, and its date_trunc on a DATE
+    # returns TIMESTAMP instead of DATE — which the 10 lesson and its six scripts lean on throughout.
+    # WHAT MOVED, measured on the new jar: 1.4 averages an INTERVAL, which 1.1.3 refused (the 10 lesson and
+    # DatesAndTimesSpec were reworded 2026-09-19 so they no longer depend on that refusal); and DuckDB
+    # reworded its key error, 'constraint violated' -> 'constraint violation' — Data Modeling S1 · 15 quotes
+    # it in the lesson AND asserts it, and both were corrected. WHAT HELD: the scalar-subquery and the
+    # aggregate-in-WHERE refusals 00 draws, the INTERVAL-vs-INTEGER refusal 10 draws, date_trunc still
+    # returning DATE. Re-run on the new version: every Series 1 and 2 spec green, koans red only where the
+    # ___ is still unfilled.
     #
     # OPEN CURRICULUM QUESTIONS (from the 2026-09-15 review, NOT applied; moved here 2026-09-17):
     #   20  replace the tidy-up trap (a moved filter, which repeats 15's six rows) with "merge two steps and the
@@ -596,9 +700,14 @@ series:
     #       Rule: one step, one grain. See the review note at the top of the 20 video's index.tsx.
     #   10  every country x every month with CROSS JOIN (on Northwind Company S: 126 country-months in H1 2024,
     #       21 empty). Not in the episode as written; the one-customer month spine teaches the missing rows.
-    #   40  make it `core`. (48 became core 2026-09-19; 30's pairs trap and the `excludes` ROLLUP line were
-    #       applied the same day.)
-    #   drift  the published S1 · 20 link to an unpublished lesson (404); the stale README and episode counts.
+    #   drift  the published S1 · 20 link to an unpublished lesson (404). STILL OPEN, and the only item here a
+    #       learner can hit today.
+    # APPLIED 2026-09-21, all four from the coherency review: 40 is now `core` (it was the odd one out — every
+    #   other episode a working analyst needs was core already); the ramp table above gained 56; the five
+    #   Series 2 video roadmaps and the twelve Series 1 ones were re-synced to the `short` labels here; and
+    #   README.md was rewritten for the four series that exist. (48 became core 2026-09-19; 30's pairs trap
+    #   and the `excludes` ROLLUP line were applied the same day.) NOTHING ABOVE IS GUARDED BY PROSE ANY MORE:
+    #   TocSpec fails the build if the ramp, a video roadmap or the README drifts from this file again.
     # WORKPLACE AUDIT (2026-09-15): keep SHORT, real but niche — HAVING with no GROUP BY inside EXISTS (25); CUBE's
     #   2^n and GROUPING_ID (50); MODE, PERCENT_RANK, CUME_DIST (58); regex beyond practical patterns (40). Now in
     #   the briefs: percentages and integer division (05); removing duplicates with ROW_NUMBER (35); updating rows
@@ -626,6 +735,8 @@ series:
       # BUILDS ON: Series 1 · 25 (aggregates), 1 · 30 (GROUP BY), 1 · 50 (the report and its grain).
       # WORKPLACE: compare each row with a number the data computes (an average, a maximum); filter by a list
       #   another query produces; query a query's result; check what the inside query's rows are first.
+      # LADDER (2026-09-21) — she opens, she states the limit (bottom rung). What HE owns is the last line:
+      #   he turns his manager's complaint into his own question, and no later episode takes it back off him.
       # STORY (map 2026-09-17) — SEGMENT, the opening: two value subqueries side by side — 2024 ordered sales
       #   3628572.55 vs invoiced sales 3190372.69 (the manager's note: orders up 10%, invoicing down — said, not
       #   computed). Neither total is wrong: demand vs what was billed. Why did invoicing fall while orders grew?
@@ -662,9 +773,19 @@ series:
       # FILTER (WHERE …), one line (added 2026-09-19): count(*) FILTER (WHERE "Status" = 'Cancelled') is the
       #   standard spelling of the conditional count, on PostgreSQL and DuckDB; SUM(CASE …) is the one that runs
       #   everywhere, so the lesson keeps teaching CASE. In the draft since 2026-09-19; the video does not have it yet.
+      # "I LABELLED THE ROWS AND NOW I CANNOT FILTER ON THE LABEL" (added 2026-09-21). The first thing a person
+      #   does with a new CASE is try to use its alias: SELECT CASE … AS "Band" … WHERE "Band" = 'heavy', and the
+      #   engine refuses — the alias does not exist yet when WHERE runs. This is not a new rule, it is Series 1 · 20's,
+      #   and Series 3 · 15 explains WHY with the logical processing order. What belongs HERE is the collision and
+      #   the two repairs, because here is where they first reach for it: repeat the whole CASE in WHERE (works,
+      #   and you now maintain it twice), or name the step and filter the name — which is 20, five episodes away,
+      #   and is the honest answer. Say that it is coming; do not teach WITH here.
       # SETS UP: 50 (the GROUPING() labelling idiom is a CASE) and Series 3 · 00 (the portable pivot).
       # WORKPLACE: label and bucket rows; one column per status with conditional counts and sums; percentages
       #   that do not come back as 0 (integer division); always write the ELSE.
+      # LADDER (2026-09-21) — she still opens and still states the limit; what is new is that Leo NAMES THE
+      #   METHOD before she describes it. Her wording says "your question from the subqueries lesson", not "the
+      #   one the lesson left us".
       # STORY (map 2026-09-17) — SEGMENT, written at step C: per courier, 2024 orders marked 'Shipped' with no
       #   "ShippedDate", a share with 100.0 * — Speedy Express 178 of 1768 (10.1), the other three 0 of 630.
       #   One query, one finding: it is one courier. The freight bands and both ELSE traps keep their own examples.
@@ -692,7 +813,7 @@ series:
       # days. That is what makes "days to ship" go wrong, and it is why Series 1 · 45 cast both
       # sides — this episode owes the explanation that one borrowed. AGE() too, in one line
       # (PostgreSQL and DuckDB both have it). Averaging an INTERVAL works on PostgreSQL and on DuckDB 1.4+ (the
-      # koan runner's 1.1.3 refuses it — see the header's upgrade note); the lesson casts to DATE either way,
+      # koan runner is on 1.4.5.0, so it answers — see the header's upgrade note); the lesson casts to DATE either way,
       # because a whole number of days is what a report shows.
       #
       # ON NORTHWIND COMPANY S (step C, 2026-09-17; every figure asserted by DatesAndTimesSpec on both engines):
@@ -721,6 +842,10 @@ series:
       # (Series 3 · 10) builds the same spine anywhere. Series 4 owns the spellings.
       # WORKPLACE: group by real months, half-open ranges, partial periods, days between dates, anchoring
       #   "recent" on the data, filling periods that have no rows.
+      # LADDER (2026-09-21) — LEO OPENS. First rung of agency and the hinge of the arc: she does not say "now
+      #   the case"; he brings it back, says why "since when" is worth asking, and names the method when she asks
+      #   how. She still states the limit (that is 15's rung), but HE names what he wants next, which is what
+      #   lets him open 15 unprompted.
       # STORY (map 2026-09-17) — SEGMENT, written (step C): date_trunc('week') over 2024 with 05's SUM(CASE …)
       #   on 'Shipped' orders with no ship date — 0 a week until the week of 2024-03-04, then 3–12 every week
       #   to the week of 2024-08-26, then 0 (1 once, in October). Every week has orders, so the conditional
@@ -781,8 +906,8 @@ series:
       # DATA NOTES, checked 2026-09-17 on Northwind Company S. Every product has sold and every order
       # has lines (1 to 6), so in the lesson rows go missing only by narrowing the match, exactly as in
       # Series 1 · 40. There ARE a few rows with no match at all — one customer who never ordered
-      # (Yarrow Supermarket) and the three employees who take no orders (the chief executive and the
-      # two sales managers) — which the article says in one paragraph and koan 10 uses. "Invoices" is
+      # (Yarrow Supermarket) and the 20 employees who take no orders (the chief executive, the two
+      # sales managers and everyone outside sales) — which the article says in one paragraph and koan 10 uses. "Invoices" is
       # at most one row per order. "Order Details" is the many-to-many bridge between orders and
       # products and is worth one beat (Heritage Butter: 779 lines, 78 different customers).
       # "EmployeeTerritories", "Territories" and "Region" are populated in Northwind Company; nothing in
@@ -792,6 +917,10 @@ series:
       # BUILDS ON: 00 (the cure), 10 (the June boundary), Series 1 · 40 and 1 · 50.
       # WORKPLACE: joins across several tables that neither drop nor multiply rows; aggregate each measure at
       #   its own grain before joining; bridge tables.
+      # LADDER (2026-09-21) — LEO OPENS AND LEO STATES THE LIMIT. He arrives owing a number he promised at the
+      #   end of 10. She moves to CHECKING: one question about order of operations, one real correction on the
+      #   grain of count(*). He says "how much, and not whether they arrived" BEFORE she can; she confirms. From
+      #   here on the limits are his to state.
       # STORY (map 2026-09-17) — SEGMENT, written 2026-09-17: each order's value aggregated first, then a LEFT JOIN
       #   to "Invoices" — 188 orders marked shipped with no invoice, worth 275698.44 (with the lines joined directly,
       #   count(*) would read 460). One query, one finding, no claim about delivery. The lesson's fan-out trap keeps
@@ -816,10 +945,43 @@ series:
       # The motivation is free at this point: 15's cures work, and they are subqueries nested in a
       # FROM. "Name it, then use the name" is the whole lesson — the June product report rewritten
       # as a WITH reads top to bottom in the order a person thinks it.
-      # SETS UP: 25 (correlated subqueries read far better beside named steps) and 35 (filtering on
-      # ROW_NUMBER needs a CTE or a subquery).
+      #
+      # THE TRAP — ONE STEP, ONE GRAIN (applied 2026-09-21; it replaces the moved-filter tidy-up trap,
+      # which only repeated 15's six rows, and was proposed in OPEN CURRICULUM QUESTIONS on 2026-09-15
+      # with figures that are stale — the ones below are measured).
+      # sales-and-freight-with.sql keeps two named steps because they are at two different grains:
+      # `sales` is per customer OVER THE JOINED LINES, `freight` is per customer OVER month_orders ALONE.
+      # They look like they could be one step. Merging them is what a reader does the moment they feel
+      # fluent — it is shorter, it is tidier, and it is the fan-out of 15 walking back in through a CTE.
+      # MAY 2024, 181 orders over 450 lines:
+      #     two steps, as shipped    47 rows    sales 262931.17    freight  11819.17
+      #     merged into one step     47 rows    sales 262931.17    freight  37749.51
+      # THE ROWS AGREE AND THE SALES AGREE TO THE CENT. That is the whole reason this trap is the
+      # real-project one: the two things that are quick to check both match, so the report ships.
+      # AND THE HEADLINE MOVES. Ordered by freight, the correct top five open on Baltic Supermarket
+      # (752.27). Merged, they open on QUAYSIDE WHOLEFOODS — fifth in truth at 571.50, first at 3409.70
+      # once its lines have multiplied its freight. Quayside is already the customer
+      # month-orders-step.sql prints row by row for the inspect-one-step beat, so the fake winner is a
+      # customer the viewer has personally read. THE RULE TO LEAVE THEM WITH: a named step is not safe
+      # because it is named. One step, one grain — the name is what lets you SAY the grain out loud.
+      #
+      # "IS A CTE A TEMP TABLE?" — one line, and it is the second question this topic really gets asked.
+      # No. Naming a step does not store its answer; customer_totals is referenced twice in
+      # customers-above-the-average-customer-with.sql and the engine may well build those 119 rows twice.
+      # Whether it does is 18's (the plan as evidence) and the delta tracks'. What is portable and useful
+      # here is the consequence: if you need the ANSWER kept rather than the QUESTION named, that is the
+      # very next episode. Hand it over in that sentence rather than half-teaching materialization.
+      # SETS UP: 22 (save the query or save the answer — the sentence above is its opening), 25 (correlated
+      # subqueries read far better beside named steps) and 35 (filtering on ROW_NUMBER needs a CTE or a
+      # subquery).
       # WORKPLACE: break a long query into named steps, reuse a step, debug one step at a time, check a rewrite
-      #   returns the same rows and totals.
+      #   returns the same rows and totals; keep each measure's step at its own grain instead of merging them.
+      # LADDER (2026-09-21) — HE OPENS AND THE MISTAKE IS HIS. 15 gave him the limits to state; this is where
+      #   he uses them on his own work. He arrives with 15's cure written out, says it works and he cannot read
+      #   it, and that complaint IS the lesson's motivation — she does not have to supply one. Then he merges the
+      #   two steps himself, on screen, because it is tidier; the rows match, the sales match, and he is the one
+      #   who asks why freight looks high. She confirms rather than reveals. Do not let her catch it first: the
+      #   whole point is that naming a step makes a competent person feel safe, and Leo is now competent.
       # STORY (map 2026-09-17) — NONE. The lesson's own examples; its "one filter, every use of the step sees it" beat
       #   stays on non-story data. (The drafted case parts are removed at step C.)
       - n: "20"
@@ -851,6 +1013,34 @@ series:
       # The trap is the snapshot read as live: a table built on Monday, reported from on Friday.
       # Designing tables (types, keys, constraints) stays Learn Data Modeling's; the SQL Server course
       # owns temp tables against table variables.
+      # THE QUERIES (run on northwind_co_s, 2026-09-22). Two views, built side by side, and the whole episode
+      # is the difference between them.
+      # 1. THE VIEW THAT SAVES THE QUESTION: CREATE VIEW over "Orders" JOIN "Order Details" -- the join the
+      #    reader has retyped since 15 -- and now it has a name. Read it, filter it, and say the thing people
+      #    ask first: A VIEW TAKES NO PARAMETERS. You do not pass it a country; you put WHERE on the view and
+      #    the filter reaches inside (WHERE "Freight" > 100 -> 1,541 orders). That is the answer, and it is
+      #    one sentence rather than the workaround somebody is about to invent.
+      # 2. THE TRAP, AND IT IS HALF RIGHT, WHICH IS WHY IT SHIPS: that view is 25,233 rows for 10,000 orders.
+      #    Sum the line amounts through it -- 15,017,031.15, CORRECT, exactly what the order-grain view gives.
+      #    Sum "Freight" through it -- 2,161,332.75 against a true 693,052.88, 3.12x too big. THE MEASURE THE
+      #    VIEW WAS BUILT FOR IS RIGHT AND THE ONE BESIDE IT IS TRIPLE. 15's fan-out, one layer of abstraction
+      #    away from the person who pays for it, and nobody can see the join any more.
+      # 3. THE HABIT THAT CATCHES IT IN ONE LINE, and it belongs on a card: count(*) on the view is 25,233,
+      #    count(*) on "Orders" is 10,000. ASK A VIEW ITS GRAIN BEFORE YOU SUM FROM IT -- not by reading its
+      #    definition, which you may not be allowed to see, but by counting it against the thing it claims to
+      #    be about. "One row per WHAT?" is the question; this is how you ask it of somebody else's object.
+      # 4. THE VIEW WRITTEN PROPERLY: aggregate the lines to order grain inside the view (20's CTE, saved) so
+      #    it is 10,000 rows carrying both "Freight" and the order's sales total. Freight 693,052.88 and sales
+      #    15,017,031.15 -- BOTH RIGHT AT ONCE, which is the payoff shot. One view, one grain.
+      # 5. CREATE TABLE AS -- THE SNAPSHOT, AND IT REACHES FORWARD TO 55: orders with no invoice is 468 today.
+      #    Save it as a view and as a table, then let 55 run its fix (164 ship dates, 164 invoices) and read
+      #    both again: THE VIEW SAYS 304, THE SNAPSHOT STILL SAYS 468. Same name, same columns, 164 orders
+      #    apart. That is the Monday table reported from on Friday, and it is a number rather than a warning.
+      # 6. CREATE TEMP TABLE ... AS, one line: the same snapshot, gone when the session ends -- the scratch
+      #    copy 55 and 56 do their writing on, so nobody practises an UPDATE on the real "Orders".
+      # 7. MAINTENANCE, one line each, because they are the next two things typed: CREATE OR REPLACE VIEW can
+      #    add columns at the end; changing or dropping one means DROP VIEW and create it again. And a view
+      #    over a view is fine and is how grain gets lost -- if you stack them, the count in 3 is the check.
       # WORKPLACE: save a query as a named, reusable object; know a view's grain before summing from it; save a
       #   result as a table or a temp table, and know it will not update.
       # STORY (map 2026-09-17) — NONE. The fan-out-hidden-in-a-view trap keeps its own example. Its closing hands over
@@ -865,7 +1055,7 @@ series:
           source: northwind_co_s
           tables: ["Orders", "Order Details", "Invoices"]
           fit: good
-          reason: "A view over an order-grain aggregate can be reused safely, while a view that hides line fan-out demonstrates the grain risk. Minimum: 30 orders, 60 lines, and at least one order without an invoice."
+          reason: "A view over an order-grain aggregate can be reused safely, while a view that hides line fan-out demonstrates the grain risk. Measured 2026-09-22: the naive Orders-to-lines view is 25,233 rows for 10,000 orders and is HALF right -- the line amounts sum to 15,017,031.15, correct, while \"Freight\" sums to 2,161,332.75 against a true 693,052.88 (3.12x), which is why the object survives review; the order-grain view gives both figures right at once. 468 orders have no invoice, and 55's fix drops that to 304, so a CREATE TABLE AS snapshot taken here reads 164 orders stale afterwards. Minimum: 30 orders, 60 lines, at least one order without an invoice, and a second measure at order grain so the fan-out is wrong while the headline measure is right."
       # THE HARD HALF OF SUBQUERIES, split from old 05 on 2026-09-14 and placed after CTEs, so
       # correlation is met with the tool that makes it readable.
       #
@@ -908,9 +1098,13 @@ series:
       # table, two roles — not a third "rows that multiply" episode, so it does not belong beside 15.
       # It sits DIRECTLY BEFORE WINDOW FUNCTIONS I (35): a row beside an earlier row, done with a
       # self-join, is the hard way that 35 replaces. Series 3 · 10 walks the same hierarchy recursively.
-      # Northwind Company's "Employees" has 12 rows in three levels (checked 2026-09-19): Maya Bauer,
-      # the CEO, whose "ReportsTo" is NULL; 2 sales managers; 9 reps — so "each employee and their
-      # manager" loses Maya under a plain JOIN (11 rows) and keeps her under a LEFT one (12). Series 1 · 40's rule, on a table joined to itself.
+      # Northwind Company's "Employees" has 29 rows (checked 2026-09-26): Maya Bauer, the CEO, whose
+      # "ReportsTo" is NULL; sales in three levels (2 sales managers, 9 reps, employees 2 to 12); operations
+      # and finance beside it, six levels deep at the warehouse (13 to 27); and two interim managers entered as
+      # reporting to each other (28, 29) — so "each employee and their manager" loses Maya under a plain JOIN
+      # (28 rows) and keeps her under a LEFT one (29). Series 1 · 40's rule, on a table joined to itself. One
+      # self-join per level reaches a grandmanager; reaching the top from a warehouse operative takes five,
+      # which is the itch Series 3 · 10 scratches.
       # THE MAIN EXAMPLE IS "PRODUCTS BOUGHT TOGETHER" (decided 2026-09-19 — the org chart alone made a thin
       # episode). "Order Details" joined to itself on "OrderID" (DuckDB, 2026-09-19, all five years): 81,763 rows,
       # every line matched to itself included; a."ProductID" <> b."ProductID" leaves 56,530, and every pair is
@@ -921,7 +1115,7 @@ series:
       # Recursive walking is Series 3 · 10.
       # WORKPLACE: compare rows in the same table — employee and manager, pairs of related rows, a row beside
       #   an earlier row the pre-window way.
-      # STORY (map 2026-09-17) — NONE. Manager and employee (three levels), products bought together.
+      # STORY (map 2026-09-17) — NONE. Manager and employee, products bought together.
       - n: "30"
         slug: self-joins-and-hierarchies
         title: "Self-JOINs & Hierarchies — Relating Rows to Other Rows in the Same Table"
@@ -932,7 +1126,7 @@ series:
           source: northwind_co_s
           tables: ["Employees", "Order Details", "Products"]
           fit: good
-          reason: "The three-level CEO/manager/representative hierarchy shows why LEFT JOIN preserves the top manager; 10,000 orders with 1 to 6 lines give products bought together, with self-matches and mirrored pairs to remove. Minimum: 3 employees with one NULL ReportsTo, and 20 orders with 2+ lines."
+          reason: "The org chart (the CEO with a NULL ReportsTo, sales in three levels, operations six deep) shows why LEFT JOIN preserves the top manager; 10,000 orders with 1 to 6 lines give products bought together, with self-matches and mirrored pairs to remove. Minimum: 3 employees with one NULL ReportsTo, and 20 orders with 2+ lines."
       # Moved down from Series 3, because "CTEs, subqueries and window functions on real questions" is not true
       # without them: running totals, month-over-month, rank-within-region and
       # latest-row-per-customer ARE what business questions look like, and they are the
@@ -946,6 +1140,47 @@ series:
       # ONE LINE EACH (added 2026-09-19): LATERAL — top N per group as a JOIN LATERAL (… ORDER BY … LIMIT 3), the
       #   other way to write it, on PostgreSQL and DuckDB; QUALIFY — filters on a window function without the CTE,
       #   but PostgreSQL does not have it, so it is a line and never a koan (the koans run on DuckDB, which does).
+      # THE QUERIES (every figure measured on northwind_co_s, 2026-09-22 -- none of them remembered).
+      # 1. THE LATEST ROW PER KEY, and the table for it is "OrderStatusHistory", not "Orders": 19,897 rows
+      #    over all 10,000 orders -- 105 orders with a single row (Open, nothing since), 9,894 with two, and
+      #    order 9720 with four: Open, Cancelled, Open, Shipped. ROW_NUMBER() OVER (PARTITION BY "OrderID"
+      #    ORDER BY "ChangedAt" DESC, "StatusChangeID" DESC) with rn = 1 gives exactly 10,000 rows: 9,720
+      #    Shipped, 175 Cancelled, 105 still Open. THE TABLE HOLDS 176 CANCELLED ROWS AND ONLY 175 ORDERS ARE
+      #    CANCELLED -- order 9720 was cancelled and then reopened and shipped. The whole case for "the latest
+      #    row" is that one row, and it is a number on this dataset, not a parable.
+      # 2. THE TRAP, and it is the most-asked greatest-n-per-group question on the internet: do it the
+      #    pre-window way -- join back to max("ChangedAt") GROUP BY "OrderID" -- and it returns 10,263 rows
+      #    for 10,000 orders, because 263 orders have two rows at the same instant and the join keeps both.
+      #    "Why does my latest-row query return MORE rows than I have orders?" is the question; the second
+      #    ORDER BY key inside the OVER is the answer. Same shape one level up: 119 of the 120 customers have
+      #    orders and 5 of them have two orders on their latest date.
+      # 3. TIES, all three functions on one screen: rank customers within their country by order count (119
+      #    customers with orders, 21 countries, 2-9 customers each). SWITZERLAND IS THE SLIDE -- 7 customers,
+      #    three tied on 7 orders each: ROW_NUMBER 3,4,5 / RANK 3,3,3 then 6 / DENSE_RANK 3,3,3 then 4. Seven
+      #    rows, and the three functions disagree twice. Over all 119 rows ROW_NUMBER differs from RANK on 7
+      #    and RANK from DENSE_RANK on 2. (Austria is the second slide if one is not enough: 6 customers,
+      #    three tied on 4 -- but the tie is at the BOTTOM there, so RANK and DENSE_RANK still agree.)
+      # 4. TOP N PER GROUP, on that same ranking: rn <= 3 returns 62 rows, rk <= 3 returns 64. "Top 3 per
+      #    country" is a question about which of the two you meant, and the gap is two real customers.
+      # 5. A ROW BESIDE ITS GROUP'S TOTAL: sum(orders) OVER (PARTITION BY "Country") on the same result --
+      #    Switzerland totals 66, and Quayside Supermarket's 31 is 47.0% of it. No GROUP BY, no second query,
+      #    no join back to a summary: this is the beat where a window function stops being a ranking trick.
+      # 6. THE SECOND TRAP, the one that FORCES the CTE: put row_number() in the WHERE and DuckDB answers
+      #    "Binder Error: WHERE clause cannot contain window functions!" -- because the window runs after
+      #    WHERE, not before it. This is why every top-N answer anyone has ever copied is wrapped in a CTE,
+      #    and 20 is where they learned to write one. Say the order out loud: WHERE, then GROUP BY, then the
+      #    window, then ORDER BY.
+      # 7. DEDUPLICATION, small enough to show whole: "CourierConfirmations" is 189 rows over 172 orders --
+      #    11 orders confirmed twice and 3 confirmed three times (the same duplicate 48 reconciles with UNION
+      #    vs UNION ALL). ROW_NUMBER() OVER (PARTITION BY "OrderID" ORDER BY "ReceivedDate"), keep rn = 1,
+      #    172 rows out.
+      # THE TITLE PROMISES "THE LATEST ROW PER CUSTOMER" AND IT STILL HAS TO DELIVER THAT: open on the
+      # customer version, because that is the sentence the person searching typed, and move to the status
+      # table for the trap -- the tie bites 5 customers and 263 orders, and 263 is the number big enough
+      # to be believed. Do not rename the episode; the keyword IS the point of the title convention.
+      # NOT ON THIS DATASET (checked 2026-09-22, so nobody re-checks it): units per product within category
+      # has NO ties -- 0 tied groups in 8 categories, and ROW_NUMBER equals RANK on all 24 of its top-3 rows.
+      # The tie lesson cannot be built there. That is what `reason` used to promise, and it now does not.
       # WORKPLACE: rank within groups, first/latest row per group, top N per group, a row beside its group's
       #   total, removing duplicates.
       # STORY (map 2026-09-17) — NONE. Latest row per group, top N per group, ties, removing duplicates.
@@ -958,9 +1193,9 @@ series:
         status: planned
         data:
           source: northwind_co_s
-          tables: ["Customers", "Orders", "Order Details", "Products"]
+          tables: ["OrderStatusHistory", "Orders", "Customers", "CourierConfirmations"]
           fit: good
-          reason: "Five years of customer orders support latest-row-per-customer, rank/top-N per group, ties, and duplicate removal. Minimum: 12 customers with 3+ orders each, two tied values, and at least one customer with no order."
+          reason: "Measured 2026-09-22 on northwind_co_s. \"OrderStatusHistory\" is the latest-row-per-key table: 19,897 rows over all 10,000 orders, and 263 of those orders carry two rows at the same instant, so the pre-window join to max(\"ChangedAt\") returns 10,263 rows and ROW_NUMBER with a tie-break returns 10,000. Ranking the 119 ordering customers within their 21 countries gives ties where the lesson needs them -- Switzerland has three customers on 7 orders each, mid-table, so ROW_NUMBER, RANK and DENSE_RANK all disagree in one seven-row result -- and top-3 per country is 62 rows by ROW_NUMBER against 64 by RANK. \"CourierConfirmations\" is 189 rows over 172 orders for deduplication. Minimum: 15 groups of 3+ rows, one tie in the MIDDLE of a ranking, one key with two rows at the same timestamp, and at least one customer with no order (there is 1 of 120)."
       # One episode, not two: pattern matching and the string/number helpers are both
       # "functions for data nobody cleaned", and both are reference material a working
       # person looks up rather than memorises. Ships with a cheat sheet and covers the
@@ -970,6 +1205,44 @@ series:
       # window-function episodes (35 and 45), one tool at a time. Its call sheet formats 35's call list. It collects two Series 1 promises: LIKE's
       # `_`, ESCAPE and case-insensitive matching (deferred by 1 · 10), and STRING_AGG — the text
       # aggregate 1 · 25 named as Series 2's. `||` is 1 · 20's; build on it, do not re-teach it.
+      # THE QUERIES (run on northwind_co_s, 2026-09-22; `reason` above surveys the columns, this says what
+      # to type). The order is the episode: find it, clean it, cut it up, put it back together.
+      # 1. THE OPENER IS A SEARCH THAT FINDS ONE OF THREE. "City" = 'Tampere' returns 1 customer.
+      #    trim(lower("City")) = 'tampere' returns 3 -- [Tampere], [Tampere ] and [TAMPERE]. Same town, same
+      #    question, three times the answer, and nothing in the first result says anything is missing. That is
+      #    the episode's whole argument and it fits on one card. SELECT DISTINCT "City" is 58 rows; the same
+      #    DISTINCT over trim(lower(...)) is 45. 12 cities are split in two, Tampere in three.
+      # 2. LIKE, AND THE THREE THINGS SERIES 1 - 10 PROMISED: `_` for exactly one character, ESCAPE for a
+      #    literal % or _, and case-insensitive matching (lower() both sides, or ILIKE -- which DuckDB and
+      #    PostgreSQL both have and the standard does not; say that once). The phone column is the board:
+      #    120 rows, 52 starting '+', 23 starting '(', 17 starting '00', 28 plain digits and spaces.
+      #    LIKE '+31%' finds the Dutch ones written one way and misses the ones written the other three.
+      # 3. REGEX, ONCE, FOR THE THING LIKE CANNOT DO: regexp_replace("Phone", '[^0-9]', '', 'g') strips
+      #    every phone to digits -- and the 120 digit-strings are still 120 DISTINCT values, so the numbers
+      #    were never ambiguous, only the punctuation was. Normalise, then compare. No regex puzzles: this
+      #    one expression earns the whole section.
+      # 4. THE || NULL TRAP, and it is the most-asked string question of all: 105 of the 120 customers have a
+      #    NULL "Region", so the mailing label "Address" || ', ' || "City" || ', ' || "Region" || ' ' ||
+      #    "PostalCode" is NULL for 105 of 120 rows -- not short, NULL, the whole label gone. Anything || NULL
+      #    is NULL. THE CURE IS COALESCE, WHICH 05 TAUGHT, so name 05 out loud; CONCAT_WS is the other answer
+      #    and it skips NULLs by itself. This is the single best beat in the episode and the column survey
+      #    could not have found it, because it is not a property of a column.
+      # 5. SPLIT_PART AND CAST, the "pack size" column nobody stored: all 80 products write
+      #    "QuantityPerUnit" starting with a number (10 boxes x 20 bags, 24 - 12 oz bottles, 5 kg pkg.), so
+      #    CAST(split_part("QuantityPerUnit", ' ', 1) AS INTEGER) gives 7 pack sizes from 5 to 48 and they
+      #    sort as numbers. Cast it as text and 10 sorts before 5; that is the one-line reason CAST exists.
+      # 6. STRING_AGG, THE SLIDE THAT DEMONSTRATES ITSELF: one row per country, cities in one cell. On the
+      #    raw column Germany prints "Munich, Hamburg, Berlin, munich, Cologne" and Sweden prints
+      #    "Gothenburg, stockholm, Stockholm" -- the report shows the dirt without anyone claiming it. Clean
+      #    INSIDE the aggregate and Germany is four cities. Collects Series 1 - 25's promise of a text
+      #    aggregate; `||` is 1 - 20's and is built on here, never re-taught.
+      # 7. LIKE OVER FREE TEXT, WITH THE NULL CAVEAT: "Orders"."DeliveryNotes" is 526 notes among 10,000
+      #    orders, 114 distinct. lower("DeliveryNotes") LIKE '%leave%' returns 65 orders -- and the 9,474
+      #    NULL notes are neither matched nor excluded, which is 1 - 45 met again in a place nobody expects
+      #    it. One sentence; do not re-teach three-valued logic here.
+      # PLATFORM NOTE (2026-09-22, found the hard way): DuckDB HAS NO initcap. "Catalog Error: Scalar
+      # Function with name initcap does not exist!" PostgreSQL has it. The koans run on DuckDB, so title-case
+      # with upper(left(x,1)) || lower(substr(x,2)) or do not title-case at all.
       # WORKPLACE: case-insensitive search, trim and split, practical patterns, a list of rows in one cell
       #   (STRING_AGG), CAST and number formatting for a report. No regex puzzles.
       # STORY (map 2026-09-17) — NONE. The dataset must plant messy phones, stray spaces and case variants for it.
@@ -978,14 +1251,56 @@ series:
         title: "String Functions, LIKE & Regex — Clean Up Messy Real-World Data"
         short: "String Functions, LIKE & Regex — clean up messy data"
         hands_on: ["koan:complete"]
+        core: true
         status: planned
         data:
           source: northwind_co_s
-          tables: ["Customers.ContactName", "Customers.City", "Customers.Phone", "Suppliers", "Employees"]
+          tables: ["Customers.Phone", "Customers.ContactName", "Customers.City", "Products.QuantityPerUnit", "Orders.DeliveryNotes"]
           fit: good
-          reason: "The seed intentionally plants trailing spaces, case variants, lower-case contacts, and mixed phone formats; supplier/employee names support practical string aggregation. Minimum: 20 text rows with at least three defects of each kind and enough repeated cities to aggregate."
+          reason: "Measured 2026-09-21 on northwind_co_s. Customers.Phone is the LIKE/regex spine: 120 rows in 12 different shapes (103 3282, +31-7317358, (31) 397-7415, 0033.542.4636), no majority format. ContactName carries 5 all-lower, 4 all-upper, 4 double-spaced and 3 padded values; City 7 padded and 6 case variants over 58 cities in 21 countries, which is the STRING_AGG list; SELECT DISTINCT \"City\" returns 58 and TRIM/LOWER of it returns 45, so 13 of those cities do not exist: 12 are split in two and Tampere in three, and that pair of numbers is the episode's whole argument. Products.QuantityPerUnit gives 10 shapes to split (10 boxes x 20 bags, 24 - 12 oz bottles). Orders.DeliveryNotes gives LIKE over a mostly-NULL free-text column: 526 notes among 10000 orders, 114 distinct. Suppliers and Employees were listed here until 2026-09-21 and are now dropped: all 20 supplier rows are clean in every text column, and Employees.Notes is NULL on 27 of 29 rows (the two interim managers share one note). WebOrders.Payload stays with 50, where JSON is taught."
       # MOVED FROM 55 TO 45 ON 2026-09-15. BUILDS ON 35 and on 10: month-over-month needs date_trunc to make the months before LAG can
       # compare them.
+      # AND SAY THE WORD: date_trunc IS A GRAIN CHANGE (added 2026-09-21). Rolling the orders up to
+      # one row per month before the window is 15's "one row per WHAT?" and 20's "one step, one
+      # grain" — met here for the first time since 22, and the series does not raise it again until
+      # the project. Window the raw rows instead and the running total is per ORDER and LAG hands
+      # back the previous ORDER: that is the Austria near-miss below, written as a grain mistake
+      # rather than as a date one. One sentence, with the callback to 2 · 15 said out loud.
+      # (The measures here are order-grain ON PURPOSE — Freight and OrderID, never line amounts —
+      # so the join fan-out cannot bite in this episode. 50 is where it does.)
+      # THE QUERIES (run on northwind_co_s, 2026-09-22; the brief above names the tools, this names what to
+      # type and what comes back).
+      # 1. THE SPINE, AND IT IS A GRAIN CHANGE -- say the word, as the note above insists: date_trunc('month',
+      #    "OrderDate") turns 10,000 order rows into 60 month rows, and every window below runs on those 60.
+      #    All 60 months of 2020-01..2024-12 are present at company level, 90 to 277 orders each, so the
+      #    company-level spine needs no generate_series. Window the RAW rows instead and LAG hands back the
+      #    previous ORDER, and the running total counts per order: that is the mistake, and it is a grain
+      #    mistake, not a date one.
+      # 2. MONTH OVER MONTH (LAG): lag(orders) OVER (ORDER BY mth), then 100.0 * (orders - prev) / prev. 2024
+      #    reads -19.2, -3.7, +12.1, -4.4, -7.2, -2.2, +10.2, -12.3, -1.8, +22.0, +35.1, -8.3. November is
+      #    the spike -- 205 to 277 orders, +35.1% -- and December falls back 8.3%. Real seasonality, nothing
+      #    planted, and the December drop is the beat where "down" does not mean "bad".
+      # 3. RUNNING TOTAL, with the frame written out: sum(orders) OVER (ORDER BY mth ROWS BETWEEN UNBOUNDED
+      #    PRECEDING AND CURRENT ROW) reaches 10,000 at 2024-12, which is the check -- the last value of a
+      #    running total is the grand total or the query is wrong. THEN THE FILTER TRAP: add WHERE mth >=
+      #    DATE '2024-09-01' to that same query and the total RESTARTS at 168 instead of continuing, because
+      #    WHERE runs before the window (35 again). Window over everything, filter in an outer query.
+      # 4. THE FRAME DEFAULT, AND IT IS THE BEST TRAP IN THE EPISODE: sum(...) OVER (ORDER BY "OrderDate")
+      #    with no frame means RANGE, not ROWS -- every row sharing that date is one step. This company
+      #    places up to 18 orders on one date (10,000 orders over 1,818 order days, 5.5 a day), so over
+      #    December 2024 alone 223 of 254 orders get a DIFFERENT running total from the identical query
+      #    written ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW. The question people ask is "why does my
+      #    running total repeat the same number for several rows?" and the answer is one word they did not
+      #    type. Rolled up to months the two agree -- which is exactly why nobody meets this until it matters.
+      # 5. A MOVING AVERAGE, the frame used on purpose: avg(orders) OVER (ORDER BY mth ROWS BETWEEN 2
+      #    PRECEDING AND CURRENT ROW) reads 168.0, 186.5, 216.7, 245.3 for 2024-09..12 against actuals of
+      #    168, 205, 277, 254. THE FIRST TWO ARE AVERAGES OF FEWER THAN THREE MONTHS and nothing labels them
+      #    as such; one sentence on that, because every dashboard in the world ships that edge unlabelled.
+      # 6. THE SPARSE CASE, WITH THE SLIDE THIS TIME: Austria has orders in 29 of the 60 months, and in 2024
+      #    in 6 of 12 -- February, then nothing until August, then September to December. LAG gives August
+      #    "the previous row", which is FEBRUARY, and calls the difference month-over-month. Nothing on the
+      #    screen says the gap is there. The cure is 10's month spine, generate_series LEFT JOINed to the
+      #    months that exist -- not a CROSS JOIN.
       # WORKPLACE: previous/next row (LAG, LEAD), running totals, month-over-month, frames.
       # STORY (map 2026-09-17) — NONE. LAG gives the previous row, not the previous month: Austria has orders in 29 of
       #   60 months (2026-09-19); the fix reuses 10's month spine (generate_series + LEFT JOIN), no CROSS JOIN.
@@ -1003,11 +1318,44 @@ series:
           source: northwind_co_s
           tables: ["Orders.OrderDate", "Orders.Freight", "Orders.OrderID"]
           fit: good
-          reason: "Five years of dated orders give LAG/LEAD, running totals, frames, and month-over-month comparisons; the sparse customer case exposes that LAG means previous row, not previous calendar month. Minimum: 24 monthly periods, 30 orders, and at least two missing customer-months."
+          reason: "Measured 2026-09-22 on northwind_co_s. All 60 months of 2020-01..2024-12 carry orders at company level (90 to 277 each), so LAG, LEAD, running totals and month-over-month need no spine there -- November 2024 is a real +35.1% spike and December a -8.3% fall. The frame lesson has teeth because up to 18 orders share one date (1,818 order days, 5.5 a day): over December 2024, 223 of 254 orders get a different running total from the default RANGE frame than from an explicit ROWS frame. Austria is the sparse case -- 29 of 60 months, and in 2024 February then nothing until August -- so LAG compares August with February. Minimum: 24 monthly periods, 30 orders, at least two missing customer-months, and one date carrying several orders so RANGE and ROWS disagree."
       # CORRECTED 2026-09-15: this said Series 1 · 40 wrote a FULL OUTER JOIN as a UNION of a LEFT and
       # a RIGHT join. It does not — Series 1 · 40 has no UNION at all. The real callback: Series 1 · 40
       # says FULL OUTER JOIN earns its place in RECONCILIATION, comparing two lists that should agree —
       # and EXCEPT and INTERSECT are the set-based way to do exactly that.
+      # THE QUERIES (run on northwind_co_s, 2026-09-22). Two lists that should agree and do not: OUR 177
+      # un-invoiced Speedy Express orders from 15, and THE COURIER'S confirmations. Everything below is that
+      # one comparison, written four ways.
+      # 1. THE COLUMN RULES FIRST, because they are what actually stops people: both branches need the same
+      #    number of columns, in the same order, with compatible types -- and the column NAMES come from the
+      #    first branch, so a mis-labelled report is a set operation written back to front. ORDER BY belongs
+      #    to the whole statement, once, at the very end. Three sentences, then the business question.
+      # 2. INTERSECT -- DELIVERED, SO INVOICE THEM: our 177 against the courier's list gives 164 orders,
+      #    242,383.04.
+      # 3. EXCEPT -- NEVER CONFIRMED, SO CLAIM THEM: 13 orders, 14,511.63. And the check said out loud,
+      #    164 + 13 = 177, which is the number 15 produced. A reconciliation that does not reconcile is not
+      #    finished.
+      # 4. UNION vs UNION ALL, AND THE DATASET ARGUES IT FOR YOU: "CourierConfirmations" is 189 rows over 172
+      #    orders -- a clean file of 172 received 2024-12-16, one row per order, and a RE-SEND of 17 rows
+      #    covering 14 orders received 2024-12-18, THREE OF WHICH ARE DUPLICATED INSIDE THE RE-SEND. Stack
+      #    the two files with UNION ALL and you report 189 confirmations for 172 orders; UNION gives 172.
+      #    Nobody invented that: it is what happens when an ops team re-sends a file, and it is why UNION ALL
+      #    is the faster one and the wrong default. (The brief used to say "the duplicate confirmation",
+      #    singular. There are 17 excess rows.)
+      # 5. THE NOISE, AND IT MUST BE NAMED: 8 of the 172 confirmed orders ALREADY had a "ShippedDate" -- the
+      #    courier confirming something we already knew. Turn the EXCEPT around (their list EXCEPT ours) to
+      #    surface them. They are not evidence of anything and saying so is the honest move; a reconciliation
+      #    that quietly drops its own leftovers teaches the opposite of what this episode is for.
+      # 6. ONE LINE EACH, no more: INTERSECT and EXCEPT are DISTINCT by default -- that is why 189 rows
+      #    answer for 172 orders without anyone asking -- and INTERSECT ALL / EXCEPT ALL exist when you mean
+      #    to keep the copies. PostgreSQL and DuckDB both have them.
+      # FIGURES NOTE (resolved 2026-09-22): .docs/plan-academy-figures-northwind-co-s.md used to give
+      # "confirmation rows / distinct orders / for already-dated orders" as 173 / 172 / 8 in column C
+      # against a built 189 / 172 / 8 -- distinct orders and the already-dated count always matched, only
+      # the row count had moved, from 1 excess row to 17. Series 2 is unpublished, so the owner had the
+      # table follow the build: it now reads 189, and its row-count line carries CourierConfirmations 189
+      # and the OrderStatusHistory 19,897 it had been missing. Every other table in that line was
+      # re-counted the same day and matched. The 17 excess rows ARE the lesson above -- do not "tidy" them.
       # WORKPLACE: stack result sets (UNION ALL), deduplicate on purpose (UNION), reconcile two lists
       #   (EXCEPT, INTERSECT).
       # STORY (map 2026-09-17) — MAIN EXAMPLE, reconciliation: our un-dated Speedy Express orders INTERSECT / EXCEPT
@@ -1024,7 +1372,7 @@ series:
           source: northwind_co_s
           tables: ["Orders", "CourierConfirmations", "Shippers"]
           fit: good
-          reason: "Orders and courier confirmations are deliberately overlapping but non-identical lists, with a duplicate confirmation, so UNION/UNION ALL, INTERSECT, and EXCEPT have business meaning. Minimum: 20 candidate orders, both matched and unmatched confirmations, and one duplicate."
+          reason: "Orders and courier confirmations are deliberately overlapping but non-identical lists, so UNION/UNION ALL, INTERSECT, and EXCEPT have business meaning. Measured 2026-09-22: \"CourierConfirmations\" is 189 rows over 172 orders -- a clean file of 172 received 2024-12-16 and a re-send of 17 rows covering 14 orders received 2024-12-18, 3 of them duplicated inside the re-send -- so UNION ALL reports 189 where UNION reports 172. Against the 177 un-invoiced outage orders from 15, INTERSECT gives 164 (242,383.04) and EXCEPT gives 13 (14,511.63), and 164 + 13 reconciles to 177. 8 confirmations are for orders that already had a ship date. Minimum: 20 candidate orders, both matched and unmatched confirmations, and a duplicate that arrives as a re-sent batch rather than as a single stray row."
       # NEW 2026-09-07, and it closes a promise this file made and never kept: the GROUP BY
       # comment in Series 1 · 30 says GROUPING SETS, ROLLUP and CUBE "are later series", and no
       # later series of THIS course delivered them.
@@ -1088,7 +1436,19 @@ series:
       # WHAT GOES WRONG (beat 4): the total that is right and the subtotal that is not. Somebody
       # UNIONed the detail and the grand total, then added a category filter to only one half —
       # or read a real NULL region as the "all regions" row and reported the same money twice.
-      # Both look plausible on a slide, which is how they survive.
+      # THIRD, AND THE MOST COMMON OF THE THREE, ADDED 2026-09-21: THE MEASURE WAS SUMMED AT THE
+      # WRONG GRAIN. This episode's tables span two of them — Freight lives on "Orders", the
+      # amounts live on "Order Details" — so a ROLLUP over a join of the two multiplies every
+      # freight figure by that order's line count. RE-MEASURED 2026-09-22 (the 2026-09-21 figures no
+      # longer reproduce -- the 25,233-row join is unchanged, so it is the Freight column that moved
+      # in a later build; use these): SUM("Freight") is 693,052.88 at order grain and 2,161,332.75
+      # across the 25,233-row line join — 3.12x too big — AND PER COUNTRY THE FACTOR IS NOT EVEN
+      # CONSTANT (Germany 3.23, Mexico 3.22, Brazil 3.15, Finland 3.13, Spain 3.04, USA 3.04),
+      # because a bigger order carries both more freight and more lines. So every subtotal
+      # is wrong by a DIFFERENT amount and they all still add up to the grand total, which is
+      # precisely why nobody catches it. It is Series 2 · 15's grain, and this is the first
+      # episode since 22 that puts it back in front of the reader — say so.
+      # All three look plausible on a slide, which is how they survive.
       # WORKPLACE: subtotals and a grand total in one query; label and sort the subtotal rows. ROLLUP, GROUPING
       #   SETS and GROUPING() are the workplace part; CUBE's 2^n and GROUPING_ID get a line each.
       # STORY (map 2026-09-17) — NONE. The real NULL vs the subtotal NULL on "Customers"."Region" (the dataset plants
@@ -1117,6 +1477,36 @@ series:
       # (The audit found nothing else missing: COALESCE/NULLIF are Series 1 · 45, LIKE/ILIKE
       # are Series 1 · 10, ROUND/CAST are Series 2 · 40, EXTRACT is Series 2 · 10, and every
       # key/constraint/DDL topic is deliberately Learn Data Modeling's.)
+      # THE QUERIES (run on northwind_co_s, 2026-09-22). The case has been diagnosed by now; this episode is
+      # where the reader touches the data, so every statement below is paired with the count that proves it.
+      # 1. THE WHERE AS A SELECT FIRST, and it is the habit the episode exists to install: write the SELECT,
+      #    read the count, and only then swap SELECT for UPDATE. The count to expect is 164 -- the orders the
+      #    courier confirmed (48) that still have no "ShippedDate". If the SELECT does not return 164, the
+      #    UPDATE is not ready.
+      # 2. THE FIX, part one: record the confirmed ship dates. UPDATE "Orders" from the courier's
+      #    "DeliveredDate" WHERE "ShippedDate" IS NULL and the order is confirmed -> 164 rows.
+      # 3. THE TRAP, WITH ITS PRICE ON SCREEN: drop `AND "ShippedDate" IS NULL` and the same statement also
+      #    touches the 8 orders that ALREADY had a ship date -- and in ALL EIGHT the courier's date is
+      #    EXACTLY TWO DAYS LATER than ours. No error, no warning, eight good ship dates quietly moved
+      #    forward by two days, some of them across a week boundary. Show the before and after of one row.
+      #    This is the beat; "be careful" is not.
+      # 4. THE SECOND TRAP, and it is the one nobody expects: the SOURCE has duplicates. UPDATE ... FROM
+      #    "CourierConfirmations" joins 189 source rows to 172 target orders (48). On this data every
+      #    duplicate agrees on "DeliveredDate" -- 0 orders with conflicting dates -- SO THE CARELESS VERSION
+      #    HAPPENS TO BE RIGHT, which is exactly why it survives to production. Deduplicate the source first
+      #    (35's ROW_NUMBER, rn = 1) and say out loud that an UPDATE with more source rows than targets is
+      #    undefined, not clever.
+      # 5. THE FIX, part two: INSERT ... SELECT the 164 missing invoices -- "Invoices" is InvoiceID, OrderID,
+      #    InvoiceDate, Amount, Freight, PaidDate, and the amount comes from the order's lines, so this is
+      #    also the last chance to say "one row per WHAT?" before the project. The check: 9,532 invoices
+      #    before, 9,696 after. THE 13 NEVER-CONFIRMED ORDERS ARE NOT INVOICED -- their recommendation is a
+      #    claim against the courier, not a sale -- and refusing to invoice them is a judgement the SQL
+      #    cannot make for you.
+      # 6. THE TRANSACTION, which is what makes all of the above safe to try: BEGIN, both writes, the two
+      #    counts, then ROLLBACK and watch the counts go back. Run it a second time ending in COMMIT. A
+      #    reader who has rolled back a real change once stops being frightened of the keyword.
+      # 7. DELETE gets the smallest beat and an honest reason: NOTHING IN THIS CASE IS DELETED. Practise it
+      #    on the copy 22 made with CREATE TABLE AS, and point at 56 for the re-runnable version.
       # WORKPLACE: change data safely — the WHERE as a SELECT first, a transaction, check, roll back;
       #   update rows from a list somebody sends.
       # STORY (map 2026-09-17) — MAIN EXAMPLE, the fix safely: record the confirmed ship dates and create the missing
@@ -1132,7 +1522,7 @@ series:
           source: northwind_co_s
           tables: ["Orders", "Invoices", "CourierConfirmations", "Customers"]
           fit: good
-          reason: "The seed has unrecorded ship dates, courier confirmations, invoices created only for recorded dates, and cancellable/open orders, making safe UPDATE/INSERT, DELETE, and transaction checks realistic. Minimum: 20 orders, one confirmed missing date, and one existing invoice."
+          reason: "The seed has unrecorded ship dates, courier confirmations, invoices created only for recorded dates, and cancellable/open orders, making safe UPDATE/INSERT, DELETE, and transaction checks realistic. Measured 2026-09-22: the fix records 164 ship dates and creates 164 invoices (9,532 before, 9,696 after), and the trap has a price -- 8 confirmed orders already had a \"ShippedDate\" and the courier's date is exactly two days later on all 8, so an UPDATE without the IS NULL guard silently moves eight correct dates. The source is duplicated too (189 confirmation rows for 172 orders) and every duplicate agrees on \"DeliveredDate\", so the careless statement happens to be right. Minimum: 20 orders, one confirmed missing date, one existing invoice, one already-dated order the courier also confirms, and a duplicated source row."
       # NEW 2026-09-19, split from 55. MUST COVER `INSERT … ON CONFLICT`, the one real hole a competitor
       # audit found (Amigoscode's 60-episode PostgreSQL course, 2026-09-02 — it spends TWO of its sixty on
       # this: "On Conflict Do Nothing" and "Upsert"). Before this, UPSERT appeared only at Series 4 · 05,
@@ -1144,8 +1534,8 @@ series:
       #                             a beginner writes instead. EXCLUDED is the incoming row.
       #   MERGE                   — the standard spelling (SQL:2003; PostgreSQL 15+, DuckDB 1.4+, and the
       #                             only one on SQL Server and Oracle). One beat: the same upsert written
-      #                             as MERGE. Its koan needs the koan runner's DuckDB upgraded
-      #                             from 1.1.3 to 1.4.4.0 first (the Series 2 header's upgrade note).
+      #                             as MERGE. Its koan needs DuckDB 1.4+; the koan runner has
+      #                             been on 1.4.5.0 since 2026-09-21 (the Series 2 header's upgrade note).
       # THE FAILURE THAT EARNS IT: an import run twice — the second run duplicates every row or dies on the
       # key. The example is a supplier's price list: some products already exist (update the price), some
       # are new (insert them). Practice on a copy made with 22's CREATE TABLE AS, with its key added.
@@ -1156,6 +1546,39 @@ series:
       # with the staging table and the row-count check around it. THIS episode owes only the statement and
       # what it does to one table.
       # BUILDS ON: 55 (INSERT … SELECT, transactions), 22 (CREATE TABLE AS). Standalone after 55.
+      # THE QUERIES (run on northwind_co_s and on a writable copy of it, 2026-09-22). The price list the
+      # brief describes is already in the dataset: "PriceChanges" is 255 rows covering all 80 products,
+      # 2020-03-05 to 2024-11-04 -- SEVERAL ROWS PER PRODUCT, which is what a supplier feed actually is.
+      # 0. THE TARGET, built with 22: CREATE TABLE AS over the 7 products of SupplierID 3, then add the
+      #    primary key -- ON CONFLICT needs a unique constraint to conflict WITH, and the error you get
+      #    without one is the first thing to show, not the last.
+      # 1. THE FAILURE THAT EARNS THE EPISODE: run the plain INSERT of the feed twice. The second run dies on
+      #    the key (or, without a key, duplicates every row). Every import script in the world is this script.
+      # 2. ON CONFLICT DO NOTHING -- the re-runnable load: same INSERT, run it three times, the table does not
+      #    move and nothing errors. That is idempotency in one keyword, and ETL Series 1 25 is where it grows
+      #    into a job. Do not let it grow here.
+      # 3. ON CONFLICT ... DO UPDATE -- insert-or-update in one statement, EXCLUDED being the incoming row.
+      #    Against a 9-row list (the 7 existing products plus 2 invented new ones) it updates 7 and inserts 2,
+      #    and the reader watches one statement do both. Say what it replaces: the SELECT-then-branch a
+      #    beginner writes, which is two statements and a race.
+      # 4. THE TRAP, AND IT IS THE MOST-ASKED QUESTION ABOUT THIS STATEMENT: THE FEED HAS THE SAME KEY TWICE.
+      #    Supplier 3's 7 products carry 26 price changes between them (2 to 5 each), so feeding
+      #    "PriceChanges" in unfiltered means 26 rows for 7 keys. PostgreSQL REFUSES it -- "ON CONFLICT DO
+      #    UPDATE command cannot affect row a second time". DUCKDB DOES NOT: it accepts the batch and lands
+      #    THE EARLIEST PRICE FOR ALL SEVEN -- 14.65 where the catalogue says 18.37, 39.33 where it says
+      #    48.01, 8.00 where it says 9.69. 2020 prices written over 2024 prices, no error, no warning. Show
+      #    BOTH engines on this one; it is the clearest place in the series where "it ran" and "it worked"
+      #    come apart.
+      # 5. THE CURE, AND IT IS 35 ARRIVING WHERE NOBODY EXPECTED IT: ROW_NUMBER() OVER (PARTITION BY
+      #    "ProductID" ORDER BY "ChangedDate" DESC), rn = 1 -- 26 rows become 7, and all 7 land EXACTLY the
+      #    catalogue's current prices (18.37, 10.05, 48.01, 9.69, 27.03, 53.04, 26.93). The dedupe is not a
+      #    precaution, it is verifiable on screen. DEDUPLICATE THE SOURCE TO ONE ROW PER KEY, ALWAYS -- the
+      #    same sentence 55 says about UPDATE ... FROM, met a second time so it sticks.
+      # 6. MERGE, one beat: the same upsert in the standard spelling, and the note that it is the only one on
+      #    SQL Server and Oracle. Syntax, not a second lesson.
+      # NO KOAN ON THE DUPLICATE-KEY RULE (2026-09-22): the koans run on DuckDB, and DuckDB is the LAXER
+      # engine here -- a koan asserting the PostgreSQL error could never go green. The koans take 2, 3 and 5,
+      # where both engines agree; the trap stays in the video and the article, with both behaviours named.
       # WORKPLACE: insert-or-update in one statement; re-runnable loads; MERGE when the engine has no ON CONFLICT.
       # STORY (map 2026-09-19) — NONE.
       - n: "56"
@@ -1167,9 +1590,9 @@ series:
         status: planned
         data:
           source: northwind_co_s
-          tables: ["Products", "Suppliers"]
+          tables: ["Products", "Suppliers", "PriceChanges"]
           fit: good
-          reason: "Products has a primary key and prices a supplier's list can change, so a list with some existing and some new products shows DO NOTHING, DO UPDATE and MERGE on one table. Minimum: 10 products, a list of 5 rows with 3 existing and 2 new."
+          reason: "Products has a primary key and prices a supplier's list can change, so a list with some existing and some new products shows DO NOTHING, DO UPDATE and MERGE on one table. Measured 2026-09-22: \"PriceChanges\" is the feed the episode needs -- 255 rows over all 80 products, and SupplierID 3's 7 products carry 26 changes between them, so the unfiltered feed has the same key up to 5 times. PostgreSQL refuses that batch; DuckDB accepts it and lands the EARLIEST price for all 7 (14.65 against a catalogue 18.37, 39.33 against 48.01), while a ROW_NUMBER dedupe to rn = 1 lands all 7 catalogue prices exactly. Minimum: 10 products, a list of 5 rows with 3 existing and 2 new, and a source that repeats at least one key."
       # NEW 2026-09-07. An audit for performance coverage found something more basic: the words
       # median and percentile appear NOWHERE in any curriculum in this academy — checked by
       # grep across all twenty-eight, not assumed. That is a strange silence for a course whose
@@ -1183,13 +1606,35 @@ series:
       # the project can ask for a median.
       #
       # THE FRAMING, and it is a business point before it is a syntax point: the average is
-      # dragged around by outliers and the median is not. One enterprise order of £2,000,000
-      # moves the average order value and does not move the median at all. When somebody asks
+      # pulled upwards by the top of the distribution and the median is not. When somebody asks
       # for "the typical order", they mean the median and they say average, and the difference
       # has changed real decisions.
-      # THE SHIPPED DATA MAKES THE POINT WITHOUT AN INVENTED ORDER (Northwind Company S, checked
-      # 2026-09-19): the average order value is 1,501.70 and the median is 1,320.88 — the average sits
-      # 14% above the typical order. Freight is not a calm contrast here (average 52.74, median 44.86).
+      # MEASURED, AND IT IS RIGHT SKEW RATHER THAN AN OUTLIER STORY (Northwind Company S, DuckDB,
+      # re-checked 2026-09-21): the average order value is 1,501.70 and the median is 1,320.88 —
+      # the average sits 14% above the typical order. THAT GAP IS NOT ONE BIG ORDER. The five
+      # largest orders are 6,030.80 / 5,440.72 / 5,336.51 / 5,299.17 / 5,276.56 — a smooth tail
+      # whose top is only 4.6x the median — and DROPPING THE LARGEST ORDER ALTOGETHER MOVES THE
+      # AVERAGE BY 45 PENCE (1,501.70 to 1,501.25) and the median by two (1,320.88 to 1,320.86).
+      # SO DO NOT PROMISE AN OUTLIER ON SCREEN. The honest sentence, and the one the data will
+      # survive being queried live, is "half the orders are below 1,320.88, yet the average is
+      # 1,501.70, because the orders above the middle sit further from it than the orders below."
+      # That is many small orders and a long thin tail: the ORDINARY case, which is the better
+      # lesson anyway, because it is the shape the reader's own data almost always has. The
+      # enterprise-whale version is said, not queried — beat 4 owns it and labels it as such.
+      # Freight is not a calm contrast here either. RE-MEASURED 2026-09-21: average 69.31, median
+      # 46.77 — the 52.74 / 44.86 recorded here earlier was a frozen-Northwind figure and is wrong
+      # for Northwind Company S. The correction helps: freight's average sits 48% above its median
+      # where order value's sits 14% above, so freight is the louder of the two, not the calmer.
+      # AND THE WHALE DOES NOT HAVE TO BE SAID — IT CAN BE QUERIED, ONE LEVEL UP (2026-09-21).
+      # No single ORDER is a whale, which is why the paragraph above is right about order value.
+      # CUSTOMER lifetime value is a different distribution: average 126,193.54 against a median of
+      # 22,978.10, ONLY 30 OF THE 119 CUSTOMERS ABOVE THAT AVERAGE, and the top five holding 25.5%
+      # of all revenue (Fjord Foods 797,164.00). That average is not a customer — the nearest real
+      # ones sit either side of it. THE READER HAS ALREADY RUN BOTH QUERIES: 126,193.54 is exactly
+      # what 20-ctes/scripts/average-customer-with.sql returns, and
+      # customers-above-the-average-customer-with.sql returns exactly those 30 rows. So beat 4 opens
+      # by handing back a result from episode 20 rather than by inventing a 2,000,000 order: they
+      # have seen an average nobody is standing near, and this episode gives them the word for it.
       #
       # COVER:
       #   THE ORDERED-SET AGGREGATES, which look unlike anything else in SQL and should be
@@ -1201,25 +1646,51 @@ series:
       #     CONT  for a continuous measure where a number between two rows is meaningful
       #   A CONT median of 47.5 on a table where no order was ever 47.50 is correct and will
       #   still get you asked whether the query is broken.
-      #   10,000 ORDERS IS AN EVEN COUNT, so over the whole table CONT and DISC differ, but only by
-      #   2 cents (1,320.88 vs 1,320.86) — the difference is clearer on a small even-sized group.
+      #   TEACH THAT DECISION BY SHOWING THE TWO MIDDLE ROWS — ROW_NUMBER() over the ordered
+      #   values, then look at the pair in the middle. 10,000 ORDERS IS AN EVEN COUNT, so rows
+      #   5,000 and 5,001 are 1,320.86 (order 5923) and 1,320.89 (order 7827): DISC HANDS BACK
+      #   THE FIRST OF THEM, CONT AVERAGES THE PAIR TO 1,320.88 (DuckDB, 2026-09-21). The 2
+      #   cents between the two functions IS that pair, seen rather than asserted. Repeat it on
+      #   a small even-sized group, where the gap is wide enough to read off the screen.
+      #   THAT GROUP IS DAIRY PRODUCTS (measured 2026-09-21): ten products, so again an even count,
+      #   and the middle pair is 15.74 (Rustic Butter) and 30.06 (Highland Yoghurt) — a gulf rather
+      #   than two cents. DISC hands back 15.74, CONT averages the pair to 22.90, AND NO PRODUCT IN
+      #   THE CATALOGUE COSTS 22.90. That is the "correct and still gets you asked whether the query
+      #   is broken" sentence above, on a list short enough to print whole and check by eye. Ten
+      #   prices ascending: 9.38, 11.10, 11.15, 12.73, 15.74, 30.06, 35.47, 43.12, 43.12, 53.04.
+      #   MERGED IN FROM A SEPARATE PORTABILITY SECTION ON 2026-09-21: that section said "show
+      #   the workaround — ROW_NUMBER and COUNT(*), pick the middle row or average the two",
+      #   which is this same beat written a second time eighteen lines further down, carrying
+      #   its own Series 2 · 35 prerequisite. One screen now does both.
+      #   WATCH THE ROW ARITHMETIC when this is written: picking the middle rows needs INTEGER
+      #   division. (n+1)/2 is FLOAT division on DuckDB and silently matches no row — DuckDB
+      #   wants //, MySQL wants DIV. Put the expression on screen rather than leaving the
+      #   reader to discover it.
       #   MODE() WITHIN GROUP as the third member of the family, in a line.
       #   PER GROUP: the whole thing under GROUP BY — a median per category, which is where it
       #   earns its place in a reporting course.
       #   p95 AND p99 as the same function with a different argument, because that is how the
-      #   reader will meet it outside reporting.
+      #   reader will meet it outside reporting. THIS IS WHERE THE WORKPLACE LINE'S "percentiles
+      #   for service levels" GETS ITS WORKED EXAMPLE — it had none before 2026-09-21: days from
+      #   OrderDate to ShippedDate. MEASURED (DuckDB, 2026-09-21): median 5 days, p95 7, p99 20,
+      #   max 24, against an average of 4.83. Say what that means out loud — half of all orders
+      #   ship within 5 days, the promise you can actually make a customer is the p95 one at 7
+      #   days, and the p99 of 20 is the tail the average of 4.83 hides completely.
+      #   ONE LINE ON NULLS while that query is on screen: 9,532 of the 10,000 orders have a
+      #   ShippedDate, so the percentile silently drops 468 unshipped ones. It is p95 OF THE
+      #   ORDERS THAT SHIPPED — the number people quote and rarely the one they mean. Series 1 ·
+      #   45's three-valued logic, met again inside an aggregate.
       #   NTILE, PERCENT_RANK and CUME_DIST from the window family, with the distinction stated
       #   plainly: NTILE BUCKETS ROWS, a percentile RETURNS A VALUE. People reach for NTILE
       #   expecting the second.
       #   STDDEV, in a line, beside the median: Series 1 · 25 promised "the statistical set" to
       #   Series 2, and spread is the other half of "what is typical".
       #
-      # PORTABILITY, and here it is sharp enough to belong in the lesson rather than in
-      # Series 4: PostgreSQL, Oracle, SQL Server and Db2 all have PERCENTILE_CONT and
-      # PERCENTILE_DISC. MYSQL HAS NEITHER, and neither does SQLite. So SHOW THE WORKAROUND —
-      # ROW_NUMBER() and COUNT(*) over the group, then pick the middle row, or the two middle
-      # rows and average them for an even count. It needs Series 2 · 35, it is genuinely
-      # fiddly, and a large share of readers will need it.
+      # PORTABILITY, one line now that the workaround is on screen above: PostgreSQL, Oracle,
+      # SQL Server and Db2 all have PERCENTILE_CONT and PERCENTILE_DISC. MYSQL HAS NEITHER, and
+      # neither does SQLite — and the ROW_NUMBER pair the reader just watched IS the median
+      # there. NOT deferred to Series 4: a large share of readers are on MySQL, Series 4 is a
+      # specialist series, and this now costs a sentence rather than a second lesson.
       #
       # COST, in one paragraph with a forward pointer rather than a detour: a percentile has to
       # ORDER the whole group, so it is one of the aggregates that does not get cheap as data
@@ -1229,11 +1700,18 @@ series:
       # KOANS: `predict` on CONT against DISC over an even-numbered group — nobody gets both
       # right first time. `complete` on the per-category median.
       #
-      # WHAT GOES WRONG (beat 4): the average presented as "typical". One enterprise customer's
-      # £2M order lifts the average order value by a third, a pricing decision is made on it,
-      # and the number was never wrong — it was the wrong statistic. It is the purest example in
-      # the course of a number that is right and still misleads, which is the flip side of the
-      # rule this track uses everywhere else.
+      # WHAT GOES WRONG (beat 4): the average presented as "typical". SAY THIS ONE, DO NOT RUN
+      # IT, and let the script be plain that it is a thought experiment: imagine one enterprise
+      # customer placing a £2,000,000 order tomorrow. The average order value jumps, the median
+      # does not move at all, a pricing decision is made on the average, and the number was
+      # never wrong — it was the wrong statistic.
+      # WHY IT IS SPOKEN AND NOT QUERIED (decided 2026-09-21): the shipped data cannot stage it.
+      # The largest real order is worth 45 pence of the average (see THE FRAMING), and inventing
+      # a row on screen in a course that measures every figure would cost more than it buys.
+      # The real data already made the quieter, truer version of the point two beats earlier;
+      # the whale is the extreme that makes the mechanism obvious, not the evidence for it.
+      # It is the purest example in the course of a number that is right and still misleads,
+      # which is the flip side of the rule this track uses everywhere else.
       # WORKPLACE: typical values (the median, not the average), percentiles for service levels, medians per group.
       # STORY (map 2026-09-17) — NONE. The average vs the median order value stays the main example.
       - n: "58"
@@ -1244,9 +1722,9 @@ series:
         status: planned
         data:
           source: northwind_co_s
-          tables: ["Orders.Freight", "Order Details", "Products"]
+          tables: ["Order Details", "Products", "Orders.Freight", "Orders.ShippedDate"]
           fit: good
-          reason: "Order values and freight have enough spread and outliers for median, percentile, per-category statistics, and the AVG-versus-typical comparison. Minimum: 21 orders for an odd median, one even-sized group, and one clear high-value outlier; the S seed is comfortably larger."
+          reason: "Order values and line amounts are right-skewed enough for median, percentiles, per-category statistics and the AVG-versus-typical comparison, and OrderDate-to-ShippedDate gives the service-level percentile. Minimum: 21 orders for an odd median, one even-sized group, a right-skewed amount column whose average sits visibly above its median, and a nullable date for the NULL beat. NOT a high-value outlier: the S seed has none — dropping its largest order moves the average by 45 pence — and the episode's framing was rewritten on 2026-09-21 to teach right skew instead."
       # SERIES 2 PROJECT. The academy-wide audit found this series walking nine core episodes
       # with nothing that applied them — the same defect Python and Java & Groovy had.
       # It closes the series' own promise: a question a person actually asked, answered with
@@ -1255,6 +1733,45 @@ series:
       # what we sold has no shipping record; did those orders not ship, or did nobody record it?
       # The two earlier candidates are dropped: revenue per customer per quarter answered nothing the
       # series was asking, and "bought in Q1 2024 and not since" is not churn on this data.
+      # STEP ONE IS THE GRAIN (added 2026-09-21): the case spans three of them — one row per order,
+      # one row per line, one row per invoice or courier confirmation — and every count and every
+      # sum in the project is wrong if the grain gets decided by accident. Open by asking "one row
+      # per WHAT?" out loud, the way Series 2 · 15 framed it, and write the answer down before the
+      # first CTE. It is the single check that catches what the series taught separately: the rows
+      # a join quietly drops, the money a fan-out doubles (50), the running total taken over the
+      # wrong rows (45).
+      # THE QUERIES, IN ORDER (each one re-run against northwind_co_s on 2026-09-22; every figure below
+      # matched .docs/plan-academy-figures-northwind-co-s.md column C exactly, so the locked table and the
+      # built dataset agree and this block is how to reproduce it, not a second source of truth).
+      # 0. STEP ZERO, AND IT IS THE OPENING SHOT: the obvious query returns NOTHING. "ShippedDate" IS NOT
+      #    NULL AND NOT EXISTS (an invoice) -> 0 rows. Zero. Because the ship date IS what went missing, the
+      #    obvious definition of "shipped" is the one the outage destroyed, and a confident empty result says
+      #    "all clear". Open on it. Nothing else in the course makes the case for reading a zero suspiciously.
+      # 1. SO "SHIPPED" HAS TO COME FROM SOMEWHERE ELSE -- "OrderStatusHistory", and that is 35 earning its
+      #    place: ROW_NUMBER() OVER (PARTITION BY "OrderID" ORDER BY "ChangedAt" DESC, "StatusChangeID" DESC),
+      #    rn = 1, exactly 10,000 rows out of 19,897. Note the tie-break out loud: without the second key 263
+      #    orders have two rows at the same instant and the count comes back 10,263 (see 35).
+      # 2. SHIPPED AND NEVER INVOICED, ALL YEARS (NOT EXISTS, from 25): 188 orders, 275,698.44.
+      # 3. NARROW IT TO THE OUTAGE (dates from 10): Speedy Express, ordered 2024-03-04..2024-08-30 -> 177
+      #    orders, 256,894.67. THE 11 ORDERS AND 18,803.77 LEFT OVER ARE NOT THE OUTAGE and must be said so;
+      #    a project that lets its headline number quietly absorb the residue teaches the wrong habit.
+      # 4. WAS IT DELIVERED? (48): the 177 against "CourierConfirmations" -- INTERSECT gives 164 confirmed,
+      #    242,383.04; EXCEPT gives 13 never confirmed, 14,511.63. DEDUPLICATE FIRST: the table is 189 rows
+      #    over 172 orders (11 orders twice, 3 three times), so UNION ALL and a careless join both inflate
+      #    it -- the same ROW_NUMBER dedupe from 35, on the evidence this time. Courier confirmation is SOFT
+      #    evidence and Leo says so himself; the ladder in the series header gives him that line.
+      # 5. WHAT ONLY THE PROJECT FINDS: orders whose LATEST status is still "Open" although they were placed
+      #    before November 2024 -> 43 orders, 59,611.41. These are not the outage and not Speedy Express;
+      #    they are a second, smaller thing nobody was looking for, and finding it is the reward for having
+      #    built step 1 properly.
+      # 6. THE DEADLINE, AND IT IS WHERE THE RECOMMENDATION LIVES: 12 months from the EARLIEST OF THE 13
+      #    NEVER-CONFIRMED orders is 2025-03-08. From all 177 it would be 2025-03-05; from all 188,
+      #    2021-03-01, which is meaningless. Identical date arithmetic, three different answers, and only the
+      #    business question -- you claim against the courier for what the courier never confirmed -- chooses
+      #    between them. That is the whole difference between a query and an answer.
+      # 7. THE ARITHMETIC CHECK, said on screen: 164 + 13 = 177, and 177 + 11 = 188. Every number in the
+      #    recommendation reconciles to the one above it, and a row count before and after every join (15,
+      #    50). If the check does not tie, the recommendation is not ready -- that is the habit being taught.
       # WORKPLACE: answer a real question end to end, with the checks, and write the recommendation.
       # STORY (map 2026-09-17) — THE WHOLE CASE: the gap, the courier, the dates, the money, the soft evidence, the
       #   reconciliation, the fix — plus what only the project finds (cancelled orders never updated; the claim
@@ -1269,9 +1786,9 @@ series:
         status: planned
         data:
           source: northwind_co_s
-          tables: ["Orders", "Order Details", "Customers", "Invoices", "CourierConfirmations", "Employees"]
+          tables: ["Orders", "Order Details", "OrderStatusHistory", "Customers", "Invoices", "CourierConfirmations", "Employees"]
           fit: good
-          reason: "The full S2 case needs order/line grain, missing ship dates, invoices, courier evidence, statuses, and dates in one coherent dataset. Minimum: 100 orders over 12 months with 2+ lines each, 10 customers, an invoice gap, courier confirmations, and cancelled/open rows."
+          reason: "The full S2 case needs order/line grain, missing ship dates, invoices, courier evidence, statuses, and dates in one coherent dataset. Re-run end to end on 2026-09-22: every step reproduces the locked column-C figures to the penny (188/275,698.44 shipped-and-never-invoiced, 177/256,894.67 inside the outage, 164/242,383.04 confirmed, 13/14,511.63 never confirmed, 43/59,611.41 still open, deadline 2025-03-08), and \"shipped\" must be read from \"OrderStatusHistory\" because the \"ShippedDate\" reading returns 0 rows. Minimum: 100 orders over 12 months with 2+ lines each, 10 customers, an invoice gap, courier confirmations (including duplicates), and cancelled/open rows."
 
   - slug: series3-advanced
     title: Advanced SQL
@@ -1288,42 +1805,77 @@ series:
     # OLD → NEW: 00 → 10 · 05 → 00 · 10 → 15 · 15 → 05. Slugs unchanged. Every episode's comment
     # below names what it builds on, and so does each brief's PLACE IN THE SERIES block.
     #
-    # ── BEFORE SERIES 3 CAN BE BUILT: THE BULK DATASET (sketched 2026-09-14 — NOT BUILT) ──────
-    # Seven of these eleven episodes carry `seed: bulk`, which the header above defines as "the
-    # larger dataset (datasets/bulk/)". THAT FOLDER DOES NOT EXIST. The only large generator,
-    # datasets/generated/make_big_orders.py, writes one flat CSV for the Python track's chunking
-    # episodes — no keys, no second table, no database — and cannot carry an EXPLAIN, an index or
-    # a recursive walk. Block B cannot be written until this exists. What it has to be:
-    #   SHAPE    Northwind's own schema and names ("Customers", "Orders", "Order Details",
-    #            "Products", "Employees" …), so every query from Series 1 and 2 runs unchanged and
-    #            only the planner's choices change. A bigger Northwind, not a new business.
-    #   SIZE     big enough that a sequential scan and an index scan cost visibly different amounts
-    #            on a laptop, small enough to generate in about a minute. Order of magnitude to
-    #            start from: ~100k customers, 2–5M orders, 10–20M order lines. Measure it, then
-    #            write the chosen numbers into the generator's header.
-    #   SKEW     realistic, never uniform: a few customers with thousands of orders and most with a
-    #            handful, seasonal months, a long tail of products. Uniform data makes every plan
-    #            look alike and hides the estimated-versus-actual gap Series 3 · 20 teaches first.
-    #   DEPTH    an org chart several levels deep (hundreds of employees under one CEO) for
-    #            Series 3 · 10, plus one deliberate reporting loop for the termination guard.
-    #            Northwind's 3 employees cannot recurse.
-    #   HISTORY  several years of orders, so cohorts (Series 3 · 15) have enough months.
-    #   NULLS    where production has them — unshipped orders, blank regions — so Series 3 · 22's
-    #            NOT IN and DISTINCT examples fire on this data too.
-    #   INDEXES  primary keys only. No foreign keys (DuckDB indexes each one it is given) and none of
-    #            the secondary indexes Series 3 · 25 creates, so "add the index" is the learner's move.
-    #   JSON     Northwind has no JSON column, and Series 3 · 05 needs one: either a payload column
-    #            here, or a small committed file whose defects are the lesson (a missing key, a
-    #            number stored as text, a nested array) — the second fits datasets/README.md's
-    #            tier 2 better. Decide when 05 is written.
-    # HOW IT IS MADE, by datasets/README.md's tier 3 rules: a generator under datasets/generated/
-    # with a FIXED SEED, deterministic, never committed as data. It loads the SAME rows into DuckDB
-    # (the koans) and PostgreSQL (CloudBeaver and the spec gate), and the spec asserts the counts
-    # match on both. Plans differ between the two engines, so every plan-reading koan says which
-    # engine it is about; EXPLAIN ANALYZE lessons are PostgreSQL-first.
-    # OPEN DECISIONS for the owner: the exact sizes (disk and generation time on a learner's
-    # laptop); whether DataPallas ships it as an optional database or the learner generates it;
-    # whether Series 4 reuses it (probably not — Oracle XE and Db2 Community have resource caps).
+    # ── SERIES 3'S BULK DATASET: BUILT. IT IS NORTHWIND COMPANY L ─────────────────────
+    # SUPERSEDED 2026-09-21. This block used to open "sketched 2026-09-14 — NOT BUILT" and say that
+    # `datasets/bulk/` DOES NOT EXIST and that Block B could not be written until it did. Both were
+    # true when written and neither is true now. Six of the eleven episodes below carry BOTH
+    # `seed: bulk` — the marker meaning "not on the 79-row Northwind" — and, naming what that now
+    # resolves to, `data.source: northwind_co_l` (18, 20, 22, 25, 27, 30 — Block B, the performance
+    # episodes; the same six both ways). Recursive CTEs (10) runs on S: what it needs is depth and a
+    # loop, not volume, and S has both. Scale L was built on DuckDB on 2026-09-19 and verified on 2026-09-20
+    # (datasets/scripts/academy-northwind-co-install.groovy, datasets/README.md). The sketch is kept
+    # here ONLY as the checklist it turned into — every line of it is now answered by a real
+    # generator, and this is where to look when a Series 3 episode needs to know what the data does.
+    #
+    #   SHAPE    MET. Northwind's own table names ("Customers", "Orders", "Order Details",
+    #            "Products", "Employees" …) at every scale, so a Series 1 or 2 query runs unchanged
+    #            and only the planner's choices change. A bigger Northwind, not a new business.
+    #   SIZE     MET, and DELIBERATELY SMALLER THAN THE SKETCH ASKED. The sketch wanted ~100k
+    #            customers, 2–5M orders and 10–20M lines in about a minute. L ships 1,000,000
+    #            orders, ~2.5M order lines and 20,000 customers: 2–3 min and ~450 MB on DuckDB,
+    #            under 400 MB of Java heap — a bad plan is seconds and a good one is still instant,
+    #            which is all the performance episodes need, and it still installs on a laptop. The
+    #            sketch's own numbers survive as a documented option in the generator's header
+    #            (ORDERS: 5_000_000, CUSTOMERS: 100_000, PRODUCTS: 1_000 — the first plan's L),
+    #            along with ORDERS: 2_000_000 as a middle ground. M (100,000 orders) exists too,
+    #            for "feel a missing index" without the wait.
+    #   SKEW     MET. Growth, seasonality, customer skew, the courier mix and the Speedy Express
+    #            outage are all RATES, so every scale comes out the same shape — a few customers
+    #            with thousands of orders and a long tail, not uniform data that makes every plan
+    #            look alike.
+    #   DEPTH    MET ON S (2026-09-26), SO SERIES 3 · 10 NEEDS NO BULK DATA. S's 29 employees go SIX
+    #            levels deep, unevenly: sales is three (CEO, 2 sales managers, 9 reps), finance four,
+    #            and operations six (CEO → Operations Director → Warehouse Manager → Shift Supervisor
+    #            → Team Leader → Warehouse Operative), so no fixed chain of self-joins reaches every
+    #            row. The staff take no orders, so nothing but "Employees" moved. L's tree is
+    #            ORG: [1, 3, 6, 12, 24, 74] — 120 people over six levels; M has four and 40. The "one
+    #            deliberate reporting loop" is planted AT S AND L: two interim managers entered as
+    #            reporting to each other (S: 28 and 29; L: 121 and 122), with no sales and outside
+    #            the tree, so a walk DOWN from the CEO never meets them and a walk UP from either
+    #            never ends unless the query stops it. That is the termination guard's example. Both
+    #            are on their own random streams, so no other row moves when they are switched on.
+    #   HISTORY  MET. 2020 to 2024, five years, with JOINERS (customers who start buying after
+    #            2020: 4,000 of L's 20,000) so cohorts have enough months and enough cohorts.
+    #   NULLS    MET. "Customers"."Region" is filled only where the country uses one — USA, Canada
+    #            and Brazil — so a real NULL sits beside the one ROLLUP invents, which is the
+    #            planted fact Series 2 · 50 already leans on. Unshipped orders and cancelled and
+    #            test orders are planted at a rate too.
+    #   INDEXES  MET, explicitly: "NO SECONDARY INDEXES at any scale, on purpose: the performance
+    #            lessons start from sequential scans and add them." Primary keys only. So "add the
+    #            index" stays the learner's move at every size.
+    #   JSON     DECIDED, and it is the payload column rather than a committed file:
+    #            "WebOrders"."Payload" carries the web shop's raw JSON as it arrived, with defects
+    #            planted at ~1 in 25 each — a missing key, a quantity sent as text, a price with a
+    #            comma. Series 3 · 05 has its source, and ETL and dbt share it.
+    #
+    # HOW IT IS MADE, by datasets/README.md's tier 3 rules: ONE generator
+    # (datasets/scripts/academy-northwind-co-install.groovy) with a FIXED SEED, deterministic,
+    # never committed as data — the SCALE is part of every random stream, so the three scales are
+    # one company generated three times, not S copied. It loads the SAME rows into DuckDB (the
+    # koans) and PostgreSQL (CloudBeaver and the spec gate) and writes `_dataset_info` checksums on
+    # both. Plans differ between the two engines, so every plan-reading koan says which engine it is
+    # about; EXPLAIN ANALYZE lessons are PostgreSQL-first.
+    #
+    # WHAT IS ACTUALLY STILL OPEN — none of it blocks writing Block B:
+    #   - M AND L ARE MEASURED ON DUCKDB ONLY (2026-09-19). PostgreSQL has not been timed at either;
+    #     expect a slower load and several times the disk. Time it before an episode quotes a
+    #     PostgreSQL number, and give PostgreSQL room first.
+    #   - LESSONS QUOTE FIGURES FROM S ONLY, and must keep doing so until a spec asserts a figure on
+    #     both engines. L is for timings, plans and volume — not for reference answers.
+    #   - SHIPPING: whether DataPallas ships L as an optional database or the learner generates it
+    #     from the Seed Data tab is still the owner's call. Generating it is the default today.
+    #   - SERIES 4 DOES NOT REUSE IT, as suspected here in the first place: Oracle XE and Db2
+    #     Community have resource caps, and S4 runs on the frozen Northwind. That is settled.
     episodes:
       # BLOCK A — the question shapes that need real machinery. CTEs and both window-function
       # episodes moved to Series 2; what stays here is the work that takes them as a
@@ -1367,19 +1919,19 @@ series:
       # not exist yet; here it follows its prerequisites directly. BUILDS ON: Series 2 · 20 (WITH),
       # 2 · 30 (the self-join it repeats level after level), 2 · 48 (UNION ALL joins the anchor to
       # the recursive term). Worth one line: it also builds Series 2 · 10's date spine on engines
-      # without generate_series. DATA: seed: bulk — see the note above.
+      # without generate_series. DATA: Northwind Company S — the org chart was deepened for it (the
+      # DEPTH line above); no bulk data.
       - n: "10"
         slug: recursive-ctes
         title: "Recursive CTEs — Walk an Org Chart to the Top"
         short: "Recursive CTEs — walk an org chart to the top"
         hands_on: ["koan:predict", "koan:complete"]
         status: planned
-        seed: bulk
         data:
-          source: northwind_co_l
+          source: northwind_co_s
           tables: ["Employees"]
           fit: good
-          reason: "Company L installs and verifies with SCALE 'L' (academy-verify, DuckDB 2026-09-20: all 19 tables match): 122 employee rows, of which 120 hang off the CEO across six levels (1, 3, 6, 12, 24, 74), so the anchor-plus-recursion walk has real depth. The planted loop is the other two: employees 121 and 122 report to each other and to nobody else, so a walk from the CEO never reaches them and a walk from every row never ends without a depth guard."
+          reason: "Measured 2026-09-26 on northwind_co_s (DuckDB): 29 employee rows, of which 27 hang off the CEO (Maya Bauer, 1) across six levels, unevenly: sales stops at level three (managers 2 and 3, reps 4 to 12), finance at four (14, 17, then 21 and 22), and operations goes to six (13 → 15 → 18 → 23 → 25 and 26; 19 → 24 → 27), so the walk down has a different depth per branch and the walk up from a warehouse operative takes five steps. The planted loop is the other two: employees 28 and 29, interim sales managers, report to each other and to nobody else, so a walk from the CEO never reaches them and a walk up from either never ends without a depth guard. Minimum: one root, one branch at least four levels deeper than another, and one two-row cycle outside the tree."
       # NEW 2026-09-19 — gaps and islands had no home in the course. Runs of consecutive periods: when a
       # streak started, when it stopped, how long it lasted. THE TRICK: ROW_NUMBER over all the periods minus
       # ROW_NUMBER over the flagged ones is constant within a run, so GROUP BY that difference gives one row
@@ -1752,7 +2304,7 @@ series:
         hands_on: ["koan:predict", "koan:diagnose"]
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Orders", "Order Details", "Customers", "Products"]
           fit: partial
           reason: "The frozen Northwind shape is sufficient for ANSI syntax and dialect examples, but five-engine parity, quoted identifiers, types, and empty-string behavior are not yet verified. Minimum: the classic 25 customers, 79 orders, 193 lines, and 20 products loaded identically on all five engines; add an engine verification fixture before publishing."
@@ -1763,7 +2315,7 @@ series:
         hands_on: ["koan:equivalent", "koan:complete"]
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Orders", "Customers", "Products"]
           fit: partial
           reason: "The frozen Northwind rows cover paging, strings, and dates, but portable UPSERT needs a writable staging/target table and five-engine syntax verification. Minimum: 79 orders with ties and NULL dates plus a small target table; add per-engine DDL/seed parity and a repeatable upsert fixture."
@@ -1775,7 +2327,7 @@ series:
         tags: ["project"]
         status: planned
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Customers", "Orders", "Order Details", "Products", "Categories", "Suppliers", "Employees"]
           fit: partial
           reason: "The frozen Northwind dataset has the right classic tables and minimum scale, but the five database copies and identifier/type behavior are unverified. Minimum: 25 customers, 79 orders, 193 lines, 20 products, and matching checksums on PostgreSQL, Oracle, SQL Server, MySQL, and Db2; add a cross-engine verification/install fixture before publishing."

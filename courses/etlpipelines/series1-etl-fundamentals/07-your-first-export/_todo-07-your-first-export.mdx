@@ -1,0 +1,131 @@
+---
+title: "Your First Export — Write a Table Out as a File Someone Else Can Load"
+description: "TODO — one plain sentence saying what the reader will be able to do. Same rules as the title: no rhetorical devices, no jargon, about data."
+topic: "learn-etl-pipelines"
+tags: []
+level: "beginner"
+module: "series1-etl-fundamentals"
+order: 7
+published: false
+---
+
+{/* ==========================================================================
+    TODO — NOT A LESSON YET. A brief for whoever writes it, not teaching
+    material. Named _todo-* so it stays out of the site build. Drop the prefix
+    when it becomes real.
+
+    READ FIRST
+      courses/etlpipelines/curriculum.yaml   the track's decisions, in its header
+      the comment ABOVE THIS EPISODE in that file — why it exists and why here
+      tests/src/koans/groovy/datazeus/etlpipelines/series1/_07/YourFirstExportKoans.groovy
+
+    ── THE RULE THAT OUTRANKS EVERYTHING ELSE HERE ─────────────────────────
+    This track teaches a SKILL and DEMONSTRATES it in a tool. Never the reverse.
+    Teach the principle first, then show it: "here is how you do that in <tool>".
+    Whatever the reader learns must still be true away from our tools — if this
+    episode is only true inside DataPallas, it is product documentation and
+    belongs in content/docs, not here.
+
+    ── WHERE THIS SITS ─────────────────────────────────────────────────────
+    ETL & Data Pipelines · ETL Fundamentals (beginner) — "build a pipeline that loads data and is safe to run twice"
+      before:  Your First Pipeline — Load a CSV into a Table
+      THIS:    Your First Export — Write a Table Out as a File Someone Else Can Load
+      after:   Sources & Sinks — Files, APIs and Databases as Connections
+    CORE — on the shortest path to being productive. Someone will read only
+    the core episodes, so this one has to stand alone.
+
+    ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
+    GOAL: write a day of a table out as a CSV that a stranger can load without asking a
+    question, then load it back and prove nothing was lost or changed.
+    DECISION: every file in this track arrives from somebody else's system, and no episode
+    in any course had the learner write one. 05 loads a file whose choices someone else
+    made; 2 · 07 breaks those choices. In between, the learner has to make them once, or
+    "the exporter changed the layout" is a sentence about other people. HERE, right after
+    05, while the file they loaded is fresh, and before 10 treats a file as one sink among
+    several.
+
+    ── COVER ───────────────────────────────────────────────────────────────
+      AN EXPORT IS A QUERY PLUS A CONTRACT. The query decides which rows; the contract
+                            decides how a receiver reads them. The contract is every choice
+                            below, and a receiver never sees any of them written down unless
+                            you write them down.
+      THE DAY               COPY (SELECT … WHERE "OrderDate" is 2024-12-23) TO a file, one
+                            file per day, named after the day: 12 orders, 591.26 of freight.
+                            Naming by the day is what makes the re-run in 1 · 30 overwrite the
+                            same file instead of adding a second one.
+      NULL                  2 of the 12 are unshipped. ShippedDate NULL is written as an
+                            empty field, and read back as NULL. S has no empty strings, so
+                            write one row yourself with '' next to a NULL: in a plain CSV they
+                            are the same empty field, and the receiver cannot tell "none" from
+                            "not recorded". That ambiguity is the CRM's problem in 1 · 20.
+      QUOTING               9922's note is "If late, tell Tessa Young before noon." — one
+                            comma, so the field is quoted, or the row has one column too many.
+                            Then a WebOrders.Payload: JSON, every one full of quotes and
+                            commas, and the writer doubles each inner quote. Show the bytes.
+                            A hand-rolled writer that joins values with commas breaks here.
+      TYPES DO NOT TRAVEL   Read the file back and the day is still 12 rows and 591.26, but
+                            OrderID is BIGINT and Freight DOUBLE: a CSV carries text, and the
+                            reader guessed. DECIMAL(19,4) went out as 43.8200 and came back as
+                            a float. The receiver's types are the receiver's guess unless the
+                            contract states them.
+      LEADING ZEROS         04669 (order 9927, to Berlin) is a postal code, not a
+                            number. DuckDB's reader keeps it as text; a spreadsheet opening
+                            the same file does not. 1,041 of S's 10,000 orders ship to a code
+                            that starts with 0.
+      WHOSE DISK            DuckDB's COPY … TO writes on YOUR machine. PostgreSQL's COPY … TO
+                            'file' writes on the DATABASE SERVER's disk, which from a client is
+                            nowhere you can reach; from a client it is \copy in psql, or COPY
+                            … TO STDOUT. The same statement, two different places.
+      PARQUET, ONE PARAGRAPH  COPY … TO (FORMAT parquet) carries the types and NULL with it,
+                            which removes three of the problems above. CSV stays the lowest
+                            common denominator, which is why most hand-overs still use it.
+                            Data Warehousing Series 2 owns the file format.
+
+    ── THE CONSEQUENCE THAT MAKES IT ACTIONABLE ────────────────────────────
+    RECONCILE BEFORE YOU SEND. Read your own file back and compare it with the query it came
+    from: rows, and the sum of a money column. A count alone passes a file whose comma note
+    split a row in two or whose freight lost a decimal. Rows AND a total, the same check 1 · 40
+    makes on loads, made here on the file before anyone else trusts it.
+
+    ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
+      koan:author
+      koan:reconcile
+      koan file: tests/src/koans/groovy/datazeus/etlpipelines/series1/_07/YourFirstExportKoans.groovy
+
+    THE KOAN THAT TEACHES IT: the learner writes the COPY for one day, the koan reads the file
+    back, and the reconcile compares rows and SUM("Freight") with the table. A second day
+    with a comma note written without quoting must fail the same reconcile.
+   ========================================================================== */}
+
+## The situation this lesson prepares you for
+
+{/* BEAT 1 — the concrete moment at work. Never a definition.
+    Finance asks for "yesterday's orders as a CSV, every night". The file in 05 was exactly
+    that, written by someone else. Now it is you, and the first person to open it is not you. */}
+
+TODO
+
+## TODO — the principle
+
+{/* BEAT 2 — the general idea, true anywhere. Then, and only then, how it is
+    done in the tool we demonstrate in. An export is a query plus a contract; name each
+    choice in the contract before showing COPY … TO. */}
+
+TODO
+
+## TODO — see it for yourself
+
+{/* BEAT 3 — NON-NEGOTIABLE. The koans above, or the reason there isn't one. */}
+
+TODO
+
+## What goes wrong
+
+{/* BEAT 4 — the wrong number this prevents, and how you would notice it.
+    The one to write: the nightly file is written without quoting, and on 2024-12-23 order
+    9922's note carries a comma, so that row has one field too many. The receiver's loader is
+    set to skip malformed rows, as many are: it loads 11 of 12, reports success, and the
+    day's freight is short by 9922's 73.13. The load's status says nothing; a reconcile of
+    rows and freight against the source says it at once. */}
+
+TODO

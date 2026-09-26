@@ -39,7 +39,7 @@ package datazeus._internal
  * bounce, AND this must still get through — is the judgement actually being taught.
  *
  * ── WHY REBUILD AND NEVER ALTER ───────────────────────────────────────────
- * Tested on DuckDB v1.5.4: ALTER TABLE ADD PRIMARY KEY and ALTER COLUMN SET NOT NULL work,
+ * Tested on the DuckDB the koans run on: ALTER TABLE ADD PRIMARY KEY and ALTER COLUMN SET NOT NULL work,
  * but ADD FOREIGN KEY, ADD UNIQUE and ADD CHECK are all "not implemented". So a learner
  * cannot bolt integrity onto Northwind in place — schema.sql is CREATE TABLE with the
  * constraints inline, then INSERT ... SELECT from main. That is why applySchema() drops and

@@ -1,6 +1,6 @@
 package datazeus.learnsql.series1._40
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 /**
@@ -67,7 +67,7 @@ import spock.lang.Unroll
  * counts koan 4 rests on, what koan 6 returns if you write WHERE instead of AND, and that
  * exactly one category holds two discontinued lines (koan 9).
  */
-class JoinsSpec extends NorthwindGateSpec {
+class JoinsSpec extends GateSpec {
 
     // --- 0. The dataset, and the fact the whole lesson design rests on ---------------------
 

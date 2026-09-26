@@ -34,6 +34,8 @@ Map<String, Map<String, Object>> SIZES = [
         PRODUCTS   : 80,           SUPPLIERS  : 20,
         TERRITORIES: 30,
         ORG        : [1, 2, 9],                            // head count per level, CEO first; the last level are the reps
+        STAFF      : true,                                 // PLANTED: operations and finance, six levels deep beside sales
+        REPORTING_LOOP: true,                              // PLANTED: two interim managers who report to each other
         BULK_LOAD  : false],                               // S keeps the plain batched INSERTs it was published with
 
     // M — BIG ENOUGH TO FEEL A MISSING INDEX, SMALL ENOUGH TO RE-INSTALL OVER COFFEE. ~250,000 order lines.
@@ -96,12 +98,17 @@ int    VERSION = (params?.VERSION ?: 1) as int
 //                                    courier confirmations (+ noise), phantom sales (cancelled, never updated)
 //   PLANTED   Learn SQL S2 · 35      a price tie (products 4 and 12)
 //   PLANTED   Learn SQL S2 · 40      messy phones, stray spaces and case variants in cities and contact names
+//   PLANTED   Learn SQL S2 · 48      courier confirmations re-sent after a failed hand-over (UNION drops them,
+//                                    UNION ALL does not)
 //   PLANTED   Learn SQL S2 · 50      "Region" filled only for USA, Canada and Brazil (a real NULL beside ROLLUP's)
+//   PLANTED   Learn SQL S2 · 58      a heavy tail in "Freight" (pallets, islands, re-deliveries) and in days to pay
+//                                    (a few invoices sit for months), so AVG sits well above the typical bill
 //   (natural) Learn SQL S2 · 45      months with no orders for small countries (LAG is the previous ROW)
 //   EXTENSION Learn SQL S3 · 05      "WebOrders"."Payload": raw JSON with defects (missing key, number as text,
 //                                    decimal comma)
 //   EXTENSION Learn SQL S3 · 15      customers who join and customers who stop (cohorts)
-//   PLANTED   Learn SQL S3, scale L  a reporting loop in "Employees" (a recursive CTE that must stop)
+//   PLANTED   Learn SQL S3 · 10      "Employees" six levels deep at S (operations and finance beside sales, which is
+//                                    three), and at S and L a reporting loop (a recursive CTE that must stop)
 //   EXTENSION Data Modeling S3       "StockMovements", "SalesTargets" (January 2025 budgeted, no sales yet),
 //                                    "EmployeeTerritories" (a bridge), dated "CustomerChanges"/"PriceChanges" (SCD)
 //   EXTENSION Data Warehousing S1    "Orders"."CreatedAt" (~1.5% keyed in late: late-arriving facts), cancelled
@@ -144,7 +151,7 @@ LocalDate LAST_DAY  = LocalDate.of(2024, 12, 31)          // "today" in every le
 int ORDERS = SIZE.ORDERS as int, CUSTOMERS = SIZE.CUSTOMERS as int, JOINERS = SIZE.JOINERS as int
 int PRODUCTS = SIZE.PRODUCTS as int, SUPPLIERS = SIZE.SUPPLIERS as int, TERRITORIES = SIZE.TERRITORIES as int
 List<Integer> ORG = SIZE.ORG as List<Integer>
-boolean REPORTING_LOOP = SIZE.REPORTING_LOOP as boolean, BULK_LOAD = SIZE.BULK_LOAD as boolean
+boolean STAFF = SIZE.STAFF as boolean, REPORTING_LOOP = SIZE.REPORTING_LOOP as boolean, BULK_LOAD = SIZE.BULK_LOAD as boolean
 int TERRITORIES_PER_REP = 5
 int CUSTOMER_ID_LENGTH = SCALE == 'S' ? 5 : 8             // Northwind's 5 letters run out past a few hundred customers
 assert PRODUCTS >= 12 && PRODUCTS <= 1280 : 'PRODUCTS must be 12..1,280 (the price tie needs products 4 and 12; 160 names per category)'
@@ -305,6 +312,18 @@ String phone(Random r, String prefix) { "${prefix} ${100 + r.nextInt(900)} ${100
 // the subtotal NULL that ROLLUP makes. Everywhere else it is NULL.
 Map<String, String> REGION_OF_CITY = ['Seattle': 'WA', 'Portland': 'OR', 'Boston': 'MA', 'Montreal': 'QC', 'Vancouver': 'BC',
                                       'Sao Paulo': 'SP', 'Rio de Janeiro': 'RJ']
+// The city a row carries may be untidy (S2 · 40 below plants that), so Region is looked up on a tidied key.
+// Without this, SHOUTED city would silently lose its region and the S2 · 50 trap would stop being about real NULLs.
+Map<String, String> REGION_OF_CITY_KEY = REGION_OF_CITY.collectEntries { k, v -> [(k.toLowerCase()): v] }
+def regionOfCity = { String city -> city == null ? null : REGION_OF_CITY_KEY[city.trim().toLowerCase()] }
+// The cities of a country OTHER than the one a customer is in — the candidates when they relocate. Matched on a
+// tidied key for the same reason: a customer sitting in "BRUSSELS" must still be moved to Antwerp, not "corrected"
+// to Brussels. A City row in CustomerChanges is a MOVE, and the SCD lessons downstream depend on that.
+def otherCities = { String country, String current ->
+    List row = COUNTRIES.find { it[0] == country }
+    String key = current == null ? '' : current.trim().toLowerCase()
+    row == null ? [] : row.subList(1, row.size() - 2).findAll { (it as String).toLowerCase() != key }
+}
 // PLANTED — Learn SQL S2 · 40: phone numbers arrive in the formats people actually type.
 String messyPhone(Random r, String prefix) {
     String a = String.valueOf(100 + r.nextInt(900)), b = String.valueOf(1000 + r.nextInt(9000))
@@ -494,7 +513,7 @@ COUNTRIES.each { c ->
 }
 insert('Territories', ['TerritoryID', 'TerritoryDescription', 'RegionID'], territories)
 
-// ── 3. employees: a reporting tree, ORG people per level (S: CEO → 2 sales managers → 9 reps) ──
+// ── 3. employees: a sales tree, ORG people per level (S: CEO → 2 sales managers → 9 reps), then at S the staff ──
 // Each level's people are shared out in order among the level above, the first ones taking the larger share
 // (S: reps 4–8 report to manager 2, reps 9–12 to manager 3). The last level are the sales reps.
 List<String> MIDDLE_TITLES = ['Vice President, Sales', 'Regional Director', 'Sales Director', 'Sales Manager']
@@ -526,7 +545,35 @@ ORG.eachWithIndex { int count, int level ->
     levelIds << ids
 }
 List<Integer> reps = levelIds.last()
-// PLANTED — Learn SQL S3 (recursive CTEs), scale L only: two interim managers entered as reporting to each other.
+// PLANTED — Learn SQL S3 · 10 (recursive CTEs), scale S: the people who are not in sales. Sales is three levels, so
+// on its own a walk from the CEO ends at the second step; operations goes six deep and finance four, so the depth of
+// the chart differs by branch and no fixed chain of self-joins (Series 2 · 30) reaches every row. From a warehouse
+// operative the walk to the top is five steps. They take no orders and cover no territory, so "Orders" and
+// "EmployeeTerritories" do not move, and all were hired from 2016, as the business grew past a sales office. On their
+// own stream, after the sales tree, so employees 1 to 12 are the rows they always were. M and L take their depth from
+// ORG instead. Each row: the title, the key of the boss (null = the CEO), the year hired.
+if (STAFF) {
+    Random rD = rnd('Employees.Staff')
+    List<List> STAFF_TREE = [
+        ['ops',   'Operations Director',   null,    2016], ['fin',   'Finance Director',      null,    2016],
+        ['wh',    'Warehouse Manager',     'ops',   2016], ['tr',    'Transport Manager',     'ops',   2019],
+        ['acc',   'Accounts Manager',      'fin',   2017], ['early', 'Shift Supervisor',      'wh',    2017],
+        ['late',  'Shift Supervisor',      'wh',    2021], ['drv',   'Driver',                'tr',    2019],
+        ['cred',  'Credit Controller',     'acc',   2020], ['asst',  'Accounts Assistant',    'acc',   2022],
+        ['pick',  'Team Leader, Picking',  'early', 2018], ['goods', 'Team Leader, Goods In', 'late',  2021],
+        ['op1',   'Warehouse Operative',   'pick',  2020], ['op2',   'Warehouse Operative',   'pick',  2022],
+        ['op3',   'Warehouse Operative',   'goods', 2023]]
+    Map<String, Integer> staffId = [:]
+    STAFF_TREE.each { s ->
+        int id = ++eid
+        staffId[s[0] as String] = id
+        employees << [id, pick(rD, LAST), pick(rD, FIRST), s[1], pick(rD, ['Mr.', 'Ms.']),
+                      LocalDate.of(1965 + rD.nextInt(30), 1 + rD.nextInt(12), 1 + rD.nextInt(28)), LocalDate.of(s[3] as int, 1 + rD.nextInt(12), 1),
+                      "${1 + rD.nextInt(200)} ${pick(rD, STREETS)}".toString(), 'London', null, postal(rD, 'AA# #AA'), 'United Kingdom',
+                      phone(rD, '+44'), String.valueOf(100 + rD.nextInt(900)), null, s[2] == null ? 1 : staffId[s[2] as String], null, 0.0]
+    }
+}
+// PLANTED — Learn SQL S3 · 10 (recursive CTEs), scales S and L: two interim managers entered as reporting to each other.
 // No sales and outside the tree, so a walk down from the CEO never meets them; a walk UP from either of them never
 // ends unless the query stops it. On its own stream, so nothing above moves.
 if (REPORTING_LOOP) {
@@ -641,12 +688,34 @@ Map<String, Integer> nextIdSuffix = [:]           // per 4-letter stem, the firs
                   weight: weight, joined: joined, left: left, rep: reps[rC.nextInt(reps.size())]]
 }
 assert customers.count { it.left != null } == (1..CUSTOMERS).count { it % 8 == 3 }   // S: exactly 15
-// PLANTED — Learn SQL S2 · 40: a little mess in the text, the kind nobody cleaned — four cities with a trailing space,
-// three typed in capitals, three contact names in lower case (at S). Say so in the lesson; do not "fix" it here.
+// PLANTED — Learn SQL S2 · 40: the text nobody cleaned. Roughly one customer in six has a city that needs
+// tidying and one in six a contact name that does. FOUR DEFECTS EACH, BUT NOT THE SAME FOUR: City gets a
+// leading space, a trailing space, SHOUTING and whispering; ContactName gets a trailing space, a DOUBLED INNER
+// space, SHOUTING and whispering. A doubled inner space is a ContactName defect ONLY — a lesson that promises
+// one inside a city name will not find it.
+// COUNTS, MEASURED 2026-09-21 RATHER THAN ESTIMATED. The switches below plant 19 cities and 21 contact names
+// out of 120. A later City or ContactName change (further down) retypes some of those customers cleanly,
+// exactly as a real correction would, so THE FINISHED TABLE HOLDS 13 MESSY CITIES (7 outer space, 4 SHOUTED,
+// 2 whispered) AND 16 MESSY CONTACT NAMES (3 outer space, 4 doubled inner, 4 SHOUTED, 5 whispered). That is
+// what the old wording called "a little lower": six of the nineteen cities and five of the twenty-one contact
+// names are cleaned by their own change history. Quote the finished numbers in the lesson, not the planted ones.
+// THE FIGURE THE EPISODE IS FOR: SELECT DISTINCT "City" returns 58, and TRIM/LOWER it returns 45. Thirteen
+// cities that do not exist, on a table of 120 rows a learner can read end to end — twelve cities split in two
+// and Tampere split in three. These are rates on the row number, so every scale shows the same picture and no
+// random draw moves. Say so in the lesson; do not "fix" it here.
 customers.eachWithIndex { cu, i ->
-    if (i % 29 == 5) cu.city = "${cu.city} ".toString()
-    else if (i % 37 == 11) cu.city = (cu.city as String).toUpperCase()
-    if (i % 41 == 7) cu.contact = (cu.contact as String).toLowerCase()
+    switch (i % 25) {
+        case 3:  cu.city = "${cu.city} ".toString(); break                            // a trailing space
+        case 9:  cu.city = " ${cu.city}".toString(); break                            // a leading space
+        case 14: cu.city = (cu.city as String).toUpperCase(); break                   // SHOUTED
+        case 21: cu.city = (cu.city as String).toLowerCase(); break                   // whispered
+    }
+    switch (i % 23) {
+        case 2:  cu.contact = (cu.contact as String).toLowerCase(); break
+        case 7:  cu.contact = (cu.contact as String).toUpperCase(); break
+        case 12: cu.contact = (cu.contact as String).replaceFirst(' ', '  '); break   // a doubled inner space
+        case 18: cu.contact = "${cu.contact} ".toString(); break                      // a trailing space
+    }
 }
 
 Random rCC = rnd('CustomerChanges')
@@ -660,7 +729,7 @@ customers.each { cu ->
         String attr = pick(rCC, ['Segment', 'Segment', 'City', 'ContactName'])
         String oldV = attr == 'Segment' ? cu.segment : attr == 'City' ? cu.city : cu.contact
         String newV = attr == 'Segment' ? pick(rCC, ['Retail', 'Restaurant', 'Wholesale'].findAll { it != oldV }) :
-                      attr == 'City' ? pick(rCC, (COUNTRIES.find { it[0] == cu.country }).subList(1, (COUNTRIES.find { it[0] == cu.country }).size() - 2).findAll { it != oldV } ?: [oldV]) :
+                      attr == 'City' ? pick(rCC, otherCities(cu.country as String, oldV) ?: [oldV]) :
                       "${pick(rCC, FIRST)} ${pick(rCC, LAST)}".toString()
         mine << [customerChanges.size() + mine.size() + 1, cu.id, d, attr, oldV, newV]
         if (attr == 'Segment') cu.segment = newV else if (attr == 'City') cu.city = newV else cu.contact = newV
@@ -692,6 +761,9 @@ def asOf = { Object first, List<List> history, LocalDate d ->
 Random rO = rnd('Orders'), rL = rnd('Order Details'), rI = rnd('Invoices'), rM = rnd('StockMovements'), rCF = rnd('CourierConfirmations')
 // EXTENSIONS (2026-09-17) for the courses after Learn SQL S2 — each on its OWN stream, so no earlier row moved:
 Random rCreated = rnd('Orders.CreatedAt'), rChannel = rnd('Orders.Channel'), rW = rnd('WebOrders')
+// PLANTED — Learn SQL S2 · 58 (freight) and · 58 (days to pay). Both live on streams of their own, so a tail
+// added here can never move an order, a line or an invoice that was drawn before it.
+Random rFS = rnd('Orders.FreightSurcharge'), rLP = rnd('Invoices.LatePayers')
 double[] MONTH_WEIGHT = [1, 1, 1, 1, 1, 1, 1, 0.8, 1, 1, 1.35, 1.35]
 // PLANTED — Learn SQL S2. DECIDED AT GATE 2 (owner, 2026-09-17): a PARTIAL outage — 20% of Speedy Express ship dates
 // lost for 26 weeks, orders placed 2024-03-04 .. 2024-08-30. The 86% versions (13 and 8 weeks) halved monthly invoicing,
@@ -789,6 +861,17 @@ ORDERS_PER_YEAR.eachWithIndex { int count, int yi ->
             goods += (price * qty * (BigDecimal.ONE - disc)).setScale(2, RoundingMode.HALF_UP)
         }
         BigDecimal freight = money((goods as double) * (0.02 + rO.nextDouble() * 0.03))
+        // PLANTED — Learn SQL S2 · 58: freight is normally 2-5% of the goods, but about one delivery in twenty needs
+        // a pallet, a ferry or an express re-delivery, and the courier bills a flat surcharge for it — 120 to 600,
+        // whatever the order was worth. A FLAT fee, because that is how couriers really bill, and because it keeps the
+        // biggest bill believable: the tail is long, not absurd. The effect is that the AVERAGE freight bill sits well
+        // above the TYPICAL one and only about one order in four is above "average" — which is the whole reason MEDIAN
+        // and the percentiles exist. Both rolls are drawn for every order, never inside the `if`, so changing the rate
+        // moves only the orders the rate is about.
+        // The surcharge is also capped at 60% of the goods: a courier does not bill 600 to move a 96 order, and a
+        // freight bill larger than what is in the box would make a learner distrust the data rather than query it.
+        double surchargeRoll = rFS.nextDouble(), surcharge = 120 + rFS.nextDouble() * 480
+        if (surchargeRoll < 0.05) freight = money((freight as double) + Math.min(surcharge, (goods as double) * 0.6))
 
         // What really happened to the order.
         // EVERY ROLL IS DRAWN FOR EVERY ORDER, before any decision uses it. A draw inside an `if` would make the
@@ -834,7 +917,7 @@ ORDERS_PER_YEAR.eachWithIndex { int count, int yi ->
         String note = noteRoll >= 0.05 ? null : NOTES[noteKind].replace('{contact}', contactThen).replace('{first}', contactThen.split(' ')[0])
                                                                  .replace('{phone}', cu.phone as String)
         put(ordersOut, [orderId, cu.id, employee, ts(od), ts(required), recordedShip == null ? null : ts(recordedShip), shipVia, freight,
-                        cu.name, cu.address, shipCity, REGION_OF_CITY[shipCity.trim()], cu.postal, cu.country, status, Timestamp.valueOf(updated),
+                        cu.name, cu.address, shipCity, regionOfCity(shipCity), cu.postal, cu.country, status, Timestamp.valueOf(updated),
                         Timestamp.valueOf(created), channel, note])
         if (cu.firstCreated == null) { cu.firstCreated = created; cu.firstChannel = channel }
         // EXTENSION — Data Warehousing S1 · 22, ETL S1 · 35: every status an order has been in, and when. The last
@@ -871,7 +954,12 @@ ORDERS_PER_YEAR.eachWithIndex { int count, int yi ->
 
         // ERP rule: an invoice is created when a ship date is recorded.
         if (recordedShip != null) {
-            LocalDate paid = recordedShip.plusDays(10 + rI.nextInt(40))
+            // PLANTED — Learn SQL S2 · 58: most invoices are settled in 10-49 days, but about one in twenty sits for
+            // months. AVG(days to pay) is dragged up by those few; MEDIAN says what actually happens and a percentile
+            // says what to promise. Some of the slowest run past the last day and stay unpaid (a real NULL, S2 · 25).
+            double slowRoll = rLP.nextDouble()
+            int slowExtra = 45 + rLP.nextInt(200)
+            LocalDate paid = recordedShip.plusDays(10 + rI.nextInt(40) + (slowRoll < 0.08 ? slowExtra : 0))
             put(invoicesOut, [++invoiceCount, orderId, java.sql.Date.valueOf(recordedShip), goods, freight, paid.isAfter(LAST_DAY) ? null : java.sql.Date.valueOf(paid)])
         }
         // Stock leaves the warehouse when goods physically ship — recorded or not (a clue for the modelling courses).
@@ -907,7 +995,7 @@ insert('Customers', ['CustomerID', 'CompanyName', 'ContactName', 'ContactTitle',
            LocalDateTime created = cu.created as LocalDateTime
            LocalDateTime updated = cu.lastChange == null ? created : (cu.lastChange as LocalDate).atTime(cu.uTime[0] as int, cu.uTime[1] as int)
            if (updated.isBefore(created)) updated = created
-           [cu.id, cu.name, cu.contact, cu.title, cu.address, cu.city, REGION_OF_CITY[(cu.city as String).trim()], cu.postal, cu.country, cu.phone, null,
+           [cu.id, cu.name, cu.contact, cu.title, cu.address, cu.city, regionOfCity(cu.city as String), cu.postal, cu.country, cu.phone, null,
             "buying@${(cu.name as String).toLowerCase().replaceAll('[^a-z]', '')}.example".toString(), cu.segment, Timestamp.valueOf(created), Timestamp.valueOf(updated)] })
 
 // PLANTED — Learn SQL S2 · 48: Speedy Express confirms ~95% of the un-dated outage orders; the rest (~5%) were lost.
@@ -917,7 +1005,19 @@ outageOrders.each { o ->
 }
 // Noise: a few confirmations for orders that already have a ship date (S: 8), and one sent twice.
 Math.max(8, ORDERS.intdiv(1250)).times { List o = datedInOutage[rCF.nextInt(datedInOutage.size())]; confirmations << [0, 1, o[0], java.sql.Date.valueOf((o[1] as LocalDate).plusDays(2)), java.sql.Date.valueOf(LocalDate.of(2024, 12, 16))] }
-if (confirmations) confirmations << new ArrayList(confirmations[rCF.nextInt(confirmations.size())])
+// PLANTED — Learn SQL S2 · 48: the courier's hand-over failed once and its system re-sent a batch, so some orders
+// were confirmed twice and a few three times (S: about 15 orders, 18 extra rows, two days later). Counting the
+// confirmations with UNION quietly removes them; UNION ALL does not — and the two numbers differ by enough to notice.
+// A stream of its own, so the confirmations above never move.
+Random rCFD = rnd('CourierConfirmations.Retries')
+int resentOrders = Math.max(15, confirmations.size().intdiv(12))
+List<List> resent = []
+if (confirmations) resentOrders.times {
+    List src = confirmations[rCFD.nextInt(confirmations.size())]
+    int again = rCFD.nextDouble() < 0.2 ? 2 : 1
+    again.times { resent << [0, src[1], src[2], src[3], java.sql.Date.valueOf(LocalDate.of(2024, 12, 18))] }
+}
+confirmations.addAll(resent)
 confirmations.eachWithIndex { c, i -> c[0] = i + 1 }
 insert('CourierConfirmations', ['ConfirmationID', 'ShipperID', 'OrderID', 'DeliveredDate', 'ReceivedDate'], confirmations)
 

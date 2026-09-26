@@ -10,4 +10,6 @@ JOIN (SELECT "OrderID",
 LEFT JOIN "Invoices" i
   ON i."OrderID" = o."OrderID"
 WHERE o."Status" = 'Shipped'
+  AND o."OrderDate" >= DATE '2024-01-01'
+  AND o."OrderDate" <  DATE '2025-01-01'
   AND i."InvoiceID" IS NULL;

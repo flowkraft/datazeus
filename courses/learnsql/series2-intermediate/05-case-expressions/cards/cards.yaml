@@ -10,7 +10,7 @@
 #
 # ── WHAT ANKI IS FOR ────────────────────────────────────────────────────────────────────────
 # Reviewed on a phone, weeks later, with no database open. EVERY CARD CARRIES ITS OWN PREMISE:
-# where a card needs a value (a freight of 38.4, 5617 unlabelled rows, 61 matching rows of 3749) the
+# where a card needs a value (a freight of 38.4, 5346 unlabelled rows, 61 matching rows of 3749) the
 # FRONT states it, and the card tests the REASONING. No card names a Northwind table as something
 # to remember, and none asks for a figure from the dataset. The koans are where the SQL is written;
 # this deck is where the rules have to hold without rows in reach.
@@ -71,8 +71,8 @@ cards:
       back: "NULL. A CASE with no ELSE returns NULL for every row that no WHEN matched."
 
   - basic:
-      front: "5617 orders have a label of NULL because the CASE had no ELSE. You filter <code>WHERE label &lt;&gt; 'heavy'</code>. How many of the 5617 come back, and why?"
-      back: "None. <code>NULL &lt;&gt; 'heavy'</code> is unknown, not true, and WHERE keeps only rows where the test is true. Add an ELSE so those rows get a real label, and the filter finds all 5617."
+      front: "5346 orders have a label of NULL because the CASE had no ELSE. You filter <code>WHERE label &lt;&gt; 'heavy'</code>. How many of the 5346 come back, and why?"
+      back: "None. <code>NULL &lt;&gt; 'heavy'</code> is unknown, not true, and WHERE keeps only rows where the test is true. Add an ELSE so those rows get a real label, and the filter finds all 5346."
 
   - basic:
       front: "You want to filter on a label made by CASE in the SELECT. Why can't <code>WHERE band = 'heavy'</code> in the same query see it, and what do you do?"

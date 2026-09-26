@@ -1,6 +1,6 @@
 package datazeus.learnsql.series1._07
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 /**
@@ -39,7 +39,7 @@ import spock.lang.Unroll
  * Convention: the spec runs the SAME *.sql files the lesson and the video show, so the SQL
  * is authored in exactly one place (the lesson's scripts/) and verified here — no drift.
  */
-class DataTypesSpec extends NorthwindGateSpec {
+class DataTypesSpec extends GateSpec {
 
     // --- 1. The catalog: ask the database what it is holding -----------------------------
 

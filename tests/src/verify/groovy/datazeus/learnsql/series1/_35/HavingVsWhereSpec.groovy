@@ -1,6 +1,6 @@
 package datazeus.learnsql.series1._35
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 /**
@@ -60,7 +60,7 @@ import spock.lang.Unroll
  * Every koan is checked in its solved form on both engines, plus the factual claims their
  * HINTS make, because a wrong number in a hint tells a student their correct query is wrong.
  */
-class HavingVsWhereSpec extends NorthwindGateSpec {
+class HavingVsWhereSpec extends GateSpec {
 
     // --- 1. The payoff episode 30 promised out loud ----------------------------------------
 

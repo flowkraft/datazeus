@@ -15,7 +15,7 @@ import spock.lang.Unroll
  *    dairy-units-left-then-inner, dairy-units-left-all-the-way,
  *    dairy-units-narrowed-first, dairy-products-without-may-sale              §1 a join that drops rows
  *    sales-and-freight-per-customer, freight-per-customer,
- *    nordic-foods-orders-and-lines, company-freight-two-ways                   §2 a join that multiplies money
+ *    quayside-orders-and-lines, company-freight-two-ways                        §2 a join that multiplies money
  *    sum-distinct-freight, orders-and-freight-values                           §3 SUM(DISTINCT) is wrong
  *    sales-and-freight-aggregated-first, heritage-butter-lines-and-customers   §4 the cure, and the bridge
  *    shipped-orders-without-invoice                                            §4b the case file
@@ -25,21 +25,32 @@ import spock.lang.Unroll
  *
  * ── THE CASE FILE (plan-academy-course-stories-artefacts.md §3.2.1, row 15; figures LOCKED in
  *    plan-academy-figures-northwind-co-s.md, column C) ─────────────────────────────────────────
- * Each order's value aggregated first, then LEFT JOIN "Invoices", shipped orders with no invoice:
- * 188 orders, 275698.44. The value is ROUNDed once, on the SUM (rounded per order: 275698.52).
- * Joined to the lines directly, count(*) reads 460 — lines, not orders.
+ * Each order's value aggregated first, then LEFT JOIN "Invoices", 2024 orders marked shipped with
+ * no invoice: 178 orders, 257319.65. The value is ROUNDed once, on the SUM (per order: 257319.74).
+ * Joined to the lines directly, count(*) reads 429 — lines, not orders.
+ *
+ * THE YEAR IS PART OF THE QUESTION. Without it the report answers for all five years — 188 orders,
+ * 275698.44 — and sweeps in 10 orders from 2020-2023 that belong to no case. Scoped to 2024 it
+ * returns the SAME 178 orders the dates lesson ended on (the two sets are identical, EXCEPT both
+ * ways), so the series' arc closes on one number instead of two. 177 of the 178 are Speedy Express
+ * inside the outage window; the odd one out is order 9449, Speedy Express, placed 2024-10-29.
  *
  * ── THE EARN, AS ARITHMETIC ────────────────────────────────────────────────────────────────
- * May 2024, Nordic Foods: 184.43 × 5 + 59.69 × 3 + 44.27 × 2 + 191.90 × 5 = 2149.26, against 480.29
- * over "Orders" alone; number one moves from Alpine Provisions (610.83) to Nordic Foods.
- * The company, all five years: 527429.46 against 1712919.25. SUM(DISTINCT) gives 391726.53 —
- * 135702.93 short — because 10000 orders have only 6689 different freight values.
+ * May 2024, Quayside Wholefoods: 3.86 × 1 + 567.64 × 6 = 3409.70, against 571.50 over "Orders"
+ * alone; number one moves from Baltic Supermarket (752.27) to Quayside Wholefoods, which is FIFTH
+ * once each measure is summed at its own grain. Baltic Supermarket is not on the broken report at
+ * all — sixth, on 1806.74 — so the fan-out does not merely reorder a report, it can push the right
+ * answer off the page. And the broken row is self-refuting: 3409.70 of freight on 3102.87 of sales.
+ * The company, all five years: 693052.88 against 2161332.75. SUM(DISTINCT) gives 566293.15 —
+ * 126759.73 short — because 10000 orders have only 6960 different freight values.
  *
  * ── WHY MAY 2024 AND THE DAIRY PRODUCTS (measured 2026-09-17) ───────────────────────────────
  * Over all five years every product has sold, and over any whole month of 2024 60 to 69 of the 80
  * products sell — a result too long to read. One category in one month keeps the whole result on a
- * card: Dairy Products in May 2024, 7 of 10. Per customer over all five years the fan-out does NOT
- * move number one (Fjord Foods both ways); in May 2024 it does. Both asserted below.
+ * card: Dairy Products in May 2024, 7 of 10. Per customer the fan-out moves number one at BOTH
+ * scales (five years: Quayside Traders joined, Yarrow Pantry alone; May 2024: Quayside Wholefoods
+ * over Baltic Supermarket), so the month is chosen for the card — 120 customers are not a card —
+ * and because May 2024 is already on screen from the Dairy half. Both asserted below.
  *
  * ── ORDER AND NAMES ────────────────────────────────────────────────────────────────────────
  * The Dairy product lists are ordered by "ProductName"; the ten names sort alike in byte order
@@ -128,73 +139,82 @@ class MultiTableJoinsDuplicateRowsSpec extends NorthwindCoGateSpec {
     // --- 2. A JOIN THAT MULTIPLIES MONEY --------------------------------------------------------------
 
     @Unroll
-    def "[#engine] May 2024 joined: Nordic Foods first on 2149.26 — over Orders alone Alpine Provisions leads on 610.83"() {
+    def "[#engine] May 2024 joined: Quayside Wholefoods first on 3409.7 — over Orders alone Baltic Supermarket leads on 752.27"() {
         given:
         def joined = sqlFor(engine).rows(script("sales-and-freight-per-customer"))
         def alone = sqlFor(engine).rows(script("freight-per-customer"))
 
         expect: "freight-top's card"
         joined.collect { [it.CompanyName, dec(it["Total sales"]), dec(it.Freight)] } == [
-                ["Nordic Foods", dec("11322.73"), dec("2149.26")],
-                ["Golden Pantry", dec("18342.33"), dec("2050.36")],
-                ["Alpine Provisions", dec("15686.56"), dec("1814.54")],
-                ["Nordic Delicatessen", dec("12531.83"), dec("1317.29")],
-                ["Juniper Trading", dec("11928.18"), dec("1226.41")]]
+                ["Quayside Wholefoods", dec("3102.87"), dec("3409.7")],
+                ["Nordic Foods", dec("11322.73"), dec("3295.76")],
+                ["Golden Pantry", dec("18342.33"), dec("2414.54")],
+                ["Emerald Grocers", dec("2744.71"), dec("1951.72")],
+                ["Alpine Provisions", dec("15686.56"), dec("1814.54")]]
 
-        and: "orders-alone-result's card: Nordic Foods is fifth"
+        and: "the article and the video: the top row is self-refuting — more freight than sales"
+        dec(joined[0].Freight) > dec(joined[0]["Total sales"])
+
+        and: "orders-alone-result's card: Quayside Wholefoods is fifth"
         alone.collect { [it.CompanyName, dec(it.Freight)] } == [
-                ["Alpine Provisions", dec("610.83")], ["Golden Pantry", dec("562.08")], ["Yarrow Pantry", dec("502.33")],
-                ["Quayside Traders", dec("497.47")], ["Nordic Foods", dec("480.29")]]
+                ["Baltic Supermarket", dec("752.27")], ["Golden Pantry", dec("744.17")], ["Nordic Foods", dec("709.59")],
+                ["Alpine Provisions", dec("610.83")], ["Quayside Wholefoods", dec("571.5")]]
+
+        and: "'Baltic Supermarket was not on the first report at all' — sixth there, on 1806.74"
+        def joined6 = sqlFor(engine).rows(script("sales-and-freight-per-customer").replace("LIMIT 5;", "LIMIT 6;"))
+        [joined6[5].CompanyName, dec(joined6[5].Freight)] == ["Baltic Supermarket", dec("1806.74")]
 
         and: "LIMIT 5 cuts cleanly: the sixth row of each list is below the fifth"
-        dec(sqlFor(engine).rows(script("sales-and-freight-per-customer").replace("LIMIT 5;", "LIMIT 6;"))[5].Freight) < dec("1226.41")
-        dec(sqlFor(engine).rows(script("freight-per-customer").replace("LIMIT 5;", "LIMIT 6;"))[5].Freight) < dec("480.29")
+        dec(joined6[5].Freight) < dec("1814.54")
+        dec(sqlFor(engine).rows(script("freight-per-customer").replace("LIMIT 5;", "LIMIT 6;"))[5].Freight) < dec("571.5")
 
         and: "GROUP BY \"CompanyName\" is one group per customer: the 120 names are unique"
         sqlFor(engine).firstRow('SELECT count(*) AS n, count(DISTINCT "CompanyName") AS d FROM "Customers"').with { [it.n as int, it.d as int] } == [120, 120]
 
-        and: "Nordic Foods placed 4 orders in May 2024, Alpine Provisions 13"
+        and: "Quayside Wholefoods placed 2 orders in May 2024, Baltic Supermarket 5"
         sqlFor(engine).rows('''SELECT "CustomerID" AS c, count(*) AS n FROM "Orders"
                                WHERE "OrderDate" >= DATE '2024-05-01' AND "OrderDate" < DATE '2024-06-01'
-                                 AND "CustomerID" IN ('NORDI', 'ALPI2') GROUP BY "CustomerID" ORDER BY "CustomerID"''')
-                .collect { [it.c, it.n as int] } == [["ALPI2", 13], ["NORDI", 4]]
-        sqlFor(engine).firstRow('''SELECT "CompanyName" AS n FROM "Customers" WHERE "CustomerID" = 'NORDI' ''').n == "Nordic Foods"
+                                 AND "CustomerID" IN ('QUAY3', 'BALT4') GROUP BY "CustomerID" ORDER BY "CustomerID"''')
+                .collect { [it.c, it.n as int] } == [["BALT4", 5], ["QUAY3", 2]]
+        sqlFor(engine).rows('''SELECT "CustomerID" AS c, "CompanyName" AS n FROM "Customers"
+                               WHERE "CustomerID" IN ('QUAY3', 'BALT4') ORDER BY "CustomerID"''')
+                .collect { [it.c, it.n] } == [["BALT4", "Baltic Supermarket"], ["QUAY3", "Quayside Wholefoods"]]
 
         where:
         engine << ENGINES
     }
 
     @Unroll
-    def "[#engine] why: Nordic Foods' May orders carry 184.43, 59.69, 44.27, 191.9 on 5, 3, 2, 5 lines — 2149.26"() {
+    def "[#engine] why: Quayside Wholefoods' May orders carry 3.86 and 567.64 on 1 and 6 lines — 3409.7"() {
         given:
-        def rows = sqlFor(engine).rows(script("nordic-foods-orders-and-lines"))
+        def rows = sqlFor(engine).rows(script("quayside-orders-and-lines"))
 
         expect: "why-multiplied's card"
         rows.collect { [it.OrderID as int, dec(it.Freight), it.Lines as int] } ==
-                [[8374, dec("184.43"), 5], [8468, dec("59.69"), 3], [8482, dec("44.27"), 2], [8548, dec("191.9"), 5]]
+                [[8415, dec("3.86"), 1], [8472, dec("567.64"), 6]]
 
-        and: "the arithmetic Mnemosyne says: 15 lines, 2149.26, and the 480.29 it should have been"
-        rows.collect { it.Lines as int }.sum() == 15
-        rows.collect { new BigDecimal(it.Freight.toString()) * (it.Lines as int) }.sum().stripTrailingZeros() == dec("2149.26")
-        rows.collect { new BigDecimal(it.Freight.toString()) }.sum().stripTrailingZeros() == dec("480.29")
+        and: "the arithmetic Mnemosyne says: 7 lines, 3409.7, and the 571.5 it should have been"
+        rows.collect { it.Lines as int }.sum() == 7
+        rows.collect { new BigDecimal(it.Freight.toString()) * (it.Lines as int) }.sum().stripTrailingZeros() == dec("3409.7")
+        rows.collect { new BigDecimal(it.Freight.toString()) }.sum().stripTrailingZeros() == dec("571.5")
 
-        and: "the short's collapse beat: order 8374 alone, 184.43 on five lines, 922.15"
-        (new BigDecimal(rows[0].Freight.toString()) * (rows[0].Lines as int)).stripTrailingZeros() == dec("922.15")
+        and: "the short's collapse beat: order 8472 alone, 567.64 on six lines, 3405.84 — almost the whole total"
+        (new BigDecimal(rows[1].Freight.toString()) * (rows[1].Lines as int)).stripTrailingZeros() == dec("3405.84")
 
         where:
         engine << ENGINES
     }
 
     @Unroll
-    def "[#engine] the company: 527429.46 over Orders, 1712919.25 after the join — 'more than three times'"() {
+    def "[#engine] the company: 693052.88 over Orders, 2161332.75 after the join — 'more than three times'"() {
         given:
         def r = sqlFor(engine).firstRow(script("company-freight-two-ways"))
 
         expect:
-        dec(r["Orders alone"]) == dec("527429.46")
-        dec(r["After the join"]) == dec("1712919.25")
-        (new BigDecimal("1712919.25") / new BigDecimal("527429.46")) > 3.2
-        (new BigDecimal("1712919.25") / new BigDecimal("527429.46")) < 3.3
+        dec(r["Orders alone"]) == dec("693052.88")
+        dec(r["After the join"]) == dec("2161332.75")
+        (new BigDecimal("2161332.75") / new BigDecimal("693052.88")) > 3.1
+        (new BigDecimal("2161332.75") / new BigDecimal("693052.88")) < 3.2
 
         and: "all five years: the whole table"
         sqlFor(engine).firstRow('SELECT min("OrderDate") AS a, max("OrderDate") AS b, count(*) AS n FROM "Orders"')
@@ -207,26 +227,26 @@ class MultiTableJoinsDuplicateRowsSpec extends NorthwindCoGateSpec {
     // --- 3. SUM(DISTINCT) IS WRONG ---------------------------------------------------------------------
 
     @Unroll
-    def "[#engine] SUM(DISTINCT) gives 391726.53 — 135702.93 short — because 10000 orders share 6689 freight values"() {
+    def "[#engine] SUM(DISTINCT) gives 566293.15 — 126759.73 short — because 10000 orders share 6960 freight values"() {
         expect: "distinct-is-wrong's card"
-        dec(sqlFor(engine).firstRow(script("sum-distinct-freight"))["SUM(DISTINCT)"]) == dec("391726.53")
-        new BigDecimal("527429.46") - new BigDecimal("391726.53") == new BigDecimal("135702.93")
+        dec(sqlFor(engine).firstRow(script("sum-distinct-freight"))["SUM(DISTINCT)"]) == dec("566293.15")
+        new BigDecimal("693052.88") - new BigDecimal("566293.15") == new BigDecimal("126759.73")
 
         and: "freight-values' card"
-        sqlFor(engine).firstRow(script("orders-and-freight-values")).with { [it.Orders as int, it["Freight values"] as int] } == [10000, 6689]
+        sqlFor(engine).firstRow(script("orders-and-freight-values")).with { [it.Orders as int, it["Freight values"] as int] } == [10000, 6960]
 
         and: "SUM(DISTINCT) over the orders alone is the same wrong number: the join is not what breaks it"
-        dec(sqlFor(engine).firstRow('SELECT SUM(DISTINCT "Freight") AS s FROM "Orders"').s) == dec("391726.53")
+        dec(sqlFor(engine).firstRow('SELECT SUM(DISTINCT "Freight") AS s FROM "Orders"').s) == dec("566293.15")
 
-        and: "the article: on May 2024 alone it is 140.41 short — 8837.47 against 8977.88 (181 orders, 178 values)"
+        and: "the article: on May 2024 alone it is 140.41 short — 11678.76 against 11819.17 (181 orders, 178 values)"
         def may = sqlFor(engine).firstRow('''SELECT SUM(DISTINCT o."Freight") AS d FROM "Orders" o
                                              JOIN "Order Details" dd ON dd."OrderID" = o."OrderID"
                                              WHERE o."OrderDate" >= DATE '2024-05-01' AND o."OrderDate" < DATE '2024-06-01' ''')
-        dec(may.d) == dec("8837.47")
+        dec(may.d) == dec("11678.76")
         // Read the row first: inside .with { } on a GroovyRowResult, dec(...) would resolve against the row.
         def mayOrders = sqlFor(engine).firstRow('''SELECT SUM("Freight") AS s, count(*) AS n, count(DISTINCT "Freight") AS v FROM "Orders"
                                                    WHERE "OrderDate" >= DATE '2024-05-01' AND "OrderDate" < DATE '2024-06-01' ''')
-        [dec(mayOrders.s), mayOrders.n as int, mayOrders.v as int] == [dec("8977.88"), 181, 178]
+        [dec(mayOrders.s), mayOrders.n as int, mayOrders.v as int] == [dec("11819.17"), 181, 178]
 
         where:
         engine << ENGINES
@@ -235,7 +255,7 @@ class MultiTableJoinsDuplicateRowsSpec extends NorthwindCoGateSpec {
     // --- 4. THE CURE, AND THE BRIDGE -------------------------------------------------------------------
 
     @Unroll
-    def "[#engine] aggregated first: Alpine Provisions first again on 610.83, and every sales total unchanged"() {
+    def "[#engine] aggregated first: Baltic Supermarket first again on 752.27, and every sales total unchanged"() {
         given:
         def cure = sqlFor(engine).rows(script("sales-and-freight-aggregated-first"))
         def joined = sqlFor(engine).rows(script("sales-and-freight-per-customer").replace("LIMIT 5;", ""))
@@ -243,11 +263,11 @@ class MultiTableJoinsDuplicateRowsSpec extends NorthwindCoGateSpec {
 
         expect: "cure-result's card"
         cure.collect { [it.CompanyName, dec(it["Total sales"]), dec(it.Freight)] } == [
+                ["Baltic Supermarket", dec("9445.2"), dec("752.27")],
+                ["Golden Pantry", dec("18342.33"), dec("744.17")],
+                ["Nordic Foods", dec("11322.73"), dec("709.59")],
                 ["Alpine Provisions", dec("15686.56"), dec("610.83")],
-                ["Golden Pantry", dec("18342.33"), dec("562.08")],
-                ["Yarrow Pantry", dec("12884.6"), dec("502.33")],
-                ["Quayside Traders", dec("13170.94"), dec("497.47")],
-                ["Nordic Foods", dec("11322.73"), dec("480.29")]]
+                ["Quayside Wholefoods", dec("3102.87"), dec("571.5")]]
 
         and: "'every sales total is exactly what it was' — the joined report's sales were never wrong"
         cure.every { joined[it.CompanyName] == dec(it["Total sales"]) }
@@ -274,32 +294,36 @@ class MultiTableJoinsDuplicateRowsSpec extends NorthwindCoGateSpec {
     // --- 4b. THE CASE FILE: SHIPPED ORDERS WITH NO INVOICE, AND HOW MUCH ------------------------------
 
     @Unroll
-    def "[#engine] case file: 188 shipped orders with no invoice, worth 275698.44"() {
+    def "[#engine] case file: 178 orders of 2024 shipped with no invoice, worth 257319.65 — the dates lesson's 178"() {
         given:
         def r = sqlFor(engine).firstRow(script("shipped-orders-without-invoice"))
 
         expect: "case-file-result's card"
-        [r.Orders as int, dec(r.Value)] == [188, dec("275698.44")]
+        [r.Orders as int, dec(r.Value)] == [178, dec("257319.65")]
 
         and: "\"Invoices\" is one row per order, so the LEFT JOIN cannot multiply anything"
         sqlFor(engine).firstRow('SELECT count(*) AS n, count(DISTINCT "OrderID") AS d FROM "Invoices"')
                 .with { [it.n as int, it.d as int] } == [9532, 9532]
 
-        and: "'join the lines in directly and count(*) says 460' — lines, not orders; the value is the same"
+        and: "'join the lines in directly and count(*) says 429' — lines, not orders; the value is the same"
         def direct = sqlFor(engine).firstRow('''SELECT count(*) AS n, count(DISTINCT o."OrderID") AS o,
                                                        ROUND(SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")), 2) AS v
                                                 FROM "Orders" o
                                                 JOIN "Order Details" d ON d."OrderID" = o."OrderID"
                                                 LEFT JOIN "Invoices" i ON i."OrderID" = o."OrderID"
-                                                WHERE o."Status" = 'Shipped' AND i."InvoiceID" IS NULL''')
-        [direct.n as int, direct.o as int, dec(direct.v)] == [460, 188, dec("275698.44")]
+                                                WHERE o."Status" = 'Shipped' AND i."InvoiceID" IS NULL
+                                                  AND o."OrderDate" >= DATE '2024-01-01'
+                                                  AND o."OrderDate" < DATE '2025-01-01' ''')
+        [direct.n as int, direct.o as int, dec(direct.v)] == [429, 178, dec("257319.65")]
 
-        and: "the value is rounded once, on the SUM — rounded per order it would read 275698.52"
+        and: "the value is rounded once, on the SUM — rounded per order it would read 257319.74"
         dec(sqlFor(engine).firstRow('''SELECT SUM(v.s) AS s FROM "Orders" o
                                        JOIN (SELECT "OrderID", ROUND(SUM("UnitPrice" * "Quantity" * (1 - "Discount")), 2) AS s
                                              FROM "Order Details" GROUP BY "OrderID") v ON v."OrderID" = o."OrderID"
                                        LEFT JOIN "Invoices" i ON i."OrderID" = o."OrderID"
-                                       WHERE o."Status" = 'Shipped' AND i."InvoiceID" IS NULL''').s) == dec("275698.52")
+                                       WHERE o."Status" = 'Shipped' AND i."InvoiceID" IS NULL
+                                         AND o."OrderDate" >= DATE '2024-01-01'
+                                         AND o."OrderDate" < DATE '2025-01-01' ''').s) == dec("257319.74")
 
         and: "the locked figures sheet: 177 of them in the outage window (Speedy Express, placed 2024-03-04 .. 2024-08-30), 256894.67"
         def outage = sqlFor(engine).firstRow('''SELECT count(*) AS n, ROUND(SUM(v."Order value"), 2) AS v
@@ -312,21 +336,38 @@ class MultiTableJoinsDuplicateRowsSpec extends NorthwindCoGateSpec {
                                                   AND o."OrderDate" >= DATE '2024-03-04' AND o."OrderDate" < DATE '2024-08-31' ''')
         [outage.n as int, dec(outage.v)] == [177, dec("256894.67")]
 
+        and: "the 178 are EXACTLY the dates lesson's 178: shipped, no ship date, placed in 2024"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM (
+                                     SELECT o."OrderID" FROM "Orders" o WHERE o."Status" = 'Shipped' AND o."ShippedDate" IS NULL
+                                       AND o."OrderDate" >= DATE '2024-01-01' AND o."OrderDate" < DATE '2025-01-01'
+                                     EXCEPT
+                                     SELECT o."OrderID" FROM "Orders" o LEFT JOIN "Invoices" i ON i."OrderID" = o."OrderID"
+                                     WHERE o."Status" = 'Shipped' AND i."InvoiceID" IS NULL
+                                       AND o."OrderDate" >= DATE '2024-01-01' AND o."OrderDate" < DATE '2025-01-01') t''').n == 0
+
+        and: "the year matters: without it the same report answers for five years — 188 orders, 275698.44"
+        def allYears = sqlFor(engine).firstRow(script("shipped-orders-without-invoice")
+                .replace('  AND o."OrderDate" >= DATE \'2024-01-01\'\n  AND o."OrderDate" <  DATE \'2025-01-01\'\n', ""))
+        [allYears.Orders as int, dec(allYears.Value)] == [188, dec("275698.44")]
+
         where:
         engine << ENGINES
     }
 
     @Unroll
-    def "[#engine] why May 2024: over all five years the fan-out leaves number one where it is (Fjord Foods both ways)"() {
+    def "[#engine] why May 2024: the fan-out moves number one at five-year scale too — a month is what fits a card"() {
         // The episode's header states the measurement; the lesson does not show it.
-        expect:
+        expect: "over all five years the two reports crown different customers"
         sqlFor(engine).rows('''SELECT c."CompanyName" AS n, SUM(o."Freight") AS f FROM "Customers" c
                                JOIN "Orders" o ON o."CustomerID" = c."CustomerID"
                                JOIN "Order Details" d ON d."OrderID" = o."OrderID"
-                               GROUP BY c."CompanyName" ORDER BY f DESC LIMIT 1''')[0].n == "Fjord Foods"
+                               GROUP BY c."CompanyName" ORDER BY f DESC LIMIT 1''')[0].n == "Quayside Traders"
         sqlFor(engine).rows('''SELECT c."CompanyName" AS n, SUM(o."Freight") AS f FROM "Customers" c
                                JOIN "Orders" o ON o."CustomerID" = c."CustomerID"
-                               GROUP BY c."CompanyName" ORDER BY f DESC LIMIT 1''')[0].n == "Fjord Foods"
+                               GROUP BY c."CompanyName" ORDER BY f DESC LIMIT 1''')[0].n == "Yarrow Pantry"
+
+        and: "so the month is chosen for the card: 120 customers are not a result you can read on one"
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Customers"').n == 120
 
         and: "any whole month of 2024 sells 60 to 69 of the 80 products — too many rows for a card"
         sqlFor(engine).rows('''SELECT EXTRACT(MONTH FROM o."OrderDate") AS m, count(DISTINCT d."ProductID") AS p
@@ -342,9 +383,9 @@ class MultiTableJoinsDuplicateRowsSpec extends NorthwindCoGateSpec {
     // --- 5. THE DATA FACTS, AND WHAT THE KOANS STAND ON -----------------------------------------------
 
     @Unroll
-    def "[#engine] the dataset is Northwind Company S, and what has no match: 1 customer, 3 employees, no product, no order"() {
+    def "[#engine] the dataset is Northwind Company S, and what has no match: 1 customer, 20 employees, no product, no order"() {
         expect: "the sizes the article quotes"
-        ['Orders': 10000, 'Order Details': 25233, 'Products': 80, 'Customers': 120, 'Employees': 12, 'Invoices': 9532].every { t, n ->
+        ['Orders': 10000, 'Order Details': 25233, 'Products': 80, 'Customers': 120, 'Employees': 29, 'Invoices': 9532].every { t, n ->
             (sqlFor(engine).firstRow("SELECT count(*) AS n FROM \"${t}\"".toString()).n as int) == n
         }
 
@@ -352,11 +393,14 @@ class MultiTableJoinsDuplicateRowsSpec extends NorthwindCoGateSpec {
         sqlFor(engine).rows('''SELECT c."CompanyName" AS n FROM "Customers" c
                                WHERE NOT EXISTS (SELECT 1 FROM "Orders" o WHERE o."CustomerID" = c."CustomerID")''')*.n == ["Yarrow Supermarket"]
 
-        and: "three employees take no orders: the chief executive and the two sales managers"
+        and: "20 employees take no orders: the chief executive, the two sales managers and everyone outside sales"
         sqlFor(engine).rows('''SELECT e."EmployeeID" AS id, e."Title" AS t FROM "Employees" e
                                WHERE NOT EXISTS (SELECT 1 FROM "Orders" o WHERE o."EmployeeID" = e."EmployeeID")
                                ORDER BY e."EmployeeID"''')
-                .collect { [it.id as int, it.t] } == [[1, "Chief Executive Officer"], [2, "Sales Manager"], [3, "Sales Manager"]]
+                .collect { it.id as int } == [1, 2, 3] + (13..29)
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Employees" e
+                                   WHERE "Title" = 'Sales Representative'
+                                     AND NOT EXISTS (SELECT 1 FROM "Orders" o WHERE o."EmployeeID" = e."EmployeeID")''').n == 0
 
         and: "every product has sold, and every order has lines"
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Products" p
@@ -392,12 +436,21 @@ class MultiTableJoinsDuplicateRowsSpec extends NorthwindCoGateSpec {
                                    WHERE o."OrderDate" >= DATE '2024-12-30' AND o."OrderDate" < DATE '2024-12-31' ''').n as int == 459
         sqlFor(engine).firstRow('SELECT sum("Quantity") AS n FROM "Order Details"').n as int == 955168
 
-        and: "koan 4: the top five countries' freight over Orders alone — Spain above Germany"
+        and: "koan 4: the top five countries' freight over Orders alone — Germany above Spain"
         sqlFor(engine).rows('''SELECT c."Country" AS c, SUM(o."Freight") AS f FROM "Customers" c
                                JOIN "Orders" o ON o."CustomerID" = c."CustomerID"
                                GROUP BY c."Country" ORDER BY f DESC LIMIT 5''')
-                .collect { [it.c, dec(it.f)] } == [["Spain", dec("66716.89")], ["Germany", dec("65131.99")], ["USA", dec("61982.13")],
-                                                   ["Finland", dec("58056.81")], ["Brazil", dec("49784.87")]]
+                .collect { [it.c, dec(it.f)] } == [["Germany", dec("88364.1")], ["Spain", dec("86520.02")], ["USA", dec("82617.86")],
+                                                   ["Finland", dec("76494.89")], ["Brazil", dec("65671.38")]]
+
+        and: "koan 4's sting: the top five keep their order, but Poland (14th alone) and Italy (15th) swap after the join"
+        sqlFor(engine).rows('''SELECT c."Country" AS c, SUM(o."Freight") AS f FROM "Customers" c
+                               JOIN "Orders" o ON o."CustomerID" = c."CustomerID"
+                               GROUP BY c."Country" ORDER BY f DESC LIMIT 2 OFFSET 13''')*.c == ["Poland", "Italy"]
+        sqlFor(engine).rows('''SELECT c."Country" AS c, SUM(o."Freight") AS f FROM "Customers" c
+                               JOIN "Orders" o ON o."CustomerID" = c."CustomerID"
+                               JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+                               GROUP BY c."Country" ORDER BY f DESC LIMIT 2 OFFSET 13''')*.c == ["Italy", "Poland"]
 
         and: "koan 4 and 7: 21 countries, no two with the same freight either way, so LIMIT 5 cuts in the same place on both engines"
         sqlFor(engine).firstRow('''SELECT count(*) AS n, count(DISTINCT f) AS d FROM (SELECT c."Country", SUM(o."Freight") AS f
@@ -419,10 +472,10 @@ class MultiTableJoinsDuplicateRowsSpec extends NorthwindCoGateSpec {
                                        FROM (VALUES (101, 32.00), (101, 32.00), (102, 32.00), (102, 32.00),
                                                     (103, 18.40), (103, 18.40)) AS t("OrderID", "Freight")''').s) == dec("50.40")
 
-        and: "koan 9: 2024's freight summed after joining the lines is 414844.39"
+        and: "koan 9: 2024's freight summed after joining the lines is 522639.25"
         dec(sqlFor(engine).firstRow('''SELECT SUM(o."Freight") AS f FROM "Orders" o
                                        JOIN "Order Details" d ON d."OrderID" = o."OrderID"
-                                       WHERE o."OrderDate" >= DATE '2024-01-01' AND o."OrderDate" < DATE '2025-01-01' ''').f) == dec("414844.39")
+                                       WHERE o."OrderDate" >= DATE '2024-01-01' AND o."OrderDate" < DATE '2025-01-01' ''').f) == dec("522639.25")
 
         and: "koan 10: counting orders after joining the lines gives Hugo Dubois (12) 990 in 2024"
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders" o

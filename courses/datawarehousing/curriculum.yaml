@@ -309,10 +309,10 @@ series:
         hands_on: ["koan:count:scanned"]
         core: true
         data:
-          source: northwind_co_m
+          source: northwind_co_s
           tables: ["Orders", "Order Details"]
           fit: partial
-          reason: "Company M installs and verifies with SCALE 'M' (academy-verify, DuckDB 2026-09-20: all 19 tables): 100,000 orders and 250,834 lines, with low-cardinality values that compress well (3 statuses, 4 channels). Column projection shows here. Row-group skipping does not: at M, Orders is 1 row group and Order Details 3, against 9 and 22 at L. So the episode's second beat needs either northwind_co_l instead of the M named here, or D4's Parquet pair, where the same rows at M read 2 of 25 row groups sorted against 25 of 25 unsorted (S2 · 02)."
+          reason: "Company S: 10,000 orders and 25,233 lines, with low-cardinality values that compress well (3 statuses, 4 channels). Column projection shows here, at any size. Row-group skipping does not: on DuckDB 2026-09-26, Orders and Order Details are 1 row group each at S (1 and 3 at M), against 9 and 22 at L. So the episode's second beat points at S2 · 02's Parquet pair at L, where skipping has row groups to skip."
         status: planned
       # ADDED 2026-09-07, and it is the one gap in this academy's lineage table that was a
       # CONTENT gap rather than an attribution one. TEN COURSES mention Parquet — Java & Groovy,
@@ -366,10 +366,11 @@ series:
         hands_on: ["koan:count:scanned", "koan:predict"]
         core: true
         data:
-          source: northwind_co_files
+          # If your laptop has trouble at L size, try our M export instead (northwind_co_files_m): it has 10x less data but is still larger than S.
+          source: northwind_co_files_l
           tables: ["order_lines/*.parquet (sorted and unsorted)", "web_orders.parquet"]
-          fit: good
-          reason: "academy-files-export writes the pair this needs and records the evidence: order_lines_sorted.parquet and order_lines_unsorted.parquet, the same rows in row groups of 10,240 with zstd, where a filter on 2024-06 reads 2 of 25 row groups sorted against 25 of 25 unsorted — manifest.json carries those counts under 'pruning'. web_orders.parquet supplies the nested beat from the company's own records: at M, 27,510 orders and 68,870 items, ship_to as STRUCT and items as LIST<STRUCT>, parsed from WebOrders.Payload. Exported at M and at S on DuckDB 2026-09-20 (250,834 order lines at M, in 88 seconds)."
+          fit: partial
+          reason: "academy-files-export writes the pair this needs and records the evidence: order_lines_sorted.parquet and order_lines_unsorted.parquet, the same rows in row groups of 10,240 with zstd, and manifest.json carries the counts under 'pruning'. The episode runs on the L export: a filter on 2024-06 reads 2 of 25 row groups sorted against 25 of 25 unsorted at M, and only 1 of 3 against 3 of 3 at S (DuckDB 2026-09-26), too few groups to show skipping. At L the 2,510,619 lines make about 245 row groups (arithmetic). web_orders.parquet supplies the nested beat, ship_to as STRUCT and items as LIST<STRUCT>, parsed from WebOrders.Payload. Partial because the export has run at S and M (250,834 lines at M in 88 seconds) but never at L."
         status: planned
       - n: "05"
         slug: duckdb
@@ -388,10 +389,11 @@ series:
         hands_on: ["koan:complete", "clickhouse"]
         core: true
         data:
-          source: northwind_co_m
+          # If your laptop has trouble at L size, try our M variant instead (northwind_co_m): it has 10x less data but is still larger than S.
+          source: northwind_co_l
           tables: ["Orders", "Order Details"]
           fit: MISSING
-          reason: "Company M installs and verifies on DuckDB with SCALE 'M' (100,000 orders, 250,834 lines), and the install script takes ClickHouse, inserting in batches of 20,000 rows so that MergeTree has several parts to merge. It has never been run on ClickHouse: no parts, no merge and no primary-key skipping have been seen, so nothing in this episode can be quoted yet. This stays MISSING until Company M is installed on ClickHouse and verified there."
+          reason: "Company L installs and verifies on DuckDB with SCALE 'L' (1,000,000 orders, 2,510,619 lines), and the install script takes ClickHouse, inserting in batches of 20,000 rows so that MergeTree has several parts to merge: about 50 for Orders and 126 for Order Details at L, and about 300 granules of 8,192 lines. At S, 10,000 orders are one batch and one part, with nothing to merge. It has never been run on ClickHouse: no parts, no merge and no primary-key skipping have been seen, so nothing in this episode can be quoted yet. This stays MISSING until Company L is installed on ClickHouse and verified there."
         status: planned
       - n: "15"
         slug: partitioning-and-sort-keys
@@ -399,10 +401,11 @@ series:
         hands_on: ["koan:count:scanned", "koan:diagnose"]
         core: true
         data:
-          source: northwind_co_dw_m
+          # If your laptop has trouble at L size, try our M variant instead (northwind_co_dw_m): it has 10x less data but is still larger than S.
+          source: northwind_co_dw_l
           tables: ["fact_order_line", "dim_date"]
           fit: good
-          reason: "academy-northwind-co-dw-install builds D5-M from Company M: 250,572 order lines of 99,904 orders over 60 months (2020–2024), enough to make month partitioning, date sort keys and data skipping measurable. The deliberately mispartitioned comparison table is the learner's to build in the lesson. Installed and verified on DuckDB 2026-09-20 (academy-verify, all 13 tables)."
+          reason: "academy-northwind-co-dw-install builds D5-L from Company L: 2,508,372 order lines of 999,114 orders over 60 months (2020–2024). Month partitioning prunes at any size, but date sort keys and data skipping need row groups to skip: on DuckDB 2026-09-26 the fact is 24 row groups at L against 1 at S. The deliberately mispartitioned comparison table is the learner's to build in the lesson. Installed and verified on DuckDB 2026-09-20 (academy-verify, all 13 tables)."
         status: planned
       # THE SKILL: name the business's metrics ONCE, in one reviewed place, instead of
       # re-deriving them in every query. That is what a semantic layer is, and it is the same
@@ -510,10 +513,10 @@ series:
         hands_on: ["koan:choose", "koan:predict"]
         core: true
         data:
-          source: northwind_co_files
+          source: northwind_co_files_s
           tables: ["order_lines/*.parquet (monthly)", "order_lines_daily/*.parquet"]
           fit: partial
-          reason: "D4 writes both file layouts the episode compares, and at M: order_lines/ as 60 monthly Parquet files against order_lines_daily/ as 1,827 daily ones, the same 250,834 rows either way (exported on DuckDB 2026-09-20). db/docker-compose.yml already defines the MinIO service and the one-shot job that publishes an export to the bucket 'academy', with the s3:// and http:// URLs recorded in manifest.json. Partial because none of it has been run against object storage: cold cache against warm, and 60 files against 1,827, are still unmeasured."
+          reason: "D4 writes both file layouts the episode compares, and S has the same file counts as any scale: order_lines/ as 60 monthly Parquet files against order_lines_daily/ as 1,818 daily ones, the same 25,233 rows either way (exported on DuckDB 2026-09-26). db/docker-compose.yml already defines the MinIO service and the one-shot job that publishes an export to the bucket 'academy', with the s3:// and http:// URLs recorded in manifest.json. Partial because none of it has been run against object storage: cold cache against warm, and 60 files against 1,827, are still unmeasured."
         status: planned
       - n: "20"
         slug: olap-cubes
@@ -582,7 +585,7 @@ series:
         title: "Reading Cubes Somebody Else Built — Sales, Inventory, Customers and HR"
         hands_on: ["koan:author", "cube"]
         data:
-          source: northwind
+          source: northwind_tiny
           tables: ["Customers", "Employees", "Orders", "Products", "vw_sales_detail"]
           fit: partial
           reason: "The five sample cubes the episode reads ship with DataPallas, and they do not all sit on one file: Customers, HR, Inventory and Sales are wired to rbt-sample-northwind-sqlite-4f2 (the SQLite demo - 3 employees, 7 orders, 13 order lines, with Territories, Region and EmployeeTerritories all empty, so the HR territory hierarchy renders blank), and Sales Warehouse to rbt-sample-northwind-duckdb-4f2, whose vw_sales_detail is a 7,937-row synthetic star that shares no keys with the 13 order lines beside it. Reading their definitions works; running them teaches little. academy-cubes.groovy now writes the five counterparts on Northwind Company into config/cubes - Inventory on StockMovements, HR on Employees x EmployeeTerritories x Territories x Region (populated there, three reporting levels), Sales Warehouse on D5-S's fact_order_line and its six dimensions - and leaves config/samples-cubes untouched, as this entry asked. Partial because no verified run of that script against an install is recorded, and because it cannot target ClickHouse — half of what this series runs on — so the cubes a learner reads here are DuckDB-backed whatever the rest of Series 2 does."
@@ -612,7 +615,7 @@ series:
         hands_on: ["koan:rerun", "koan:count:scanned"]
         core: true
         data:
-          source: [northwind_co_dw_s, northwind_co_changes]
+          source: [northwind_co_dw_s, northwind_co_changes_s]
           tables: ["fact_order_line", "dim_date", "D2 daily new orders and updates"]
           fit: good
           reason: "Both halves exist and verify on DuckDB 2026-09-20 (academy-verify): D5-S, and D2's 6,142 events over 91 arrival days to apply on top of it — new orders, ship dates filled in, cancellations, 66 transactions arriving 1–5 days late and 9 delivered twice — so an insert-only incremental view visibly drifts from a full refresh. S is enough, since the koan counts rows scanned per refresh."
@@ -622,20 +625,21 @@ series:
         title: "Star vs One Big Table on Columnar Engines — Measured on the Same Data"
         hands_on: ["koan:count:scanned", "koan:choose"]
         data:
-          source: northwind_co_dw_m
+          # If your laptop has trouble at L size, try our M variant instead (northwind_co_dw_m): it has 10x less data but is still larger than S.
+          source: northwind_co_dw_l
           tables: ["fact_order_line", "dim_customer", "dim_product", "dim_date"]
           fit: good
-          reason: "academy-northwind-co-dw-install builds D5-M from Company M: 250,572 order lines of 99,904 orders over 60 months (2020–2024), plus fact_order_line_wide, the same lines as one big table with every dimension copied in (the build checks it holds the same lines and revenue), for a fair scanned-row comparison. Installed and verified on DuckDB 2026-09-20 (academy-verify, all 13 tables)."
+          reason: "academy-northwind-co-dw-install builds D5-L from Company L: 2,508,372 order lines of 999,114 orders over 60 months (2020–2024), plus fact_order_line_wide (built at M and L, not at S), the same lines as one big table with every dimension copied in (the build checks it holds the same lines and revenue), for a fair scanned-row comparison. Installed and verified on DuckDB 2026-09-20 (academy-verify, all 13 tables)."
         status: planned
       - n: "45"
         slug: compression-and-encoding
         title: "Compression & Encoding — Why the Same Table Is Ten Times Smaller Here"
         hands_on: ["koan:count:scanned"]
         data:
-          source: [northwind_co_m, northwind_co_dw_m]
+          source: [northwind_co_s, northwind_co_dw_s]
           tables: ["Orders", "Order Details", "fact_order_line"]
           fit: partial
-          reason: "Company M and D5-M both install and verify on DuckDB 2026-09-20: 100,000 orders and 250,834 lines in Company M, 250,572 in the star, with low-cardinality values that compress well (3 order statuses, 4 channels, 4 shippers) and 60 months of dates. Partial because the episode compares what different engines do with those values and only DuckDB has been run: the scripts take PostgreSQL and ClickHouse, but neither has been installed, so DuckDB's numbers have nothing to sit beside."
+          reason: "Company S and D5-S both install and verify on DuckDB: 10,000 orders and 25,233 lines in Company S, 25,190 in the star, with low-cardinality values that compress well (3 order statuses, 4 channels, 4 shippers) and 60 months of dates. Partial because the episode compares what different engines do with those values and only DuckDB has been run: the scripts take PostgreSQL and ClickHouse, but neither has been installed, so DuckDB's numbers have nothing to sit beside."
         status: planned
 
       # SERIES 2 PROJECT, added 2026-08-24. The series had none: the core path
@@ -649,10 +653,11 @@ series:
         core: true
         tags: ["project"]
         data:
-          source: [northwind_co_dw_m, northwind_co_files]
+          # If your laptop has trouble at L size, try our M variants instead (northwind_co_dw_m and northwind_co_files_m): they have 10x less data but are still larger than S.
+          source: [northwind_co_dw_l, northwind_co_files_l]
           tables: ["fact_order_line", "dim_date", "order_lines/*.parquet"]
-          fit: good
-          reason: "Everything the project grades exists and is built: D5-M (250,572 lines of 99,904 orders over 60 months, verified on DuckDB 2026-09-20) for partitioning, sorting and pre-aggregating the same question, and D4's M export for the file side (60 monthly Parquet files, a sorted and an unsorted single-file copy, 2 of 25 row groups read against 25 of 25), so rows scanned before and after each change is a number the learner can quote. Nothing new to plant beyond S2 · 02 and S2 · 15."
+          fit: partial
+          reason: "The project grades the skipping of S2 · 02 and S2 · 15, so it runs where there are row groups to skip: D5-L (2,508,372 lines of 999,114 orders over 60 months, verified on DuckDB 2026-09-20, 24 row groups) for partitioning, sorting and pre-aggregating the same question, and D4's L export for the file side (60 monthly Parquet files, a sorted and an unsorted single-file copy), so rows scanned before and after each change is a number the learner can quote. Partial because the export has never run at L; at M the pair reads 2 of 25 row groups against 25 of 25. Nothing new to plant beyond S2 · 02 and S2 · 15."
         status: planned
   - slug: series3-advanced-warehousing
     title: Advanced Warehousing
@@ -665,20 +670,21 @@ series:
         hands_on: ["koan:count:scanned", "koan:diagnose"]
         core: true
         data:
-          source: northwind_co_dw_m
+          # If your laptop has trouble at L size, try our M variant instead (northwind_co_dw_m): it has 10x less data but is still larger than S.
+          source: northwind_co_dw_l
           tables: ["fact_order_line", "dim_date", "dim_customer", "dim_product"]
           fit: good
-          reason: "academy-northwind-co-dw-install builds D5-M from Company M: 250,572 order lines of 99,904 orders over 60 months (2020–2024), enough volume for plans showing pruning, join order and rows read. Installed and verified on DuckDB 2026-09-20 (academy-verify, all 13 tables)."
+          reason: "academy-northwind-co-dw-install builds D5-L from Company L: 2,508,372 order lines of 999,114 orders over 60 months (2020–2024), 24 row groups, so plans show pruning as well as join order and rows read (the fact is 1 row group at S). Its star and one-big-table queries answer in 0.2 s on DuckDB (4 threads, 8 GB, 2026-09-26). Installed and verified on DuckDB 2026-09-20 (academy-verify, all 13 tables)."
         status: planned
       - n: "05"
         slug: clickhouse-matviews-and-projections
         title: "Aggregating Materialized Views & Projections — ClickHouse Computing the Total at Insert Time"
         hands_on: ["koan:count:scanned", "clickhouse"]
         data:
-          source: [northwind_co_dw_m, northwind_co_changes]
+          source: [northwind_co_dw_s, northwind_co_changes_s]
           tables: ["fact_order_line", "D2 daily inserts"]
           fit: MISSING
-          reason: "An aggregating materialized view computes at insert time, so it needs inserts after it exists: D2's days loaded into D5-M, including the 9 orders delivered twice, which a SummingMergeTree view counts twice. D5-M and D2 are both built and verified on DuckDB, so the only thing still absent is the engine: ClickHouse has never been run, and this episode is about what ClickHouse does at insert time. This stays MISSING until D5-M is installed on ClickHouse and D2 applied there."
+          reason: "An aggregating materialized view computes at insert time, so it needs inserts after it exists: D2's days loaded into D5-S, including the 9 orders delivered twice, which a SummingMergeTree view counts twice. None of it depends on volume. D5-S and D2 are both built and verified on DuckDB, so the only thing still absent is the engine: ClickHouse has never been run, and this episode is about what ClickHouse does at insert time. This stays MISSING until D5-S is installed on ClickHouse and D2 applied there."
         status: planned
       # SOURCE (kimball): Querying SLOWLY CHANGING DIMENSIONS correctly — the Type 2 as-of join his design implies.
       - n: "10"
@@ -751,7 +757,7 @@ series:
             concept: "The LAKEHOUSE as a named architecture — warehouse behaviour over open files on object storage, with no copy into a warehouse"
         hands_on: ["koan:complete", "duckdb"]
         data:
-          source: northwind_co_files
+          source: northwind_co_files_s
           tables: ["order_lines/*.parquet", "Iceberg table order_lines"]
           fit: good
           reason: "academy-files-export writes the Iceberg copy the episode needs: iceberg/order_lines, a v2 table partitioned by month(OrderDate), with snapshot 1 as of 2024-12-31 and snapshot 2 after day 1 of D2 is appended — 30 events touching one month, 25,233 lines becoming 25,255 — beside the 60 monthly Parquet files of the same rows. Run on DuckDB 2026-09-20: 2 snapshots, 61 data files, the table's location written into its metadata (ICEBERG_LOCATION repoints it at MinIO). So a snapshot read, time travel and the manifest tree all have something real to open."
@@ -795,17 +801,17 @@ series:
         title: "Querying Across Databases — Federation, and Where the Join Actually Runs"
         hands_on: ["koan:choose", "koan:diagnose"]
         data:
-          source: [crm_export, northwind_co_m]
+          source: [crm_export_s, northwind_co_s]
           tables: ["crm_customers", "Orders", "Order Details"]
           fit: partial
-          reason: "Half the rule is ready: D3's 135-row CRM export installs and verifies as its own schema (DuckDB 2026-09-20), which is the small table to federate. The large one is not. Copying wants D1-M in a second engine, and although the install script takes PostgreSQL it has never been run there, so pushdown against a full transfer cannot yet be measured in rows moved. Note the size for when it is: M is 100,000 orders, not the 500,000 an earlier plan assumed."
+          reason: "Half the rule is ready: D3's 135-row CRM export installs and verifies as its own schema (DuckDB 2026-09-20), which is the small table to federate. The large one is not. Copying wants D1-S in a second engine, PostgreSQL, and pushdown against a full transfer has not yet been measured in rows moved. S is enough for that count: 25,233 order lines moved in full against the few a pushed-down filter moves."
         status: planned
       - n: "25"
         slug: streaming-ingestion
         title: "Streaming Ingestion — Minutes Behind Instead of a Day"
         hands_on: ["koan:rerun"]
         data:
-          source: northwind_co_changes
+          source: northwind_co_changes_s
           tables: ["D2 JSONL event log", "fact_order_line"]
           fit: good
           reason: "D2 is the replayable log this needs, and it verifies: 6,142 events over 91 arrival days as JSONL, each carrying an event_time and an arrival_time to the second, with 66 transactions arriving 1–5 days late, 104 a few minutes out of order, 9 delivered twice and an offset on every record to replay from. Run and verified on DuckDB 2026-09-20 (academy-verify). The generator is deterministic, so the rerun koan replays it twice and lands the same rows."
@@ -815,10 +821,10 @@ series:
         title: "Cost & Storage — Compression, TTL and Tiering"
         hands_on: ["koan:count:scanned"]
         data:
-          source: northwind_co_dw_m
+          source: northwind_co_dw_s
           tables: ["fact_order_line", "dim_date"]
           fit: good
-          reason: "academy-northwind-co-dw-install builds D5-M from Company M: 250,572 order lines of 99,904 orders over 60 months (2020–2024), enough dated lines for hot and cold tiering, TTL expiry, partition movement and bytes per tier across several retention periods. Installed and verified on DuckDB 2026-09-20 (academy-verify, all 13 tables)."
+          reason: "academy-northwind-co-dw-install builds D5-S from Company S: 25,190 order lines of 9,988 orders over 60 months (2020–2024), enough dated lines for hot and cold tiering, TTL expiry, partition movement and bytes per tier across several retention periods. Installed and verified on DuckDB 2026-09-20 (academy-verify, all 13 tables)."
         status: planned
       - n: "35"
         slug: benchmark-duckdb-vs-clickhouse
@@ -847,7 +853,7 @@ series:
         core: true
         tags: ["project"]
         data:
-          source: [northwind_co_s, northwind_co_dw_s, northwind_co_changes]
+          source: [northwind_co_s, northwind_co_dw_s, northwind_co_changes_s]
           tables: ["Orders", "Order Details", "Invoices", "CustomerChanges", "PriceChanges", "fact_order_line", "dim_customer"]
           fit: MISSING
           reason: "The project is the whole warehouse on DuckDB and ClickHouse, reconciled to the source: D5-S built on both with SCD2 dimensions, then D2's days applied and the two engines reconciled again. Three of the four pieces are ready and verified on DuckDB 2026-09-20 — Company S, D5-S with its SCD2 dimensions, and D2 (CustomerChanges now dated in the order they chain). The fourth is not: nothing has ever been installed on ClickHouse, and without a second engine there is nothing to reconcile against. This stays MISSING until the ClickHouse install path has been run."

@@ -1,6 +1,6 @@
 package datazeus.learnsql.series1._25
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 import java.math.RoundingMode
@@ -72,7 +72,7 @@ import java.math.RoundingMode
  * Every koan is checked here in its solved form, on both engines, plus the factual claims
  * their HINTS make: seven customers with no fax, nothing over 200, Germany the biggest market.
  */
-class AggregateFunctionsSpec extends NorthwindGateSpec {
+class AggregateFunctionsSpec extends GateSpec {
 
     // --- 0. The dataset the lesson quotes ------------------------------------------------
 

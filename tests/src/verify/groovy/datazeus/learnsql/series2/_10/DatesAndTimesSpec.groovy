@@ -252,7 +252,7 @@ class DatesAndTimesSpec extends NorthwindCoGateSpec {
         e.message.contains("Cannot compare values of type INTERVAL")
     }
 
-    // DuckDB 1.1.3 refuses AVG(INTERVAL) and 1.4+ answers, so only PostgreSQL's figure is asserted:
+    // DuckDB 1.1.3 refused AVG(INTERVAL) and 1.4+ answers, so only PostgreSQL's figure is asserted:
     // the article quotes PostgreSQL's and makes no claim about DuckDB (reworded 2026-09-19).
     def "the article's aside: PostgreSQL averages an INTERVAL"() {
         when:
@@ -395,18 +395,18 @@ class DatesAndTimesSpec extends NorthwindCoGateSpec {
 
     @Unroll
     def "[#engine] the koan comments' facts are true"() {
-        expect: "the header: 9532 invoices, 223 unpaid, 2765 web orders, 12 employees, invoice dates 2020-01-04 to 2024-12-29"
-        cellsOf(sqlFor(engine).firstRow('SELECT count(*) AS n, count(*) - count("PaidDate") AS u, min("InvoiceDate") AS a, max("InvoiceDate") AS b FROM "Invoices"')) { r -> [r.n as int, r.u as int, day(r.a), day(r.b)] } == [9532, 223, "2020-01-04", "2024-12-29"]
+        expect: "the header: 9532 invoices, 281 unpaid, 2765 web orders, 29 employees, invoice dates 2020-01-04 to 2024-12-29"
+        cellsOf(sqlFor(engine).firstRow('SELECT count(*) AS n, count(*) - count("PaidDate") AS u, min("InvoiceDate") AS a, max("InvoiceDate") AS b FROM "Invoices"')) { r -> [r.n as int, r.u as int, day(r.a), day(r.b)] } == [9532, 281, "2020-01-04", "2024-12-29"]
         sqlFor(engine).firstRow('SELECT count(*) AS n FROM "WebOrders"').n == 2765
-        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Employees"').n == 12
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Employees"').n == 29
 
         and: "koan 1: EXTRACT(MONTH) would give 12 groups"
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM (SELECT EXTRACT(MONTH FROM "InvoiceDate") AS m
                                    FROM "Invoices" GROUP BY EXTRACT(MONTH FROM "InvoiceDate")) AS t''').n == 12
 
-        and: "koan 2: the EXTRACT version returned 839, and the date_trunc version agrees with the half-open answer"
-        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Invoices" WHERE EXTRACT(MONTH FROM "PaidDate") = 3').n == 839
-        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Invoices" WHERE date_trunc('month', "PaidDate") = DATE '2024-03-01' ''').n == 191
+        and: "koan 2: the EXTRACT version returned 826, and the date_trunc version agrees with the half-open answer"
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Invoices" WHERE EXTRACT(MONTH FROM "PaidDate") = 3').n == 826
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Invoices" WHERE date_trunc('month', "PaidDate") = DATE '2024-03-01' ''').n == 199
 
         and: "koan 4: the BETWEEN version returned 100, and the 4 it missed were received during 31 December"
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "WebOrders"
@@ -422,8 +422,8 @@ class DatesAndTimesSpec extends NorthwindCoGateSpec {
         sqlFor(engine).firstRow('''SELECT count(DISTINCT date_trunc('day', "ReceivedAt")) AS n FROM "WebOrders"
                                    WHERE "ReceivedAt" >= DATE '2020-01-01' AND "ReceivedAt" < DATE '2020-02-01' ''').n == 13
 
-        and: "koan 10: the oldest unpaid invoice is dated 2024-11-15"
-        day(sqlFor(engine).firstRow('SELECT min("InvoiceDate") AS d FROM "Invoices" WHERE "PaidDate" IS NULL').d) == "2024-11-15"
+        and: "koan 10: the oldest unpaid invoice is dated 2024-05-15"
+        day(sqlFor(engine).firstRow('SELECT min("InvoiceDate") AS d FROM "Invoices" WHERE "PaidDate" IS NULL').d) == "2024-05-15"
 
         where:
         engine << ENGINES

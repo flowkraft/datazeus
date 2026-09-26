@@ -236,9 +236,10 @@ WHERE "OrderDate" >= DATE '2024-05-01'
 
 The last 30 days, counted from today:
 
-{/* The same highlight as the video: the CURRENT_DATE lines, in red. */}
+{/* The same highlight as the video: the CURRENT_DATE lines in amber, not red. The query runs and
+    it is the obvious thing to write - it just asks about today, and this data stopped in 2024. */}
 
-```sql file=./scripts/last-30-days.sql {3-4}#err
+```sql file=./scripts/last-30-days.sql {3-4}#warn
 SELECT count(*) AS "Orders"
 FROM "Orders"
 WHERE "OrderDate" >= CURRENT_DATE
@@ -399,9 +400,10 @@ Four rows. Nothing happened in February, so there is no row for it, and a chart 
 
 The fix is to generate every month first, then attach the orders to the months. `generate_series` produces one timestamp per month from January to December, and a `LEFT JOIN` from the <a href="/academy/learn-sql/joins" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">JOINs lesson</a> keeps every month, including the months with no matching order. The customer's condition goes in the `ON`: in a `WHERE` it would throw away the empty months again, the trap that lesson showed.
 
-{/* The same highlight as the video: generate_series, in green; the customer's condition in grey. */}
+{/* The same highlight as the video: generate_series in green, and the customer's condition in the
+    ON in green with it - that clause is the cure for the trap described just above. */}
 
-```sql file=./scripts/customer-month-spine.sql {3-6}#good
+```sql file=./scripts/customer-month-spine.sql {3-6,9}#good
 SELECT s.month AS "Month",
        count(o."OrderID") AS "Orders"
 FROM generate_series(
@@ -462,7 +464,7 @@ LEFT JOIN "Orders" o
 
 ## The case: since when?
 
-The <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> found that in Northwind Company, what was invoiced in 2024 falls well short of what was ordered, and the <a href="/academy/learn-sql/case-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">CASE lesson</a> found where to look: the orders marked shipped with no ship date all go through one courier. The next question is **since when?** Nothing below is new SQL: it is this lesson's `date_trunc('week', …)` with the CASE lesson's conditional count.
+The <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> found that in Northwind Company, what was invoiced in 2024 falls well short of what was ordered, and the <a href="/academy/learn-sql/case-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">CASE lesson</a> found where to look: the orders marked shipped with no ship date all go through one courier. Nobody asked for the next question; it is Leo's own: **since when?** It is worth asking because the two answers mean opposite things. If those orders have always looked like that, it is simply how that courier works, and there is nothing to find. If it started on a particular day, something changed on that day — and whatever changed can be found and fixed. Nothing below is new SQL: it is this lesson's `date_trunc('week', …)` with the CASE lesson's conditional count.
 
 {/* The same highlight as the video: date_trunc and the conditional count, in grey. */}
 
@@ -501,7 +503,7 @@ Every week of 2024 has orders, so this query returns all 53 weeks, and a week wi
 
 Every week from January to the end of February shows 0. In the week of 4 March there are 8, and **every week after it has between 3 and 12**, up to the week of 26 August. From the week of 2 September it is 0 again, apart from a single order in the week of 28 October. It did not creep in slowly or build up like a busy season: **it started in one week and stopped in another**, and 26 weeks sit between the two.
 
-So, in Northwind Company: the orders marked shipped with no ship date come from the six months between early March and the end of August 2024, a few every week. A missing ship date is not proof that nothing was delivered, and SQL alone will not decide that; people who can check with the courier will. What this query cannot say yet is how much money is on those orders. That needs more than one table.
+So, in Northwind Company: the orders marked shipped with no ship date come from the six months between early March and the end of August 2024, a few every week. Something changed in the week of 4 March, and something changed back at the end of August. A missing ship date is not proof that nothing was delivered, and SQL alone will not decide that; people who can check with the courier will. What this query cannot say yet is how much money is on those orders. That needs more than one table.
 
 ## Four habits for dates
 

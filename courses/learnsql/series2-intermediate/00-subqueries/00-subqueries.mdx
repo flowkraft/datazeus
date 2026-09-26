@@ -29,7 +29,7 @@ That question contains a second question: what is the average customer? Without 
 
 Series 1 ran on Northwind: 79 orders over 18 months, 25 customers and 3 employees. That is the right size to learn `SELECT`, and too small for the questions in Series 2: weeks and months with real gaps in them, several couriers to compare, invoices, order statuses, years to compare with each other.
 
-So Series 2 runs on **Northwind Company**: a simulated company with the same table names you already know and five years of orders, from 2020 to 2024. It has 10,000 orders, 120 customers, 12 employees, 4 couriers and 80 products, plus invoices and a few more tables. Every Series 1 query runs on it unchanged; the answers are just bigger.
+So Series 2 runs on **Northwind Company**: a simulated company with the same table names you already know and five years of orders, from 2020 to 2024. It has 10,000 orders, 120 customers, 29 employees, 4 couriers and 80 products, plus invoices and a few more tables. Every Series 1 query runs on it unchanged; the answers are just bigger.
 
 **Install it once** (about a minute), from DataPallas:
 
@@ -491,7 +491,7 @@ The outer `SELECT` has no `FROM`, because all it does is return the two values. 
 
 It is tempting to ask which of the two numbers is wrong. Neither is. **The two totals answer different questions.** What customers ordered measures demand: how much they asked us for. What was invoiced is what the company actually billed. The report answered the first question; the manager's note is about the gap between the two. In 2024, orders grew, and invoicing fell.
 
-Why would invoicing fall while orders grew? That is the question the next lessons follow, one step at a time: **what is missing, where, since when, and how much?**
+Why would invoicing fall while orders grew? It arrived as the manager's question. It leaves this lesson as **Leo's**, in four parts, and the next lessons follow them one step at a time: **what is missing, where, since when, and how much?** Not every lesson in this series stops to work on it — most of them have their own work to do — but the ones that do pick up exactly where the last left off.
 
 ## Before you trust a subquery
 

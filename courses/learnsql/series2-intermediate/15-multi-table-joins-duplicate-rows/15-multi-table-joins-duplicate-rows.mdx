@@ -62,7 +62,7 @@ ORDER BY p."ProductName";
 
 The `LEFT JOIN` to `"Order Details"` kept every product. Then the plain `JOIN` to `"Orders"` kept only the rows that matched a May order, and removed every other row, including the ones the `LEFT JOIN` had kept. **An inner join after a left join drops what the left join kept.** It is the ON-versus-WHERE problem from the JOINs lesson, one table further along.
 
-Here the rows went missing because the match was narrowed to one month: over five years, every product in Northwind Company has sold. Rows with no match at all go the same way. One customer, Yarrow Supermarket, has never placed an order, and three people in `"Employees"` (the chief executive and the two sales managers) take no orders, so an inner join to `"Orders"` leaves them out of any customer or employee report.
+Here the rows went missing because the match was narrowed to one month: over five years, every product in Northwind Company has sold. Rows with no match at all go the same way. One customer, Yarrow Supermarket, has never placed an order, and 20 of the 29 people in `"Employees"` take no orders (the chief executive, the two sales managers and everyone outside sales), so an inner join to `"Orders"` leaves them out of any customer or employee report.
 
 ## LEFT all the way: it looks repaired
 
@@ -203,21 +203,21 @@ ORDER BY "Freight" DESC
 LIMIT 5;
 ```
 
-{/* The same highlight as the video: Nordic Foods' freight in terracotta. */}
+{/* The same highlight as the video: Quayside Wholefoods' freight in terracotta. */}
 
 <div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-fault-ink))]">
 
 | CompanyName         | Total sales | Freight |
 | ------------------- | ----------- | ------- |
-| Nordic Foods        | 11322.73    | 2149.26 |
-| Golden Pantry       | 18342.33    | 2050.36 |
+| Quayside Wholefoods | 3102.87     | 3409.7  |
+| Nordic Foods        | 11322.73    | 3295.76 |
+| Golden Pantry       | 18342.33    | 2414.54 |
+| Emerald Grocers     | 2744.71     | 1951.72 |
 | Alpine Provisions   | 15686.56    | 1814.54 |
-| Nordic Delicatessen | 12531.83    | 1317.29 |
-| Juniper Trading     | 11928.18    | 1226.41 |
 
 </div>
 
-Nordic Foods appears to pay the most freight: 2149.26. Check it the way Series 1 taught, with a second query. Freight is stored on the order, so sum it over `"Orders"` alone, without the order lines:
+Quayside Wholefoods appears to pay the most freight: 3409.7 — on 3102.87 of sales. **Read those two numbers again.** A customer who paid more to ship the goods than the goods were worth is possible, but it is not likely, and a report that says so is asking to be checked. Check it the way Series 1 taught, with a second query. Freight is stored on the order, so sum it over `"Orders"` alone, without the order lines:
 
 {/* The same highlight as the video: the freight line, in green. */}
 
@@ -234,27 +234,27 @@ ORDER BY "Freight" DESC
 LIMIT 5;
 ```
 
-| CompanyName       | Freight |
-| ----------------- | ------- |
-| Alpine Provisions | 610.83  |
-| Golden Pantry     | 562.08  |
-| Yarrow Pantry     | 502.33  |
-| Quayside Traders  | 497.47  |
-| Nordic Foods      | 480.29  |
+| CompanyName         | Freight |
+| ------------------- | ------- |
+| Baltic Supermarket  | 752.27  |
+| Golden Pantry       | 744.17  |
+| Nordic Foods        | 709.59  |
+| Alpine Provisions   | 610.83  |
+| Quayside Wholefoods | 571.5   |
 
-Alpine Provisions is first, with 610.83. Nordic Foods paid 480.29, not 2149.26, and is fifth.
+Quayside Wholefoods paid 571.5, not 3409.7, and is fifth. The customer who really pays the most freight is Baltic Supermarket, on 752.27 — **and Baltic Supermarket was not on the first report at all.** It came sixth there, on 1806.74. A wrong total does not only put the wrong name at the top: it can push the right one off the page.
 
 ### Why the freight grew
 
-Look at Nordic Foods' May orders and how many lines each one has:
+Look at Quayside Wholefoods' May orders and how many lines each one has:
 
-```sql file=./scripts/nordic-foods-orders-and-lines.sql
+```sql file=./scripts/quayside-orders-and-lines.sql
 SELECT o."OrderID", o."Freight",
        count(*) AS "Lines"
 FROM "Orders" o
 JOIN "Order Details" d
   ON d."OrderID" = o."OrderID"
-WHERE o."CustomerID" = 'NORDI'
+WHERE o."CustomerID" = 'QUAY3'
   AND o."OrderDate" >= DATE '2024-05-01'
   AND o."OrderDate" <  DATE '2024-06-01'
 GROUP BY o."OrderID", o."Freight"
@@ -263,12 +263,10 @@ ORDER BY o."OrderID";
 
 | OrderID | Freight | Lines |
 | ------- | ------- | ----- |
-| 8374    | 184.43  | 5     |
-| 8468    | 59.69   | 3     |
-| 8482    | 44.27   | 2     |
-| 8548    | 191.9   | 5     |
+| 8415    | 3.86    | 1     |
+| 8472    | 567.64  | 6     |
 
-`"Freight"` is stored once per order. After joining `"Order Details"`, one row is one **order line**, and each line carries a copy of its order's freight. `SUM` adds every copy: 184.43 × 5 + 59.69 × 3 + 44.27 × 2 + 191.9 × 5 = 2149.26. An order with more lines gets its freight counted more times, so four big orders overtook Alpine Provisions' thirteen small ones.
+Two orders, seven lines. `"Freight"` is stored once per order. After joining `"Order Details"`, one row is one **order line**, and each line carries a copy of its order's freight. `SUM` adds every copy: 3.86 × 1 + 567.64 × 6 = 3409.7. Almost all of it is one order counted six times. An order with more lines gets its freight counted more times, so two orders overtook Baltic Supermarket's five.
 
 Across the whole company, all five years:
 
@@ -284,7 +282,7 @@ SELECT (SELECT SUM("Freight")
 
 | Orders alone | After the join |
 | ------------ | -------------- |
-| 527429.46    | 1712919.25     |
+| 693052.88    | 2161332.75     |
 
 The joined total is more than three times the real freight bill, and nothing reported a problem. The sales column in the first report was correct all along: sales are calculated from the lines, and one row is one line.
 
@@ -292,9 +290,11 @@ The joined total is more than three times the real freight bill, and nothing rep
 
 Series 1 fixed a multiplied count with `DISTINCT`, so it is tempting to write `SUM(DISTINCT o."Freight")`:
 
-{/* The same highlight as the video: SUM(DISTINCT) in red. */}
+{/* The same highlight as the video: SUM(DISTINCT) in amber, not red. The query runs, and its
+    answer is nearer the truth than the one it replaces — which is the whole reason it is dangerous,
+    and why it is not the colour of a broken query. */}
 
-```sql file=./scripts/sum-distinct-freight.sql {1}#err
+```sql file=./scripts/sum-distinct-freight.sql {1}#warn
 SELECT SUM(DISTINCT o."Freight")
          AS "SUM(DISTINCT)"
 FROM "Orders" o
@@ -304,9 +304,9 @@ JOIN "Order Details" d
 
 | SUM(DISTINCT) |
 | ------------- |
-| 391726.53     |
+| 566293.15     |
 
-It is smaller than the joined total, but it is not the freight bill either: it is 135702.93 short of 527429.46. `SUM(DISTINCT …)` adds each distinct **value** once. It does not know about orders. When two orders have the same freight, it counts that value once and loses the other order. In Northwind Company that happens all the time:
+It is smaller than the joined total, but it is not the freight bill either: it is 126759.73 short of 693052.88. `SUM(DISTINCT …)` adds each distinct **value** once. It does not know about orders. When two orders have the same freight, it counts that value once and loses the other order. In Northwind Company that happens all the time:
 
 ```sql file=./scripts/orders-and-freight-values.sql
 SELECT count(*) AS "Orders",
@@ -317,9 +317,9 @@ FROM "Orders";
 
 | Orders | Freight values |
 | ------ | -------------- |
-| 10000  | 6689           |
+| 10000  | 6960           |
 
-Ten thousand orders share 6689 different freight values. On a smaller slice the error is smaller and harder to spot: for May 2024 alone, `SUM(DISTINCT)` returns 8837.47 against a real 8977.88, because 181 orders have 178 different values. A number that is only slightly wrong is the one nobody checks.
+Ten thousand orders share 6960 different freight values. On a smaller slice the error is smaller and harder to spot: for May 2024 alone, `SUM(DISTINCT)` returns 11678.76 against a real 11819.17, because 181 orders have 178 different values. A number that is only slightly wrong is the one nobody checks.
 
 ## Aggregate first, then join
 
@@ -351,21 +351,21 @@ ORDER BY f."Freight" DESC
 LIMIT 5;
 ```
 
-{/* The same highlight as the video: Alpine Provisions in green. */}
+{/* The same highlight as the video: Baltic Supermarket in green. */}
 
 <div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-good)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-good-ink))]">
 
-| CompanyName       | Total sales | Freight |
-| ----------------- | ----------- | ------- |
-| Alpine Provisions | 15686.56    | 610.83  |
-| Golden Pantry     | 18342.33    | 562.08  |
-| Yarrow Pantry     | 12884.6     | 502.33  |
-| Quayside Traders  | 13170.94    | 497.47  |
-| Nordic Foods      | 11322.73    | 480.29  |
+| CompanyName         | Total sales | Freight |
+| ------------------- | ----------- | ------- |
+| Baltic Supermarket  | 9445.2      | 752.27  |
+| Golden Pantry       | 18342.33    | 744.17  |
+| Nordic Foods        | 11322.73    | 709.59  |
+| Alpine Provisions   | 15686.56    | 610.83  |
+| Quayside Wholefoods | 3102.87     | 571.5   |
 
 </div>
 
-Alpine Provisions is first again, and every sales total is the same as in the joined report. Both columns are now right. The query is also hard to read, and May's range is written twice, which the next lesson deals with.
+Baltic Supermarket is first again, and every sales total is the same as in the joined report — including Quayside Wholefoods' 3102.87, which was right all along next to a freight that was six times too big. Both columns are now right. The query is also hard to read, and May's range is written twice, which the next lesson deals with.
 
 ## One row is one what?
 
@@ -395,7 +395,7 @@ Heritage Butter (product 28) sold on 779 order lines, to 78 different customers.
 
 ## Case file: how much was never invoiced?
 
-This series follows one case through Northwind Company. In 2024 its ordered sales grew while its invoiced sales fell; the orders marked shipped with no ship date turned out to be one courier's, and they started in March and stopped at the end of August. The question still open is **how much money**. Every shipped order should have an invoice in `"Invoices"`, so the report is: the orders marked shipped that have no invoice, and what they are worth.
+This series follows one case through Northwind Company. In 2024 its ordered sales grew while its invoiced sales fell; the orders marked shipped with no ship date turned out to be one courier's, and they started in March and stopped at the end of August. Leo left the dates lesson owing a number, and this is where he brings it: the question still open is **how much money**. Every shipped order should have an invoice in `"Invoices"`, so the report is: the 2024 orders marked shipped that have no invoice, and what they are worth. The year belongs in the query. The case is 2024's, and without that line the report also answers for four other years, which nobody asked about.
 
 It is this lesson's shape again. An order's value comes from its **lines**; the invoice is at most one row per **order**. So each order's value goes first, in brackets, one row per order; then the orders `LEFT JOIN` the invoices, and `IS NULL` keeps the ones with no match, as in the JOINs lesson:
 
@@ -414,6 +414,8 @@ JOIN (SELECT "OrderID",
 LEFT JOIN "Invoices" i
   ON i."OrderID" = o."OrderID"
 WHERE o."Status" = 'Shipped'
+  AND o."OrderDate" >= DATE '2024-01-01'
+  AND o."OrderDate" <  DATE '2025-01-01'
   AND i."InvoiceID" IS NULL;
 ```
 
@@ -423,13 +425,15 @@ WHERE o."Status" = 'Shipped'
 
 | Orders | Value     |
 | ------ | --------- |
-| 188    | 275698.44 |
+| 178    | 257319.65 |
 
 </div>
 
-Before the `WHERE`, one row is one order, so `count(*)` counts orders. With `"Order Details"` joined in directly instead of in brackets, the value would come out the same but `count(*)` would say 460: lines, not orders.
+Before the `WHERE`, one row is one order, so `count(*)` counts orders. With `"Order Details"` joined in directly instead of in brackets, the value would come out the same but `count(*)` would say 429: lines, not orders.
 
-In Northwind Company, **188 orders are marked shipped and have no invoice, worth 275698.44.** That is how much money the question is about. It does not say whether those orders were delivered: the data has not answered that yet, and this series comes back to it.
+In Northwind Company, **178 orders placed in 2024 are marked shipped and have no invoice, worth 257319.65.** That is how much money the question is about — and 178 is the number the dates lesson ended on. These are the same orders, priced.
+
+It is also worth saying what the number is **not**. It does not say whether those orders were delivered. Four lessons in, that limit is the sort of thing a careful analyst states about their own result before anybody thinks to ask for it — and from here on in this series, Leo is the one who states it. The data has not answered that, and no query in this lesson can.
 
 ## Four rules for joins
 

@@ -62,9 +62,9 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
             it.a.toString().startsWith("2020-01-01") && it.b.toString().startsWith("2024-12-31")
         }
 
-        and: "120 customers, 12 employees, 4 couriers, 80 products, 20 suppliers, 25,233 order lines"
+        and: "120 customers, 29 employees, 4 couriers, 80 products, 20 suppliers, 25,233 order lines"
         sql.firstRow('SELECT count(*) AS n FROM "Customers"').n == 120
-        sql.firstRow('SELECT count(*) AS n FROM "Employees"').n == 12
+        sql.firstRow('SELECT count(*) AS n FROM "Employees"').n == 29
         sql.firstRow('SELECT count(*) AS n FROM "Shippers"').n == 4
         sql.firstRow('SELECT count(*) AS n FROM "Products"').n == 80
         sql.firstRow('SELECT count(*) AS n FROM "Suppliers"').n == 20
@@ -174,9 +174,11 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
         e.message.contains("more than one row returned by a subquery used as an expression")
     }
 
-    def "DuckDB 1.1.3 refuses it too — it does not silently take the first row"() {
-        // Older DuckDB versions DID take the first row without a word. The koans pin 1.1.3 in the
-        // pom; koan 3 depends on this refusal, so it is asserted rather than assumed.
+    def "DuckDB refuses it too — it does not silently take the first row"() {
+        // Older DuckDB versions DID take the first row without a word. Koan 3 depends on this
+        // refusal, so it is asserted rather than assumed — re-checked on 1.4.5.0 (2026-09-21),
+        // which also offers SET scalar_subquery_error_on_multiple_rows=false to bring the old
+        // behaviour back. The lesson never sets it.
         when:
         sqlFor("duckdb").rows(script("dearer-than-beverages-error"))
 
@@ -395,8 +397,8 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
 
     @Unroll
     def "[#engine] the koan comments' facts are true"() {
-        expect: "koan 1: the average freight is 52.74"
-        dec(sqlFor(engine).firstRow('SELECT ROUND(AVG("Freight"), 2) AS a FROM "Orders"').a) == dec("52.74")
+        expect: "koan 1: the average freight is 69.31"
+        dec(sqlFor(engine).firstRow('SELECT ROUND(AVG("Freight"), 2) AS a FROM "Orders"').a) == dec("69.31")
 
         and: "koan 2: exactly one order carries the highest freight"
         sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Orders" WHERE "Freight" = (SELECT MAX("Freight") FROM "Orders")').n == 1
@@ -437,7 +439,7 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
         and: "koan 9: nine reps took orders, two share a surname, the average rep sold 1668559.02, and the fifth misses it by under 26,000"
         sqlFor(engine).firstRow('SELECT count(DISTINCT "EmployeeID") AS n FROM "Orders"').n == 9
         sqlFor(engine).firstRow('SELECT min("EmployeeID") AS n FROM "Orders"').n == 4
-        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Employees" WHERE "LastName" = \'Keller\'').n == 2
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Employees" WHERE "LastName" = \'Keller\' AND "Title" = \'Sales Representative\'').n == 2
         def reps = sqlFor(engine).rows('''SELECT o."EmployeeID", SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")) AS t
                                           FROM "Orders" o JOIN "Order Details" d ON d."OrderID" = o."OrderID"
                                           GROUP BY o."EmployeeID" ORDER BY t DESC''').collect { dec(it.t) }
@@ -496,8 +498,8 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
         expect:
         koanBody("a value in brackets: freight above the average")
                 .contains('WHERE "Freight" > (SELECT ___("Freight") FROM "Orders")')
-        koanBody("a value in brackets: freight above the average").contains("shouldReturn 4065, '''")
-        koanBody("a value in brackets can be the whole comparison").contains('shouldReturn([[7826, "BRAM2", 294.35]], \'\'\'')
+        koanBody("a value in brackets: freight above the average").contains("shouldReturn 3029, '''")
+        koanBody("a value in brackets can be the whole comparison").contains('shouldReturn([[567, "BRAM2", 726.54]], \'\'\'')
     }
 
     // --- helpers ---------------------------------------------------------------------------------

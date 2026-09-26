@@ -14,14 +14,17 @@
 # the REASONING. No card names a Northwind table as something to remember.
 #
 # FILE ORDER IS THE CURRICULUM, in the lesson's order: what a CTE is and its scope, using a step twice,
-# steps that read steps, checking a rewrite, the moved filter, looking inside a step, readability,
+# steps that read steps, checking a rewrite, one step one grain, looking inside a step, readability,
 # and last the production card.
-# 15 basic, 4 cloze — about the 3:1 the existing decks run.
+# 16 basic, 4 cloze — a shade above the 3:1 the existing decks run.
 #
 # WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
 #   - Series 2 · 00 owns subqueries; the cards here are about naming one.
-#   - Series 1 · 40 / Series 2 · 15 own the WHERE-on-a-LEFT-JOIN problem; the card here is the rewrite
-#     that brings it back.
+#   - Series 1 · 40 / Series 2 · 15 own the WHERE-on-a-LEFT-JOIN problem, and the fan-out that
+#     multiplies a parent-row measure over its children. Section 5 is NOT a third telling of either:
+#     it is the same fan-out arriving through a NAMED STEP, which is the thing this lesson adds —
+#     the reader merges two steps because both group by the same column, and the name makes it feel
+#     safe. Keep the cards on "what is one row of this step", not on the join.
 #   - Recursive CTEs belong to Series 3 · 10, views to Series 2 · 22, performance to Series 3.
 
 deck: "DataZeus::Learn SQL::Series 2::20 CTEs (WITH)"
@@ -74,15 +77,19 @@ cards:
   - cloze: "Check a rewrite against the original: the same number of {{c1::rows}}, and the same {{c2::totals}}."
 
   - basic:
-      front: "After a rewrite, the total units still match the original (40), but the row count went from 20 to 6. Is the rewrite correct?"
-      back: "No. A matching total does not prove the same answer: here 14 rows with no units disappeared. Check the rows AND the totals."
+      front: "After a rewrite, the row count matches the original (47) and the sales total matches to the cent — but the freight total went from 11,819 to 37,750. Is the rewrite correct?"
+      back: "No, and this is the shape that gets shipped: the two things that are quick to check both passed. A rewrite has to match on EVERY total, and the one to check hardest is a measure that belongs to the parent row (an order's freight), because a join to its children can multiply it while everything else stays right."
 
-  # ── 5. THE MOVED FILTER ──
+  # ── 5. ONE STEP, ONE GRAIN ──
   - basic:
-      front: "<code>WITH lines AS (SELECT product_id, quantity, order_date FROM …)<br>SELECT p.name, SUM(l.quantity) FROM products p LEFT JOIN lines l ON … WHERE l.order_date &gt;= DATE '2024-06-01' AND l.order_date &lt; DATE '2024-07-01' GROUP BY p.name</code><br>Why do products with no June sale disappear?"
-      back: "The WHERE tests l.order_date, which is NULL for a product the LEFT JOIN found no line for. The test is not true, so the row is removed. Put the June test inside the lines step instead, before the join."
+      front: "Two steps both end in <code>GROUP BY customer_id</code>, so you merge them into one: <code>SELECT o.customer_id, SUM(l.amount) AS sales, SUM(o.freight) AS freight FROM month_orders o JOIN order_lines l ON l.order_id = o.order_id GROUP BY o.customer_id</code>. The sales are still right to the cent and the freight is three times too big. Why?"
+      back: "month_orders holds one row per ORDER. Joining it to the order lines makes one row per LINE, so SUM(l.amount) is right — a sale IS a line — while SUM(o.freight) adds each order's freight once for every line that order has. Freight needs its own step over month_orders, before the join."
 
-  - cloze: "Keep a filter inside the {{c1::step}} it narrows; moving it to a WHERE on a {{c2::LEFT JOIN}}ed column can remove rows."
+  - cloze: "One step, one {{c1::grain}}: a measure that belongs to the order has to be added up {{c2::before}} the join to the order lines, or the join multiplies it."
+
+  - basic:
+      front: "Does giving a step a name make it safe to add up whatever is in it?"
+      back: "No. A CTE is a subquery with a name, and a name is not a guarantee — two steps can look alike and hold rows of completely different things. What the name is good for is saying the grain out loud: if you cannot finish the sentence \"one row of this step is one …\", a SUM over it is a guess."
 
   # ── 6. LOOKING INSIDE A STEP ──
   - basic:

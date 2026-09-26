@@ -31,8 +31,8 @@ import spock.lang.Stepwise
  *
  *   1. NAME IT, THEN USE THE NAME. A CTE is a subquery with a name, written before the
  *      query that uses it. Use it as often as you like — no copy-pasted brackets.
- *   2. COUNT THE ROWS BEFORE AND AFTER A REWRITE. Tidying a filter out of a step
- *      and into the final WHERE can change the answer.
+ *   2. CHECK EVERY TOTAL AFTER A REWRITE, not just the rows. A step is not safe because
+ *      it has a name: one step, one grain, or a join multiplies what you add up.
  *   3. RUN ONE STEP ON ITS OWN: SELECT * FROM that_step.
  *
  * ── THESE ARE NOT THE LESSON'S QUERIES ──────────────────────────────────────
@@ -48,7 +48,7 @@ import spock.lang.Stepwise
  *   3    one step reads another: sales per order, per sales rep
  *   4    a total of totals: each channel's share of all sales
  *   5    equivalent: rewrite the nested product query with WITH
- *   6    diagnose: the tidy-up that dropped two categories
+ *   6    diagnose: the step that multiplied the freight
  *   7    run one step on its own
  *   8    equivalent: rewrite the courier report with WITH
  *   9    write the whole query: countries above the average country
@@ -70,7 +70,7 @@ import spock.lang.Stepwise
  *   "Products" — 80 rows. "ProductID", "ProductName", "SupplierID", "CategoryID".
  *   "Categories" — 8 rows. "CategoryID", "CategoryName".
  *   "Shippers" — 4 rows. "ShipperID", "CompanyName".
- *   "Employees" — 12 rows. "EmployeeID", "FirstName", "LastName". Two sales reps share a
+ *   "Employees" — 29 rows. "EmployeeID", "FirstName", "LastName". Two sales reps share a
  *     first name and two share a surname: group by "EmployeeID", never by a name.
  *   "Customers" — 120 rows. "CustomerID", "CompanyName", "Country" (21 countries),
  *     "Segment" ('Restaurant', 'Retail' or 'Wholesale').
@@ -212,40 +212,47 @@ class CtesKoans extends NorthwindCoKoanBase {
         ''')
     }
 
-    // 6) DIAGNOSE: THE TIDY-UP THAT DROPPED TWO CATEGORIES. "Every category and its units on
-    //    18 February 2023." Somebody tidied the query: one step with every order line and its
-    //    date, and the day's test moved to the final WHERE. It returned 6 rows out of 8 — a WHERE
-    //    on a LEFT JOINed column throws away the categories with no line that day, and the unit
-    //    totals all still looked right. Put the day's test back INSIDE the step, where it narrows
-    //    the lines before the join: fill in the step's WHERE, half-open ("OrderDate" is a
-    //    TIMESTAMP), with DATE '…' literals.
-    //    (Eight rows. Two categories sold nothing that day.)
-    def "diagnose: the tidy-up that dropped two categories"() {
+    // 6) DIAGNOSE: THE STEP THAT MULTIPLIED THE FREIGHT. "Each sales rep's 2024 freight and
+    //    units, biggest freight first." rep_orders holds ONE ROW PER ORDER. Somebody noticed that
+    //    the units step and the freight step both ended in GROUP BY "EmployeeID", decided that was
+    //    one step written twice, and merged them — so the freight was summed over the JOIN to the
+    //    order lines. Every unit total stayed right (a unit IS a line) and every freight was about
+    //    three times too big, which even swapped the top two reps. Give the freight its own step
+    //    again, at its own grain: fill in freight AS (…) so that it reads rep_orders ALONE and
+    //    returns one row per "EmployeeID" with that rep's total "Freight".
+    //    (Three rows. Nine reps took orders in 2024; these are the three who paid the most to ship
+    //     them. One step, one grain.)
+    def "diagnose: the step that multiplied the freight"() {
         expect:
-        shouldReturn([["Beverages", 123], ["Condiments", null], ["Confections", 29], ["Dairy Products", 46],
-                      ["Grains/Cereals", null], ["Meat/Poultry", 6], ["Produce", 103], ["Seafood", 24]], '''
-            WITH day_lines AS (
-              SELECT p."CategoryID", d."Quantity"
-              FROM "Products" p
-              JOIN "Order Details" d ON d."ProductID" = p."ProductID"
-              JOIN "Orders" o ON o."OrderID" = d."OrderID"
-              WHERE ___
+        shouldReturn([["Yara", "Schmidt", 27217.04, 32474], ["Hugo", "Dubois", 26880.27, 35982],
+                      ["Umberto", "Jansen", 24550.02, 30853]], '''
+            WITH rep_orders AS (
+              SELECT "OrderID", "EmployeeID", "Freight"
+              FROM "Orders"
+              WHERE "OrderDate" >= DATE '2024-01-01' AND "OrderDate" < DATE '2025-01-01'
             ),
-            day_units AS (
-              SELECT "CategoryID", sum("Quantity") AS "Units"
-              FROM day_lines
-              GROUP BY "CategoryID"
+            units AS (
+              SELECT o."EmployeeID", sum(d."Quantity") AS "Units"
+              FROM rep_orders o
+              JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+              GROUP BY o."EmployeeID"
+            ),
+            freight AS (
+              ___
             )
-            SELECT c."CategoryName", u."Units"
-            FROM "Categories" c
-            LEFT JOIN day_units u ON u."CategoryID" = c."CategoryID"
-            ORDER BY c."CategoryName"
+            SELECT e."FirstName", e."LastName", ROUND(f."Freight", 2) AS "Freight", u."Units"
+            FROM "Employees" e
+            JOIN units u ON u."EmployeeID" = e."EmployeeID"
+            JOIN freight f ON f."EmployeeID" = e."EmployeeID"
+            ORDER BY f."Freight" DESC
+            LIMIT 3
         ''')
     }
 
     // 7) RUN ONE STEP ON ITS OWN. When a query with steps looks wrong, read the steps one at a
-    //    time. Keep a step like koan 6's and look straight into it: how many order lines on
-    //    18 February 2023, and how many units? Fill in what the final SELECT reads from.
+    //    time. Keep a step that narrows the lines to one day and look straight into it: how many
+    //    order lines on 18 February 2023, and how many units? Fill in what the final SELECT reads
+    //    from.
     //    (One row: lines, then units.)
     def "run one step on its own"() {
         expect:

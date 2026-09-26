@@ -1,6 +1,6 @@
 package datazeus.datamodeling.series1._20
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 import java.sql.SQLException
@@ -30,10 +30,10 @@ import java.sql.SQLException
  * reference solution, and §6 proves those checks can FAIL on a broken model.
  *
  * ── A SCHEMA OF ITS OWN ─────────────────────────────────────────────────────────────────
- * NorthwindEngines hands every spec the SAME DuckDB copy and PostgreSQL; this lesson WRITES, so
+ * GateEngines hands every spec the SAME DuckDB copy and PostgreSQL; this lesson WRITES, so
  * everything it builds lives in `dm_s1_20` (every `practice` rewritten) and is dropped in cleanupSpec.
  */
-class ManyToManySpec extends NorthwindGateSpec {
+class ManyToManySpec extends GateSpec {
 
     static final String SCHEMA = "dm_s1_20"
 

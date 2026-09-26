@@ -66,7 +66,7 @@ import spock.lang.Stepwise
  *     "InvoiceID"       INTEGER        "OrderID"         INTEGER
  *     "InvoiceDate"     DATE           — 2020-01-04 to 2024-12-29
  *     "Amount"          DECIMAL(19,2)  "Freight"         DECIMAL(19,2)
- *     "PaidDate"        DATE           — empty for the 223 invoices not paid yet
+ *     "PaidDate"        DATE           — empty for the 281 invoices not paid yet
  *   Both dates are DATEs, not timestamps: no time of day.
  *
  *   "WebOrders" — 2765 rows. The web shop's copy of every order placed on the web.
@@ -77,7 +77,7 @@ import spock.lang.Stepwise
  *   "Orders" — 10000 rows. The one column these koans use: "OrderDate" TIMESTAMP, always
  *     at midnight.
  *
- *   "Employees" — 12 rows. "EmployeeID" INTEGER, "FirstName" VARCHAR, "LastName" VARCHAR,
+ *   "Employees" — 29 rows. "EmployeeID" INTEGER, "FirstName" VARCHAR, "LastName" VARCHAR,
  *     "HireDate" DATE, and title, address and contact columns these koans do not need.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait (the path to enlightenment)
@@ -101,11 +101,11 @@ class DatesAndTimesKoans extends NorthwindCoKoanBase {
     // 2) DIAGNOSE: FIVE MARCHES IN ONE COUNT. The question was "how many invoices were paid
     //    in March 2024?", and somebody wrote
     //        WHERE EXTRACT(MONTH FROM "PaidDate") = 3
-    //    It returned 839. What else did it count? Write a WHERE that keeps the year.
+    //    It returned 826. What else did it count? Write a WHERE that keeps the year.
     //    (A half-open range works; so does date_trunc('month', "PaidDate") = DATE '2024-03-01'.)
     def "diagnose: five Marches in one count"() {
         expect:
-        shouldReturn 191, '''
+        shouldReturn 199, '''
             SELECT count(*)
             FROM "Invoices"
             WHERE ___
@@ -173,7 +173,7 @@ class DatesAndTimesKoans extends NorthwindCoKoanBase {
     //    (Invoices with no "PaidDate" give NULL, and min and max skip it.)
     def "a date minus a date: the quickest and the slowest payment"() {
         expect:
-        shouldReturn([[10, 49]], '''
+        shouldReturn([[10, 289]], '''
             SELECT min("PaidDate" - ___) AS "Quickest",
                    max("PaidDate" - ___) AS "Slowest"
             FROM "Invoices"
@@ -225,7 +225,7 @@ class DatesAndTimesKoans extends NorthwindCoKoanBase {
     //     CHECK IT: the oldest unpaid invoice has the SMALLEST invoice date.
     def "write the whole query: the invoices still unpaid, and the oldest of them"() {
         expect:
-        shouldReturn([[223, 44]], '''
+        shouldReturn([[281, 228]], '''
             ___
         ''')
     }

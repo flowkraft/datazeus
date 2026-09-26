@@ -39,8 +39,8 @@ import spock.lang.Stepwise
  *
  * ── THE KOANS ───────────────────────────────────────────────────────────
  * On the throwaway copy KoanBase opens: a supplier's price list against "Products" — re-run an INSERT with
- * DO NOTHING and predict the row count; DO UPDATE the prices that changed; the same upsert as MERGE (MERGE INTO needs
- * DuckDB 1.4+: upgrade tests/pom.xml's duckdb.version from 1.1.3 to 1.4.4.0 first).
+ * DO NOTHING and predict the row count; DO UPDATE the prices that changed; the same upsert as MERGE (MERGE INTO needs a
+ * recent DuckDB; the koan runner's is new enough -- see tests/pom.xml).
  *
  * ── PLACE IN THE SERIES ─────────────────────────────────────────────────
  * LEVEL ●● of ●●●●. BUILDS ON: Series 2 · 55 (INSERT … SELECT, transactions), 2 · 22 (CREATE TABLE AS).

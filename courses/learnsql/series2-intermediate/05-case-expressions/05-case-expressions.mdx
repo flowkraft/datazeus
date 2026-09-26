@@ -81,11 +81,11 @@ ORDER BY min("Freight");
 
 | Band   | Orders |
 | ------ | ------ |
-| light  | 2446   |
-| medium | 4156   |
-| heavy  | 3398   |
+| light  | 2334   |
+| medium | 3941   |
+| heavy  | 3725   |
 
-2446, 4156 and 3398 add up to 10000, every order in the table. The label the query made up is the thing it groups by. `ORDER BY min("Freight")` sorts the bands by the smallest freight in each, so light comes first instead of in alphabetical order.
+2334, 3941 and 3725 add up to 10000, every order in the table. The label the query made up is the thing it groups by. `ORDER BY min("Freight")` sorts the bands by the smallest freight in each, so light comes first instead of in alphabetical order.
 
 PostgreSQL and DuckDB both let `GROUP BY` use the name `"Band"` from the `SELECT`. Some databases do not, and there you repeat the whole CASE in the `GROUP BY`.
 
@@ -113,12 +113,12 @@ ORDER BY min("Freight");
 
 | Band   | Orders |
 | ------ | ------ |
-| medium | 6602   |
-| heavy  | 3398   |
+| medium | 6275   |
+| heavy  | 3725   |
 
 </div>
 
-There are no light orders at all, and medium went from 4156 to 6602, which is 2446 + 4156. The 2446 light orders are still in the table, and their freight did not change. What changed is the order of the tests: **under 25 is also under 60**. The first `WHEN` now asks "under 60?", every light order answers yes, and CASE stops there. The light test is never reached.
+There are no light orders at all, and medium went from 3941 to 6275, which is 2334 + 3941. The 2334 light orders are still in the table, and their freight did not change. What changed is the order of the tests: **under 25 is also under 60**. The first `WHEN` now asks "under 60?", every light order answers yes, and CASE stops there. The light test is never reached.
 
 There is no error and no warning. The result simply has one band fewer. So **write the narrow tests first**: a wide test above a narrow one catches its rows before the narrow one is checked.
 
@@ -144,12 +144,12 @@ ORDER BY "Label" NULLS LAST;
 
 | Label    | Orders |
 | -------- | ------ |
-| heavy    | 4383   |
-| `[NULL]` | 5617   |
+| heavy    | 4654   |
+| `[NULL]` | 5346   |
 
 </div>
 
-4383 orders are heavy, and **5617 orders are labelled NULL**, more than half of them. A CASE with no `ELSE` returns NULL for every row that no `WHEN` matched. It does not look harmful here, because the 5617 are still counted. The trouble starts when a query tests the label.
+4654 orders are heavy, and **5346 orders are labelled NULL**, more than half of them. A CASE with no `ELSE` returns NULL for every row that no `WHEN` matched. It does not look harmful here, because the 5346 are still counted. The trouble starts when a query tests the label.
 
 ### How many orders are not heavy?
 
@@ -171,7 +171,7 @@ WHERE "Label" <> 'heavy';
 | --------- |
 | 0         |
 
-Zero, although 5617 orders are not heavy. Every one of them is labelled NULL, and this is the rule from the <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a>: NULL is not unequal to 'heavy'. The comparison `NULL <> 'heavy'` is **unknown**, and `WHERE` keeps only rows where the test is true. All 5617 are dropped.
+Zero, although 5346 orders are not heavy. Every one of them is labelled NULL, and this is the rule from the <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a>: NULL is not unequal to 'heavy'. The comparison `NULL <> 'heavy'` is **unknown**, and `WHERE` keeps only rows where the test is true. All 5346 are dropped.
 
 ### Write the ELSE
 
@@ -192,9 +192,9 @@ WHERE "Label" <> 'heavy';
 
 | Not heavy |
 | --------- |
-| 5617      |
+| 5346      |
 
-One line, and the 5617 orders are back.
+One line, and the 5346 orders are back.
 
 ## The short form
 
@@ -460,7 +460,7 @@ FROM "Orders";
 
 ## Case file: one courier stands out
 
-This series follows one case through Northwind Company. The <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> ended on a question: in 2024, orders grew while invoicing fell. Why? An order is invoiced once its ship date is recorded, so one place to look is **the orders marked Shipped that have no `"ShippedDate"`**. The report is this lesson's shape: per courier, all of its 2024 orders, how many of them are marked shipped with no ship date, and the share, beside its count. The one new thing is a `WHEN` with two tests joined by `AND`:
+This series follows one case through Northwind Company. The <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> ended with Leo taking that case on as his own question: in 2024, orders grew while invoicing fell. Why? An order is invoiced once its ship date is recorded, so one place to look is **the orders marked Shipped that have no `"ShippedDate"`**. The report is this lesson's shape: per courier, all of its 2024 orders, how many of them are marked shipped with no ship date, and the share, beside its count. The one new thing is a `WHEN` with two tests joined by `AND`:
 
 {/* The same highlight as the video: the two SUM(CASE …) columns, in grey. */}
 

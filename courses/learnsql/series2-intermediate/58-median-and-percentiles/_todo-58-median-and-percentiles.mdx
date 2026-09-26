@@ -85,10 +85,20 @@ published: false
 
     ── THE SERIES CASE — NONE (story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1) ──────
     No case in this episode (the old "late defined from the data" and median reorder gaps are dropped).
-    MAIN EXAMPLE STAYS: the average vs the median order value — re-measure on Northwind Company S (first
-    measurement, DuckDB, 2026-09-19: the average order is €1,501.70 and the median €1,320.88, so the average sits
-    14% above the typical order). Its skew is planted (a long tail of large orders), so the gap between the two
-    is visible; say whether 14% is enough to make the point before building the lesson on it.
+    MAIN EXAMPLE STAYS: the average vs the median order value (DuckDB, re-checked 2026-09-21: the average
+    order is €1,501.70 and the median €1,320.88, so the average sits 14% above the typical order).
+    THE "IS 14% ENOUGH?" QUESTION THIS BRIEF USED TO LEAVE OPEN IS ANSWERED, IN curriculum.yaml AT THIS
+    EPISODE — read that block before writing a line. The answer is yes, ON ONE CONDITION: it is ordinary
+    right skew and NOT an outlier story, so do not promise an outlier on screen. Dropping the largest order
+    of all moves the average by 45 cents. The honest sentence, and the one that survives being queried live,
+    is "half the orders are below 1,320.88, yet the average is 1,501.70, because the orders above the middle
+    sit further from it than the orders below."
+    AND THE SECOND EXAMPLE, WHICH IS THE STRONGER ONE (measured 2026-09-21): CUSTOMER lifetime value.
+    Average €126,193.54 against a median of €22,978.10 — only 30 of the 119 customers who have ordered are
+    above that average, and the top five hold 25.5% of all revenue. THE READER ALREADY RAN THIS. €126,193.54
+    is exactly what 20-ctes/scripts/average-customer-with.sql returns, and the 30 are exactly the rows
+    customers-above-the-average-customer-with.sql printed for them at episode 20. Open by handing that
+    result back — they have already seen an average nobody is standing near, and this episode names it.
 
     DATA (decided 2026-09-17): this episode runs on NORTHWIND COMPANY S (schema northwind_co_s, installed by the
     academy-northwind-co-install.groovy Seed Data script) — lesson, case and koans alike. Every figure below that
@@ -99,6 +109,13 @@ published: false
     Series 2 is first an intermediate SQL course that covers its curriculum well and progresses steadily; the
     story (the Speedy Express recording outage) goes along from time to time — in 8 of 17 episodes, never whole
     episodes. Story map: .docs/plan-academy-course-stories-artefacts.md §3.2.1. THIS EPISODE: NONE.
+
+    ── THE HANDOVER LADDER ── who drives this one (stories plan §3.2.1a, 2026-09-21) ──
+    NO CASE FILE HERE, AND THE LADDER DOES NOT PAUSE FOR IT. Last episode before the project.
+    Mnemosyne is at DOUBTING. This is the final chance to establish, on neutral data, the exchange
+    the project inverts: she asks "how sure are you?", he answers without hesitating. At 60 she asks
+    it three times about real money and he has to answer without hesitating there either — if the
+    viewer has not seen that exchange before, the ending reads as luck rather than as habit.
     KEEP IT NONE: no case file here, not even a recap line. The story waits; the lesson gets the whole episode.
     WHY: a learner came for the SQL; the story is there to make it stick, and a story that crowds a lesson or
     repeats itself does the opposite. Checking in the brief is cheaper than re-cutting a published video.
@@ -108,9 +125,13 @@ published: false
     STDDEV it promised to Series 2 — one line, beside the median).
     THE SHIPPED DATA MAKES THE POINT WITHOUT AN INVENTED ORDER (Northwind Company S, DuckDB, 2026-09-19):
     the average order value is 1,501.70 and the median 1,320.88 (see THE SERIES CASE above). Freight is NOT a
-    calm contrast here: average 52.74, median 44.86, more skewed than the order value. 10,000 orders is an EVEN
-    count, so CONT and DISC differ over the whole table, but only by 2 cents (1,320.88 vs 1,320.86); the
-    difference is clearer on a small even-sized group.
+    calm contrast here: average 69.31, median 46.77, more skewed than the order value — its average sits 48%
+    above its median against order value's 14%. (RE-MEASURED 2026-09-21. This line read 52.74 / 44.86 until
+    then, which was a frozen-Northwind figure; curriculum.yaml carried the same stale pair and is corrected
+    too.) 10,000 orders is an EVEN count, so CONT and DISC differ over the whole table, but only by 2 cents
+    (1,320.88 vs 1,320.86); the difference is clearer on a small even-sized group, AND THAT GROUP IS DAIRY
+    PRODUCTS: ten products, middle pair 15.74 and 30.06, so DISC returns 15.74 while CONT returns 22.90 — and
+    no product in the catalogue costs 22.90.
 
     ── HANDS-ON (from curriculum.yaml) ─────────────────────────────────────
       koan:predict
@@ -145,9 +166,14 @@ TODO
 
 {/* BEAT 4 — the wrong answer this prevents.
     The one to write, and it is unusual for this track: the average presented as
-    "typical". One enterprise customer's £2M order lifts the average order value by a
-    third, a pricing decision is made on it, and the number was never wrong — it was the
+    "typical". A pricing decision is made on it, and the number was never wrong — it was the
     wrong statistic. The purest example in the course of a number that is RIGHT and still
-    misleads, which is the flip side of the rule used everywhere else. */}
+    misleads, which is the flip side of the rule used everywhere else.
+    USE THE REAL FIGURES, NOT AN INVENTED ORDER (measured 2026-09-21). The average customer is
+    worth €126,193.54 and the median customer €22,978.10; 89 of the 119 customers who have ordered
+    are BELOW that average, and the top five hold a quarter of all revenue. Price for "the average
+    customer" and you have priced for nobody — three quarters of the book is nowhere near them.
+    This brief carried an invented £2M order here until 2026-09-21; it is not needed, the shipped
+    data does it, and an invented figure is the one thing a reader cannot check. */}
 
 TODO

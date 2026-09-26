@@ -1,6 +1,6 @@
 package datazeus.learnsql.series1._15
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 /**
@@ -51,7 +51,7 @@ import spock.lang.Unroll
  * claims their HINTS make: what the unsolved koan 5 returns, and that koan 8's two engines
  * really do disagree until you write the NULLS clause.
  */
-class OrderByAndTopNSpec extends NorthwindGateSpec {
+class OrderByAndTopNSpec extends GateSpec {
 
     // --- 0. "A table has no order" — the claim the episode opens on ------------------------
 

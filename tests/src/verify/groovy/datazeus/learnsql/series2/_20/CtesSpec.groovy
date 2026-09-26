@@ -15,10 +15,10 @@ import spock.lang.Unroll
  *    customers-above-the-average-customer-nested, average-customer-with,
  *    customers-above-the-average-customer-with                                §1 name it, then use it
  *    dairy-report-with, dairy-report-with-check                               §2 steps that read steps
- *    dairy-report-tidied, dairy-report-tidied-check                           §3 the tidy-up
- *    sales-and-freight-with, sales-and-freight-with-check                     §4 one filter, every use sees it
- *    sales-and-freight-june                                                   §4b the hands-on
- *    month-orders-step                                                        §4c look inside one step
+ *    sales-and-freight-with, sales-and-freight-with-check                     §3 one filter, every use sees it
+ *    sales-and-freight-merged, sales-and-freight-merged-check                 §4 the merge: one step, one grain
+ *    month-orders-step                                                        §4b look inside one step
+ *    sales-and-freight-june                                                   §4c the hands-on
  *
  * §5 asserts the data facts the lesson leans on and every number the KOANS' comments state, and §6
  * runs the koans file itself, as written, on both engines — including the two EQUIVALENCE koans,
@@ -34,13 +34,16 @@ import spock.lang.Unroll
  * ── NO STORY IN THIS EPISODE (plan-academy-course-stories-artefacts.md §3.2.1, row 20) ───────
  * The drafted case parts (the delivered re-run, the report by rep and courier) are gone. Its beat
  * "one filter, every use of the step sees it" is taught on the sales-and-freight report: May's range,
- * written twice in Series 2 · 15's cure, is written once in the month_orders step (§4).
+ * written twice in Series 2 · 15's cure, is written once in the month_orders step (§3).
  *
  * ── THE TWO REVIEW NOTES IN THE VIDEO'S HEADER, MEASURED HERE ─────────────────────────────
- *  1. The tidy-up returns EXACTLY Series 2 · 15's left-then-inner rows (asserted in §3): the trap
- *     still repeats the previous lesson. The open alternative ("merge two steps and the freight
- *     multiplies again") is measured in §4 and NOT on screen: rows 47 = 47, sales 262931.17 =
- *     262931.17, freight 28515.7 against 8977.88, Nordic Foods back on top with 2149.26.
+ *  1. RESOLVED. The trap no longer repeats Series 2 · 15. The tidy-up that moved May's filter out
+ *     of its step and under a LEFT JOIN is gone from the lesson, and so is the assertion that used
+ *     to prove the repeat — that it returned 15's left-then-inner rows word for word. What is on
+ *     screen instead is the merge, and it is §4: two steps that both GROUP BY the customer written
+ *     as one, so the freight is summed over the order LINES. Rows 47 = 47, sales 262931.17 =
+ *     262931.17 to the cent, freight 37749.51 against 11819.17, and Quayside Wholefoods leading on
+ *     3409.7 where the truth is fifth place, on 571.5.
  *  2. The check the lesson shows on the freight report includes the freight, so it catches that
  *     merge; a rows-and-sales check would not (asserted in §4).
  */
@@ -113,34 +116,7 @@ class CtesSpec extends NorthwindCoGateSpec {
         engine << ENGINES
     }
 
-    // --- 3. THE TIDY-UP ----------------------------------------------------------------------------
-
-    @Unroll
-    def "[#engine] the tidy-up: 7 rows, and the units still add up to 1891 — only the row count notices"() {
-        given:
-        def tidied = sqlFor(engine).rows(script("dairy-report-tidied"))
-        def check = sqlFor(engine).firstRow(script("dairy-report-tidied-check"))
-        def asCard = { List rows -> rows.collect { [it.ProductName, it["May units"] as int] } }
-
-        expect: "seven-rows' card"
-        asCard(tidied) == [["Coastal Parmesan", 10], ["Harvest Butter", 408], ["Heritage Butter", 836], ["Heritage Gouda", 58],
-                           ["Highland Yoghurt", 52], ["Rustic Butter", 471], ["Smoked Feta", 56]]
-
-        and: "equivalent-check's second row"
-        [check.Rows as int, check.Sold as int, check.Units as int] == [7, 7, 1891]
-
-        and: "the three products it lost are exactly the three with no May sale"
-        (sqlFor(engine).rows(script("dairy-report-with")).findAll { it["May units"] == null }*.ProductName) ==
-                ["Alpine Butter", "Classic Feta", "Island Cheddar"]
-
-        and: "REVIEW NOTE 1: these are the very rows of the joins lesson's left-then-inner card"
-        asCard(tidied) == asCard(sqlFor(engine).rows(new File(S15 + "dairy-units-left-then-inner.sql").text))
-
-        where:
-        engine << ENGINES
-    }
-
-    // --- 4. ONE FILTER, EVERY USE OF THE STEP SEES IT ---------------------------------------------------
+    // --- 3. ONE FILTER, EVERY USE OF THE STEP SEES IT ---------------------------------------------------
 
     @Unroll
     def "[#engine] May written once: the steps return last lesson's sales-and-freight cure row for row, and the check matches on rows, sales AND freight"() {
@@ -158,26 +134,26 @@ class CtesSpec extends NorthwindCoGateSpec {
 
         and: "may-once-result's card, row for row the cure"
         asCard(with) == asCard(cure)
-        asCard(with) == [["Alpine Provisions", dec("15686.56"), dec("610.83")], ["Golden Pantry", dec("18342.33"), dec("562.08")],
-                         ["Yarrow Pantry", dec("12884.6"), dec("502.33")], ["Quayside Traders", dec("13170.94"), dec("497.47")],
-                         ["Nordic Foods", dec("11322.73"), dec("480.29")]]
+        asCard(with) == [["Baltic Supermarket", dec("9445.2"), dec("752.27")], ["Golden Pantry", dec("18342.33"), dec("744.17")],
+                         ["Nordic Foods", dec("11322.73"), dec("709.59")], ["Alpine Provisions", dec("15686.56"), dec("610.83")],
+                         ["Quayside Wholefoods", dec("3102.87"), dec("571.5")]]
 
-        and: "freight-check's card: 47 rows, 262931.17, 8977.88"
-        [check.Rows as int, dec(check.Sales), dec(check.Freight)] == [47, dec("262931.17"), dec("8977.88")]
+        and: "freight-check's card: 47 rows, 262931.17, 11819.17"
+        [check.Rows as int, dec(check.Sales), dec(check.Freight)] == [47, dec("262931.17"), dec("11819.17")]
 
         and: "'the same as last lesson's version, before its LIMIT'"
         def cureAll = sqlFor(engine).rows(cureSrc.replace("LIMIT 5;", ""))
         cureAll.size() == 47
         cureAll.collect { new BigDecimal(it["Total sales"].toString()) }.sum().stripTrailingZeros() == dec("262931.17")
-        cureAll.collect { new BigDecimal(it.Freight.toString()) }.sum().stripTrailingZeros() == dec("8977.88")
+        cureAll.collect { new BigDecimal(it.Freight.toString()) }.sum().stripTrailingZeros() == dec("11819.17")
 
-        and: "8977.88 is May's whole freight bill, over Orders alone: 181 orders, 47 customers"
+        and: "11819.17 is May's whole freight bill, over Orders alone: 181 orders, 47 customers"
         def may = sqlFor(engine).firstRow('''SELECT SUM("Freight") AS f, count(*) AS n, count(DISTINCT "CustomerID") AS c FROM "Orders"
                                              WHERE "OrderDate" >= DATE '2024-05-01' AND "OrderDate" < DATE '2024-06-01' ''')
-        [dec(may.f), may.n as int, may.c as int] == [dec("8977.88"), 181, 47]
+        [dec(may.f), may.n as int, may.c as int] == [dec("11819.17"), 181, 47]
 
         and: "LIMIT 5 cuts cleanly: the sixth row is below the fifth"
-        dec(sqlFor(engine).rows(script("sales-and-freight-with").replace("LIMIT 5;", "LIMIT 6;"))[5].Freight) < dec("480.29")
+        dec(sqlFor(engine).rows(script("sales-and-freight-with").replace("LIMIT 5;", "LIMIT 6;"))[5].Freight) < dec("571.5")
 
         where:
         engine << ENGINES
@@ -202,38 +178,85 @@ class CtesSpec extends NorthwindCoGateSpec {
         engine << ENGINES
     }
 
-    @Unroll
-    def "[#engine] REVIEW NOTE 2 and the open alternative: merge sales and freight into one step and only the freight in the check notices"() {
-        // Not on screen. The owner's open curriculum question for 20; the check the lesson shows must catch it.
-        given:
-        def merged = '''WITH month_orders AS (
-                          SELECT "OrderID", "CustomerID", "Freight" FROM "Orders"
-                          WHERE "OrderDate" >= DATE '2024-05-01' AND "OrderDate" < DATE '2024-06-01'),
-                        customer_totals AS (
-                          SELECT o."CustomerID",
-                                 ROUND(SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")), 2) AS "Total sales",
-                                 SUM(o."Freight") AS "Freight"
-                          FROM month_orders o JOIN "Order Details" d ON d."OrderID" = o."OrderID"
-                          GROUP BY o."CustomerID"),
-                        report AS (
-                          SELECT c."CompanyName", t."Total sales", t."Freight"
-                          FROM "Customers" c JOIN customer_totals t ON t."CustomerID" = c."CustomerID")'''
-        def m = sqlFor(engine).firstRow(merged + ' SELECT count(*) AS "Rows", sum("Total sales") AS "Sales", sum("Freight") AS "Freight" FROM report')
-        def top = sqlFor(engine).rows(merged + ' SELECT "CompanyName", "Freight" FROM report ORDER BY "Freight" DESC LIMIT 1')[0]
+    // --- 4. THE MERGE: ONE STEP, ONE GRAIN --------------------------------------------------------------
 
-        expect: "rows and sales match the right answer; freight does not"
-        [m.Rows as int, dec(m.Sales)] == [47, dec("262931.17")]
-        dec(m.Freight) == dec("28515.7")
-        [top.CompanyName, dec(top.Freight)] == ["Nordic Foods", dec("2149.26")]
+    @Unroll
+    def "[#engine] the merge: the same 47 rows and the same sales to the cent — and the freight 3.2x too big"() {
+        given:
+        def merged = sqlFor(engine).rows(script("sales-and-freight-merged"))
+        def check = sqlFor(engine).firstRow(script("sales-and-freight-merged-check"))
+        def twoStep = sqlFor(engine).firstRow(script("sales-and-freight-with-check"))
+        def asCard = { List rows -> rows.collect { [it.CompanyName, dec(it["Total sales"]), dec(it.Freight)] } }
+        def byCustomer = { String name ->
+            sqlFor(engine).rows(script(name).replace("LIMIT 5;", ""))
+                          .collectEntries { [(it.CompanyName): [dec(it["Total sales"]), dec(it.Freight)]] }
+        }
+
+        expect: "the-merge is what the slide says it is: both steps grouped by the customer, so the step is read ONCE"
+        script("sales-and-freight-merged").count("FROM month_orders") == 1
+        script("sales-and-freight-with").count("FROM month_orders") == 2
+        script("sales-and-freight-merged").contains('SUM(o."Freight") AS "Freight"')
+
+        and: "merge-top-five's card: Quayside Wholefoods leads it on 3409.7, and in truth it is fifth, on 571.5"
+        asCard(merged) == [["Quayside Wholefoods", dec("3102.87"), dec("3409.7")], ["Nordic Foods", dec("11322.73"), dec("3295.76")],
+                           ["Golden Pantry", dec("18342.33"), dec("2414.54")], ["Emerald Grocers", dec("2744.71"), dec("1951.72")],
+                           ["Alpine Provisions", dec("15686.56"), dec("1814.54")]]
+        merged*.CompanyName != sqlFor(engine).rows(script("sales-and-freight-with"))*.CompanyName
+
+        and: "equivalent-check's two rows: the rows agree, the sales agree TO THE CENT, only the freight moves"
+        [check.Rows as int, dec(check.Sales), dec(check.Freight)] == [47, dec("262931.17"), dec("37749.51")]
+        [twoStep.Rows as int, dec(twoStep.Sales), dec(twoStep.Freight)] == [47, dec("262931.17"), dec("11819.17")]
+
+        and: "REVIEW NOTE 2: a check on rows and sales alone passes this rewrite — the freight is the only thing that notices"
+        [check.Rows as int, dec(check.Sales)] == [twoStep.Rows as int, dec(twoStep.Sales)]
+        dec(check.Freight) > dec(twoStep.Freight) * 3
+
+        and: "the sales survive for all 47 customers; the freight does not, for the 42 whose May orders carry more than one line"
+        def right = byCustomer("sales-and-freight-with")
+        def wrong = byCustomer("sales-and-freight-merged")
+        right.size() == 47
+        wrong.keySet() == right.keySet()
+        wrong.every { name, v -> v[0] == right[name][0] }
+        wrong.count { name, v -> v[1] != right[name][1] } == 42
+
+        and: "3409.7 is 3.86 taken once and 567.64 taken six times — the seven lines of Quayside's two May orders"
+        def quay = sqlFor(engine).rows('''SELECT o."OrderID" AS id, o."Freight" AS f, count(*) AS n
+                                          FROM "Orders" o JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+                                          WHERE o."CustomerID" = 'QUAY3'
+                                            AND o."OrderDate" >= DATE '2024-05-01' AND o."OrderDate" < DATE '2024-06-01'
+                                          GROUP BY o."OrderID", o."Freight" ORDER BY o."OrderID"''')
+        quay.collect { [it.id as int, dec(it.f), it.n as int] } == [[8415, dec("3.86"), 1], [8472, dec("567.64"), 6]]
+        quay.collect { new BigDecimal(it.f.toString()) * (it.n as int) }.sum().stripTrailingZeros() == dec("3409.7")
+        quay.collect { new BigDecimal(it.f.toString()) }.sum().stripTrailingZeros() == dec("571.5")
 
         where:
         engine << ENGINES
     }
 
-    // --- 4b. THE HANDS-ON: CHANGE THE MONTH IN ONE PLACE -------------------------------------------------
+    // --- 4b. LOOK INSIDE ONE STEP ------------------------------------------------------------------------
 
     @Unroll
-    def "[#engine] the hands-on: June 2024 in the one step — Juniper Trading first, on 772.19"() {
+    def "[#engine] one step alone: month_orders for Quayside Wholefoods holds two orders, 571.5 of freight"() {
+        given:
+        def rows = sqlFor(engine).rows(script("month-orders-step"))
+
+        expect: "month-orders-result's card"
+        rows.collect { [it.OrderID as int, it.CustomerID, dec(it.Freight)] } ==
+                [[8415, "QUAY3", dec("3.86")], [8472, "QUAY3", dec("567.64")]]
+        rows.collect { new BigDecimal(it.Freight.toString()) }.sum().stripTrailingZeros() == dec("571.5")
+        sqlFor(engine).firstRow('''SELECT "CompanyName" AS n FROM "Customers" WHERE "CustomerID" = 'QUAY3' ''').n == "Quayside Wholefoods"
+
+        and: "the step is the one in the report, word for word"
+        script("sales-and-freight-with").startsWith(script("month-orders-step").readLines().take(6).join("\n"))
+
+        where:
+        engine << ENGINES
+    }
+
+    // --- 4c. THE HANDS-ON: CHANGE THE MONTH IN ONE PLACE -------------------------------------------------
+
+    @Unroll
+    def "[#engine] the hands-on: June 2024 in the one step — Juniper Trading first, on 1126.69"() {
         given:
         def june = script("sales-and-freight-june")
         def rows = sqlFor(engine).rows(june)
@@ -244,30 +267,10 @@ class CtesSpec extends NorthwindCoGateSpec {
 
         and: "the article's card"
         rows.collect { [it.CompanyName, dec(it["Total sales"]), dec(it.Freight)] } == [
-                ["Juniper Trading", dec("21727.16"), dec("772.19")], ["Zenith Food Hall", dec("18151.04"), dec("715.64")],
-                ["Fjord Foods", dec("17594.89"), dec("625.96")], ["Golden Pantry", dec("15954.95"), dec("536.37")],
-                ["Alpine Provisions", dec("15670.92"), dec("528.21")]]
-        dec(sqlFor(engine).rows(june.replace("LIMIT 5;", "LIMIT 6;"))[5].Freight) < dec("528.21")
-
-        where:
-        engine << ENGINES
-    }
-
-    // --- 4c. LOOK INSIDE ONE STEP ------------------------------------------------------------------------
-
-    @Unroll
-    def "[#engine] one step alone: month_orders for Nordic Foods holds four orders, 480.29 of freight"() {
-        given:
-        def rows = sqlFor(engine).rows(script("month-orders-step"))
-
-        expect: "month-orders-result's card"
-        rows.collect { [it.OrderID as int, it.CustomerID, dec(it.Freight)] } ==
-                [[8374, "NORDI", dec("184.43")], [8468, "NORDI", dec("59.69")], [8482, "NORDI", dec("44.27")], [8548, "NORDI", dec("191.9")]]
-        rows.collect { new BigDecimal(it.Freight.toString()) }.sum().stripTrailingZeros() == dec("480.29")
-        sqlFor(engine).firstRow('''SELECT "CompanyName" AS n FROM "Customers" WHERE "CustomerID" = 'NORDI' ''').n == "Nordic Foods"
-
-        and: "the step is the one in the report, word for word"
-        script("sales-and-freight-with").startsWith(script("month-orders-step").readLines().take(6).join("\n"))
+                ["Juniper Trading", dec("21727.16"), dec("1126.69")], ["Golden Pantry", dec("15954.95"), dec("1022.63")],
+                ["Willow Grocers", dec("10714.83"), dec("815.24")], ["Valley Food Hall", dec("8165.02"), dec("806.82")],
+                ["Alpine Kitchen", dec("10707.38"), dec("742.86")]]
+        dec(sqlFor(engine).rows(june.replace("LIMIT 5;", "LIMIT 6;"))[5].Freight) < dec("742.86")
 
         where:
         engine << ENGINES
@@ -278,7 +281,7 @@ class CtesSpec extends NorthwindCoGateSpec {
     @Unroll
     def "[#engine] the dataset is Northwind Company S"() {
         expect:
-        ['Orders': 10000, 'Order Details': 25233, 'Products': 80, 'Customers': 120, 'Employees': 12, 'Categories': 8, 'Shippers': 4].every { t, n ->
+        ['Orders': 10000, 'Order Details': 25233, 'Products': 80, 'Customers': 120, 'Employees': 29, 'Categories': 8, 'Shippers': 4].every { t, n ->
             (sqlFor(engine).firstRow("SELECT count(*) AS n FROM \"${t}\"".toString()).n as int) == n
         }
 
@@ -314,14 +317,25 @@ class CtesSpec extends NorthwindCoGateSpec {
             (frac - 0.5).abs() > 0.02
         }
 
-        and: "koan 6: the tidied version (the day's test in the final WHERE) returns 6 rows of 8"
-        sqlFor(engine).rows('''WITH lines AS (SELECT p."CategoryID", d."Quantity", o."OrderDate"
-                                             FROM "Products" p JOIN "Order Details" d ON d."ProductID" = p."ProductID"
-                                             JOIN "Orders" o ON o."OrderID" = d."OrderID")
-                               SELECT c."CategoryName", sum(l."Quantity") AS u FROM "Categories" c
-                               LEFT JOIN lines l ON l."CategoryID" = c."CategoryID"
-                               WHERE l."OrderDate" >= DATE '2023-02-18' AND l."OrderDate" < DATE '2023-02-19'
-                               GROUP BY c."CategoryName"''').size() == 6
+        and: "koan 6: nine reps took 2398 orders over 6015 lines in 2024 — so a merge multiplies the freight about 3x"
+        def y2024 = sqlFor(engine).firstRow('''SELECT count(DISTINCT o."OrderID") AS no, count(*) AS nl,
+                                                      count(DISTINCT o."EmployeeID") AS nr
+                                               FROM "Orders" o JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+                                               WHERE o."OrderDate" >= DATE '2024-01-01' AND o."OrderDate" < DATE '2025-01-01' ''')
+        [y2024.no as int, y2024.nl as int, y2024.nr as int] == [2398, 6015, 9]
+
+        and: "koan 6: merging the two steps keeps every unit total right AND swaps the top two reps — the koan's whole point"
+        sqlFor(engine).rows('''WITH rep_orders AS (
+                                 SELECT "OrderID", "EmployeeID", "Freight" FROM "Orders"
+                                 WHERE "OrderDate" >= DATE '2024-01-01' AND "OrderDate" < DATE '2025-01-01'),
+                               merged AS (
+                                 SELECT o."EmployeeID", sum(o."Freight") AS "Freight", sum(d."Quantity") AS "Units"
+                                 FROM rep_orders o JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+                                 GROUP BY o."EmployeeID")
+                               SELECT e."LastName" AS n, ROUND(m."Freight", 2) AS f, m."Units" AS u
+                               FROM "Employees" e JOIN merged m ON m."EmployeeID" = e."EmployeeID"
+                               ORDER BY m."Freight" DESC LIMIT 3''').collect { [it.n, dec(it.f), it.u as int] } ==
+                [["Dubois", dec("83026.11"), 35982], ["Schmidt", dec("82968.45"), 32474], ["Jansen", dec("78014.05"), 30853]]
 
         and: "koan 9: 21 countries, the average country is 715096.72"
         def countries = sqlFor(engine).firstRow('''SELECT count(*) AS n, ROUND(AVG(t."Total"), 2) AS a FROM (
@@ -443,7 +457,9 @@ class CtesSpec extends NorthwindCoGateSpec {
               JOIN "Orders" o ON o."OrderID" = d."OrderID"
               WHERE o."OrderDate" >= DATE '2024-01-01' AND o."OrderDate" < DATE '2025-01-01'
               GROUP BY d."ProductID"'''],
-            "diagnose: the tidy-up that dropped two categories"                   : ["o.\"OrderDate\" >= DATE '2023-02-18' AND o.\"OrderDate\" < DATE '2023-02-19'"],
+            "diagnose: the step that multiplied the freight"                      : ['''SELECT "EmployeeID", sum("Freight") AS "Freight"
+              FROM rep_orders
+              GROUP BY "EmployeeID"'''],
             "run one step on its own"                                             : ["day_lines"],
             "equivalent: rewrite the courier report with WITH"                    : ['''SELECT o."ShipVia", count(*) AS "Lines"
               FROM "Orders" o

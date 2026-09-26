@@ -1,6 +1,6 @@
 package datazeus.learnsql.series1._45
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 /**
@@ -62,7 +62,7 @@ import spock.lang.Unroll
  * of the assertions above touches the data they stand on. Every koan is checked in its solved
  * form, on both engines, plus every factual claim its comment makes to the student.
  */
-class NullAndThreeValuedLogicSpec extends NorthwindGateSpec {
+class NullAndThreeValuedLogicSpec extends GateSpec {
 
     // --- 0. The dataset, and the NULL inventory the whole lesson rests on -------------------
 

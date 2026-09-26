@@ -1,6 +1,6 @@
 package datazeus.learnsql.series1._05
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 /**
@@ -21,7 +21,7 @@ import spock.lang.Unroll
  * Convention: the spec runs the SAME *.sql files the lesson/video show, so the SQL is
  * authored in exactly one place (the lesson's scripts/) and verified here — no drift.
  */
-class SelectFetchYourDataSpec extends NorthwindGateSpec {
+class SelectFetchYourDataSpec extends GateSpec {
 
     // --- 1. SELECT * on a small table: you can see all of it -----------------------------
 
@@ -116,7 +116,7 @@ class SelectFetchYourDataSpec extends NorthwindGateSpec {
         // 2026-08-27). This assertion used to pin the DuckDB order and passed anyway, because
         // the containerised PostgreSQL is SEEDED FROM the DuckDB file and inherits its
         // insertion order. Running with PGHOST against the real database is what exposed it —
-        // which is exactly what NorthwindEngines says PGHOST is for.
+        // which is exactly what GateEngines says PGHOST is for.
         rows*.FirstName.toSet() == ["Nancy", "Andrew", "Janet"].toSet()
         rows*.LastName.toSet() == ["Davolio", "Fuller", "Leverling"].toSet()
 

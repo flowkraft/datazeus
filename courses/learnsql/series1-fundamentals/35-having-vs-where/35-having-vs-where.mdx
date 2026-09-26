@@ -104,7 +104,7 @@ At step 2 there is no count to compare against. There is not even a group. The d
 
 Most real reports use both, and each does a job the other cannot.
 
-```sql file=./scripts/expensive-orders-busy-countries.sql
+```sql file=./scripts/expensive-orders-busy-countries.sql {3-5}
 SELECT "ShipCountry", count(*) AS "OrderCount"
 FROM "Orders"
 WHERE "Freight" > 50
@@ -202,7 +202,7 @@ Now go back to what you said before you typed anything: *"if the dearest one is 
 
 "Always cheap" is a claim about **every delivery that country has ever had**, so a single delivery over 50 makes it false.
 
-```sql file=./scripts/cheap-to-ship-proof.sql
+```sql file=./scripts/cheap-to-ship-proof.sql {3-4}
 SELECT "ShipCountry", "OrderID", "Freight"
 FROM "Orders"
 WHERE "ShipCountry" = 'Germany'
@@ -326,7 +326,7 @@ This is genuinely useful — "our significant markets" almost always means a rev
 
 No. It needs a **group** — and one always exists.
 
-```sql file=./scripts/total-freight-alert.sql
+```sql file=./scripts/total-freight-alert.sql {3}
 SELECT count(*) AS "Orders", sum("Freight") AS "TotalFreight"
 FROM "Orders"
 HAVING sum("Freight") > 3500;

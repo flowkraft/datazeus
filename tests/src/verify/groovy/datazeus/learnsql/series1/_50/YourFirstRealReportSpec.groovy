@@ -1,6 +1,6 @@
 package datazeus.learnsql.series1._50
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 /**
@@ -86,7 +86,7 @@ import spock.lang.Unroll
  * different rendering — the same class of thing episode 07 already warns about. Asserted by
  * value on both.
  */
-class YourFirstRealReportSpec extends NorthwindGateSpec {
+class YourFirstRealReportSpec extends GateSpec {
 
     // --- 0. The dataset the whole lesson quotes -------------------------------------------
 

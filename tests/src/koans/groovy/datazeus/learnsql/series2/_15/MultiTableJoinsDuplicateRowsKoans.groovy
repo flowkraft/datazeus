@@ -73,8 +73,8 @@ import spock.lang.Stepwise
  *   "Products" — 80 rows. "ProductID" INTEGER, "ProductName" VARCHAR, "CategoryID" INTEGER.
  *   "Categories" — 8 rows. "CategoryID" INTEGER, "CategoryName" VARCHAR.
  *   "Customers" — 120 rows. "CustomerID" VARCHAR, "Country" VARCHAR (21 countries).
- *   "Employees" — 12 rows. "EmployeeID" INTEGER, "FirstName" VARCHAR, "LastName" VARCHAR.
- *     The first three (the chief executive and two sales managers) take no orders.
+ *   "Employees" — 29 rows. "EmployeeID" INTEGER, "FirstName" VARCHAR, "LastName" VARCHAR.
+ *     Only the nine sales reps (4 to 12) take orders; 1 to 3 and 13 to 29 take none.
  */
 @Stepwise // walk the koans in order — once one fails, the rest wait (the path to enlightenment)
 class MultiTableJoinsDuplicateRowsKoans extends NorthwindCoKoanBase {
@@ -140,15 +140,16 @@ class MultiTableJoinsDuplicateRowsKoans extends NorthwindCoKoanBase {
     }
 
     // 4) PREDICT: WHAT ONE MORE JOIN DOES TO FREIGHT. Over "Orders" alone, the five countries
-    //    whose customers paid the most freight are Spain 66716.89, Germany 65131.99, USA
-    //    61982.13, Finland 58056.81 and Brazil 49784.87. Add the order lines to this query —
-    //    fill in the join — and predict before you run it: do the numbers only grow, or does
-    //    the order of the five change too?
-    //    (An order has between 1 and 6 lines, and "Freight" is stored once per order.)
+    //    whose customers paid the most freight are Germany 88364.10, Spain 86520.02, USA
+    //    82617.86, Finland 76494.89 and Brazil 65671.38 — Germany ahead of Spain by 1844.08.
+    //    Add the order lines to this query — fill in the join — and predict before you run it:
+    //    every number grows, but by the same multiple? Is Germany still ahead by about 1844?
+    //    (An order has between 1 and 6 lines, and "Freight" is stored once per order. These five
+    //     keep their order — but further down the list, Poland and Italy swap places.)
     def "predict: what one more join does to freight per country"() {
         expect:
-        shouldReturn([["Germany", 214339.19], ["Spain", 212931.72], ["USA", 200187.00],
-                      ["Finland", 189394.18], ["Brazil", 161104.48]], '''
+        shouldReturn([["Germany", 285422.62], ["Spain", 263284.89], ["USA", 251471.90],
+                      ["Finland", 239125.79], ["Brazil", 206773.11]], '''
             SELECT c."Country", SUM(o."Freight") AS "Freight"
             FROM "Customers" c
             JOIN "Orders" o ON o."CustomerID" = c."CustomerID"
@@ -196,11 +197,13 @@ class MultiTableJoinsDuplicateRowsKoans extends NorthwindCoKoanBase {
     //    freight is summed over customers and "Orders" alone, the lines are counted over the join,
     //    each in its own brackets, and only then are the two joined on the country. Fill in the
     //    condition that joins the lines inside the second brackets.
-    //    (Koan 4's freight was wrong. Predict who is first now, and look at the lines column.)
+    //    (Koan 4's freight was wrong. Look at the lines column: Spain carries MORE lines than
+    //     Germany — 3157 against 3039 — and still grew less, 3.04 times against 3.23. The fan-out
+    //     follows WHICH orders carry the lines, not how many a country has.)
     def "aggregate first: freight and lines per country"() {
         expect:
-        shouldReturn([["Spain", 66716.89, 3157], ["Germany", 65131.99, 3039], ["USA", 61982.13, 3003],
-                      ["Finland", 58056.81, 2790], ["Brazil", 49784.87, 2424]], '''
+        shouldReturn([["Germany", 88364.10, 3039], ["Spain", 86520.02, 3157], ["USA", 82617.86, 3003],
+                      ["Finland", 76494.89, 2790], ["Brazil", 65671.38, 2424]], '''
             SELECT f."Country", f."Freight", l."Lines"
             FROM (SELECT c."Country", SUM(o."Freight") AS "Freight"
                   FROM "Customers" c
@@ -240,15 +243,15 @@ class MultiTableJoinsDuplicateRowsKoans extends NorthwindCoKoanBase {
     //      · sales are UnitPrice × Quantity × (1 − Discount), summed where one row is one
     //        ORDER LINE and ROUNDed to 2 decimals once, on the SUM   -> "Orders" JOIN "Order Details"
     //    AGGREGATE EACH IN ITS OWN BRACKETS, THEN JOIN THE TWO ON THE YEAR. If 2024's freight
-    //    comes back as 414844.39, you summed it after joining the lines.
+    //    comes back as 522639.25, you summed it after joining the lines.
     //    (Five rows.)
     def "write the whole query: orders, freight and sales per year"() {
         expect:
-        shouldReturn([[2020, 1638, 86898.68, 2474139.21],
-                      [2021, 1802, 96556.70, 2728699.14],
-                      [2022, 1982, 100954.79, 2903360.34],
-                      [2023, 2180, 114985.30, 3282259.91],
-                      [2024, 2398, 128033.99, 3628572.55]], '''
+        shouldReturn([[2020, 1638, 118631.17, 2474139.21],
+                      [2021, 1802, 124538.05, 2728699.14],
+                      [2022, 1982, 131007.41, 2903360.34],
+                      [2023, 2180, 151193.04, 3282259.91],
+                      [2024, 2398, 167683.21, 3628572.55]], '''
             ___
         ''')
     }
@@ -256,19 +259,25 @@ class MultiTableJoinsDuplicateRowsKoans extends NorthwindCoKoanBase {
     // 10) The whole query again.
     //     THE QUESTION: for each employee, how many orders did they take in 2024, and how many
     //     units were on those orders?
-    //       · one row per "Employees" row — ALL TWELVE — ordered by "EmployeeID"
+    //       · one row per "Employees" row — ALL 29 — ordered by "EmployeeID"
     //       · four columns: "EmployeeID", "FirstName", the 2024 orders, the 2024 units
     //       · an employee with no 2024 orders shows two empty cells
     //       · 2024, half-open: on or after DATE '2024-01-01', before DATE '2025-01-01'
     //     TWO GRAINS AGAIN: orders are counted where one row is one order; units are summed over
     //     order lines. Count the orders after joining the lines and Hugo Dubois (12) has 990.
-    //     (Twelve rows, three of them empty: the managers take no orders.)
+    //     (29 rows, 20 of them empty: only the nine sales reps take orders.)
     def "write the whole query: every employee's orders and units in 2024"() {
         expect:
         shouldReturn([[1, "Maya", null, null], [2, "Anna", null, null], [3, "Hugo", null, null],
                       [4, "Ravi", 362, 34218], [5, "Sven", 60, 5849], [6, "Lukas", 191, 17571],
                       [7, "Umberto", 344, 30853], [8, "Lukas", 241, 22109], [9, "Ines", 266, 24593],
-                      [10, "Jonas", 189, 16660], [11, "Yara", 366, 32474], [12, "Hugo", 379, 35982]], '''
+                      [10, "Jonas", 189, 16660], [11, "Yara", 366, 32474], [12, "Hugo", 379, 35982],
+                      [13, "Anna", null, null], [14, "Maya", null, null], [15, "Vera", null, null],
+                      [16, "Rosa", null, null], [17, "Olga", null, null], [18, "Hugo", null, null],
+                      [19, "Vera", null, null], [20, "Nils", null, null], [21, "Carla", null, null],
+                      [22, "Elena", null, null], [23, "Sofia", null, null], [24, "Omar", null, null],
+                      [25, "Ravi", null, null], [26, "Paula", null, null], [27, "Olga", null, null],
+                      [28, "Klara", null, null], [29, "Anna", null, null]], '''
             ___
         ''')
     }

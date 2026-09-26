@@ -8,7 +8,7 @@ import spock.lang.Stepwise
  * ║  SQL KOANS — Learn SQL · Series 2 · 22
  * ╚══════════════════════════════════════════════════════════════════════╝
  *
- * VIEWs — Naming a Query So You Can Reuse It
+ * VIEWs, CREATE TABLE AS & Temp Tables — Save the Query, or Save Its Answer
  *
  * TODO — NOT A KOAN YET. Lives under src/koans/_todo/, which maven does not compile and zeus
  * does not see, so it cannot mislead anyone into thinking the exercise exists. MOVE IT into
@@ -33,8 +33,10 @@ import spock.lang.Stepwise
  *     count is not.
  *
  * ── WHY THIS EPISODE, SPECIFICALLY ──────────────────────────────────────
- * GOAL: name a query once and reuse it.
- * SQL: CREATE VIEW, querying a view, when a view is a good idea and when it hides a problem.
+ * GOAL: save a query under a name, or save its answer — and know which one you have.
+ * SQL: CREATE VIEW and querying a view (stores the question, re-run on today's rows); CREATE TABLE AS
+ * (stores the answer, a snapshot that does not move); CREATE TEMP TABLE AS (the same snapshot, gone with
+ * the session). When a view is a good idea and when it hides a problem; the snapshot read as live.
  * Materialized views are Data Warehousing — say so rather than half-teaching them.
  *
  * ── KOANS AND THE SERIES CASE (.docs/plan-academy-course-stories-artefacts.md §1, §3.2) ─────────────

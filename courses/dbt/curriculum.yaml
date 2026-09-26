@@ -376,7 +376,7 @@ series:
         hands_on: ["koan:diagnose"]
         core: true
         data:
-          source: [northwind_co_raw_s, northwind_co_changes]
+          source: [northwind_co_raw_s, northwind_co_changes_s]
           tables: ["Orders._loaded_at", "Orders", "WebOrders", "CourierConfirmations"]
           fit: good
           reason: "D6 lands every raw row with a _loaded_at on today's calendar, which is what makes freshness answerable at all: in the S build of 2026-09-20, landed through day 90, the last Orders row landed 2026-09-19 while the last WebOrders row landed 2026-08-30, because D2 stops the WebOrders feed after day 70 while Orders keep arriving. So one source is twenty days stale beside others that are current, and dbt source freshness has something true to fail on. Verified with academy-verify (all 22 tables)."
@@ -522,7 +522,7 @@ series:
         core: true
         tags: ["project"]
         data:
-          source: [northwind_co_raw_s, northwind_co_changes]
+          source: [northwind_co_raw_s, northwind_co_changes_s]
           tables: ["Orders", "Order Details", "Customers", "Orders._loaded_at"]
           fit: good
           reason: "The graded bad load is D2's day 45, and it is built: a second Orders row for OrderID 10330, a negative Quantity on order 10334, order 10338 for CustomerID ALPIX, which does not exist, and a status typed 'shipped ' by hand the same day. The legitimate noise the tests must not flag is there too — 66 transactions arriving 1 to 5 days late and 9 sent twice, which staging dedupes. It reaches the project through D6's raw copy, so staging and tests see it as a real load. Built and verified on DuckDB 2026-09-20."
@@ -557,10 +557,11 @@ series:
         hands_on: ["koan:equivalent", "koan:count:scanned", "duckdb", "clickhouse"]
         core: true
         data:
-          source: northwind_co_raw_m
+          # If your laptop has trouble at L size, try our M variant instead (northwind_co_raw_m): it has 10x less data but is still larger than S.
+          source: northwind_co_raw_l
           tables: ["Orders", "Order Details", "Orders._loaded_at"]
           fit: MISSING
-          reason: "koan:equivalent (the same project, the same numbers on DuckDB and ClickHouse) could prove itself at S, but count:scanned is the reason anyone moves, and that needs volume: Company M is 100,000 orders and 250,834 order lines — not the 500,000 orders and 1.25M lines an earlier plan assumed — and it installs and verifies on DuckDB today, as does its star. What is absent is the engine, not the rows: the install, changes and raw scripts all take ClickHouse, and none of them has ever been run on it. This stays MISSING until D1-M and D6-M are landed in ClickHouse and verified there. Data Warehousing S2 and S3 wait on the same first run."
+          reason: "koan:equivalent (the same project, the same numbers on DuckDB and ClickHouse) could prove itself at S, but count:scanned is the reason anyone moves, and ClickHouse reads in granules of 8,192 rows: S's 25,233 order lines are about 3 granules, so nothing is left to skip. Company L is 1,000,000 orders and 2,510,619 order lines, about 300 granules, and it installs and verifies on DuckDB today, as do its star and its raw landing. What is absent is the engine, not the rows: the install, changes and raw scripts all take ClickHouse, and none of them has ever been run on it. This stays MISSING until D1-L and D6-L are landed in ClickHouse and verified there. Data Warehousing S2 and S3 wait on the same first run."
         status: planned
       # ADDED 2026-08-24. The first thing that breaks after the move, and it breaks quietly.
       # `view` on ClickHouse is not the cheap pointer it is on DuckDB or Postgres, and a
@@ -577,10 +578,10 @@ series:
         title: "Materializations on ClickHouse — MergeTree Tables and the View That Is Not Free"
         hands_on: ["koan:choose", "koan:count:scanned", "clickhouse"]
         data:
-          source: northwind_co_raw_m
+          source: northwind_co_raw_s
           tables: ["Order Details", "Orders"]
           fit: MISSING
-          reason: "A staging view over raw Order Details, re-read on every query, is the expensive habit, and count:scanned only persuades at volume: M's 250,834 order lines, read again for each downstream query. A materialized view acting as an INSERT trigger needs rows inserted after it exists, which one D2 day at M supplies — D2 generates at M from the same script, 6,142 events at S. The blocker is the engine: ClickHouse has never been run. This stays MISSING until D1-M and D6-M are in ClickHouse with D2 applied there."
+          reason: "A staging view over raw Order Details, re-read on every query, is the expensive habit, and count:scanned shows it as a count at any size: S's 25,233 order lines, read again for each downstream query, against a table read once. A materialized view acting as an INSERT trigger needs rows inserted after it exists, which one D2 day supplies (6,142 events at S). The blocker is the engine: ClickHouse has never been run. This stays MISSING until D1-S and D6-S are in ClickHouse with D2 applied there."
         status: planned
       # ADDED 2026-08-24, absorbing the old 3 · 05 "Incremental Strategies — merge,
       # insert_overwrite, append", which listed three strategies in the abstract. On a real
@@ -600,10 +601,10 @@ series:
         hands_on: ["koan:rerun", "koan:choose", "clickhouse"]
         core: true
         data:
-          source: [northwind_co_raw_m, northwind_co_changes]
+          source: [northwind_co_raw_s, northwind_co_changes_s]
           tables: ["Orders.OrderDate", "Orders.CreatedAt", "Orders.UpdatedAt", "Order Details"]
           fit: MISSING
-          reason: "insert_overwrite by month partition needs late rows landing in a month already built, and updates to orders inside it: D2 supplies both — 66 transactions arriving 1 to 5 days late, 9 doubled, ship dates filled in later — and it plants the month boundary too, with order 10231 dated 2025-01-31 but keyed on 2025-02-01 and order 10452 dated 2025-02-28 and keyed 2025-03-03, so partitioning on the keyed date instead of OrderDate gives a visibly wrong answer. All of it is built and verified at S; M is a scale parameter. The blocker is ClickHouse, which has never been run. This stays MISSING until D6-M is landed there and D2 applied between two runs."
+          reason: "insert_overwrite by month partition needs late rows landing in a month already built, and updates to orders inside it: D2 supplies both — 66 transactions arriving 1 to 5 days late, 9 doubled, ship dates filled in later — and it plants the month boundary too, with order 10231 dated 2025-01-31 but keyed on 2025-02-01 and order 10452 dated 2025-02-28 and keyed 2025-03-03, so partitioning on the keyed date instead of OrderDate gives a visibly wrong answer. All of it is built and verified at S, and none of it depends on volume. The blocker is ClickHouse, which has never been run. This stays MISSING until D6-S is landed there and D2 applied between two runs."
         status: planned
       # ADDED 2026-08-24. Series 2 · 20 taught snapshots as the way to keep history, and on
       # this engine that tool is largely gone — snapshots need the same UPDATE the episode
@@ -621,10 +622,11 @@ series:
         title: "History Without Snapshots — ReplacingMergeTree, FINAL and What Deduplication Costs"
         hands_on: ["koan:predict", "koan:count:scanned", "clickhouse"]
         data:
-          source: [northwind_co_raw_m, northwind_co_changes]
+          # If your laptop has trouble at L size, try our M variant instead (northwind_co_raw_m): it has 10x less data but is still larger than S.
+          source: [northwind_co_raw_l, northwind_co_changes_l]
           tables: ["Orders.OrderID", "Orders.UpdatedAt", "Orders.Status", "CustomerChanges"]
           fit: MISSING
-          reason: "ReplacingMergeTree needs several versions of one key inserted over time, so the table shows duplicates until a merge happens: D2's order updates (Open to Shipped, a ship date filled, a cancellation) arrive as new rows with a later UpdatedAt, and its customer changes as new versions — 1,406 updates in the S log, all built and verified. koan:predict turns on 'it depends when you ask', which needs enough parts that a merge has not yet run, and that needs both M and the engine. ClickHouse has never been run. This stays MISSING until D1-M and D6-M are landed there."
+          reason: "ReplacingMergeTree needs several versions of one key inserted over time, so the table shows duplicates until a merge happens: D2's order updates (Open to Shipped, a ship date filled, a cancellation) arrive as new rows with a later UpdatedAt, and its customer changes as new versions — 1,406 updates in the S log, all built and verified. koan:predict turns on 'it depends when you ask', which needs enough parts that a merge has not yet run: at S the parts are few and small enough to merge almost at once, so this runs at L. Unverified, since it needs both the volume and the engine, and ClickHouse has never been run. This stays MISSING until D1-L and D6-L are landed there."
         status: planned
       # ADDED 2026-08-24, and it is the episode that keeps the reader employed. Series 2 · 00
       # taught `unique` and `not_null` and taught them as free. On a billion-row table `unique`
@@ -643,10 +645,10 @@ series:
         title: "Testing a Big Table — Why unique Stops Being Free, and What to Assert Instead"
         hands_on: ["koan:choose", "koan:count:scanned", "clickhouse"]
         data:
-          source: northwind_co_raw_m
+          source: northwind_co_raw_s
           tables: ["Order Details", "Orders.OrderID", "Orders.OrderDate", "Order Details._batch_id"]
           fit: MISSING
-          reason: "unique over all of history against unique over yesterday's partition is a count:scanned comparison that only matters at volume: M's 250,834 order lines and 100,000 orders (not the 1.25M and 500,000 an earlier plan assumed). The 'yesterday' window needs daily load partitions, which D6 already gives as _batch_id and _source_file per arrival day, filled day by day from D2 — proven at S, landed through day 90 and verified. The duplicates the comparison turns on are planted and checked: at S the landed Orders carries ten repeated OrderIDs, and exactly one of them (D2's duplicate-in-last-batch) has both copies inside d2-day-090, so the windowed test catches that one and misses the other nine — which is the blind spot the episode has to show. The blocker is the engine: ClickHouse has never been run."
+          reason: "unique over all of history against unique over yesterday's partition is a count:scanned comparison, and the count shows it at S: all 25,233 order lines and 10,000 orders against one arrival day's partition. The 'yesterday' window needs daily load partitions, which D6 already gives as _batch_id and _source_file per arrival day, filled day by day from D2 — proven at S, landed through day 90 and verified. The duplicates the comparison turns on are planted and checked: at S the landed Orders carries ten repeated OrderIDs, and exactly one of them (D2's duplicate-in-last-batch) has both copies inside d2-day-090, so the windowed test catches that one and misses the other nine — which is the blind spot the episode has to show. The blocker is the engine: ClickHouse has never been run."
         status: planned
       - n: "25"
         slug: packages
@@ -767,8 +769,8 @@ series:
         core: true
         tags: ["project"]
         data:
-          source: [northwind_co_raw_m, northwind_co_changes]
+          source: [northwind_co_raw_s, northwind_co_changes_s]
           tables: ["Orders", "Order Details", "Customers", "Products", "Invoices", "SalesTargets", "Orders._loaded_at"]
           fit: MISSING
-          reason: "The production project on ClickHouse: raw M to staging to marts to the revenue metric, with a partition-replace incremental and a ReplacingMergeTree history model refreshed from the change feed. Every piece exists on DuckDB and verifies — Company M and its star, D2's 6,142-event log with its planted outage, late-keyed orders and doubled deliveries, and D6's landed raw copy with _batch_id and _loaded_at per arrival day — and M is a scale parameter on each script. What does not exist is the engine: nothing has ever been installed on ClickHouse. This stays MISSING until D1-M and D6-M are landed there and the metric reconciles against invoices as it does at S."
+          reason: "The production project on ClickHouse: raw S to staging to marts to the revenue metric, with a partition-replace incremental and a ReplacingMergeTree history model refreshed from the change feed. Every piece exists on DuckDB and verifies — Company S and its star, D2's 6,142-event log with its planted outage, late-keyed orders and doubled deliveries, and D6's landed raw copy with _batch_id and _loaded_at per arrival day. What does not exist is the engine: nothing has ever been installed on ClickHouse. This stays MISSING until D1-S and D6-S are landed there and the metric reconciles against invoices as it does on DuckDB."
         status: planned

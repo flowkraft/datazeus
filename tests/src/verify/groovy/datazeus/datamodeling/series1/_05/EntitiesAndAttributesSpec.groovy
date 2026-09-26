@@ -1,6 +1,6 @@
 package datazeus.datamodeling.series1._05
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 /**
@@ -24,7 +24,7 @@ import spock.lang.Unroll
  *
  * READ-ONLY: nothing is created, so the shared engines need no schema of their own here.
  */
-class EntitiesAndAttributesSpec extends NorthwindGateSpec {
+class EntitiesAndAttributesSpec extends GateSpec {
 
     // --- 1. Thing or fact: category and country --------------------------------------------
 

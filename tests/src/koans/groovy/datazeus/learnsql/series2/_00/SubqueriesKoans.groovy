@@ -75,9 +75,10 @@ import spock.lang.Stepwise
  *   "Customers" — 120 rows. "CustomerID" VARCHAR (five characters, e.g. 'ZENIT'),
  *     "CompanyName" VARCHAR, and address, contact and "Segment" columns.
  *
- *   "Employees" — 12 rows. "EmployeeID" INTEGER, "FirstName" VARCHAR, "LastName" VARCHAR,
- *     "Title" VARCHAR, "ReportsTo" INTEGER. Employees 1 to 3 are the chief executive and
- *     the two sales managers, and take no orders; 4 to 12 are the sales reps.
+ *   "Employees" — 29 rows. "EmployeeID" INTEGER, "FirstName" VARCHAR, "LastName" VARCHAR,
+ *     "Title" VARCHAR, "ReportsTo" INTEGER. Employees 4 to 12 are the sales reps, the only
+ *     ones who take orders; 1 to 3 are the chief executive and the two sales managers, and
+ *     13 to 27 work in operations and finance; 28 and 29 are interim managers.
  *     TWO REPS SHARE A SURNAME (Ravi and Sven Keller) and two share a first name (Lukas):
  *     group by "EmployeeID", never by a name.
  *
@@ -107,10 +108,10 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
     //    order with it, exactly as if you had typed the number in. Fill in the function
     //    that averages a column.
     //    (Predict first: more or fewer than half of the 10,000? Checkable fact: the average
-    //     freight is 52.74 — select the part in brackets and run it alone to see it.)
+    //     freight is 69.31 — select the part in brackets and run it alone to see it.)
     def "a value in brackets: freight above the average"() {
         expect:
-        shouldReturn 4065, '''
+        shouldReturn 3029, '''
             SELECT count(*)
             FROM "Orders"
             WHERE "Freight" > (SELECT ___("Freight") FROM "Orders")
@@ -124,7 +125,7 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
     //     compare "=" with it — see koan 3.)
     def "a value in brackets can be the whole comparison"() {
         expect:
-        shouldReturn([[7826, "BRAM2", 294.35]], '''
+        shouldReturn([[567, "BRAM2", 726.54]], '''
             SELECT "OrderID", "CustomerID", "Freight"
             FROM "Orders"
             WHERE "Freight" = (___)
@@ -140,8 +141,8 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
     //    (Two orders, heaviest first. Neither of them is hers.)
     def "one value only: turn a column of values into one"() {
         expect:
-        shouldReturn([[7826, 294.35],
-                      [4688, 240.68]], '''
+        shouldReturn([[567, 726.54],
+                      [6899, 700.95]], '''
             SELECT "OrderID", "Freight"
             FROM "Orders"
             WHERE "Freight" > (SELECT ___

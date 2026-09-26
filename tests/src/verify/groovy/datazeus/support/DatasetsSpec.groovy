@@ -112,29 +112,28 @@ class DatasetsSpec extends Specification {
         "datamodeling/series3 · 30": [sources: ["generated"], why:
             "The random star in the classic file is judged here: its fact_sales has no order number, " +
             "which is what degenerate dimensions are about. The series itself runs on Northwind Company."],
-        "datawarehousing/series2 · 25": [sources: ["northwind"], why:
+        "datawarehousing/series2 · 25": [sources: ["northwind_tiny"], why:
             "TEMPORARY. The five sample cubes this episode reads ship with DataPallas on the classic file. " +
             "The plan is academy copies of those cubes on Northwind Company; when they exist, switch the " +
             "episode to them and delete this entry."],
     ]
 
     /** The curriculum's `data.source` values that mean "the classic file". */
-    static final Set<String> CLASSIC_SOURCES = ["northwind", "generated"] as Set
+    static final Set<String> CLASSIC_SOURCES = ["northwind_tiny", "generated"] as Set
 
     /**
-     * In test code, the base class picks the file. KoanBase and NorthwindGateSpec open the classic
+     * In test code, the base class picks the file. KoanBase and GateSpec open the classic
      * one, and SchemaKoanBase works on a copy of it; NorthwindCoKoanBase and NorthwindCoGateSpec
      * open Northwind Company.
      */
-    static final List<String> CLASSIC_BASES = ["KoanBase", "NorthwindGateSpec", "SchemaKoanBase"]
+    static final List<String> CLASSIC_BASES = ["KoanBase", "GateSpec", "SchemaKoanBase"]
     static final List<String> COMPANY_BASES = ["NorthwindCoKoanBase", "NorthwindCoGateSpec"]
 
     /**
-     * Code that opens the classic file without extending a classic base: its helpers, and its
-     * path. (Word boundaries matter: NorthwindCoEngines is not NorthwindEngines.)
+     * Code that opens the classic file without extending a classic base: its path. (GateEngines
+     * opens whatever file it is given, so the path is what names the classic one.)
      */
-    static final List CLASSIC_NAMES = [~/\bNorthwindEngines\b/, ~/\bNorthwindSeed\b/,
-                                       ~/datasets\/northwind\//, ~/\bnorthwind\.duckdb\b/]
+    static final List CLASSIC_NAMES = [~/datasets\/northwind\//, ~/\bnorthwind\.duckdb\b/]
 
     // ── Engines (the second decision in the header above) ──────────────────────────────────────
 
@@ -205,15 +204,15 @@ class DatasetsSpec extends Specification {
 
     /**
      * How lesson code reaches an engine: a JDBC URL, a Testcontainers class, `sqlFor("…")`, or a
-     * gate base whose ENGINES include it (NorthwindGateSpec and NorthwindCoGateSpec run on
+     * gate base whose ENGINES include it (GateSpec and NorthwindCoGateSpec run on
      * PostgreSQL).
      */
     static final Map<String, List> ENGINE_IN_CODE = [
-        postgres  : [~/jdbc:postgresql/, ~/PostgreSQLContainer/, ~/\bNorthwind(?:Co)?Engines\.pg\(\)/,
+        postgres  : [~/jdbc:postgresql/, ~/PostgreSQLContainer/, ~/\bGateEngines\b.*\.pg\b/,
                      ~/sqlFor\(\s*["']postgres["']\s*\)/],
         clickhouse: [~/jdbc:(?:clickhouse|ch):/, ~/ClickHouseContainer/, ~/sqlFor\(\s*["']clickhouse["']\s*\)/],
     ]
-    static final List<String> POSTGRES_BASES = ["NorthwindGateSpec", "NorthwindCoGateSpec"]
+    static final List<String> POSTGRES_BASES = ["GateSpec", "NorthwindCoGateSpec"]
 
     // ════════════════════════════════════════════════════════════════════════════════════════
     //  2. THE CHECKS — one per place the decision can silently break
@@ -234,24 +233,23 @@ class DatasetsSpec extends Specification {
 
         doc.series.each { s ->
             def key = seriesKey(track, s)
-            // A classic series lists `northwind` on every episode, or on none (Learn SQL Series 1,
-            // which has no data blocks; check 2 guards it through its code). Half is a leak.
+            // A classic series lists `northwind_tiny` on every episode. Half is a leak.
             boolean listsData = s.episodes.any { sourcesOf(it) }
             s.episodes.each { ep ->
                 def sources = sourcesOf(ep)
                 if (!sources && CLASSIC_SERIES.containsKey(key) && listsData) problems <<
-                    "${where(track, s, ep)} has no data block, but the rest of this series lists `northwind`. " +
+                    "${where(track, s, ep)} has no data block, but the rest of this series lists `northwind_tiny`. " +
                     "Every episode of it says which dataset it runs on, so a change cannot slip through unlisted.\n" +
                     "  WHY: ${CLASSIC_SERIES[key]}\n" +
-                    "  USE: data: { source: northwind, … } as in the other episodes of the series."
+                    "  USE: data: { source: northwind_tiny, … } as in the other episodes of the series."
                 if (!sources) return
                 def epKey = "${key} · ${ep.n}".toString()
                 def classicHere = sources.findAll { it in CLASSIC_SOURCES }
 
                 if (CLASSIC_SERIES.containsKey(key)) {
-                    if (sources != ["northwind"]) problems <<
+                    if (sources != ["northwind_tiny"]) problems <<
                         "${where(track, s, ep)} lists ${sources}, but this whole series runs on classic " +
-                        "Northwind (`northwind`) and nothing else.\n" +
+                        "Northwind (`northwind_tiny`) and nothing else.\n" +
                         "  WHY: ${CLASSIC_SERIES[key]}\n" +
                         "  TO CHANGE IT ON PURPOSE: edit CLASSIC_SERIES in DatasetsSpec, with the new reason."
                 } else if (CLASSIC_EPISODES.containsKey(epKey)) {
@@ -328,11 +326,11 @@ class DatasetsSpec extends Specification {
                         if (opens == "company" || text.contains("northwind_co")) problems <<
                             "${rel} opens Northwind Company (${chain ?: 'northwind_co'}), but ${key} runs on " +
                             "classic Northwind.\n  WHY: ${CLASSIC_SERIES[key]}\n" +
-                            "  USE: KoanBase (or SchemaKoanBase) for koans, NorthwindGateSpec for lesson specs."
+                            "  USE: KoanBase (or SchemaKoanBase) for koans, GateSpec for lesson specs."
                         else if (own && opens != "classic") problems <<
                             "${rel} (${chain}) does not open classic Northwind, and ${key} runs on it.\n" +
                             "  WHY: ${CLASSIC_SERIES[key]}\n" +
-                            "  USE: KoanBase (or SchemaKoanBase) for koans, NorthwindGateSpec for lesson specs."
+                            "  USE: KoanBase (or SchemaKoanBase) for koans, GateSpec for lesson specs."
                     } else if (!excusedFolders.any { rel.contains("/${it}/") }) {
                         def named = CLASSIC_NAMES.find { text =~ it }
                         if (opens == "classic" || named) problems <<

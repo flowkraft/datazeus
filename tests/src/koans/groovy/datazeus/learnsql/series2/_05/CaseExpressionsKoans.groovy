@@ -170,12 +170,14 @@ class CaseExpressionsKoans extends NorthwindCoKoanBase {
     //    shows the region where the address has one, and the country where it does not:
     //    COALESCE("ShipRegion", "ShipCountry"). Write it the long way — fill in the last line
     //    of the CASE.
-    //    (Eleven orders, in "OrderID" order. Three of them go to Portland, in the region OR.)
+    //    (Eleven orders, in "OrderID" order. Three of them go to Portland, in the region OR.
+    //     One city comes back SHOUTED: nobody tidied it when it was typed in. Print it as it is
+    //     stored — cleaning text is its own lesson, later in the series.)
     def "COALESCE is a CASE: write it the long way"() {
         expect:
         shouldReturn([[9990, "Madrid", "Spain"], [9991, "Portland", "OR"], [9992, "Portland", "OR"],
                       [9993, "Oslo", "Norway"], [9994, "Brussels", "Belgium"], [9995, "Guadalajara", "Mexico"],
-                      [9996, "Oslo", "Norway"], [9997, "Tampere", "Finland"], [9998, "Brussels", "Belgium"],
+                      [9996, "Oslo", "Norway"], [9997, "TAMPERE", "Finland"], [9998, "Brussels", "Belgium"],
                       [9999, "Portland", "OR"], [10000, "Paris", "France"]], '''
             SELECT "OrderID", "ShipCity",
                    CASE

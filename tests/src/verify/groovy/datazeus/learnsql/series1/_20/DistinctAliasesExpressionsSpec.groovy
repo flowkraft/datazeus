@@ -1,6 +1,6 @@
 package datazeus.learnsql.series1._20
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 import java.sql.SQLException
@@ -52,7 +52,7 @@ import java.sql.SQLException
  * form, on both engines, along with every factual claim their HINTS make. A wrong number in a
  * hint tells a student their correct query is wrong, which is worse than no hint at all.
  */
-class DistinctAliasesExpressionsSpec extends NorthwindGateSpec {
+class DistinctAliasesExpressionsSpec extends GateSpec {
 
     // --- 0. The dataset the whole lesson counts on ----------------------------------------
 

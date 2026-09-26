@@ -180,12 +180,31 @@ series:
         hands_on: ["koan:author", "cloudbeaver"]
         core: true
         data:
-          source: northwind_co_files
+          source: northwind_co_files_s
           tables: ["orders_YYYY-MM-DD.csv", "Orders", "Order Details"]
           fit: good
           reason: "academy-files-export writes orders/: 30 daily CSVs for 2024-12-02 to 2024-12-31, cut from D1-S Orders — one file per day, header row, comma-delimited, UTF-8, LF, an empty field for NULL, 247 orders in all at S and 2,522 at M. Days 1–10 are layout v1 and clean, which is exactly a first load, and every row reconciles back to Orders by OrderID. Exported and read back on DuckDB 2026-09-20; manifest.json lists each file with its size and SHA-256. The classic-Northwind messy/orders-export.csv stays out of it: wrong company, wrong shape."
         status: planned
-      # ALSO NAME THE SPREADSHEET, because a surprising share of real pipelines start with one
+      # ADDED 2026-09-26. THE OTHER END OF THE FILE. Every file this track loads arrives from somebody else's
+      # system, and until now no episode anywhere (Learn SQL, Data Warehousing, dbt, this track) had the learner
+      # WRITE one. So 05 loads a file whose every choice (header, delimiter, quoting, how NULL is written, the
+      # number and date formats) someone else made, and 2 · 07 teaches what happens when that someone changes a
+      # choice — without the learner ever having made one. Here they make them: export a day of Orders, load
+      # their own file back, and reconcile it to the table it came from.
+      # WHY HERE: right after 05, so the file they just loaded is fresh, and before 10, which then treats a
+      # file as one kind of sink among several. The academy's own files (academy-files-export) stay a setup
+      # step, never an exercise: running a generator that plants drift on purpose teaches nothing about exports.
+      - n: "07"
+        slug: your-first-export
+        title: "Your First Export — Write a Table Out as a File Someone Else Can Load"
+        hands_on: ["koan:author", "koan:reconcile"]
+        core: true
+        data:
+          source: northwind_co_s
+          tables: ["Orders", "Orders.ShippedDate", "Orders.DeliveryNotes", "Orders.ShipPostalCode", "Orders.Freight", "WebOrders.Payload"]
+          fit: good
+          reason: "One day of Orders carries every export decision: 2024-12-23 is 12 orders and 591.26 of freight, 2 of them unshipped (ShippedDate NULL), one DeliveryNotes with a comma in it ('If late, tell Tessa Young before noon.'), one ShipPostalCode with a leading zero (04669) and Freight as DECIMAL(19,4). Across S, 255 DeliveryNotes carry a comma and 1,041 postal codes start with 0, and every WebOrders.Payload is JSON full of quotes and commas, the hardest field a CSV has to carry. Checked on DuckDB 2026-09-26: COPY … TO (HEADER) writes NULL as an empty field, quotes the comma note, doubles the quotes inside a payload, and read_csv reads the day back as 12 rows and 591.26 — but as BIGINT and DOUBLE, not INTEGER and DECIMAL(19,4). S has no empty strings, so NULL against '' is shown on a row the learner writes, and on the CRM export in 1 · 20."
+        status: planned
       # and this episode is the catalogue of what a source can be.
       #   Python for Data, Series 2 - 02 and Java & Groovy for Data, Series 2 - 05 both teach
       #   READING .xlsx properly — do not re-teach it. What is new here is that a spreadsheet
@@ -200,7 +219,7 @@ series:
         hands_on: ["koan:complete"]
         core: true
         data:
-          source: [northwind_co_s, northwind_co_files]
+          source: [northwind_co_s, northwind_co_files_s]
           tables: ["Orders", "WebOrders.Payload", "order-summary.xlsx"]
           fit: partial
           reason: "The database source (Orders on PostgreSQL) and a JSON source (WebOrders.Payload) exist today. Missing: a spreadsheet and an API. Add to D4 the planned Excel workbook with its header on row 4 (plus a second month where a column has moved, for the validate-the-header rule), and serve WebOrders as paginated JSON pages with a next-page cursor, so an API extract is real; both are cut from D1-S so every source reconciles to the same orders."
@@ -224,7 +243,7 @@ series:
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         data:
-          source: [northwind_co_s, crm_export]
+          source: [northwind_co_s, crm_export_s]
           tables: ["WebOrders.Payload", "Order Details.Quantity", "Order Details.UnitPrice", "crm_customers.active"]
           fit: partial
           reason: "Across-source type clashes exist today: WebOrders.Payload sends qty as text and unit_price as '12,50' where Order Details holds SMALLINT and DECIMAL(19,4). Missing is the episode's own title case, a boolean spelled Y/yes/1/true: build D3 (crm_export) with its planned 'active' flag in those spellings, plus dates in two formats (dd/mm/yyyy and ISO) and a credit limit as text with thousands separators, keyed CRM-000001 and matching D1-S Customers, so the same file serves 2 · 15 dedup, Data Warehousing S3 federation and dbt sources."
@@ -297,7 +316,7 @@ series:
         core: true
         tags: ["project"]
         data:
-          source: [northwind_co_s, northwind_co_files, crm_export]
+          source: [northwind_co_s, northwind_co_files_s, crm_export_s]
           tables: ["Orders", "Order Details", "Customers", "WebOrders", "orders_YYYY-MM-DD.csv", "crm_customers"]
           fit: partial
           reason: "The database half runs today: stage Orders, Order Details, Customers and WebOrders, transform, count, re-run, prove nothing moved. The series' artefact is designed as a nightly load from files, the CRM export and the database whose output IS the raw copy; missing are D4's daily CSVs, D3's CRM export and D6 (northwind_co_raw_s) as the checksummed reference the learner's output must match."
@@ -366,7 +385,7 @@ series:
         hands_on: ["koan:diagnose", "koan:predict"]
         core: true
         data:
-          source: northwind_co_files
+          source: northwind_co_files_s
           tables: ["orders_YYYY-MM-DD.csv"]
           fit: good
           reason: "The four drifts arrive on one feed, as designed: orders/ changes layout on day 11 (ADDED Channel as the last column), day 18 (RENAMED ShipVia to ShipperID), day 24 (RETYPED Freight with a decimal comma) and day 27 (REORDERED, Channel moving to just after CustomerID) — manifest.json's daily_orders.layouts names each version, its first day and its columns. Daily volumes swing too (3 to 14 orders a day at S, 65 to 98 at M), and DeliveryNotes carries a comma, so a quoted field turns up on days with no layout change at all. Exported on DuckDB 2026-09-20."
@@ -432,7 +451,7 @@ series:
         hands_on: ["koan:predict", "koan:diagnose"]
         core: true
         data:
-          source: [crm_export, northwind_co_s]
+          source: [crm_export_s, northwind_co_s]
           tables: ["crm_customers", "Customers", "Customers.CompanyName", "Customers.Phone"]
           fit: good
           reason: "D3 installs and verifies as its own schema (academy-verify, DuckDB 2026-09-20): 135 rows — 120 customers, 8 of them with no ERP account, 12 of them exported a second time under another spelling, and 3 prospects who are not customers at all. Its _plants table names all 49 planted rows: 12 duplicates, 12 address and phone format variants, 12 email variants and 2 near-identical company names. So matching on name alone fails in both directions, which is the lesson, and Company S stays the conformed side."
@@ -789,7 +808,7 @@ series:
         title: "Change Data Capture — Reading the Database's Own Log, Deletes Included"
         hands_on: ["koan:predict"]
         data:
-          source: northwind_co_changes
+          source: northwind_co_changes_s
           tables: ["events: orders", "events: order_details", "events: customers"]
           fit: good
           reason: "D2 is the log-shaped feed this needs, and it verifies: 6,142 events over 91 arrival days, each with an op (4,725 creates, 1,406 updates, 6 deletes, and 5 whose op is none of the three — the tail of day 58's reject burst), before and after images, an event_time, an arrival_time and an offset. The deletes are the point, because a watermark cannot see them: a line removed from open order 10145 on day 21 without Orders.UpdatedAt moving, and order 10242 keyed in error on day 33 and deleted 25 minutes later with its lines. Built and verified on DuckDB 2026-09-20."
@@ -871,20 +890,20 @@ series:
         hands_on: ["koan:rerun", "koan:diagnose"]
         core: true
         data:
-          source: [northwind_co_m, northwind_co_s]
+          source: northwind_co_s
           tables: ["Orders", "Order Details", "Invoices", "CourierConfirmations", "Orders.ShippedDate"]
           fit: good
-          reason: "Company M installs and verifies with SCALE 'M' (academy-verify, DuckDB 2026-09-20): 100,000 orders and 250,834 lines over 60 months — 1,916 orders in June 2024 against 177 at S — so a month-sized backfill is a volume job rather than a demonstration. The reason to backfill is in the rows and stays proportional at M: the Speedy Express outage loses ShippedDate for 302 of its 1,443 March 2024 orders and 288 of its 1,430 in April, against 34 in February."
+          reason: "Company S: 10,000 orders and 25,233 lines over 60 months, 177 orders in June 2024. The lesson is rewriting a month without breaking downstream, not its size: a month's backfill took 18 ms at S and 87 ms at M (DuckDB, 4 threads, 2026-09-26), a demonstration at either. The reason to backfill is in the rows: the Speedy Express outage leaves ShippedDate empty on 31 of its 151 March 2024 orders and 36 of its 158 in April that were not cancelled, against 4 in February."
         status: planned
       - n: "30"
         slug: idempotent-merge-at-scale
         title: "Idempotent MERGE at Scale — and the Vendor Differences That Break It"
         hands_on: ["koan:rerun", "koan:count:scanned"]
         data:
-          source: [northwind_co_m, northwind_co_changes]
+          source: [northwind_co_s, northwind_co_changes_s]
           tables: ["Order Details", "Orders", "Orders.UpdatedAt", "events: orders"]
           fit: good
-          reason: "Both halves are built and verified on DuckDB 2026-09-20: Company M (100,000 orders, 250,834 order lines on the composite key OrderID + ProductID) for MERGE's scan cost, and D2 for the delta batch to merge, where 9 transactions are delivered twice — the same event_id, a new offset — so one batch can hold two source rows for one target key. That is the case PostgreSQL MERGE errors on, INSERT ... ON CONFLICT cannot touch a row twice in one statement, and ClickHouse ReplacingMergeTree only settles eventually. M is 250,834 lines, not the 1.25M an earlier plan assumed."
+          reason: "Both halves are built and verified on DuckDB 2026-09-20: Company S (10,000 orders, 25,233 order lines on the composite key OrderID + ProductID) for MERGE's scan cost, counted in rows, and D2 for the delta batch to merge, where 9 transactions are delivered twice — the same event_id, a new offset — so one batch can hold two source rows for one target key. That is the case PostgreSQL MERGE errors on, INSERT ... ON CONFLICT cannot touch a row twice in one statement, and ClickHouse ReplacingMergeTree only settles eventually. None of it depends on volume: merging 5,000 rows took 14 ms at S and 23 ms at M (DuckDB, 2026-09-26)."
         status: planned
       # ALSO OWNS THE AUDIT DIMENSION, folded in because the SKILL is daily even though
       # Kimball's particular implementation is only one way to get it.
@@ -919,7 +938,7 @@ series:
         title: "Bulk Loading & Parallelism — COPY, Partitions and Throughput"
         hands_on: ["koan:count:scanned"]
         data:
-          source: [northwind_co_l, northwind_co_files]
+          source: [northwind_co_l, northwind_co_files_l]
           tables: ["Order Details", "Orders", "StockMovements", "order_lines/month=YYYY-MM"]
           fit: good
           reason: "Company L installs and verifies with SCALE 'L' (academy-verify, DuckDB 2026-09-20): 1,000,000 orders and 2,510,619 order lines, which is the throughput to move. D4 supplies the file side at any scale: order_lines/ as 60 month-partitioned Parquet files and order_lines_csv/ as the same 60 months in CSV, so JDBC batches against COPY, and one loader against one per partition, can both be timed. Exported and read back at S and M on DuckDB 2026-09-20 (250,834 lines at M in 88 seconds); rerun it at SCALE L for the files this episode loads."
@@ -966,7 +985,7 @@ series:
         core: true
         tags: ["project"]
         data:
-          source: [northwind_co_s, northwind_co_changes, northwind_co_dw_s]
+          source: [northwind_co_s, northwind_co_changes_s, northwind_co_dw_s]
           tables: ["Orders", "Order Details", "CustomerChanges", "PriceChanges", "events: orders", "fact_order_line", "dim_customer"]
           fit: partial
           reason: "On S today the pipeline can load the star with SCD2 from CustomerChanges/PriceChanges and backfill the outage months from CourierConfirmations. Missing for end to end: D2's daily change feed for the CDC and incremental steps, and D5-S as the reference star the orchestrated result reconciles to (row counts and checksums). Volume is not this project's point, so S is kept."
@@ -1070,7 +1089,7 @@ series:
         title: "Event Time, Windows and Watermarks — Deciding When an Answer Is Final"
         hands_on: ["koan:predict", "koan:diagnose"]
         data:
-          source: northwind_co_changes
+          source: northwind_co_changes_s
           tables: ["events: orders", "event_time", "arrival_time"]
           fit: good
           reason: "Every D2 event carries both times: event_time, when the order was keyed, and arrival_time, when the record reached the log, to the second, plus an offset. 66 transactions arrive 1 to 5 days late and 104 a few minutes out of order, so a window by event time and the same window by processing time genuinely disagree, and a watermark has something to be late for. 6,142 events over 91 arrival days, verified on DuckDB 2026-09-20."
@@ -1087,10 +1106,10 @@ series:
         title: "Staging in a Stream — The Log Is Your Raw Layer, and It Expires"
         hands_on: ["koan:choose", "koan:predict"]
         data:
-          source: northwind_co_changes
+          source: northwind_co_changes_s
           tables: ["events: orders", "offset"]
           fit: good
-          reason: "D2 is the replayable log: 6,142 events over 91 arrival days as JSONL, an offset on every record, so how long to keep it becomes a decision a learner can test — a 7-day window can no longer re-derive what a 30-day one still can. Built and verified on DuckDB 2026-09-20. The transform bug whose effect is noticed ten days in stays out of the generator on purpose: it is the lesson's own code, not something planted in the data."
+          reason: "D2 is the replayable event log: 6,142 events over 91 arrival days as JSONL, an offset on every record, so how long to keep it becomes a decision a learner can test — a 7-day window can no longer re-derive what a 30-day one still can. Built and verified on DuckDB 2026-09-20. The transform bug whose effect is noticed ten days in stays out of the generator on purpose: it is the lesson's own code, not something planted in the data."
         status: planned
       # COUNTERPART: Series 2 · 10 (Data Quality Gates) and 2 · 25 (Errors, Retries & Dead
       # Letters).
@@ -1105,7 +1124,7 @@ series:
         title: "Bad Records Without a Human — Quarantine Instead of Stopping the Pipeline"
         hands_on: ["koan:diagnose", "koan:capture"]
         data:
-          source: northwind_co_changes
+          source: northwind_co_changes_s
           tables: ["events: orders", "events: order_details"]
           fit: good
           reason: "Day 45's bad load is in D2: a second Orders row for OrderID 10330, a negative Quantity on order 10334, and order 10338 for CustomerID ALPIX, which does not exist. The poison record is day 52 — one truncated, unparseable line with the intact event straight after it — and day 58, 14:00 to 14:20, is the burst: 20 records with no usable key, op, table or row, a jump in the rejected share for a gate to catch. D6 lands all 21 in _rejects with the reason (5 no row, 5 unknown op, 5 no key, 5 unknown table, 1 not JSON). Built and verified on DuckDB 2026-09-20."
@@ -1121,7 +1140,7 @@ series:
         title: "Deduplication With State — One Customer, One Row, Within Seven Days"
         hands_on: ["koan:count:rows-held", "koan:predict"]
         data:
-          source: northwind_co_changes
+          source: northwind_co_changes_s
           tables: ["events: orders", "OrderID"]
           fit: good
           reason: "D2 delivers 9 transactions twice inside the window — the same event_id, a new offset — and sends orders 10281, 10297 and 10305 again 8 to 10 days after they first arrived. So a 7-day dedup window catches the first kind and lets those three through, and the window's size is visibly a business decision rather than a default. Built and verified on DuckDB 2026-09-20."
@@ -1138,7 +1157,7 @@ series:
         title: "The Fact That Arrived Before Its Dimension — Load Order You Do Not Control"
         hands_on: ["koan:predict", "koan:choose"]
         data:
-          source: northwind_co_changes
+          source: northwind_co_changes_s
           tables: ["events: customers", "events: orders"]
           fit: good
           reason: "D2 plants both halves, with minutes to work in: order 10315 keyed at 08:29 on day 43 while customer RIVE2's record arrives at 10:37, and order 10331 at 08:09 on day 45 while customer KEST5's arrives at 08:40 — so buffer-with-timeout and placeholder-then-correct behave differently. Customer UPLA8 is the harder one: created in the source, its event never reaches the log, though its orders do. The log carries 4 new-customer events besides, so this is no longer only about changed customers. Built and verified on DuckDB 2026-09-20."
@@ -1156,7 +1175,7 @@ series:
         title: "Dimension Lookups in Flight — Joining to a Table That Is Changing Under You"
         hands_on: ["koan:predict", "koan:diagnose"]
         data:
-          source: northwind_co_changes
+          source: northwind_co_changes_s
           tables: ["events: customers", "events: price_changes", "events: orders"]
           fit: good
           reason: "D2 plants the two as-of cases by name: on day 47 GOLD4, the biggest buyer, moves from Wholesale to Restaurant, and order 10312 — keyed 2025-02-11, before the change — arrives after it; on day 50 product 77 goes from 9.62 to 10.39, with order 10364, keyed the day before, arriving after. A lookup at processing time picks the wrong version and an as-of-event-time join the right one, and the difference has a customer and a price attached. Continues D1's CustomerChanges and PriceChanges; built and verified on DuckDB 2026-09-20."
@@ -1174,7 +1193,7 @@ series:
         title: "Idempotent Sinks — Why Exactly-Once Stops at the Edge of the Stream"
         hands_on: ["koan:predict", "koan:diagnose"]
         data:
-          source: northwind_co_changes
+          source: northwind_co_changes_s
           tables: ["events: orders", "OrderID", "offset"]
           fit: good
           reason: "Beyond the 9 transactions the source itself sends twice, D2 plants the consumer's own failure: on day 60 at 00:30, offsets 4197 to 4212 are delivered again, exactly as a restart would. An append-only sink double-counts those 16; an upsert on OrderID does not. Built and verified on DuckDB 2026-09-20."
@@ -1190,7 +1209,7 @@ series:
         title: "Reconciling a Stream — Counting Something That Has No End"
         hands_on: ["koan:capture", "koan:count:rows-held"]
         data:
-          source: [northwind_co_changes, northwind_co_s]
+          source: [northwind_co_changes_s, northwind_co_s]
           tables: ["events: orders", "Orders"]
           fit: good
           reason: "D2 carries the source's own count for every closed window: 90 daily control-total events (orders, order lines and amount, as the source system reports them). Because 66 transactions arrive 1 to 5 days late, a window reconciled before its watermark passes comes up short, and reconciled after it agrees — which is the whole lesson. D1-S anchors the totals up to 2024-12-31. Both built and verified on DuckDB 2026-09-20."
@@ -1207,7 +1226,7 @@ series:
         title: "Replay and Reprocessing — Rewriting History Without Double-Counting It"
         hands_on: ["koan:rerun", "koan:diagnose"]
         data:
-          source: northwind_co_changes
+          source: northwind_co_changes_s
           tables: ["events: orders", "offset"]
           fit: good
           reason: "D2 is replayable by construction: a JSONL log starting from the D1-S snapshot of 2024-12-31, an offset on each of its 6,142 events, and a deterministic generator, so a replay lands the same rows twice. Day 60's redelivered offsets (4197 to 4212) are the double-count risk when reprocessing into a parallel output and switching over. Built and verified on DuckDB 2026-09-20; as in 4 · 05, the transform bug that motivates the reprocess is the lesson's own code."
@@ -1220,7 +1239,7 @@ series:
         hands_on: ["koan:author", "koan:rerun"]
         tags: ["project"]
         data:
-          source: northwind_co_changes
+          source: northwind_co_changes_s
           tables: ["events: orders", "events: order_details", "events: customers", "events: price_changes"]
           fit: good
           reason: "The whole series arrives on one feed, and it verifies: 6,142 events over 91 arrival days with 66 late and 104 out of order, 9 delivered twice and offsets 4197 to 4212 redelivered on day 60, a poison line on day 52 and a 20-record reject burst on day 58, facts before their customer on days 43 and 45, day 45's bad load, and 90 daily control totals to reconcile against — twice, to prove the pipeline safe to replay. _plants names all 29 incidents with the episode each belongs to. Built and verified on DuckDB 2026-09-20."

@@ -1,6 +1,6 @@
 package datazeus.learnsql.series1._30
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 /**
@@ -52,7 +52,7 @@ import spock.lang.Unroll
  * factual claims their HINTS make: a wrong number in a hint tells a student their correct
  * query is wrong.
  */
-class GroupBySpec extends NorthwindGateSpec {
+class GroupBySpec extends GateSpec {
 
     // --- 0. The dataset the lesson quotes -------------------------------------------------
 

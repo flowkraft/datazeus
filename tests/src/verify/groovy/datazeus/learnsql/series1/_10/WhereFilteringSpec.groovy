@@ -1,6 +1,6 @@
 package datazeus.learnsql.series1._10
 
-import datazeus.support.NorthwindGateSpec
+import datazeus.support.GateSpec
 import spock.lang.Unroll
 
 /**
@@ -39,7 +39,7 @@ import spock.lang.Unroll
  * Convention: the spec runs the SAME *.sql files the lesson/video show, so the SQL is
  * authored in exactly one place (the lesson's scripts/) and verified here — no drift.
  */
-class WhereFilteringSpec extends NorthwindGateSpec {
+class WhereFilteringSpec extends GateSpec {
 
     // --- 1. WHERE equality: keep only the rows that pass the test ------------------------
 
