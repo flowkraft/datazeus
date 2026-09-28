@@ -1,0 +1,4 @@
+# This folder is YOUR workspace.
+# `zeus update` refreshes northwind_co.duckdb only while it is exactly as we shipped it. Once you
+# have installed data into it (Medium, Large), your copy is kept and a newer one of ours arrives
+# beside it as northwind_co.duckdb.new. Don't delete this marker.

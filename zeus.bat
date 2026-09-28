@@ -496,8 +496,8 @@ REM COMPARE AS TEXT, NOT BYTES (no /b), here and at every other fc in this file.
 REM every one of them asks is "did the learner change this file?" - and an editor that rewrites
 REM line endings on save changes no character at all. A byte compare answers "yes" to that and
 REM freezes the lesson: never updated, never pruned. Text mode ignores line endings and still
-REM reports any real edit. Only text is ever compared here (launchers and koans); the binary
-REM datasets go through robocopy, which never calls fc.
+REM reports any real edit. A dataset inside a workspace (datasets\northwind-co\*.duckdb) is
+REM binary: :dzfc compares that one byte for byte.
 REM
 REM zeus.sh still byte-compares (cmp has no text mode, so the POSIX-safe fix needs a helper to
 REM strip CR into temp files first). Deferred, so the two intentionally differ on this point.
@@ -514,6 +514,10 @@ for /f "usebackq delims=" %%W in ("%WSLIST%") do if exist "%NEW%\%%W" (
     set "loc=%ROOT%\!rel!"
     set "bas=%BASE%\!rel!"
     if not exist "!loc!" (
+      call :dzcopy "%%F" "!loc!"
+    ) else if not exist "%BASE%\%%W\" (
+      REM A folder that has just become a workspace has no baseline yet. Until this update
+      REM step 2 refreshed it like every other file of ours, so what is on disk is ours.
       call :dzcopy "%%F" "!loc!"
     ) else if exist "!bas!" (
       call :dzmerge "%%F" "!loc!" "!bas!" "!rel!"
@@ -533,7 +537,7 @@ for /f "usebackq delims=" %%W in ("%WSLIST%") do if exist "%BASE%\%%W" (
     set "rel=!rel:%BASE%\=!"
     if not exist "%NEW%\!rel!" (
       if exist "%ROOT%\!rel!" (
-        fc "%ROOT%\!rel!" "%%F" >nul 2>nul
+        call :dzfc "%ROOT%\!rel!" "%%F"
         if not errorlevel 1 (
           del /q "%ROOT%\!rel!" >nul 2>nul
         ) else (
@@ -614,16 +618,16 @@ exit /b 0
 :dzmerge
 REM  %1 = the shipped file, %2 = the learner's file, %3 = the baseline, %4 = relative path.
 REM  Mirror of the same branch in zeus.sh - keep the two in step.
-fc "%~2" "%~3" >nul 2>nul
+call :dzfc "%~2" "%~3"
 if not errorlevel 1 (
   REM Byte-identical to the baseline: never touched, so it is ours to update.
   copy /y "%~1" "%~2" >nul 2>nul
   exit /b 0
 )
-fc "%~1" "%~3" >nul 2>nul
+call :dzfc "%~1" "%~3"
 if not errorlevel 1 exit /b 0
 REM  ^ yours differs but we did not change this file - nothing to report.
-fc "%~1" "%~2" >nul 2>nul
+call :dzfc "%~1" "%~2"
 if not errorlevel 1 (
   REM You already match the new version - which is also how a .new sidecar from an earlier
   REM update ends once you have folded it in. Clear it so it does not become litter.
@@ -639,9 +643,26 @@ REM (.dpkg-dist / .rpmnew): a 3-way merge nobody asked for is worse than two fil
 REM clear sentence. `**/*.groovy` in pom.xml will not compile a .new, so it is inert.
 copy /y "%~1" "%~2.new" >nul 2>nul
 echo   %~4
-echo       we corrected this lesson and you have edits in it - yours kept,
+set "dzrel=%~4"
+if /I "%dzrel:~0,9%"=="datasets\" (
+  echo       we updated this dataset and you have installed data into it - yours kept,
+) else (
+  echo       we corrected this lesson and you have edits in it - yours kept,
+)
 for %%N in ("%~2") do echo       ours is beside it as %%~nxN.new
 exit /b 0
+
+:dzfc
+REM  errorlevel 0 when %1 and %2 hold the same content. Text compares as text (see step 2); a
+REM  .duckdb is binary, so it compares byte for byte, sizes first so a changed dataset is
+REM  answered without fc walking every byte of it.
+if /I not "%~x1"==".duckdb" (
+  fc "%~1" "%~2" >nul 2>nul
+  exit /b
+)
+if not "%~z1"=="%~z2" exit /b 1
+fc /b "%~1" "%~2" >nul 2>nul
+exit /b
 
 :dzprune
 REM  %1 = a path we shipped LAST time, relative to the download root.

@@ -135,6 +135,10 @@ zeus_update() {
         src="$new/$w/$f"; loc="$DIR/$w/$f"; bas="$baseline/$w/$f"
         if [ ! -f "$loc" ]; then
           mkdir -p "$DIR/$w/$(dirname "$f")"; cp "$src" "$loc"          # new exercise
+        elif [ ! -d "$baseline/$w" ]; then
+          # A folder that has just become a workspace has no baseline yet. Until this update
+          # step 2 refreshed it like every other file of ours, so what is on disk is ours.
+          cp "$src" "$loc"
         elif [ -f "$bas" ] && cmp -s "$loc" "$bas"; then
           cp "$src" "$loc"                                              # untouched -> update
         elif [ -f "$bas" ] && cmp -s "$src" "$bas"; then
@@ -153,7 +157,10 @@ zeus_update() {
           # a 3-way merge nobody asked for is worse than two files and a clear sentence.
           cp "$src" "$loc.new"
           echo "  $w/$f"
-          echo "      we corrected this lesson and you have edits in it - yours kept,"
+          case "$w" in
+            datasets/*) echo "      we updated this dataset and you have installed data into it - yours kept," ;;
+            *)          echo "      we corrected this lesson and you have edits in it - yours kept," ;;
+          esac
           echo "      ours is beside it as $(basename "$f").new"
         fi
       done )
