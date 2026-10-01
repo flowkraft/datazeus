@@ -22,7 +22,6 @@ String SCALE = (params?.SCALE ?: 'S').toString().toUpperCase()
 // morning, so what was keyed, shipped or changed after it is in the source and not here. That gap is Data
 // Warehousing S1 · 22's first reason a warehouse and its source legitimately differ (timing, and late arrivals).
 String LOAD_CUTOFF = (params?.LOAD_CUTOFF ?: '2024-12-31 02:00:00').toString()
-int VERSION = 1
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -53,6 +52,13 @@ int VERSION = 1
 //                            Warehousing S2 · 40, star vs one big table)
 //   _load_audit              the load's cutoff and what it left behind
 //   _dataset_info            row counts and checksums, as in every academy schema (academy-verify.groovy reads it)
+//
+// KEYS AND INDEXES: a primary key on every dimension and on every fact whose grain gives it one. fact_order_line has
+// none, on purpose: Data Warehousing S2 · 35 and S3 · 05 load D2's days into it, nine orders delivered twice among
+// them, and a key would reject the second copy those lessons count. At S, an index on each key the lessons join the
+// facts on (JOIN INDEXES, below); at M and L, primary keys only, on purpose (M stands in for L where L is too large for
+// a laptop), with the same indexes there commented, each with what it would change. NO FOREIGN KEYS: they would fix a
+// load order and a drop order.
 //
 // AS OF THE CUTOFF: an order keyed after LOAD_CUTOFF is not loaded; an order's status is the one it had at the
 // cutoff (from OrderStatusHistory), and its ship date only if it was recorded by then.
@@ -142,14 +148,13 @@ def validOn = { String x, String a ->
 
 // ── 0. the source must be there, and be what it says it is ─────────────────────────────────────
 List srcInfo
-try { srcInfo = dbSql.rows("SELECT \"Dataset\", \"Version\", \"Scale\", \"TableName\" FROM ${S('_dataset_info')}".toString()) }
+try { srcInfo = dbSql.rows("SELECT \"Dataset\", \"Scale\", \"TableName\" FROM ${S('_dataset_info')}".toString()) }
 catch (Exception e) { throw new IllegalStateException("Install Northwind Company scale ${SCALE} first (schema ${SRC} not found: ${e.message}).") }
 if (srcInfo.isEmpty() || srcInfo[0].Scale != SCALE || srcInfo[0].Dataset != 'northwind_co')
     throw new IllegalStateException("${SRC} is not Northwind Company scale ${SCALE}.")
 if (!srcInfo.any { it.TableName == 'OrderStatusHistory' })
     throw new IllegalStateException("${SRC} was installed by an older academy-northwind-co-install (no OrderStatusHistory). Reinstall it.")
-int SOURCE_VERSION = srcInfo[0].Version as int
-log.info("=== Warehouse {} v{} from {} (v{}) on {}, loaded as of {} ===", DW, VERSION, SRC, SOURCE_VERSION, vendor, LOAD_CUTOFF)
+log.info("=== Warehouse {} from {} on {}, loaded as of {} ===", DW, SRC, vendor, LOAD_CUTOFF)
 
 if (CH) {
     dbSql.execute("DROP DATABASE IF EXISTS ${DW} SYNC".toString())
@@ -171,7 +176,7 @@ CREATE TABLE ${T('fact_order_line')} (order_id INTEGER NOT NULL, product_key INT
 CREATE TABLE ${T('fact_order')} (order_id INTEGER PRIMARY KEY, customer_key INTEGER NOT NULL, employee_key INTEGER NOT NULL, shipper_key INTEGER NOT NULL, order_date_key INTEGER NOT NULL, required_date_key INTEGER NOT NULL, shipped_date_key INTEGER NOT NULL, order_status VARCHAR(10) NOT NULL, channel VARCHAR(10) NOT NULL, line_count INTEGER NOT NULL, net_amount DECIMAL(19,2) NOT NULL, freight DECIMAL(19,2) NOT NULL);
 CREATE TABLE ${T('fact_inventory_monthly')} (product_key INTEGER NOT NULL, month_end_date_key INTEGER NOT NULL, units_received INTEGER NOT NULL, units_sold INTEGER NOT NULL, units_returned INTEGER NOT NULL, units_adjusted INTEGER NOT NULL, units_on_hand INTEGER NOT NULL, PRIMARY KEY (product_key, month_end_date_key));
 CREATE TABLE ${T('fact_sales_target')} (category_key INTEGER NOT NULL, month_date_key INTEGER NOT NULL, target_amount DECIMAL(19,2) NOT NULL, PRIMARY KEY (category_key, month_date_key));
-CREATE TABLE ${T('_load_audit')} (source_schema VARCHAR(40) NOT NULL, source_version INTEGER NOT NULL, load_cutoff TIMESTAMP NOT NULL, orders_loaded INTEGER NOT NULL, orders_keyed_after_cutoff INTEGER NOT NULL, orders_changed_after_cutoff INTEGER NOT NULL);
+CREATE TABLE ${T('_load_audit')} (source_schema VARCHAR(40) NOT NULL, load_cutoff TIMESTAMP NOT NULL, orders_loaded INTEGER NOT NULL, orders_keyed_after_cutoff INTEGER NOT NULL, orders_changed_after_cutoff INTEGER NOT NULL);
 """
 DDL.split(';').collect { it.trim() }.findAll { it }.each { dbSql.execute(CH ? chDdl(it) : it) }
 
@@ -370,7 +375,7 @@ if (ONE_BIG_TABLE) {
 
 // ── 8. the load audit ────────────────────────────────────────────────────────────────────────
 dbSql.execute("""INSERT INTO ${T('_load_audit')}
-    SELECT '${SRC}', ${SOURCE_VERSION}, ${CUTOFF},
+    SELECT '${SRC}', ${CUTOFF},
            (SELECT COUNT(*) FROM ${T('_stage_orders')}),
            (SELECT COUNT(*) FROM ${S('Orders')} WHERE "CreatedAt" > ${CUTOFF}),
            (SELECT COUNT(*) FROM ${S('Orders')} WHERE "CreatedAt" <= ${CUTOFF} AND "UpdatedAt" > ${CUTOFF})""".toString())
@@ -450,8 +455,78 @@ def eachRowStreamed = { String sql, Closure c ->
 }
 List<String> TABLES = ['dim_date', 'dim_customer', 'dim_category', 'dim_product', 'dim_employee', 'dim_shipper', 'bridge_employee_territory',
                        'fact_order_line', 'fact_order', 'fact_inventory_monthly', 'fact_sales_target', '_load_audit'] + (ONE_BIG_TABLE ? WIDE : [])
+
+// ── JOIN INDEXES ──────────────────────────────────────────────────────────────────────────────
+// Every key the lessons join a fact to a dimension on, the order number a header meets its lines on, and the natural
+// key an SCD2 as-of join looks a version up by, where the table's primary key does not already start with it. Not
+// indexed: shipper_key (four shippers, so an index would never be chosen); employee_key on fact_order_line (a rep's
+// lines lie on nearly every page: at L the index read 21,514 of the fact's 33,300 pages and was no faster than the
+// scan); the required and shipped date keys (days to ship and the like join them across every order, which an index
+// does not speed up; the date ranges the lessons slice by are order dates); fact_inventory_monthly, fact_sales_target
+// and the small dimensions (a few hundred pages at most, scanned faster than an index is read); and
+// fact_order_line_wide (the one big table exists to be scanned). No foreign keys: they would fix a load order and a
+// drop order. Built after the rows are in, which is quicker than keeping them up to date row by row. ClickHouse has no
+// secondary indexes (its tables are ordered by their primary keys), so there joinIndex does nothing.
+int joinIndexes = 0
+def joinIndex = { String table, List<String> cols ->
+    if (CH) return
+    dbSql.execute("CREATE INDEX ix_${table}_${cols.join('_')} ON ${T(table)} (${cols.join(', ')})".toString())
+    joinIndexes++
+}
+if (SCALE == 'S') {
+    joinIndex('fact_order_line', ['order_id'])                  // an order's lines, and fact_order ⋈ its lines (not unique)
+    joinIndex('fact_order_line', ['order_date_key'])            // ⋈ dim_date, and every date range the lessons slice by
+    joinIndex('fact_order_line', ['customer_key'])              // ⋈ dim_customer
+    joinIndex('fact_order_line', ['product_key'])               // ⋈ dim_product
+    joinIndex('fact_order', ['customer_key'])                   // ⋈ dim_customer
+    joinIndex('fact_order', ['order_date_key'])                 // ⋈ dim_date
+    joinIndex('fact_order', ['employee_key'])                   // ⋈ dim_employee, and the territory bridge through it
+    joinIndex('dim_customer', ['customer_id', 'valid_from'])    // a customer's version as of a date (SCD2)
+    joinIndex('dim_product', ['product_id', 'valid_from'])      // a product's price as of a date (SCD2)
+} else {
+    // M AND L — PRIMARY KEYS ONLY, ON PURPOSE. D5-L is where Data Warehousing S2 · 15, S2 · 40, S2 · 50 and S3 · 00
+    // measure how much a query reads (graded on rows scanned, never on time), and where S3 · 35 races DuckDB against
+    // ClickHouse, which has no secondary indexes. An index would let PostgreSQL skip what partitioning, sort keys and
+    // pre-aggregation are there to skip, and would add bytes to one side only of star vs one big table (S2 · 40) and of
+    // DuckDB vs ClickHouse (S3 · 35). D5-M is where those lessons run when L is too large for a laptop, so M starts the
+    // same way. The indexes S gets are below, commented, each with what L does without it (Off) and what uncommenting it
+    // changes (On). Uncommenting one builds it at M and L on PostgreSQL and DuckDB.
+    // Measured at L on PostgreSQL 16, warm, the best of five runs from a client; On is the plan PostgreSQL chose once
+    // the index was there. On DuckDB (1.4.4) none of them changed a plan: every query below stayed a sequential scan,
+    // so there an index only adds its size to the file. All nine: PostgreSQL +112 MB and 4 s to build; DuckDB +164 MB
+    // on a 471 MB file, and 4 s.
+    //
+    // joinIndex('fact_order_line', ['order_id'])
+    //     Off: an order's lines (2.5 on average), and fact_order ⋈ its lines for a few orders, is a parallel scan of all
+    //     2,508,372 (45 ms). On: an index scan (0.7 ms). PostgreSQL 39 MB, DuckDB +35 MB.
+    // joinIndex('fact_order_line', ['order_date_key'])
+    //     Off: a month's lines (44,774 in March 2023) is a parallel scan of the whole fact (57 ms). On: a bitmap scan
+    //     that reads 3,684 of its 33,300 pages (7 ms). PostgreSQL 17 MB, DuckDB +30 MB.
+    // joinIndex('fact_order_line', ['customer_key'])
+    //     Off: a customer version's lines (82 on average) is a parallel scan of the whole fact (47 ms), and so is the star
+    //     query that picks one customer in dim_customer and sums its lines (59 ms). On: a bitmap scan (0.8 ms), and that
+    //     star query becomes a nested loop over this index and dim_customer's (0.7 ms). PostgreSQL 17 MB, DuckDB +29 MB.
+    // joinIndex('fact_order_line', ['product_key'])
+    //     Off: a product version's lines (1,560 on average, 20,351 at most) is a parallel scan of the whole fact (47 ms).
+    //     On: a bitmap scan (0.7 ms for a typical version's 661). PostgreSQL 17 MB, DuckDB +31 MB.
+    // joinIndex('fact_order', ['customer_key'])
+    //     Off: a customer version's orders (33 on average) is a parallel scan of all 999,114 (25 ms). On: a bitmap scan
+    //     (0.5 ms). PostgreSQL 7 MB, DuckDB +13 MB.
+    // joinIndex('fact_order', ['order_date_key'])
+    //     Off: a month's orders (17,828 in March 2023) is a parallel scan of all 999,114 (29 ms). On: a bitmap scan of 238
+    //     pages (2 ms). PostgreSQL 7 MB, DuckDB +12 MB.
+    // joinIndex('fact_order', ['employee_key'])
+    //     Off: a rep's orders (13,500 on average) is a parallel scan of all 999,114 (26 ms). On: a bitmap scan (10 ms)
+    //     that still reads 8,096 of the table's 11,700 pages. PostgreSQL 7 MB, DuckDB +12 MB.
+    // joinIndex('dim_customer', ['customer_id', 'valid_from'])
+    //     Off: a customer's version as of a date is a scan of all 39,459 versions (3 ms); it is where the star query above
+    //     starts. On: a backward index scan that reads the latest version first (0.7 ms). PostgreSQL 1.2 MB, DuckDB +2 MB.
+    // joinIndex('dim_product', ['product_id', 'valid_from'])
+    //     1,636 versions in 24 pages: 0.7 ms Off and On. Nothing to gain at this size.
+}
+if (joinIndexes) log.info("  {} join indexes", joinIndexes)
 if (vendor == 'POSTGRES' && SCALE != 'S') TABLES.each { dbSql.execute("ANALYZE ${T(it)}".toString()) }
-String infoDdl = "CREATE TABLE ${T('_dataset_info')} (\"Dataset\" VARCHAR(40), \"Version\" INTEGER, \"Scale\" VARCHAR(2), \"TableName\" VARCHAR(40), \"RowCount\" INTEGER, \"Checksum\" VARCHAR(64))".toString()
+String infoDdl = "CREATE TABLE ${T('_dataset_info')} (\"Dataset\" VARCHAR(40), \"Scale\" VARCHAR(2), \"TableName\" VARCHAR(40), \"RowCount\" INTEGER, \"Checksum\" VARCHAR(64))".toString()
 dbSql.execute(CH ? chDdl(infoDdl) : infoDdl)
 // A table's columns for the checksum, sorted case-insensitively, as SELECT expressions. ClickHouse is asked for its
 // dates, times and booleans as text (toString), which is the canonical form already.
@@ -480,10 +555,10 @@ TABLES.each { table ->
         n = rs.count
         hex = rs.hex()
     }
-    info << [DATASET, VERSION, SCALE, table, n, hex]
+    info << [DATASET, SCALE, table, n, hex]
 }
-dbSql.withBatch(info.size(), "INSERT INTO ${T('_dataset_info')} VALUES (?, ?, ?, ?, ?, ?)".toString()) { ps -> info.each { ps.addBatch(it) } }
+dbSql.withBatch(info.size(), "INSERT INTO ${T('_dataset_info')} VALUES (?, ?, ?, ?, ?)".toString()) { ps -> info.each { ps.addBatch(it) } }
 
 Map audit = dbSql.firstRow("SELECT * FROM ${T('_load_audit')}".toString())
-log.info("=== {} v{} built from {}: {} orders loaded as of {}; {} keyed after the cutoff and {} changed after it are in the source only ===",
-         DW, VERSION, SRC, audit.orders_loaded, LOAD_CUTOFF, audit.orders_keyed_after_cutoff, audit.orders_changed_after_cutoff)
+log.info("=== {} built from {}: {} orders loaded as of {}; {} keyed after the cutoff and {} changed after it are in the source only ===",
+         DW, SRC, audit.orders_loaded, LOAD_CUTOFF, audit.orders_keyed_after_cutoff, audit.orders_changed_after_cutoff)

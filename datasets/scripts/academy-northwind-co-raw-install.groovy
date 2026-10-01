@@ -54,7 +54,6 @@ String SCALE = (params?.SCALE ?: 'S').toString().toUpperCase()
 int THROUGH_DAY = (params?.THROUGH_DAY ?: '0').toString() as int
 // REBUILD — true drops the landed copy and starts again from the snapshot.
 boolean REBUILD = (params?.REBUILD ?: 'false').toString().toBoolean()
-int VERSION = 1
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -180,7 +179,7 @@ if (applied > THROUGH_DAY) {
     log.info("  {} has landed through day {}; day {} was asked for, so it is rebuilt from the snapshot", DST, applied, THROUGH_DAY)
     applied = -1
 }
-log.info("=== Landed copy {} v{} on {}: {} {} ===", DST, VERSION, vendor,
+log.info("=== Landed copy {} on {}: {} {} ===", DST, vendor,
          applied < 0 ? 'building from the snapshot, then through day' : "day ${applied} → day".toString(), THROUGH_DAY)
 if (applied == THROUGH_DAY) { log.info("=== {} is already at day {}: nothing to land ===", DST, THROUGH_DAY); return }
 
@@ -329,7 +328,7 @@ if (THROUGH_DAY > applied) {
 
 // ── 3. _dataset_info: counts and checksums of the tables that changed (the canonical form of academy-verify.groovy) ──
 if (!exists(DST, '_dataset_info'))
-    createTable("CREATE TABLE ${T(DST, '_dataset_info')} (\"Dataset\" VARCHAR(40), \"Version\" INTEGER, \"Scale\" VARCHAR(2), \"TableName\" VARCHAR(40), \"RowCount\" INTEGER, \"Checksum\" VARCHAR(64))".toString())
+    createTable("CREATE TABLE ${T(DST, '_dataset_info')} (\"Dataset\" VARCHAR(40), \"Scale\" VARCHAR(2), \"TableName\" VARCHAR(40), \"RowCount\" INTEGER, \"Checksum\" VARCHAR(64))".toString())
 // A table's columns for the checksum, _loaded_at left out, sorted case-insensitively, as SELECT expressions.
 // ClickHouse is asked for any date, time or boolean as text (toString), which is the canonical form already.
 def checksumColumns = { String table ->
@@ -365,7 +364,9 @@ touched.each { String t ->
         hex = rs.hex()
     }
     dbSql.execute("DELETE FROM ${T(DST, '_dataset_info')} WHERE \"TableName\" = ?".toString(), [t])
-    dbSql.execute("INSERT INTO ${T(DST, '_dataset_info')} VALUES (?, ?, ?, ?, ?, ?)".toString(), [DATASET, VERSION, SCALE, t, n, hex])
+    // Columns by name, so a landed copy whose _dataset_info still has a Version column takes the row too.
+    dbSql.execute("INSERT INTO ${T(DST, '_dataset_info')} (\"Dataset\", \"Scale\", \"TableName\", \"RowCount\", \"Checksum\") VALUES (?, ?, ?, ?, ?)".toString(),
+                  [DATASET, SCALE, t, n, hex])
 }
-log.info("=== {} v{} landed through day {} ({}): {} tables re-counted; _loaded_at runs up to {} ===", DST, VERSION, THROUGH_DAY,
+log.info("=== {} landed through day {} ({}): {} tables re-counted; _loaded_at runs up to {} ===", DST, THROUGH_DAY,
          THROUGH_DAY == 0 ? 'the 2024-12-31 snapshot' : DAY_ZERO.plusDays(THROUGH_DAY).toString(), touched.size(), NOW.withNano(0))

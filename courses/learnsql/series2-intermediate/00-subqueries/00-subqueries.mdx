@@ -31,6 +31,10 @@ Series 1 ran on Northwind: 79 orders over 18 months, 25 customers and 3 employee
 
 So Series 2 runs on **Northwind Company**: a simulated company with the same table names you already know and five years of orders, from 2020 to 2024. It has 10,000 orders, 120 customers, 29 employees, 4 couriers and 80 products, plus invoices and a few more tables. Every Series 1 query runs on it unchanged; the answers are just bigger.
 
+**Why change the data at all?** Series 1's data was tiny on purpose, so that you could picture every row. You write real queries now, and the data grows with you.
+
+**How much data?** There are three sizes. **Tiny** (Series 1) and **Small** (`northwind_co_s`, around 10,000 orders, used across this whole series) both come with DataPallas. **Large** is needed in a handful of lessons, such as the one on making queries faster, and that lesson shows how to install it. The [Learn Data](/docs/learn-data) guide lists all of them.
+
 **Install it once** (about a minute), from DataPallas:
 
 1. Open **Configuration → Connections**, select the Northwind PostgreSQL connection (the one CloudBeaver uses) and click **Edit**.
@@ -126,11 +130,13 @@ SQL Error [42803]: ERROR: aggregate functions are not allowed in WHERE
   Position: 71
 ```
 
-This is the rule from the <a href="/academy/learn-sql/having-vs-where" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">HAVING vs WHERE lesson</a>. `WHERE` looks at one row at a time, before anything has been added up, so when it runs there is no average to compare with. The average exists, but only as the result of a different query.
+This is the rule from the <a href="/academy/learn-sql/having-vs-where" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">HAVING vs WHERE lesson</a>. `WHERE` looks at one row at a time, before anything has been added up, so when it runs there is no average to compare with.
+
+"But the average exists: I worked it out a minute ago." It does, but with a different query. So hand the `WHERE` that exact query, the one that gave you the average.
 
 ## A query in brackets
 
-So give the `WHERE` that different query. Put it in brackets, where the pasted number was:
+Put it in brackets, where the pasted number was:
 
 {/* The same highlight as the video: the two bracket lines in green. */}
 
@@ -170,7 +176,7 @@ WHERE "UnitPrice" > (SELECT "UnitPrice"
 SQL Error [21000]: ERROR: more than one row returned by a subquery used as an expression
 ```
 
-There are ten beverages, so the brackets return ten prices, and `>` compares one value with one value. The error is really a question: which of the ten prices is meant? "More than every beverage" means more than the most expensive beverage, so ask for that one value with `MAX`:
+There are 10 beverages, so the brackets return 10 prices, and `>` compares one value with one value. The error is really a question: which of the 10 prices is meant? "More than every beverage" means more than the most expensive beverage, so ask for that one value with `MAX`. (If you meant "any of the 10", the tool is `IN`, coming up shortly.)
 
 {/* The same highlight as the video: the MAX line in green. */}
 
@@ -196,6 +202,25 @@ ORDER BY "UnitPrice" DESC;
 Fourteen products cost more than the most expensive beverage, Alpine Ale, at 39.1.
 
 Two of the rows behind the "…" cost exactly the same, 43.12. `ORDER BY "UnitPrice"` does not say which of two equal prices comes first, so the database may return them in either order. When the order of tied rows matters, add a second column to the `ORDER BY`, such as `"ProductName"`.
+
+## No error, no rows
+
+Now a quiet one. Take the same query and change a single digit, category 9:
+
+{/* The same highlight as the video: the category line in orange (warning, not an error). No script file for this query yet. */}
+
+```sql {5}#warn
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+WHERE "UnitPrice" > (SELECT MAX("UnitPrice")
+                     FROM "Products"
+                     WHERE "CategoryID" = 9)
+ORDER BY "UnitPrice" DESC;
+```
+
+It returns 0 rows, and no error. Did it work? Look at the inside: there is no category 9, so the brackets found no products, and a subquery that finds nothing hands back `NULL`. Nothing is ever greater than `NULL`, so the `WHERE` keeps no rows and raises no error.
+
+Zero rows can mean two things: there really is no answer, or the question was wrong. Run the inside on its own to tell which: a `NULL` means the question needs fixing.
 
 ## Three shapes
 
@@ -225,11 +250,12 @@ WHERE "CustomerID" IN (
     ON d."OrderID" = o."OrderID"
   WHERE d."ProductID" = 39
     AND o."OrderDate" >= DATE '2024-01-01'
+    AND o."OrderDate" <  DATE '2025-01-01'
 )
 ORDER BY "CompanyName";
 ```
 
-Royal Raisins sold on 9 order lines in 2024, so it is tempting to predict 9 customers. The result has 8:
+First do what you were told: run the inside on its own. It returns 9 rows, one customer id per order line, because Royal Raisins sold on 9 order lines in 2024. Write that number down, then run the whole query. It is tempting to predict 9 customers. The result has 8:
 
 {/* The same highlight as the video: Yarrow Pantry in blue, the row the text is about. */}
 
@@ -248,7 +274,7 @@ Royal Raisins sold on 9 order lines in 2024, so it is tempting to predict 9 cust
 
 </div>
 
-Yarrow Pantry bought Royal Raisins twice. `IN` asks one yes-or-no question for each customer, "is this customer's id in the list?", so each customer appears once, however many times their id appears inside the brackets.
+Yarrow Pantry bought Royal Raisins twice. The two queries have different **grains**: inside the brackets, one row is one order line (9 of them); outside, one row is one customer (8 of them). `IN` never counts lines. It asks one yes-or-no question for each customer, "is this customer's id in the list?", so each customer appears once, however many times their id appears inside the brackets.
 
 The same question written as a join returns one row per matching order line:
 
@@ -261,6 +287,7 @@ JOIN "Order Details" d
   ON d."OrderID" = o."OrderID"
 WHERE d."ProductID" = 39
   AND o."OrderDate" >= DATE '2024-01-01'
+  AND o."OrderDate" <  DATE '2025-01-01'
 ORDER BY c."CompanyName";
 ```
 
@@ -282,11 +309,32 @@ ORDER BY c."CompanyName";
 
 </div>
 
-Nine rows, with Yarrow Pantry twice. Both queries are correct SQL, but only the first answers the question: who to tell is a list of customers, not a list of order lines. This is the repeated-rows problem from the <a href="/academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">report lesson</a>, seen from the other side: there, `count(DISTINCT …)` removed the repeats; here, `IN` never creates them.
+9 rows, with Yarrow Pantry twice. Both queries are correct SQL, but only the first answers the question: who to tell is a list of customers, not a list of order lines. This is the repeated-rows problem from the <a href="/academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">report lesson</a>, seen from the other side: there, `count(DISTINCT …)` removed the repeats; here, `IN` never creates them.
+
+### Subquery or join?
+
+The outer query looks anemic: the join does most of the work, and `DISTINCT` could remove the duplicates. So with a `JOIN` plus `DISTINCT`, are subqueries needed at all?
+
+You could indeed use a `JOIN` with `DISTINCT` to get the correct 8 customers here, but it is fragile:
+
+| Query | Rows | Grain of the join |
+| ----- | ---- | ----------------- |
+| `SELECT DISTINCT "CompanyName" … JOIN "Order Details"` | 8 | one row per order line: `DISTINCT` is a hack that removes the duplicates afterwards |
+| `SELECT DISTINCT "CompanyName", "OrderID" … JOIN "Order Details"` | 9, Yarrow Pantry twice | adding a second column brings the duplication back, and people do this often |
+| `SELECT … FROM "Customers" WHERE "CustomerID" IN (subquery)` | 8, one per customer | no hack needed: `FROM "Customers"` defines the grain |
+
+The real problem is deeper. The join itself is at the order-line grain, and the question is about customers. It should feel strange to answer a question about customers with a query on `"Order Details"`, even if a hack can patch the result. Instead of returning order lines and then patching them into customers, ask for customers directly.
+
+Both are tools you have now, and many queries use both together. A rule of thumb is to look at what the answer has to contain:
+
+- **Only columns from one table, and the other table just picks the rows: a subquery.** "Customers who bought Royal Raisins in 2024" needs only customer names; the product is just how you pick them.
+- **Columns from both tables: a join.** "Which customers bought Royal Raisins, and how many boxes each?" needs `"Customers"` and `"Order Details"` side by side, and only a join can put them there.
+
+Is one of them faster? Not by nature: databases often run both the same way, so choose by what the answer needs, not by speed. When a query really is slow, read its plan and measure; do not guess.
 
 ### Your turn
 
-How many products sell at or below the average price? Thirty are above it, so predict the rest before you run it:
+How many products sell at or below the average price? 30 are above it, so predict the rest before you run it:
 
 ```sql file=./scripts/at-or-below-average-price.sql
 SELECT count(*) AS "Products"
@@ -445,7 +493,16 @@ The outer query is exactly the same as before. Only the query in brackets change
 
 ### Reading a nested query
 
-The last query works, but it is hard to read: brackets inside brackets inside a `HAVING`. Read it from the inside out: the innermost query builds a table of customer totals, the query around it averages them, and the outer query compares each customer with that average. A later lesson in this series gives each step a name, so a query like this reads from top to bottom.
+The last query is a monster: a table, inside a value, inside a query. Read it from the inside out:
+
+1. The deepest subquery is your own query from before: the spend per customer.
+2. The next one, with `AVG`, turns all those spends into a single average.
+3. The `HAVING` keeps only the customers who spent more than that average.
+4. The joins, from `"Customers"` down to `"Order Details"`, reach the money; the `SELECT` shows `"CompanyName"` and `"Total sales"`; `ORDER BY` puts the biggest at the top.
+
+**Does the database work the average out again for every customer?** With 119 customers that would sound slow, but no. The subquery never mentions the customer being checked, so it does not change from row to row: the database works it out once and reuses the number, exactly like the 24.01 you used to paste in, only now the database fills it in. Subqueries that do depend on the outer row exist too. They are worked out row by row, and that comes later in this series.
+
+The query works, but it is hard to read: brackets inside brackets inside a `HAVING`. Ten minutes to understand a query like this is perfectly normal. A later lesson in this series gives each subquery a name, so a query like this reads from top to bottom.
 
 {/* THE CASE SEGMENT (.docs/plan-academy-course-stories-artefacts.md §3.2 and the story map §3.2.1, S2·00):
     the series opens here. The same skill as the lesson — two VALUE subqueries — applied to one more
@@ -497,7 +554,7 @@ Why would invoicing fall while orders grew? It arrived as the manager's question
 
 1. **Run the inside on its own.**
 2. **Check its shape:** a value, a list or a table. The shape decides where it can go, and the wrong shape stops the query with an error.
-3. **Check its grain:** one row of the inside represents what? The wrong grain does not produce an error. It produces 118 customers who are nearly all "above average".
+3. **Check its grain:** one row of the inside represents what? The wrong grain does not produce an error. It produces 118 customers out of 119 who are "above average".
 
 ## Practice
 

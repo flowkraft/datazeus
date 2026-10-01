@@ -52,7 +52,6 @@ String SCALE = (params?.SCALE ?: 'S').toString().toUpperCase()
 // Also write the export as a file, crm_customers.csv, into this folder (UTF-8, header row, comma-delimited; a NULL
 // is an empty field, an empty string is ""). Empty: the database table only.
 String EXPORT_DIR = (params?.EXPORT_DIR ?: '').toString()
-int VERSION = 1
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -118,7 +117,8 @@ LocalDate AS_OF = LocalDate.of(2024, 12, 31)
 LocalDate MIGRATED_BEFORE = LocalDate.of(2020, 1, 1)
 int MATCHING = 120, DUPLICATES = 12, PROSPECTS = 3, NO_ERP = 8
 
-def rnd = { String stream -> new Random(("${DATASET}|${VERSION}|${SCALE}|${stream}".toString()).hashCode() * 2654435761L) }
+// The |1| is a fixed part of every seed: every row, checksum and quoted figure is built from it, so it never changes.
+def rnd = { String stream -> new Random(("${DATASET}|1|${SCALE}|${stream}".toString()).hashCode() * 2654435761L) }
 def q = { String name -> "\"${name}\"".toString() }
 def S = { String table -> "${SRC}.${q(table)}".toString() }
 def T = { String table -> "${SCHEMA}.${q(table)}".toString() }
@@ -130,8 +130,8 @@ def toDate = { Object v -> v == null ? null : v instanceof Timestamp ? ((Timesta
                          : v instanceof java.sql.Date ? ((java.sql.Date) v).toLocalDate() : v as LocalDate }
 
 if (!exists(SRC, '_dataset_info')) throw new IllegalStateException("Install Northwind Company scale ${SCALE} first (academy-northwind-co-install; schema ${SRC} not found).")
-log.info("=== CRM export {} v{} from {} on {}: {} customers, {} duplicates, {} prospects ===",
-         SCHEMA, VERSION, SRC, vendor, MATCHING, DUPLICATES, PROSPECTS)
+log.info("=== CRM export {} from {} on {}: {} customers, {} duplicates, {} prospects ===",
+         SCHEMA, SRC, vendor, MATCHING, DUPLICATES, PROSPECTS)
 
 // ── 1. the customers, as Company has them on 2024-12-31 ─────────────────────────────────────
 // revenue24: what they bought in 2024 (active, the credit limit, the M/L selection); revenue: what they bought ever
@@ -400,7 +400,7 @@ insert('_plants', ['plant', 'lesson', 'crm_id', 'ref', 'detail'], plants)
 // Canonical form (Northwind Company's, so academy-verify.groovy checks this schema unchanged with SCHEMA=crm_export_s):
 // every column, names sorted case-insensitively; NULL as <NULL>. Scale S: rows tab-joined and sorted, SHA-256 of the
 // rows joined by newlines; M and L: the sum of every row's SHA-256 modulo 2^256 (RowSum).
-dbSql.execute("CREATE TABLE ${T('_dataset_info')} (\"Dataset\" VARCHAR(40), \"Version\" INTEGER, \"Scale\" VARCHAR(2), \"TableName\" VARCHAR(40), \"RowCount\" INTEGER, \"Checksum\" VARCHAR(64))".toString())
+dbSql.execute("CREATE TABLE ${T('_dataset_info')} (\"Dataset\" VARCHAR(40), \"Scale\" VARCHAR(2), \"TableName\" VARCHAR(40), \"RowCount\" INTEGER, \"Checksum\" VARCHAR(64))".toString())
 List<List> info = ['crm_customers', '_plants'].collect { String table ->
     List<String> cols = dbSql.rows('SELECT column_name FROM information_schema.columns WHERE table_schema = ? AND table_name = ?', [SCHEMA, table])
                              .collect { it.column_name as String }.sort { a, b -> a.compareToIgnoreCase(b) }
@@ -409,14 +409,14 @@ List<List> info = ['crm_customers', '_plants'].collect { String table ->
         List<String> lines = []
         dbSql.eachRow(select) { r -> lines << (1..cols.size()).collect { RowSum.canon(r.getObject(it)) }.join('\t') }
         lines.sort()
-        [DATASET, VERSION, SCALE, table, lines.size(), MessageDigest.getInstance('SHA-256').digest(lines.join('\n').getBytes('UTF-8')).collect { String.format('%02x', it) }.join()]
+        [DATASET, SCALE, table, lines.size(), MessageDigest.getInstance('SHA-256').digest(lines.join('\n').getBytes('UTF-8')).collect { String.format('%02x', it) }.join()]
     } else {
         RowSum rs = new RowSum()
         dbSql.eachRow(select) { r -> rs.add(r, cols.size()) }
-        [DATASET, VERSION, SCALE, table, rs.count, rs.hex()]
+        [DATASET, SCALE, table, rs.count, rs.hex()]
     }
 }
-insert('_dataset_info', ['Dataset', 'Version', 'Scale', 'TableName', 'RowCount', 'Checksum'], info)
+insert('_dataset_info', ['Dataset', 'Scale', 'TableName', 'RowCount', 'Checksum'], info)
 
 // ── 10. the file, when asked for ────────────────────────────────────────────────────────────
 if (EXPORT_DIR) {
@@ -435,5 +435,5 @@ if (EXPORT_DIR) {
     log.info("  wrote {} ({} rows)", out.absolutePath, rows.size())
 }
 
-log.info("=== {} v{} installed from {}: {} rows — {} customers ({} without an ERP account), {} duplicates, {} prospects ===",
-         SCHEMA, VERSION, SRC, all.size(), records.size(), NO_ERP, duplicates.size(), prospects.size())
+log.info("=== {} installed from {}: {} rows — {} customers ({} without an ERP account), {} duplicates, {} prospects ===",
+         SCHEMA, SRC, all.size(), records.size(), NO_ERP, duplicates.size(), prospects.size())

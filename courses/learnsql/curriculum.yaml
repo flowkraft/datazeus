@@ -732,6 +732,10 @@ series:
       #                                  (8 customers; the join gives 9 rows)
       #   a TABLE   subquery in FROM     the per-customer totals the hook needs
       # EXISTS, NOT EXISTS and correlated subqueries are 25, after CTEs. Do not preview them here.
+      # THE QUIET FAILURE IS 00's (added 2026-09-30): after the loud "more than one row" error, the same query
+      # with category 9 -- which has no products -- returns 0 rows and NO error, because an empty subquery hands
+      # back NULL and nothing is greater than NULL. It reuses the MAX query and ends on "run the inside alone".
+      # NOT IN with a NULL in the list, and ANY / ALL, are NOT here: both are 25's (see its brief).
       # BUILDS ON: Series 1 · 25 (aggregates), 1 · 30 (GROUP BY), 1 · 50 (the report and its grain).
       # WORKPLACE: compare each row with a number the data computes (an average, a maximum); filter by a list
       #   another query produces; query a query's result; check what the inside query's rows are first.
@@ -1069,6 +1073,17 @@ series:
       # nothing like a NULL comparison. Teach the habit: NOT EXISTS, always. Series 3 · 22 comes
       # back to it as a query plan; this episode owns the correctness.
       #
+      # ANY AND ALL, AS ONE RECOGNITION BEAT AFTER THE NOT IN TRAP (decided 2026-09-30) -- "know it, don't
+      # write it", not a segment and not a koan. They are the list shape's comparison operators, and two of
+      # them are the NOT IN trap in other clothes: `= ANY (...)` is IN; `<> ALL (...)` is NOT IN, with the same
+      # NULL failure. ON NORTHWIND COMPANY S (DuckDB, 2026-09-30): "UnitPrice" > ALL (prices of category 1)
+      # keeps 14 products -- the same 14 as `> (SELECT MAX(...))` in 00, so the reader meets an old answer in a
+      # new spelling. THE PAYOFF IS THE EMPTY LIST: against category 9 (which has no products) `> (SELECT MAX(...))`
+      # returns 0 rows, the quiet NULL that 00 shows, while `> ALL (empty)` returns ALL 80 -- "greater than every
+      # one of nothing" is vacuously true. Same question, opposite silent answers; that contrast is the reason
+      # to teach ALL here. The habit stays MAX/MIN for one value and NOT EXISTS for "none of". Say once that
+      # SQLite has neither operator, so a cross-vendor reader should prefer the MAX/NOT EXISTS spellings.
+      #
       # A PROMISE MADE IN SERIES 1 · 35: HAVING with no GROUP BY is "genuinely useful inside a
       # subquery". This episode owes the worked example — orders whose lines add up to more than
       # 400 units, EXISTS (… HAVING sum("Quantity") > 400) with no GROUP BY: 6 orders. The brief
@@ -1077,7 +1092,8 @@ series:
       # A second verified question: customers who ordered in Q1 2024 and never since — 10 of them.
       # NOT A CHURN QUESTION (2026-09-15): every one of the 10 is simply not due for its next order
       # yet (78–159 days since the last, ~190-day cycle). Use it as plain SQL, or not at all.
-      # BUILDS ON: 00, 20, Series 1 · 35 and 1 · 45.
+      # BUILDS ON: 00 (incl. its empty-subquery beat: a subquery that finds nothing hands back NULL, so
+      # `> (SELECT MAX ...)` quietly returns 0 rows), 20, Series 1 · 35 and 1 · 45.
       # WORKPLACE: "has any / has none" questions — EXISTS, NOT EXISTS, the Series 1 · 40 anti-join — correlated
       #   subqueries, and NOT IN failing on a NULL.
       # STORY (map 2026-09-17) — SEGMENT, question 2 opens: a correlated EXISTS — customers with an un-dated order who

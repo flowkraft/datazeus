@@ -66,13 +66,13 @@ def eachRowStreamed = { String sql, Closure c ->
 
 List expected
 try {
-    expected = dbSql.rows("SELECT \"Dataset\", \"Version\", \"Scale\", \"TableName\", \"RowCount\", \"Checksum\" FROM ${SCHEMA}.\"_dataset_info\" ORDER BY \"TableName\"".toString())
+    expected = dbSql.rows("SELECT \"Dataset\", \"Scale\", \"TableName\", \"RowCount\", \"Checksum\" FROM ${SCHEMA}.\"_dataset_info\" ORDER BY \"TableName\"".toString())
 } catch (Exception e) {
     log.error("NOT INSTALLED: schema {} has no _dataset_info table ({}). Run academy-northwind-co-install first.", SCHEMA, e.message)
     throw e
 }
 String scale = expected[0].Scale
-log.info("=== Verifying {} ({} v{} scale {}) on {} ===", SCHEMA, expected[0].Dataset, expected[0].Version, scale, vendor)
+log.info("=== Verifying {} ({} scale {}) on {} ===", SCHEMA, expected[0].Dataset, scale, vendor)
 
 List<String> problems = []
 expected.each { row ->

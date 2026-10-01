@@ -1,6 +1,7 @@
 package datazeus.learnsql.series2._00
 
 import datazeus.support.NorthwindCoGateSpec
+import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
 import java.math.RoundingMode
@@ -26,8 +27,11 @@ import java.sql.SQLException
  *    ordered-and-invoiced-2024                                      §4b the case segment
  *
  * §0 asserts the dataset facts the setup section and slide quote, §5 every number the KOANS'
- * comments state, and §6 runs the koans file itself, as written, on both engines (ported from
- * Series 1 · 50 §8).
+ * comments state, §6 runs the koans file itself, as written, on both engines (ported from
+ * Series 1 · 50 §8), and §7 pins the QUERY TEXT: every SQL block the video draws is read out of
+ * the video's own index.tsx and must be a lesson script (or one of the two the video alone shows),
+ * and every query in the scripts, the video and the koans is checked for portable ANSI SQL
+ * (double-quoted identifiers, DATE literals, no dialect functions) on top of running on both engines.
  *
  * ── THE EARN, AS ARITHMETIC ────────────────────────────────────────────────────────────────
  * The average ORDER LINE is 595.13 and 118 of the 119 customers who ever ordered beat it; the one
@@ -431,10 +435,10 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
                                      HAVING SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount"))
                                           > (SELECT AVG("UnitPrice" * "Quantity" * (1 - "Discount")) FROM "Order Details")) t''').n == 20
 
-        and: "koan 8: the average price of all 80 products is 24.01 (§1), and three categories beat it"
-        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM (
-                                     SELECT "CategoryID" FROM "Products" GROUP BY "CategoryID"
-                                     HAVING AVG("UnitPrice") > (SELECT AVG("UnitPrice") FROM "Products")) t''').n == 3
+        and: "koan 8: there is no employee 99 (the company has 29), so MAX over their orders is one row holding NULL"
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Employees" WHERE "EmployeeID" = 99').n == 0
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Orders" WHERE "EmployeeID" = 99').n == 0
+        sqlFor(engine).firstRow('SELECT MAX("Freight") AS m FROM "Orders" WHERE "EmployeeID" = 99').m == null
 
         and: "koan 9: nine reps took orders, two share a surname, the average rep sold 1668559.02, and the fifth misses it by under 26,000"
         sqlFor(engine).firstRow('SELECT count(DISTINCT "EmployeeID") AS n FROM "Orders"').n == 9
@@ -474,7 +478,25 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
         resultOf(engine, sql, expected) == expected
 
         where:
-        [engine, title] << [ENGINES, ANSWERS.keySet() as List].combinations()
+        [engine, title] << [ENGINES, ANSWERS.findAll { it.value != null }.keySet() as List].combinations()
+    }
+
+    @Unroll
+    def "[#engine] koan 8 (predict), as written: three queries that run, and the numbers the comment states"() {
+        given:
+        def title = "predict: a subquery that finds nothing raises no error and returns no rows"
+        def queries = koanQueries(title)
+
+        expect: "three queries, three blanks, and the blanks are the three row counts 0, 1 and 0"
+        queries.size() == 3
+        koanBody(title).count("== ___") == 3
+        queries.collect { sqlFor(engine).rows(it).size() } == [0, 1, 0]
+
+        and: "run alone, the MAX brackets hand back ONE row holding NULL"
+        sqlFor(engine).firstRow(queries[1]).getAt(0) == null
+
+        where:
+        engine << ENGINES
     }
 
     def "the koans file matches the video's koans slide: ten koans, its three names, two whole queries last"() {
@@ -487,11 +509,13 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
         titles[0] == "a value in brackets: freight above the average"
         titles[1] == "a value in brackets can be the whole comparison"
         titles[2] == "one value only: turn a column of values into one"
+        titles[7] == "predict: a subquery that finds nothing raises no error and returns no rows"
         koanQueries(titles[8])*.trim() == ["___"]
         koanQueries(titles[9])*.trim() == ["___"]
         koansSource().contains("extends NorthwindCoKoanBase")
     }
 
+    @IgnoreIf({ !SubqueriesSpec.videoPresent() })
     def "the video's editor mock quotes koan 1 verbatim"() {
         // ED_CODE and animFill in the video file hard-code koan 1's blank line and its expected
         // value; if the koan moves, the mock would draw a line the file no longer has.
@@ -502,7 +526,178 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
         koanBody("a value in brackets can be the whole comparison").contains('shouldReturn([[567, "BRAM2", 726.54]], \'\'\'')
     }
 
+    // --- 7. THE QUERY TEXT: the video's SQL, the scripts' SQL and the koans' SQL --------------------
+
+    /** The scripts the video draws, by name — every one must be on screen, as written. */
+    private static final List<String> SCRIPTS_IN_VIDEO = [
+            "avg-price", "above-average-price-typed", "aggregate-in-where", "above-average-price",
+            "dearer-than-beverages-error", "dearer-than-every-beverage", "royal-raisins-customers",
+            "average-sale", "customers-above-the-average-line", "average-customer",
+            "customers-above-the-average-customer", "ordered-and-invoiced-2024"]
+
+    /** The two queries only the video shows (no script, no article block). */
+    private static final String VIDEO_NO_CATEGORY_NINE = '''SELECT "ProductName", "UnitPrice"
+FROM "Products"
+WHERE "UnitPrice" > (SELECT MAX("UnitPrice")
+                     FROM "Products"
+                     WHERE "CategoryID" = 9)
+ORDER BY "UnitPrice" DESC;'''
+    private static final String VIDEO_AVERAGE_CUSTOMER_BESIDE_THE_LINE = '''SELECT ROUND(AVG(t."Total"), 2) AS "Average"
+FROM (SELECT o."CustomerID",
+             SUM(d."UnitPrice" * d."Quantity"
+               * (1 - d."Discount")) AS "Total"
+      FROM "Orders" o
+      JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+      GROUP BY o."CustomerID") AS t;'''
+
+    @IgnoreIf({ !SubqueriesSpec.videoPresent() })
+    def "every SQL block the video draws is a lesson script, or one of the two the video alone shows"() {
+        given:
+        def drawn = videoQueries()
+        def allowed = (SCRIPTS_IN_VIDEO.collect { norm(script(it)) } +
+                       [norm(VIDEO_NO_CATEGORY_NINE), norm(VIDEO_AVERAGE_CUSTOMER_BESIDE_THE_LINE)]) as Set
+
+        expect: "the video draws SQL at all"
+        drawn.size() >= 19
+
+        and: "nothing on screen is a query the gate has not run"
+        drawn.findAll { !(norm(it) in allowed) }.isEmpty()
+
+        and: "and every script the video uses is on screen as written"
+        SCRIPTS_IN_VIDEO.every { name -> drawn.any { norm(it) == norm(script(name)) } }
+        drawn.any { norm(it) == norm(VIDEO_NO_CATEGORY_NINE) }
+        drawn.any { norm(it) == norm(VIDEO_AVERAGE_CUSTOMER_BESIDE_THE_LINE) }
+    }
+
+    @IgnoreIf({ !SubqueriesSpec.videoPresent() })
+    def "the hands-on card's query is the at-or-below script with its one blank filled"() {
+        given: "hands-on-average draws `... <= ___;` and the learner fills the brackets in"
+        def card = videoArray("ctaSql").find { it.contains("___") }
+
+        expect:
+        card != null
+        norm(card.replace("___", '(SELECT AVG("UnitPrice") FROM "Products")')) == norm(script("at-or-below-average-price"))
+    }
+
+    def "the royal-raisins scripts ask for 2024 as a half-open range, as the video does"() {
+        expect: "a lone >= would let 2025 in; the dataset ends in 2024, so both agree, but the text is the video's"
+        script("royal-raisins-customers").contains("""o."OrderDate" <  DATE '2025-01-01'""")
+        script("royal-raisins-customers-joined").contains("""o."OrderDate" <  DATE '2025-01-01'""")
+    }
+
+    @Unroll
+    def "[#engine] the video-only queries return what the video says"() {
+        expect: "no-rows-no-error: category 9 does not exist (1 to 8, ten products each), the inside is NULL, the whole query is 0 rows"
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Categories" WHERE "CategoryID" = 9').n == 0
+        sqlFor(engine).firstRow('SELECT count(DISTINCT "CategoryID") AS n FROM "Products"').n == 8
+        sqlFor(engine).rows('SELECT "CategoryID" AS c FROM "Products" GROUP BY "CategoryID" HAVING count(*) <> 10').isEmpty()
+        sqlFor(engine).firstRow('SELECT MAX("UnitPrice") AS m FROM "Products" WHERE "CategoryID" = 9').m == null
+        sqlFor(engine).rows(VIDEO_NO_CATEGORY_NINE).isEmpty()
+
+        and: "two-averages: 126193.54 beside 595.13, the same money counted per customer and per line"
+        dec(sqlFor(engine).firstRow(VIDEO_AVERAGE_CUSTOMER_BESIDE_THE_LINE).Average) == dec("126193.54")
+        dec(sqlFor(engine).firstRow(VIDEO_AVERAGE_CUSTOMER_BESIDE_THE_LINE).Average) ==
+                dec(sqlFor(engine).firstRow(script("average-customer")).values().first())
+
+        where:
+        engine << ENGINES
+    }
+
+    @IgnoreIf({ !SubqueriesSpec.videoPresent() })
+    def "the video quotes the koan names and koan 1 as the file has them"() {
+        given:
+        def video = videoSource()
+        def titles = (koansSource() =~ /(?m)^    def "(.+?)"\(\)/).collect { it[1] }
+
+        expect: "do-koans' checklist and the editor mock use the koans' own names and lines"
+        [0, 1, 2].every { video.contains('name: "' + titles[it] + '"') }
+        video.contains('WHERE \\"Freight\\" > (SELECT ___(\\"Freight\\") FROM \\"Orders\\")')
+        video.contains("<b>10</b> koans")
+        titles.size() == 10
+    }
+
+    // ANSI: the dialect words and shorthand that do not run on every one of the nine databases.
+    private static final Map<String, String> NOT_ANSI = [
+            "LIMIT"                              : /(?i)\bLIMIT\b/,
+            "TOP n"                              : /(?i)\bSELECT\s+(DISTINCT\s+)?TOP\b/,
+            "double-colon cast"                  : /::/,
+            "backtick or [bracket] identifier"   : /[`\[]/,
+            "ILIKE / REGEXP / RLIKE"             : /(?i)\b(ILIKE|REGEXP|RLIKE)\b/,
+            "IFNULL / ISNULL / NVL"              : /(?i)\b(IFNULL|ISNULL|NVL)\b/,
+            "vendor date functions"              : /(?i)\b(NOW|GETDATE|DATEADD|DATEDIFF|DATE_TRUNC|DATE_ADD|STRFTIME|TO_CHAR|TO_DATE|YEAR|MONTH)\s*\(/,
+            "GROUP/ORDER BY ALL, EXCLUDE, QUALIFY": /(?i)\b(GROUP\s+BY\s+ALL|ORDER\s+BY\s+ALL|EXCLUDE|QUALIFY)\b/,
+            "unquoted table name"                : /(?i)\b(FROM|JOIN)\s+[A-Za-z_]/,
+            "bare date literal"                  : /(?<!DATE\s)'\d{4}-\d{2}-\d{2}'/,
+    ]
+
+    private static List<String> ansiViolations(String sql) {
+        def text = sql.replace("___", "")   // a koan blank is not SQL
+        NOT_ANSI.findAll { why, rx -> text.find(rx) != null }.keySet() as List
+    }
+
+    def "every query the scripts, the video and the koans run is portable ANSI SQL"() {
+        given:
+        def scripts = new File("../courses/learnsql/series2-intermediate/00-subqueries/scripts").listFiles()
+                .findAll { it.name.endsWith(".sql") }.collectEntries { [it.name, it.getText("UTF-8")] }
+        def video = [:]
+        videoQueries().eachWithIndex { q, i -> video["video block ${i + 1}".toString()] = q }
+        def koans = [:]
+        (koansSource() =~ /(?s)'''(.*?)'''/).collect { it[1] }.eachWithIndex { q, i -> koans["koan query ${i + 1}".toString()] = q }
+        def answers = [:]
+        ANSWERS.findAll { it.value != null }.each { t, a -> answers["answer to '${t}'".toString()] = koanSql(t) }
+
+        expect: "the sources are all there"
+        scripts.size() >= 14
+        !videoPresent() || video.size() >= 19
+        koans.size() >= 10
+        answers.size() == 9
+
+        and: "none of them uses a construct outside the standard"
+        (scripts + video + koans + answers).collectEntries { name, q -> [name, ansiViolations(q)] }
+                .findAll { it.value }.isEmpty()
+
+        and: "the lint itself bites: dialect SQL is caught"
+        ansiViolations('SELECT * FROM "Products" LIMIT 3') == ["LIMIT"]
+        ansiViolations('SELECT x::int FROM "Products"') == ["double-colon cast"]
+        ansiViolations('SELECT * FROM Products') == ["unquoted table name"]
+        ansiViolations("""SELECT 1 FROM "Orders" WHERE "OrderDate" >= '2024-01-01'""") == ["bare date literal"]
+        ansiViolations("""SELECT 1 FROM "Orders" WHERE "OrderDate" >= DATE '2024-01-01'""").isEmpty()
+    }
+
     // --- helpers ---------------------------------------------------------------------------------
+
+    private static String norm(String sql) { sql.replaceAll(/\s+/, " ").replaceAll(/\s*;\s*$/, "").trim() }
+
+    // The video lives in the cli-remotion project, a sibling of this repo in the monorepo. A standalone
+    // clone of this repo has no video to read, so every check that reads it skips instead of failing.
+    private static final File VIDEO_FILE = new File("../../../../cli-remotion/src/videos/rb/learnsql-series2-00-subqueries/index.tsx")
+
+    static boolean videoPresent() { VIDEO_FILE.exists() }
+
+    private static String videoSource() { VIDEO_FILE.exists() ? VIDEO_FILE.getText("UTF-8") : "" }
+
+    /** The string-literal lines of every `<key>: [` array in the video, each array joined as one query. */
+    private static List<String> videoArray(String key) {
+        def out = []
+        def lines = videoSource().readLines()
+        for (int i = 0; i < lines.size(); i++) {
+            if (!(lines[i] =~ /^\s*${key}: \[\s*$/)) continue
+            def parts = []
+            for (int j = i + 1; j < lines.size() && !(lines[j] =~ /^\s*\],?\s*$/); j++) {
+                def m = lines[j] =~ /^\s*(['"])(.*)\1,?\s*$/
+                if (m.matches()) parts << unescapeJs(m.group(2))
+            }
+            out << parts.join("\n")
+        }
+        out
+    }
+
+    /** Every `sql: [ ... ]` block the video draws (scene cards, the monster view, both twoRoutes sides, the before-card). */
+    private static List<String> videoQueries() { videoArray("sql") }
+
+    private static String unescapeJs(String s) {
+        s.replace("\\\\", "\u0000").replace("\\'", "'").replace('\\"', '"').replace("\u0000", "\\")
+    }
 
     private static String script(String name) {
         new File("../courses/learnsql/series2-intermediate/00-subqueries/scripts/${name}.sql").text
@@ -538,7 +733,7 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
             "a join repeats what IN does not"                                     : ['d."ProductID" = p."ProductID"'],
             "a table in FROM, and its grain"                                      : ['GROUP BY p."SupplierID"'],
             "the average of what: suppliers above the average supplier"           : ['t."Total"'],
-            "a subquery beside HAVING"                                            : ['AVG("UnitPrice")'],
+            "predict: a subquery that finds nothing raises no error and returns no rows" : null,
             "write the whole query: sales reps who beat the average sales rep"    : ['''
                 SELECT e."FirstName", e."LastName",
                        ROUND(SUM(d."UnitPrice" * d."Quantity"

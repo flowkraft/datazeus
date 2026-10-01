@@ -165,7 +165,6 @@ String OUT_DIR = (params?.OUT_DIR ?: 'db/academy-files').toString()
 // The location written into the Iceberg table's metadata. Empty: the folder the table is written to (a file: URI,
 // readable where it was written). To read it from MinIO instead, set s3://academy/northwind_co_files_<scale>/iceberg/order_lines
 String ICEBERG_LOCATION = (params?.ICEBERG_LOCATION ?: '').toString()
-int VERSION = 1
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -262,7 +261,7 @@ def fwd = { String p -> p.replace('\\', '/').replace("'", "''") }       // a pat
 def at = { String rel -> fwd(new File(root, rel).path) }
 def relOf = { String f -> rootPath.relativize(new File(f).canonicalFile.toPath()).toString().replace('\\', '/') }
 
-log.info("=== Files {} v{} from {} on {} → {} ===", NAME, VERSION, SRC, vendor, root)
+log.info("=== Files {} from {} on {} → {} ===", NAME, SRC, vendor, root)
 
 // ── a private DuckDB, in memory, to shape and write the files ──────────────────────────────
 // One thread: the same rows are written in the same order into the same files every run.
@@ -307,7 +306,7 @@ load('src_status', 'StatusChangeID INTEGER, OrderID INTEGER, Status VARCHAR, Cha
      """SELECT h."StatusChangeID", h."OrderID", h."Status", h."ChangedAt" FROM ${S('OrderStatusHistory')} h
         WHERE h."OrderID" IN (SELECT "OrderID" FROM ${S('Orders')} WHERE "CreatedAt" >= TIMESTAMP '${DAILY_FROM} 00:00:00'
                                                                    AND "CreatedAt" <  TIMESTAMP '${AS_OF.plusDays(1)} 00:00:00')""")
-List<Map> sourceInfo = dbSql.rows("SELECT * FROM ${SRC}._dataset_info ORDER BY 4".toString()).collect { r -> r.collectEntries { k, v -> [(k.toString()): v] } }
+List<Map> sourceInfo = dbSql.rows("SELECT \"Dataset\", \"Scale\", \"TableName\", \"RowCount\", \"Checksum\" FROM ${SRC}._dataset_info ORDER BY \"TableName\"".toString()).collect { r -> r.collectEntries { k, v -> [(k.toString()): v] } }
 
 // ── 2. the order lines ──────────────────────────────────────────────────────────────────────
 List<List<String>> LINE_COLS = [['OrderID', 'INTEGER', 'int'], ['OrderDate', 'DATE', 'date'], ['CustomerID', 'VARCHAR', 'string'],
@@ -634,8 +633,9 @@ log.info("  api: {} pages of up to {}", pages, API_PAGE_SIZE)
 File tableDir = new File(root, 'iceberg/order_lines')
 String tableLoc = ICEBERG_LOCATION ?: { String p = tableDir.path.replace('\\', '/'); 'file://' + (p.startsWith('/') ? '' : '/') + p }()
 tableLoc = tableLoc.replaceAll('/+$', '')
-def uuid = { String what -> UUID.nameUUIDFromBytes("${NAME}|${VERSION}|${what}".toString().getBytes('UTF-8')).toString() }
-def digest = { String what -> MessageDigest.getInstance('SHA-256').digest("${NAME}|${VERSION}|${what}".toString().getBytes('UTF-8')) }
+// The |1| is a fixed part of every id: the table's UUIDs and snapshot ids are built from it, so it never changes.
+def uuid = { String what -> UUID.nameUUIDFromBytes("${NAME}|1|${what}".toString().getBytes('UTF-8')).toString() }
+def digest = { String what -> MessageDigest.getInstance('SHA-256').digest("${NAME}|1|${what}".toString().getBytes('UTF-8')) }
 def snapshotIdOf = { String what -> new BigInteger(1, digest("snapshot|${what}")).longValue() & Long.MAX_VALUE }
 def syncOf = { String file -> Arrays.copyOf(digest("sync|${file}"), 16) }
 def le4 = { int v -> java.nio.ByteBuffer.allocate(4).order(java.nio.ByteOrder.LITTLE_ENDIAN).putInt(v).array() }
@@ -885,7 +885,7 @@ paths.sort().each { String rel ->
 }
 def setOf = { String prefix -> files.findAll { it.path == prefix || it.path.startsWith(prefix + '/') } }
 Map manifest = [
-    dataset: DATASET, version: VERSION, scale: SCALE, name: NAME, as_of: AS_OF.toString(),
+    dataset: DATASET, scale: SCALE, name: NAME, as_of: AS_OF.toString(),
     source: [schema: SRC, dataset_info: sourceInfo],
     generator: [script: 'academy-files-export.groovy', duckdb: duckVersion, poi: org.apache.poi.Version.version],
     parquet: [writer: "DuckDB ${duckVersion}".toString(), compression: 'zstd', row_group_rows: ROW_GROUP_ROWS, statistics: 'min/max per row group'],
@@ -917,8 +917,8 @@ Map manifest = [
 new File(root, 'manifest.json').setText(groovy.json.JsonOutput.prettyPrint(toJson(manifest)) + '\n', 'UTF-8')
 new File(root, '.incomplete').delete()
 
-log.info("=== {} v{} written to {}: {} files, {} bytes; {} order lines, {} daily order files, Iceberg {} snapshot(s) ===",
-         NAME, VERSION, root, files.size(), files.sum(0L) { it.bytes }, olCount, DAILY_DAYS, icebergInfo.snapshots.size())
+log.info("=== {} written to {}: {} files, {} bytes; {} order lines, {} daily order files, Iceberg {} snapshot(s) ===",
+         NAME, root, files.size(), files.sum(0L) { it.bytes }, olCount, DAILY_DAYS, icebergInfo.snapshots.size())
 
 } finally {
     mem.close()

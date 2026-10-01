@@ -7,5 +7,6 @@ WHERE "CustomerID" IN (
     ON d."OrderID" = o."OrderID"
   WHERE d."ProductID" = 39
     AND o."OrderDate" >= DATE '2024-01-01'
+    AND o."OrderDate" <  DATE '2025-01-01'
 )
 ORDER BY "CompanyName";

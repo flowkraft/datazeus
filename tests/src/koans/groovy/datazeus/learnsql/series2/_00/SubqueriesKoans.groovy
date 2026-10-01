@@ -48,7 +48,7 @@ import spock.lang.Stepwise
  *   5    a join repeats what IN does not
  *   6    a table in FROM, and its grain
  *   7    the average of WHAT: suppliers above the average supplier
- *   8    a subquery beside HAVING
+ *   8    predict: a subquery that finds nothing raises no error and returns no rows
  *   9    write the whole query: sales reps who beat the average sales rep
  *  10    write the whole query: a value inside a value inside a list
  *
@@ -90,8 +90,6 @@ import spock.lang.Stepwise
  *     "SupplierID"      INTEGER        "CategoryID"      INTEGER
  *     "UnitPrice"       DECIMAL(19,4)  "UnitCost"        DECIMAL(19,4)
  *     "Discontinued"    BOOLEAN        plus stock columns.
- *
- *   "Categories" — 8 rows. "CategoryID" INTEGER, "CategoryName" VARCHAR, "Description" VARCHAR.
  *
  *   "Order Details" — 25,233 rows, 5 columns. ONE ROW PER THING BOUGHT.
  *     "OrderID"         INTEGER        "ProductID"       INTEGER
@@ -213,6 +211,11 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
     // 7) THE AVERAGE OF WHAT. Which suppliers sell more than the average SUPPLIER?
     //    Each supplier's total is compared with the average of the per-supplier totals —
     //    koan 6's table, now inside the HAVING. Fill in what the average is taken over.
+    //    HAVING, not WHERE: the average of the totals only exists once the rows are grouped, and
+    //    a WHERE that tried to compare with a SUM or an AVG of its own rows is refused with
+    //    "aggregate functions are not allowed in WHERE". The brackets are worked out ONCE —
+    //    they never mention the supplier being checked, so nothing in them changes from one
+    //    supplier to the next.
     //    (Nine suppliers of the twenty. Compare them with the average ORDER LINE instead —
     //     595.13 — and all twenty would pass, which is the lesson's trap on different
     //     tables: a supplier's total is thousands of lines added up, so of course it beats
@@ -247,23 +250,45 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
         ''')
     }
 
-    // 8) A SUBQUERY BESIDE HAVING. Which categories have an average product price above the
-    //    average price of ALL products? HAVING filters the groups; the brackets supply the
-    //    one number every group is measured against. Fill in the brackets' select list.
-    //    (Three of the eight categories, dearest first. Checkable fact: the average price
-    //     of all 80 products is 24.01.)
-    def "a subquery beside HAVING"() {
+    // 8) PREDICT — nothing found, nothing said. Three queries are already written and all
+    //    three run without complaint. The first asks for the orders that paid more freight than
+    //    EVERY order taken by employee 99. The second is its brackets, run alone: the largest
+    //    freight among employee 99's orders. The third is the same brackets without MAX: the
+    //    freight of each of employee 99's orders. Say how many rows each one returns BEFORE you
+    //    look, then put your three numbers in.
+    //    (There is no employee 99 — the company has 29. A subquery that finds nothing hands
+    //     back NULL, and nothing is greater than NULL, so the outer WHERE keeps no row and
+    //     raises no error. Careful with the middle one: MAX over no rows is still ONE row,
+    //     and the value in it is NULL. Zero rows can mean "no answer" or "wrong question" —
+    //     running the inside alone is how you tell which.)
+    def "predict: a subquery that finds nothing raises no error and returns no rows"() {
+        given: "the whole query — brackets and all"
+        int wholeQuery = rows('''
+            SELECT "OrderID", "Freight"
+            FROM "Orders"
+            WHERE "Freight" > (SELECT MAX("Freight")
+                               FROM "Orders"
+                               WHERE "EmployeeID" = 99)
+        ''').size()
+
+        and: "the brackets, run alone"
+        int insideWithMax = rows('''
+            SELECT MAX("Freight")
+            FROM "Orders"
+            WHERE "EmployeeID" = 99
+        ''').size()
+
+        and: "the same brackets without MAX"
+        int insideWithoutMax = rows('''
+            SELECT "Freight"
+            FROM "Orders"
+            WHERE "EmployeeID" = 99
+        ''').size()
+
         expect:
-        shouldReturn([["Meat/Poultry", 38.97],
-                      ["Confections", 29.29],
-                      ["Dairy Products", 26.49]], '''
-            SELECT c."CategoryName", ROUND(AVG(p."UnitPrice"), 2) AS "Average price"
-            FROM "Products" p
-            JOIN "Categories" c ON c."CategoryID" = p."CategoryID"
-            GROUP BY c."CategoryName"
-            HAVING AVG(p."UnitPrice") > (SELECT ___ FROM "Products")
-            ORDER BY "Average price" DESC
-        ''')
+        wholeQuery == ___
+        insideWithMax == ___
+        insideWithoutMax == ___
     }
 
     // 9) The whole query — no scaffolding.

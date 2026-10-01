@@ -27,6 +27,15 @@ class Cumulative {
     int find(double x) { int lo = 0, hi = cum.length - 1; while (lo < hi) { int mid = (lo + hi) >>> 1; if (x < cum[mid]) hi = mid else lo = mid + 1 }; lo }
 }
 
+// One event of the log, already as the JSON it is written as: its key, and its rows as the end of its line. At L the
+// log carries over half a million events, and as maps they would not fit in the Java heap of the DataPallas that runs this.
+@CompileStatic
+class Event {
+    final String table, op, key
+    String rows                     // ,"before":{...},"after":{...}}
+    Event(String table, String op, String key, String rows) { this.table = table; this.op = op; this.key = key; this.rows = rows }
+}
+
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 // SCALE — 'S', 'M' or 'L', the same as the installed Northwind Company it continues: northwind_co_s gets
 // northwind_co_changes_s, and so on. params.SCALE, when the Seed Data tab passes one, wins over this line.
@@ -37,7 +46,6 @@ String SCALE = (params?.SCALE ?: 'S').toString().toUpperCase()
 String EXPORT_DIR = (params?.EXPORT_DIR ?: '').toString()
 // Where to write the figures manifest (section 6b). Empty and no EXPORT_DIR: not written at all.
 String FIGURES_FILE = (params?.FIGURES_FILE ?: '').toString()
-int VERSION = 1
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -191,18 +199,18 @@ def chValue = { v ->
 
 // ── 0. the source must be there, and be what it says it is ─────────────────────────────────────
 List srcInfo
-try { srcInfo = dbSql.rows("SELECT \"Dataset\", \"Version\", \"Scale\", \"TableName\" FROM ${S('_dataset_info')}".toString()) }
+try { srcInfo = dbSql.rows("SELECT \"Dataset\", \"Scale\", \"TableName\" FROM ${S('_dataset_info')}".toString()) }
 catch (Exception e) { throw new IllegalStateException("Install Northwind Company scale ${SCALE} first (schema ${SRC} not found: ${e.message}).") }
 if (srcInfo.isEmpty() || srcInfo[0].Scale != SCALE || srcInfo[0].Dataset != 'northwind_co')
     throw new IllegalStateException("${SRC} is not Northwind Company scale ${SCALE}.")
 if (!srcInfo.any { it.TableName == 'OrderStatusHistory' })
     throw new IllegalStateException("${SRC} was installed by an older academy-northwind-co-install (no OrderStatusHistory). Reinstall it.")
-int SOURCE_VERSION = srcInfo[0].Version as int
-log.info("=== Change log {} v{} from {} (v{}) on {}: {} .. {} ===", DST, VERSION, SRC, SOURCE_VERSION, vendor, FIRST, LAST)
+log.info("=== Change log {} from {} on {}: {} .. {} ===", DST, SRC, vendor, FIRST, LAST)
 
 // ── helpers ──────────────────────────────────────────────────────────────────────────────────
 // One random stream per concern, seeded by name: a change to one rule moves only the rows it is about.
-def rnd = { String name -> new Random(("${DATASET}|${VERSION}|${SCALE}|${name}".toString()).hashCode() * 2654435761L) }
+// The |1| is a fixed part of every seed: every row, checksum and quoted figure is built from it, so it never changes.
+def rnd = { String name -> new Random(("${DATASET}|1|${SCALE}|${name}".toString()).hashCode() * 2654435761L) }
 def pick = { Random r, List xs -> xs[r.nextInt(xs.size())] }
 def money = { double v -> new BigDecimal(v).setScale(2, RoundingMode.HALF_UP) }
 def weighted = { Random r, List<Double> w ->
@@ -225,6 +233,8 @@ jv = { Object v ->
     v
 }
 def rowOf = { Map r -> Map m = new LinkedHashMap(); r.each { k, v -> m[k.toString()] = jv(v) }; m }
+ObjectMapper JSON = new ObjectMapper()
+JSON.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false)
 def at = { LocalDate d, int h, int m -> d.atTime(h, m) }
 def dayNo = { LocalDateTime t -> (int) ChronoUnit.DAYS.between(DAY_ZERO, t.toLocalDate()) }
 def ldt = { Object v -> v == null ? null : v instanceof Timestamp ? ((Timestamp) v).toLocalDateTime() : v instanceof CharSequence ? LocalDateTime.parse(v.toString().replace(' ', 'T')) : v as LocalDateTime }
@@ -304,7 +314,11 @@ log.info("  source on 2024-12-31: {} customers ({} buying), {} products on sale,
 // A transaction is one commit: its events share "tx" and arrive together. Built in any order, sorted by time later.
 List<Map> txs = []
 List<List> plants = []                                  // [plant, lesson, detail, locator Closure → [day, ref]]
-def ev = { String table, String op, Map key, Map before, Map after -> [table: table, op: op, key: key, before: before, after: after] }
+// Every row handed to an event is final: whatever changes a row later changes a copy of it.
+def ev = { String table, String op, Map key, Map before, Map after ->
+    new Event(table, op, JSON.writeValueAsString(jv(key)),
+              ',"before":' + JSON.writeValueAsString(jv(before)) + ',"after":' + JSON.writeValueAsString(jv(after)) + '}')
+}
 def addTx = { LocalDateTime t, String kind, List<Map> events, Map extra = [:] ->
     Map tx = [time: t, n: txs.size(), kind: kind, events: events] + extra
     txs << tx
@@ -588,6 +602,7 @@ plans.each { Map p ->
     order.UpdatedAt = tsv(created); order.CreatedAt = tsv(created); order.Channel = p.channel; order.DeliveryNotes = note
 
     List<Map> evs = [ev('Orders', 'c', [OrderID: orderId], null, new LinkedHashMap(order))]
+    if (created.toLocalDate() == DAY_ZERO.plusDays(BAD_DAY - 1)) p.orderRow = new LinkedHashMap(order)     // day 45 copies one of these
     lines.each { l -> evs << ev('Order Details', 'c', [OrderID: orderId, ProductID: l.ProductID], null, l) }
     int openStatusId = nextStatusId++
     evs << ev('OrderStatusHistory', 'c', [StatusChangeID: openStatusId], null, [StatusChangeID: openStatusId, OrderID: orderId, Status: 'Open', ChangedAt: tsv(created)])
@@ -604,9 +619,7 @@ plans.each { Map p ->
         String payload = "{\"order_ref\": \"WEB-${orderId}\", \"customer\": \"${cid}\", \"placed_at\": \"${created.format(ISO).substring(0, 16)}\"${shipTo}, \"items\": [${items.join(', ')}]}"
         String ip = p.ipRoll < 0.75 ? (officeIp[cid] ?: joinerById[cid]?.ip ?: "198.51.100.${p.ipHost}".toString()) : "192.0.2.${p.ipHost}".toString()
         int webId = nextWebId++
-        Map webEv = ev('WebOrders', 'c', [WebOrderID: webId], null, [WebOrderID: webId, OrderID: orderId, ReceivedAt: tsv(created), Payload: payload, ClientIP: ip])
-        webEv.webFeed = true
-        evs << webEv
+        evs << ev('WebOrders', 'c', [WebOrderID: webId], null, [WebOrderID: webId, OrderID: orderId, ReceivedAt: tsv(created), Payload: payload, ClientIP: ip])
         made.web++
     }
     Map createTx = addTx(created, 'order', evs, [arriveAt: p.arriveAt, orderId: orderId])
@@ -670,7 +683,7 @@ plans.each { Map p ->
 // Day 45: the same OrderID sent again, for another customer, with no lines — a replayed import from the EDI bridge.
 LocalDateTime dupAt = at(DAY_ZERO.plusDays(BAD_DAY), 11, 20)
 dupOfOrder = plans.findAll { it.role == null && (it.created as LocalDateTime).toLocalDate() == DAY_ZERO.plusDays(BAD_DAY - 1) }.last()
-Map dupRow = new LinkedHashMap(((dupOfOrder.createTx as Map).events[0] as Map).after as Map)
+Map dupRow = new LinkedHashMap(dupOfOrder.orderRow as Map)
 String otherBuyer = buyers.find { it != dupRow.CustomerID }
 Map ob = customers[otherBuyer]
 dupRow.CustomerID = otherBuyer; dupRow.ShipName = ob.CompanyName; dupRow.ShipAddress = ob.Address; dupRow.ShipCity = ob.City
@@ -733,19 +746,17 @@ log.info("  business: {} orders ({} lines, {} web), {} shipped, {} cancelled, {}
 
 // ── 3. delivery: event ids, arrival times, duplicates, the log's offsets ──────────────────────────
 txs.sort { a, b -> (a.time as LocalDateTime) <=> (b.time as LocalDateTime) ?: (a.n as int) <=> (b.n as int) }
-ObjectMapper JSON = new ObjectMapper()
-JSON.configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, false)
 long eventNo = 0
 int txNo = 0
 txs.each { Map tx ->
     tx.tx = ++txNo
-    tx.lines = (tx.events as List<Map>).collect { Map e ->
-        Map line = new LinkedHashMap()
-        line.event_id = String.format('E%07d', ++eventNo)
-        line.tx = tx.tx; line.table = e.table; line.op = e.op; line.key = jv(e.key); line.event_time = (tx.time as LocalDateTime).format(ISO)
-        line.before = e.before == null ? null : jv(e.before); line.after = e.after == null ? null : jv(e.after)
-        e.eventId = line.event_id
-        JSON.writeValueAsString(line)
+    String eventTime = JSON.writeValueAsString((tx.time as LocalDateTime).format(ISO))
+    tx.lines = (tx.events as List<Event>).collect { Event e ->
+        String line = '{"event_id":' + JSON.writeValueAsString(String.format('E%07d', ++eventNo)) + ',"tx":' + tx.tx +
+                      ',"table":' + JSON.writeValueAsString(e.table) + ',"op":' + JSON.writeValueAsString(e.op) + ',"key":' + e.key +
+                      ',"event_time":' + eventTime + e.rows
+        e.rows = null                                    // in the line now; the event keeps its table, op and key
+        line
     }
 }
 Random rT = rnd('Delivery')
@@ -897,7 +908,7 @@ joiners.findAll { it.factFirst }.each { Map j ->
 if (!((segmentOrder.createTx as Map).arrival as LocalDateTime).isAfter(SEGMENT_CHANGE_AT)) problems << 'the as-of-segment order arrives before the change'
 if (!((priceOrder.createTx as Map).arrival as LocalDateTime).isAfter(PRICE_CHANGE_AT)) problems << 'the as-of-price order arrives before the change'
 if (!((segmentOrder.createTx as Map).events.any { it.table == 'Order Details' })) problems << 'the as-of-segment order has no lines'
-if (!((priceOrder.createTx as Map).events.any { it.table == 'Order Details' && it.key.ProductID == hotProduct })) problems << 'the as-of-price order does not buy the product'
+if (!((priceOrder.createTx as Map).events.any { it.table == 'Order Details' && JSON.readValue(it.key as String, Map).ProductID == hotProduct })) problems << 'the as-of-price order does not buy the product'
 if (feed.any { dayNo(it[1] as LocalDateTime) > WEB_FEED_LAST_DAY && (it[2] as String).contains('"table":"WebOrders"') }) problems << 'WebOrders events after the feed stopped'
 if (!feed.any { dayNo(it[1] as LocalDateTime) > WEB_FEED_LAST_DAY && (it[2] as String).contains('"Channel":"Web"') }) problems << 'no web orders after the feed stopped'
 Set<LocalDate> arrivalDays = feed.collect { (it[1] as LocalDateTime).toLocalDate() } as Set
@@ -907,7 +918,10 @@ int controlOrders = control.values().sum { it[0] } as int
 if (controlOrders != made.orders - 1) problems << "control totals count ${controlOrders} orders, ${made.orders - 1} were kept".toString()
 if (problems) throw new IllegalStateException("Change log check failed — ${problems.join('; ')}. Nothing is wrong with the source; this script has a bug.")
 log.info("  ok: every planted incident is in the log, on its day ({} kinds, {} rows in _plants)", plantCount.size(), plantRows.size())
-
+// From here on only the log itself and the planted rows are needed: what the log was made from goes, so that the
+// heap holds one copy of the log while it is written.
+txs = null; plans = null; deliveries = null; resendCandidates = null; dimChanges = null
+customers = null; custHistory = null; joiners = null; joinerById = null; day59 = null
 // ── 6. write ─────────────────────────────────────────────────────────────────────────────────
 if (CH) {
     dbSql.execute("DROP DATABASE IF EXISTS ${DST} SYNC".toString())
@@ -951,8 +965,12 @@ def insert = { String table, List<String> cols, List<List> rows ->
     } finally { f.delete() }
     log.info("  {}: {} rows", table, rows.size())
 }
-int seq = 0
-insert('event_log', ['seq', '"offset"', 'arrival_time', 'line'], feed.collect { [++seq, it[0], it[1], it[2]] })
+// The log's rows as event_log has them, made one at a time as they are written rather than as a second copy of it.
+List<List> eventRows = new AbstractList<List>() {
+    int size() { feed.size() }
+    List get(int i) { List f = feed[i] as List; [i + 1, f[0], f[1], f[2]] }
+}
+insert('event_log', ['seq', '"offset"', 'arrival_time', 'line'], eventRows)
 insert('_plants', ['plant', 'lesson', 'arrival_day', 'ref', 'detail'], plantRows.sort { a, b -> (a[2] as int) <=> (b[2] as int) ?: a[0] <=> b[0] ?: a[3] <=> b[3] })
 if (EXPORT_DIR) {
     File dir = new File(EXPORT_DIR, DST)
@@ -1015,7 +1033,7 @@ if (figuresFile) {
     StringBuilder y = new StringBuilder()
     y << "# Emitted by academy-northwind-co-changes.groovy — do not hand-edit, re-run the script.\n"
     y << "# CurriculumSpec checks every figure quoted in a curriculum reason against this file.\n"
-    y << "dataset: ${DATASET}\nversion: ${VERSION}\nscale: ${SCALE}\n".toString()
+    y << "dataset: ${DATASET}\nscale: ${SCALE}\n".toString()
     y << "figures:\n"
     figures.each { String k, Object v -> y << "  ${k}: ${v}\n".toString() }
     y << "plants:\n"
@@ -1037,8 +1055,19 @@ def canon = { Object v ->
     if (v instanceof java.sql.Date) return ((java.sql.Date) v).toLocalDate().toString()
     v.toString()
 }
+int EVENTS = feed.size()
+feed = null                                                // in event_log now; the checksum reads it back from there
 BigInteger MOD = BigInteger.ONE.shiftLeft(256)
-String infoDdl = "CREATE TABLE ${T('_dataset_info')} (\"Dataset\" VARCHAR(40), \"Version\" INTEGER, \"Scale\" VARCHAR(2), \"TableName\" VARCHAR(40), \"RowCount\" INTEGER, \"Checksum\" VARCHAR(64))".toString()
+// Reads a big table in pieces: PostgreSQL otherwise fetches every row into memory before the first one is seen.
+def eachRowStreamed = { String sql, Closure c ->
+    if (vendor != 'POSTGRES') { dbSql.eachRow(sql, c); return }
+    def conn = dbSql.connection
+    boolean autoCommit = conn.autoCommit
+    conn.autoCommit = false
+    try { dbSql.withStatement { it.fetchSize = 10_000 }; dbSql.eachRow(sql, c) }
+    finally { dbSql.withStatement { it.fetchSize = 0 }; conn.commit(); conn.autoCommit = autoCommit }
+}
+String infoDdl = "CREATE TABLE ${T('_dataset_info')} (\"Dataset\" VARCHAR(40), \"Scale\" VARCHAR(2), \"TableName\" VARCHAR(40), \"RowCount\" INTEGER, \"Checksum\" VARCHAR(64))".toString()
 dbSql.execute(CH ? chDdl(infoDdl) : infoDdl)
 // A table's columns for the checksum, sorted case-insensitively, as SELECT expressions. ClickHouse is asked for its
 // times as text (toString), which is the canonical form already.
@@ -1063,10 +1092,10 @@ List<List> info = ['event_log', '_plants'].collect { String table ->
     } else {
         MessageDigest sha = MessageDigest.getInstance('SHA-256')
         BigInteger sum = BigInteger.ZERO
-        dbSql.eachRow(select) { r -> sum = sum.add(new BigInteger(1, sha.digest((1..cols.size()).collect { canon(r.getObject(it)) }.join('\t').getBytes('UTF-8')))); n++ }
+        eachRowStreamed(select) { r -> sum = sum.add(new BigInteger(1, sha.digest((1..cols.size()).collect { canon(r.getObject(it)) }.join('\t').getBytes('UTF-8')))); n++ }
         hex = String.format('%064x', sum.mod(MOD))
     }
-    [DATASET, VERSION, SCALE, table, n, hex]
+    [DATASET, SCALE, table, n, hex]
 }
-dbSql.withBatch(info.size(), "INSERT INTO ${T('_dataset_info')} VALUES (?, ?, ?, ?, ?, ?)".toString()) { ps -> info.each { ps.addBatch(it) } }
-log.info("=== {} v{} built from {}: {} records over {} arrival days, {} planted incidents (see {}) ===", DST, VERSION, SRC, feed.size(), ARRIVAL_DAYS, plantRows.size(), T('_plants'))
+dbSql.withBatch(info.size(), "INSERT INTO ${T('_dataset_info')} VALUES (?, ?, ?, ?, ?)".toString()) { ps -> info.each { ps.addBatch(it) } }
+log.info("=== {} built from {}: {} records over {} arrival days, {} planted incidents (see {}) ===", DST, SRC, EVENTS, ARRIVAL_DAYS, plantRows.size(), T('_plants'))

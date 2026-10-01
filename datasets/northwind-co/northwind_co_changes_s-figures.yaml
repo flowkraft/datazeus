@@ -1,7 +1,6 @@
 # Emitted by academy-northwind-co-changes.groovy — do not hand-edit, re-run the script.
 # CurriculumSpec checks every figure quoted in a curriculum reason against this file.
 dataset: northwind_co_changes
-version: 1
 scale: S
 figures:
   events: 6142

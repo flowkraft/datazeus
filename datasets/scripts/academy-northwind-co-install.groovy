@@ -3,7 +3,7 @@
 //   dbSql  — groovy.sql.Sql connected to the target database
 //   vendor — String (uppercase): POSTGRES, DUCKDB, CLICKHOUSE
 //   log    — SLF4J Logger
-//   params — Map; optional keys: SCALE, VERSION (1), OUTAGE_WEEKS (26), OUTAGE_RATE (0.20) — the last two only to compare variants
+//   params — Map; optional keys: SCALE, OUTAGE_WEEKS (26), OUTAGE_RATE (0.20) — the last two only to compare variants
 
 import groovy.transform.CompileStatic
 import java.math.BigDecimal
@@ -27,7 +27,7 @@ String SCALE = (params?.SCALE ?: 'S').toString().toUpperCase()
 Map<String, Map<String, Object>> SIZES = [
 
     // S — THE LESSONS' DATASET. Leave it alone: every published figure was measured on it, and _dataset_info pins its
-    // checksums. A different S is a new VERSION (datasets/README.md, "Rules for changing a relational dataset").
+    // checksums (datasets/README.md, "Rules for changing a relational dataset").
     // About 30 s to 2 min (plain INSERTs), ~13 MB on DuckDB, under 300 MB of Java heap.
     S: [ORDERS     : 10_000,
         CUSTOMERS  : 120,          JOINERS    : 25,       // JOINERS: customers who start buying after 2020 (cohorts)
@@ -63,7 +63,6 @@ Map<String, Map<String, Object>> SIZES = [
         REPORTING_LOOP: true,                              // PLANTED: two interim managers who report to each other
         BULK_LOAD  : true],
 ]
-int    VERSION = (params?.VERSION ?: 1) as int
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -74,7 +73,7 @@ int    VERSION = (params?.VERSION ?: 1) as int
 // and an updated-at column. Design: kraft-src-company-biz/.docs/plan-academy-datasets.md.
 // Rules every change to this file must follow: the academy's datasets/README.md,
 // "Rules for changing a relational dataset" — in short:
-//   1. once a published lesson uses a version, its rows never change (bump VERSION instead);
+//   1. what a published lesson shows never moves: its rows and the results of its queries stay as they are;
 //   2. evolve by ADDING tables and columns;
 //   3. ONE RANDOM STREAM PER TABLE (rnd('Orders') …), so adding a table never shifts another's rows;
 //   4. no faker libraries — every name comes from the word lists in this file;
@@ -136,7 +135,11 @@ int    VERSION = (params?.VERSION ?: 1) as int
 // ENGINES: PostgreSQL, DuckDB and ClickHouse. ClickHouse is for the analytics series, beside DuckDB (which series use
 // which pair: _datazeus/tests DatasetsSpec, the engine-pair checks). On ClickHouse the schema is a database and every
 // table a MergeTree ordered by its primary key; the rows and the checksums are meant to be the same as on the other two.
-// NO SECONDARY INDEXES at any scale, on purpose: the performance lessons start from sequential scans and add them.
+// KEYS AND INDEXES: a primary key on every table at every scale; at S, an index on each column the lessons join on
+// (JOIN INDEXES, below); at M and L, primary keys only, on purpose: the performance lessons (Learn SQL S3 · 18–30) start
+// from sequential scans and add every index themselves, on L or on M where L is too large for a laptop, and the same
+// indexes sit there commented, each with what it would change. NO FOREIGN KEYS: they would fix a load order and a drop
+// order.
 // ─────────────────────────────────────────────────────────────────────────────────────────────
 
 if (!SIZES.containsKey(SCALE)) throw new IllegalArgumentException("SCALE must be S, M or L (got ${SCALE}).")
@@ -164,11 +167,12 @@ if (SCALE == 'S') assert ORDERS_PER_YEAR as List == [1638, 1802, 1982, 2180, 239
 double QTY_BUDGET = 1100                                   // tunes the average order value (target ≈ €1,500)
 double PHANTOM_RATE = 0.024                                // ≈ 40 cancelled-but-still-open orders in 2024 at S (S2 · 60)
 
-log.info("=== Academy dataset {} v{} scale {} → schema {} on {}: {} orders, {} customers, {} products ===",
-         DATASET, VERSION, SCALE, SCHEMA, vendor, ORDERS, CUSTOMERS, PRODUCTS)
+log.info("=== Academy dataset {} scale {} → schema {} on {}: {} orders, {} customers, {} products ===",
+         DATASET, SCALE, SCHEMA, vendor, ORDERS, CUSTOMERS, PRODUCTS)
 
 // ── deterministic helpers ────────────────────────────────────────────────────────────────────
-def rnd = { String table -> new Random(("${DATASET}|${VERSION}|${SCALE}|${table}".toString()).hashCode() * 2654435761L) }
+// The |1| is a fixed part of every seed: every row, checksum and quoted figure is built from it, so it never changes.
+def rnd = { String table -> new Random(("${DATASET}|1|${SCALE}|${table}".toString()).hashCode() * 2654435761L) }
 def money = { double v -> new BigDecimal(v).setScale(2, RoundingMode.HALF_UP) }
 def pick = { Random r, List xs -> xs[r.nextInt(xs.size())] }
 def ts = { LocalDate d -> Timestamp.valueOf(d.atStartOfDay()) }
@@ -1156,6 +1160,82 @@ insert('SalesTargets', ['CategoryID', 'TargetMonth', 'TargetAmount'], targets)
 List<String> TABLES = ['Region', 'Territories', 'Categories', 'Suppliers', 'Products', 'PriceChanges', 'Shippers', 'Employees', 'EmployeeTerritories',
                        'Customers', 'CustomerChanges', 'Orders', 'Order Details', 'Invoices', 'StockMovements', 'SalesTargets', 'CourierConfirmations', 'WebOrders',
                        'OrderStatusHistory']
+
+// ── JOIN INDEXES ──────────────────────────────────────────────────────────────────────────────
+// Every column a lesson joins on that its table's primary key does not already start with, on the tables that grow
+// with the orders, and on the two change histories an as-of join looks a date up in. Not indexed: the small reference
+// tables (Products, Employees, Territories and the rest are read in a page or two), and ShipVia and ShipperID (a
+// handful of shippers, so an index would never be chosen). No foreign keys: they would fix a load order and a drop
+// order. Built after the rows are in, which is quicker than keeping them up to date row by row. ClickHouse has no
+// secondary indexes (its tables are ordered by their primary keys), so there joinIndex does nothing.
+int joinIndexes = 0
+def joinIndex = { String table, List<String> cols ->
+    if (CH) return
+    String name = "ix_${table.toLowerCase().replace(' ', '_')}_${cols.collect { it.toLowerCase() }.join('_')}".toString()
+    dbSql.execute("CREATE INDEX ${name} ON ${T(table)} (${cols.collect { q(it) }.join(', ')})".toString())
+    joinIndexes++
+}
+if (SCALE == 'S') {
+    joinIndex('Orders', ['CustomerID'])                          // Customers ⋈ Orders, in nearly every series
+    joinIndex('Orders', ['EmployeeID'])                          // Employees ⋈ Orders
+    joinIndex('Order Details', ['ProductID'])                    // Products ⋈ order lines (OrderID already leads the key)
+    joinIndex('Invoices', ['OrderID'])                           // orders with and without an invoice
+    joinIndex('OrderStatusHistory', ['OrderID', 'ChangedAt'])    // the join, and an order's status at a moment
+    joinIndex('CourierConfirmations', ['OrderID'])               // not unique: re-sent confirmations (Learn SQL S2 · 48)
+    joinIndex('WebOrders', ['OrderID'])                          // the web shop's payload behind an order
+    joinIndex('StockMovements', ['ProductID'])                   // a product's stock ledger
+    joinIndex('StockMovements', ['OrderID'])                     // the movements an order caused
+    joinIndex('CustomerChanges', ['CustomerID', 'ChangedDate'])  // a customer's version as of a date
+    joinIndex('PriceChanges', ['ProductID', 'ChangedDate'])      // a product's price as of a date
+} else {
+    // M AND L — PRIMARY KEYS ONLY, ON PURPOSE. L is the dataset of the performance lessons, Learn SQL S3 · 18–30, and
+    // the curriculum has them run on primary keys only: the sequential scans they read are real, and every index they
+    // add (S3 · 25, S3 · 30) is the learner's own, measured from a clean start. M is where those lessons run when L is
+    // too large for a laptop, so M starts the same way. The indexes S gets are below, commented, each with what L does
+    // without it (Off) and what uncommenting it changes (On). Uncommenting one builds it at M and L on PostgreSQL and
+    // DuckDB, and takes the "before" away from the lesson that adds it.
+    // Measured at L on PostgreSQL 16, warm, the best of five runs from a client; On is the plan PostgreSQL chose once the
+    // index was there. A join or an aggregate over every row (revenue by rep, by product) hashes both tables with or
+    // without an index; what an index speeds up is a filter or a join that picks out a few rows. On DuckDB (1.4.4) none
+    // of them changed a plan: every lookup below stayed a sequential scan that zone maps prune, 0–12 ms with or without
+    // its index, so there an index only adds its size to the file. All eleven: PostgreSQL +174 MB and 3 s to build;
+    // DuckDB +272 MB (the file roughly doubles) and 4 s.
+    //
+    // joinIndex('Orders', ['CustomerID'])
+    //     Off: one customer's orders (53 on average, 380 at most) is a parallel scan of all 1,000,000 (34 ms), and so is
+    //     Customers ⋈ Orders for a few customers (the 11 of one city: 40 ms). On: a bitmap index scan (4 ms; that join
+    //     2 ms). PostgreSQL 7 MB, DuckDB +24 MB.
+    // joinIndex('Orders', ['EmployeeID'])
+    //     Off: a rep's orders (13,500 on average, 74 reps) is a parallel scan of all 1,000,000 (32 ms). On: a bitmap scan
+    //     (9 ms) that still reads 10,457 of the table's 23,500 pages, a rep's orders being spread all through it.
+    //     PostgreSQL 7 MB, DuckDB +13 MB.
+    // joinIndex('Order Details', ['ProductID'])
+    //     Off: a product's lines (6,277 on average, 23,724 at most) is a parallel scan of all 2,510,619 (39 ms). On: a
+    //     bitmap scan (4 ms). PostgreSQL 17 MB, DuckDB +28 MB.
+    // joinIndex('Invoices', ['OrderID'])
+    //     Off: an order's invoice, or whether it has one (EXISTS for a few orders), is a parallel scan of all 957,511
+    //     (23 ms). On: a one-row index scan (2 ms). PostgreSQL 21 MB, DuckDB +8 MB.
+    // joinIndex('OrderStatusHistory', ['OrderID', 'ChangedAt'])
+    //     Off: an order's status at a moment is a parallel scan of all 1,990,135 changes (34 ms). On: a backward index
+    //     scan that reads the latest change first and stops (1 ms). The largest: PostgreSQL 60 MB, DuckDB +115 MB.
+    // joinIndex('CourierConfirmations', ['OrderID'])
+    //     17,350 confirmations in 112 pages: 2 ms Off and On. Nothing to gain at this size.
+    // joinIndex('WebOrders', ['OrderID'])
+    //     Off: one order's payload is a parallel scan of all 274,983 payloads, 102 MB (21 ms). On: a one-row index scan
+    //     (2 ms). PostgreSQL 6 MB, DuckDB +7 MB.
+    // joinIndex('StockMovements', ['ProductID'])
+    //     Off: a product's stock ledger (6,252 movements on average, 23,465 at most) is a parallel scan of all 2,500,849
+    //     (40 ms). On: a bitmap scan (2 ms). PostgreSQL 17 MB, DuckDB +29 MB.
+    // joinIndex('StockMovements', ['OrderID'])
+    //     Off: the 2 or 3 movements an order caused is a parallel scan of all 2,500,849 (45 ms). On: an index scan
+    //     (1 ms). PostgreSQL 38 MB, DuckDB +46 MB.
+    // joinIndex('CustomerChanges', ['CustomerID', 'ChangedDate'])
+    //     25,957 changes in 244 pages: 2 ms Off, 1 ms On. Little to gain. PostgreSQL 0.8 MB, DuckDB +2 MB.
+    // joinIndex('PriceChanges', ['ProductID', 'ChangedDate'])
+    //     1,235 changes in 16 pages: 1 ms Off and On. Nothing to gain at this size.
+}
+if (joinIndexes) log.info("  {} join indexes", joinIndexes)
+
 // PostgreSQL plans from table statistics; give M and L theirs now, so the first EXPLAIN a learner runs is the real one.
 if (vendor == 'POSTGRES' && SCALE != 'S') TABLES.each { dbSql.execute("ANALYZE ${T(it)}".toString()) }
 
@@ -1185,7 +1265,7 @@ def eachRowStreamed = { String sql, Closure c ->
     try { dbSql.withStatement { it.fetchSize = 10_000 }; dbSql.eachRow(sql, c) }
     finally { dbSql.withStatement { it.fetchSize = 0 }; conn.commit(); conn.autoCommit = autoCommit }
 }
-String infoDdl = "CREATE TABLE ${T('_dataset_info')} (\"Dataset\" VARCHAR(40), \"Version\" INTEGER, \"Scale\" VARCHAR(2), \"TableName\" VARCHAR(40), \"RowCount\" INTEGER, \"Checksum\" VARCHAR(64))".toString()
+String infoDdl = "CREATE TABLE ${T('_dataset_info')} (\"Dataset\" VARCHAR(40), \"Scale\" VARCHAR(2), \"TableName\" VARCHAR(40), \"RowCount\" INTEGER, \"Checksum\" VARCHAR(64))".toString()
 dbSql.execute(CH ? chDdl(infoDdl) : infoDdl)
 // A table's columns for the checksum, sorted case-insensitively, as SELECT expressions.
 def checksumColumns = { String table ->
@@ -1214,8 +1294,8 @@ TABLES.each { table ->
         count = rs.count
         hex = rs.hex()
     }
-    info << [DATASET, VERSION, SCALE, table, count, hex]
+    info << [DATASET, SCALE, table, count, hex]
 }
-insert('_dataset_info', ['Dataset', 'Version', 'Scale', 'TableName', 'RowCount', 'Checksum'], info)
+insert('_dataset_info', ['Dataset', 'Scale', 'TableName', 'RowCount', 'Checksum'], info)
 
-log.info("=== {} v{} scale {} installed in schema {}: {} orders, {} order lines, {} invoices ===", DATASET, VERSION, SCALE, SCHEMA, orderId, lineCount, invoiceCount)
+log.info("=== {} scale {} installed in schema {}: {} orders, {} order lines, {} invoices ===", DATASET, SCALE, SCHEMA, orderId, lineCount, invoiceCount)

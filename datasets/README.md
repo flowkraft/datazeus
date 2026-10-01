@@ -74,7 +74,7 @@ orders, and a landed all-text copy for dbt.
 Used by: Learn SQL Series 2 and 3 · Data Modeling Series 3 · Data Warehousing · ETL & Data
 Pipelines · Analytics Engineering with dbt.
 
-**Scale S, version 1, as built:** Region 4 · Territories 30 · Categories 8 · Suppliers 20 · Products 80 ·
+**Scale S, as built:** Region 4 · Territories 30 · Categories 8 · Suppliers 20 · Products 80 ·
 PriceChanges 255 · Shippers 4 · Employees 29 · EmployeeTerritories 45 · Customers 120 · CustomerChanges 154 ·
 Orders 10,000 · Order Details 25,233 · Invoices 9,532 · StockMovements 29,264 · SalesTargets 488 ·
 CourierConfirmations 173 · WebOrders 2,765. Identical on PostgreSQL and DuckDB (every table's checksum).
@@ -87,7 +87,8 @@ quote it.**
 **`northwind-co/northwind_co.duckdb`** is scale S exactly as the install script writes it on a DuckDB connection
 (schema `northwind_co_s`, with its `_dataset_info`). The koans (`NorthwindCoKoanBase`) and the verify gate
 (`NorthwindCoGateSpec`) read a throwaway copy of it, so a learner needs no install for the koans. Rebuild it only
-by running the install script, never by hand, and only while no published lesson uses the version.
+by running the install script, never by hand, and only with every published figure still where it was (the specs
+prove it).
 - **The file is not called `northwind_co_s.duckdb` on purpose:** DuckDB names a database after its file, and a
   catalog called `northwind_co_s` beside a schema called `northwind_co_s` makes every qualified name ambiguous.
 - **Lessons use Northwind's plain table names** and tell the learner, once (Learn SQL Series 2 · 00), to run
@@ -125,18 +126,20 @@ The committed DuckDB copy above is the install script's own output, so a learner
 rows and a video's rows are identical.
 
 Each install creates **its own schema** (Northwind's table names inside it), writes a
-`_dataset_info` table (dataset, version, scale, and per table a row count and a checksum), and can
+`_dataset_info` table (dataset, scale, and per table a row count and a checksum), and can
 be removed by dropping that schema.
 
 ### Rules for changing a relational dataset
 
-1. **A dataset version is frozen once any published lesson uses it.** Before that, it may change.
+1. **What a published lesson shows never moves.** There is one edition of each dataset, designed
+   well up front; before any lesson uses a table, the table may still change.
 2. **Evolve by adding.** New tables and new columns are allowed; existing rows, and the results of
-   queries already written, must not move. Changing an existing row makes a **new version**,
-   installed into its own schema beside the old one (`northwind_co_s_v2`). A lesson names the
-   version it uses, and every version stays installable.
-3. **One random stream per table**, seeded from the dataset, the version and the table name, so
-   adding a table can never shift a row in another one.
+   queries already written, must not move. A new episode that needs something else gets it from
+   what is added; older lessons and videos keep the figures they were made with, and their specs
+   fail if one of them moves.
+3. **One random stream per table**, seeded from the dataset, the scale and the table name, so
+   adding a table can never shift a row in another one. Every seed also carries a fixed `|1|`, which
+   every row is built from: taking it out would change them all.
 4. **No faker libraries.** Names come from fixed word lists in the script; a library upgrade must
    not be able to change the data.
 5. **Money is exact decimal** end to end (`BigDecimal`), never floating point, so totals match to

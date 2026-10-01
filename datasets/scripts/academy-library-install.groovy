@@ -3,7 +3,7 @@
 //   dbSql  — groovy.sql.Sql connected to the target database
 //   vendor — String (uppercase): POSTGRES, DUCKDB (the two supported so far)
 //   log    — SLF4J Logger
-//   params — Map; optional keys: SCALE (S, the only one), VERSION (1)
+//   params — Map; optional keys: SCALE (S, the only one)
 
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -19,15 +19,14 @@ import java.time.LocalDateTime
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 String SCALE = (params?.SCALE ?: 'S').toString().toUpperCase()
 
-// THE SIZES. S is the lessons' dataset: leave it alone once a lesson is published on it (a different S is a new
-// VERSION — datasets/README.md, "Rules for changing a relational dataset"). About 8 s and ~1.3 MB on DuckDB on a laptop
+// THE SIZES. S is the lessons' dataset: leave it alone once a lesson is published on it (datasets/README.md,
+// "Rules for changing a relational dataset"). About 8 s and ~1.3 MB on DuckDB on a laptop
 // (2026-09-19); PostgreSQL not measured yet.
 Map<String, Map<String, Object>> SIZES = [
     S: [LOANS  : 14_000,          // generated loans, 2019-03-04 .. 2026-07-21; the brief's 26 rows come on top
         MEMBERS: 600,             // everyone who ever joined, the brief's 10 included ("roughly six hundred")
         COPIES : 4_000],          // physical books on the shelves, the brief's 17 included ("about four thousand")
 ]
-int    VERSION = (params?.VERSION ?: 1) as int
 // ═════════════════════════════════════════════════════════════════════════════════════════════
 
 // ─────────────────────────────────────────────────────────────────────────────────────────────
@@ -43,7 +42,7 @@ int    VERSION = (params?.VERSION ?: 1) as int
 // views, never through tables of ours. Branches, ebooks and reservations are S2 · 60's change requests — the
 // learner designs them; the checks bring their own rows.
 // The rules every change to this file must follow are Northwind Company's (academy-northwind-co-install.groovy):
-// frozen once published (bump VERSION); ONE RANDOM STREAM PER TABLE; no faker libraries, every name comes from
+// what a published lesson shows never moves; ONE RANDOM STREAM PER TABLE; no faker libraries, every name comes from
 // the word lists here; money is BigDecimal; every install writes row counts and checksums to _dataset_info.
 //
 // HOW lending_log_full IS MADE, so it reads like the brief's file and loads into any model that took the 26 rows:
@@ -87,11 +86,12 @@ BigDecimal FINE_PER_DAY = new BigDecimal('0.20')
 
 int LOANS = SIZE.LOANS as int, MEMBERS = SIZE.MEMBERS as int, COPIES = SIZE.COPIES as int
 
-log.info("=== Academy dataset {} v{} scale {} → schema {} on {}: {} loans, {} members, {} copies ===",
-         DATASET, VERSION, SCALE, SCHEMA, vendor, LOANS, MEMBERS, COPIES)
+log.info("=== Academy dataset {} scale {} → schema {} on {}: {} loans, {} members, {} copies ===",
+         DATASET, SCALE, SCHEMA, vendor, LOANS, MEMBERS, COPIES)
 
 // ── deterministic helpers ────────────────────────────────────────────────────────────────────
-def rnd = { String table -> new Random(("${DATASET}|${VERSION}|${SCALE}|${table}".toString()).hashCode() * 2654435761L) }
+// The |1| is a fixed part of every seed: every row, checksum and quoted figure is built from it, so it never changes.
+def rnd = { String table -> new Random(("${DATASET}|1|${SCALE}|${table}".toString()).hashCode() * 2654435761L) }
 def pick = { Random r, List xs -> xs[r.nextInt(xs.size())] }
 def q = { String name -> "\"${name}\"".toString() }
 def T = { String table -> "${SCHEMA}.\"${table}\"".toString() }
@@ -537,7 +537,7 @@ def canon = { v ->
     if (v instanceof LocalDate) return v.toString()
     return v.toString()
 }
-dbSql.execute("CREATE TABLE ${T('_dataset_info')} (\"Dataset\" VARCHAR(40), \"Version\" INTEGER, \"Scale\" VARCHAR(2), \"TableName\" VARCHAR(40), \"RowCount\" INTEGER, \"Checksum\" VARCHAR(64))".toString())
+dbSql.execute("CREATE TABLE ${T('_dataset_info')} (\"Dataset\" VARCHAR(40), \"Scale\" VARCHAR(2), \"TableName\" VARCHAR(40), \"RowCount\" INTEGER, \"Checksum\" VARCHAR(64))".toString())
 List<List> info = []
 TABLES.each { table ->
     List<String> cols = dbSql.rows("SELECT column_name FROM information_schema.columns WHERE table_schema = ? AND table_name = ?".toString(), [SCHEMA, table])
@@ -547,9 +547,9 @@ TABLES.each { table ->
     dbSql.eachRow(select) { r -> rows << (1..cols.size()).collect { canon(r.getObject(it)) }.join('\t') }
     rows.sort()
     String hex = MessageDigest.getInstance('SHA-256').digest(rows.join('\n').getBytes('UTF-8')).collect { String.format('%02x', it) }.join()
-    info << [DATASET, VERSION, SCALE, table, rows.size(), hex]
+    info << [DATASET, SCALE, table, rows.size(), hex]
 }
-insert('_dataset_info', ['Dataset', 'Version', 'Scale', 'TableName', 'RowCount', 'Checksum'], info)
+insert('_dataset_info', ['Dataset', 'Scale', 'TableName', 'RowCount', 'Checksum'], info)
 
-log.info("=== {} v{} scale {} installed in schema {}: {} rows in lending_log_full, {} members, {} copies ===",
-         DATASET, VERSION, SCALE, SCHEMA, fullRows.size(), members.size(), copies.size())
+log.info("=== {} scale {} installed in schema {}: {} rows in lending_log_full, {} members, {} copies ===",
+         DATASET, SCALE, SCHEMA, fullRows.size(), members.size(), copies.size())
