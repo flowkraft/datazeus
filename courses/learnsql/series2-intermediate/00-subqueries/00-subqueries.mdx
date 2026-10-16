@@ -7,8 +7,9 @@ level: "intermediate"
 module: "series2-intermediate"
 order: 0
 date: "2026-09-14"
-published: false
+published: true
 videoId: "learnsql-series2-00-subqueries"
+dataset: "northwind_co_s"
 ---
 
 {/* HANDS-ON (from curriculum.yaml): koan:predict, koan:complete — the koans in
@@ -21,47 +22,6 @@ videoId: "learnsql-series2-00-subqueries"
 The top 10 customers report from the <a href="/academy/learn-sql/select-sum-join-group-by-order-by-limit-project" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">last lesson of Series 1</a> went to the manager, and it came back with a question: **which customers spend more than the average customer?**
 
 That question contains a second question: what is the average customer? Without SQL beyond Series 1, the only way to answer it is to run one query, write the number down, and paste it into a second query. This lesson shows how to let the database answer the first question inside the second one, with a **subquery**: a query in brackets that runs first, and whose result the outer query uses.
-
-{/* THE SETUP SECTION — Series 2 · 00 owns it; 05, 10, 15 and 20 link back here. Every figure in it
-    is asserted by SubqueriesSpec §0 on both engines. Mirrors the video's the-data slide. */}
-
-## Set up the data for Series 2
-
-Series 1 ran on Northwind: 79 orders over 18 months, 25 customers and 3 employees. That is the right size to learn `SELECT`, and too small for the questions in Series 2: weeks and months with real gaps in them, several couriers to compare, invoices, order statuses, years to compare with each other.
-
-So Series 2 runs on **Northwind Company**: a simulated company with the same table names you already know and five years of orders, from 2020 to 2024. It has 10,000 orders, 120 customers, 29 employees, 4 couriers and 80 products, plus invoices and a few more tables. Every Series 1 query runs on it unchanged; the answers are just bigger.
-
-**Why change the data at all?** Series 1's data was tiny on purpose, so that you could picture every row. You write real queries now, and the data grows with you.
-
-**How much data?** There are three sizes. **Tiny** (Series 1) and **Small** (`northwind_co_s`, around 10,000 orders, used across this whole series) both come with DataPallas. **Large** is needed in a handful of lessons, such as the one on making queries faster, and that lesson shows how to install it. The [Learn Data](/docs/learn-data) guide lists all of them.
-
-**Install it once** (about a minute), from DataPallas:
-
-1. Open **Configuration → Connections**, select the Northwind PostgreSQL connection (the one CloudBeaver uses) and click **Edit**.
-2. Switch to the **Seed Data** tab. If the panel is not active yet, click **Test Connection** first.
-3. In the **Example** sub-tab, pick **Academy Northwind Co Install** in the **Template** dropdown and confirm.
-4. Click **Copy Example Script To Clipboard**.
-5. Switch to the **My Script** sub-tab, paste, click **Run Script**, and wait for it to finish.
-
-It installs into a schema of its own, `northwind_co_s`, so Series 1's Northwind stays exactly as it was. The [Seed Data walkthrough](/docs/report-generation/large-scale#step-2-open-the-connections-seed-data-tab) shows the same tab with screenshots.
-
-**Use it.** In CloudBeaver, run this once at the top of the SQL editor. It lasts for the editor's session, and every query in Series 2 assumes it:
-
-```sql
-SET search_path TO northwind_co_s;
-```
-
-Then check that the data is there:
-
-```sql
-SELECT count(*) FROM "Orders";
-```
-
-The answer is 10000.
-
-**If a number ever differs from a lesson**, run the template **Academy Verify** the same way. It says OK if your data is exactly the data the lessons use, or which table differs; then run the install again.
-
-The koans need none of this: they ship with their own copy of Northwind Company.
 
 ## Warm up on one table
 
@@ -522,7 +482,7 @@ Each total is a value in brackets, and a value can go anywhere a single value ca
 
 {/* The same highlight as the video: the two lines that open the brackets' FROM, in grey. */}
 
-```sql file=./scripts/ordered-and-invoiced-2024.sql {3,9}
+```sql file=./scripts/ordered-and-invoiced-2024.sql {3,9} stampup
 SELECT (SELECT ROUND(SUM(d."UnitPrice" * d."Quantity"
                  * (1 - d."Discount")), 2)
         FROM "Order Details" d
