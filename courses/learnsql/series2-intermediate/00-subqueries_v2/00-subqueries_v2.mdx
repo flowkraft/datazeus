@@ -1,0 +1,1186 @@
+---
+title: "Subqueries (v2 pilot) — Using One Query's Result Inside Another"
+description: "Put a query in brackets inside another query: compare with the value it returns, test a list with IN, or query the table it builds, and check which average you are really comparing with."
+topic: "learn-sql"
+tags: ["sql", "intermediate", "subqueries", "in", "having", "grain"]
+level: "intermediate"
+module: "series2-intermediate"
+order: 0
+date: "2026-09-14"
+published: true
+videoId: "learnsql-series2-00-subqueries"
+dataset: "northwind_co_s"
+---
+
+{/* HANDS-ON (from curriculum.yaml): koan:predict, koan:complete — the koans in
+    tests/src/koans/groovy/datazeus/learnsql/series2/_00/SubqueriesKoans.groovy.
+    CurriculumSpec requires a PLANNED lesson to name these; this comment can go when the episode is
+    published (curriculum status: published, front matter published: true). Invisible on the page. */}
+
+{/* dialogue:begin all */}
+
+{/* keep:intro */}
+<Point title="The data model">
+
+Five tables carry this lesson. **Customers, Orders, Order Details and Products** point at each other through ids: an order belongs to one customer, and each order line points at one order and one product. **Invoices** stands on its own here — the lesson never joins it to the others.
+
+<DataModel />
+
+</Point>
+
+<Point title="The questions this lesson answers">
+
+- Which customers spend more than the average customer?
+- Which products cost more than the average product?
+- Which customers bought a discontinued product in 2024?
+- **How much did customers order in 2024, and how much did we invoice?** (series mystery)
+
+</Point>
+{/* /keep */}
+
+<Beat title="The question and the data" />
+
+<Say who="mnemosyne" pose="talking">
+
+**Welcome to Series 2, Intermediate SQL course, Leo.** This series is about answering bigger questions in steps — subqueries, CTEs, window functions — and today we start with the first: **subqueries, a query inside another query.**
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+Good morning, Mnemo — **and wait till you hear this.** Remember my Series 1 top ten customers report? I sent it to my manager. **No "well done", no "nice work"** — it came straight back with another question: **which customers spend more than the average customer?**
+
+</Say>
+
+<Say who="mnemosyne" pose="talking">
+
+**Ha — you wanted a thank-you and got more work.** That is the thank-you, Leo: **she trusts your numbers, so she wants more of them.** And her question looks like one — **it's really two, and one is hidden inside the other.**
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+I can see both halves. **First the average — then everybody above it.** I'd run one query, copy the number, and paste it into a second one. **For now, that's the only way I know how to do it.**
+
+</Say>
+
+<Beat />
+
+<Say who="mnemosyne" pose="talking">
+
+**One thing before we continue.** Like in Series 1, the database comes bundled with DataPallas — **only with a lot more data this time.** Connect to it in CloudBeaver, then run `SET search_path TO northwind_co_s` first.
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+**Mnemo — I'd just started to love the old Northwind database.** We spent a whole series together. **And now you want me to change it?**
+
+</Say>
+
+<Say who="mnemosyne" pose="talking">
+
+**Your Series 1 queries ran on the starter data, and the company has grown since.** So have you: **the old database was tiny on purpose** — few enough rows that you could picture every one. **You write real queries now.**
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+**OK — Series 1's data was tiny on purpose,** so a complete beginner like me **could see every row.** And now the data has to grow with me. **All right, I'm sold.**
+
+</Say>
+
+{/* keep:the-ladder:head */}
+<div className="text-center">
+
+### HOW MUCH DATA?
+
+</div>
+{/* /keep */}
+
+<Ladder dbs={[{"name":"Tiny","sub":"SQL beginner","vol":"about 80 orders","inside":["bundled with","DataPallas"],"insideInk":"#ffffff","rows":4,"w":190,"h":170,"now":false},{"name":"Small","sub":"SQL intermediate","vol":"about 10k orders","inside":["bundled with","DataPallas"],"insideInk":"#ffffff","rows":16,"w":250,"h":240,"now":true,"badge":"northwind_co_s"},{"name":"Large","sub":"learn about SQL performance","vol":"about a million orders","inside":["install when","a course asks","for it"],"insideInk":"#000000","rows":220,"w":330,"h":344,"now":false}]} />
+
+<Say who="mnemosyne" pose="talking">
+
+Leo, see these: **Tiny, from the beginner series, and the Small northwind_co_s dataset, used by many courses — including this one — both come with DataPallas.** Large is needed in a handful of episodes, **like making your queries faster — there I'll show you how to install it.**
+
+</Say>
+
+<Say who="leo" pose="smiling">
+
+**Give me a few moments, Mnemo — let me read the video description to see how to connect CloudBeaver to** `northwind_co_s`. **Around 10k orders, you said, a bit bigger than Northwind Tiny:** enough for meaningful data, yet still small, so our queries stay snappy.
+
+</Say>
+
+<Say who="leo" pose="smiling">
+
+**OK — mostly the Northwind tables I know from Series 1.** Every query I wrote there still runs, **just on more data now.**
+
+</Say>
+
+<Beat title="From a pasted number to a subquery" />
+
+<Say who="mnemosyne" pose="questioning">
+
+**OK, enough housekeeping Leo** — let's come back to your manager's question: **which customers spend more than the average customer?** This is our goal for today and you'll answer it, but first I'll warm you up on something smaller: **which products cost more than the average price?** Question one: what's the average?
+
+</Say>
+
+```sql {1}
+SELECT ROUND(AVG("UnitPrice"), 2)
+       AS "Average price"
+FROM "Products";
+```
+
+<ResultCard spec={{"columns":["Average price"],"rows":[["24.01"]]}} />
+
+<Say who="leo" pose="smiling">
+
+**24.01.** One table, one number. **And now I write it down.**
+
+</Say>
+
+<Say who="mnemosyne" pose="talking">
+
+Question two. **Paste your number into a WHERE**, and ask for every product above it.
+
+</Say>
+
+```sql {3}
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+WHERE "UnitPrice" > 24.01
+ORDER BY "UnitPrice" DESC;
+```
+
+<Say who="leo" pose="proud">
+
+`WHERE "UnitPrice" > 24.01`. **Two queries, one number copied across** — that's exactly how I'd do it at work.
+
+</Say>
+
+<ResultCard label={"30 rows — the products above the average"} spec={{"columns":["ProductName","UnitPrice"],"rows":[["Harvest Chicken Pie","81"],["Spiced Meatballs","61.12"],["… +27 more products","…"],["Classic Tonic","24.07"]],"rowNumbers":["1","2","","30"],"belowLine":{"label":"the average","value":"24.01"},"highlight":{"row":3,"tone":"grey"}}} />
+
+<Say who="mnemosyne" pose="pointing-right">
+
+**30 products**, and every one of them is right — **today.**
+
+</Say>
+
+<Say who="leo" pose="questioning">
+
+Why only **today?**
+
+</Say>
+
+<Say who="mnemosyne" pose="pointing-right">
+
+Because **24.01** is a number you pasted in, and **Classic Tonic is on the list by six cents.** Change one price tomorrow and the real average moves — but `WHERE "UnitPrice" > 24.01` **keeps answering yesterday's question, and nothing tells you.**
+
+</Say>
+
+<Say who="leo" pose="questioning">
+
+So the average has to come from the database **every time the query runs** — not from me.
+
+</Say>
+
+<Beat />
+
+<Say who="mnemosyne" pose="questioning">
+
+**Then let the database work out the average.** Where does it go?
+
+</Say>
+
+<Say who="leo" pose="confused">
+
+Right where my 24.01 was: `AVG("UnitPrice")`. **And it won't run** — aggregate functions are not allowed in WHERE?
+
+</Say>
+
+```sql {3}#err
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+WHERE "UnitPrice" > AVG("UnitPrice");
+```
+
+```
+SQL Error [42803]: ERROR: aggregate functions are not allowed in WHERE
+  Position: 71
+```
+
+{/* keep:why-where-refuses:0 */}
+<Point title="SQL point" side="left">
+
+`WHERE` looks at one row at a time, before anything is grouped or averaged, so an aggregate such as `AVG` is not allowed inside it.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="talking">
+
+**Leo, you've met this refusal before, in the lesson on HAVING.** WHERE looks at one row at a time, **before anything has been added up** — so at that moment there is no average to compare with.
+
+</Say>
+
+<Say who="leo" pose="questioning">
+
+But the average **exists**, Mnemosyne. **I worked it out a minute ago.**
+
+</Say>
+
+<Say who="mnemosyne" pose="talking">
+
+**Yes, you worked it out with a different query.** So, for getting it to work, try handing the WHERE that exact query, the one that gave you the average. Put it in brackets, right where your number was — **and the database runs that inner query first.**
+
+</Say>
+
+<Beat />
+
+{/* keep:brackets:0 */}
+<Point title="SQL technique" side="left">
+
+A subquery is a `SELECT` in brackets, written where a single value could go. The database works out the inside first and uses what it hands back.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="proud">
+
+**Here is your first subquery, in between brackets, right where your number was.** `(SELECT AVG("UnitPrice") FROM "Products")` runs first and hands back **one value** — 24.01 today — and the outer query uses it exactly like the number you pasted in.
+
+</Say>
+
+```sql {3-4}#good
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+WHERE "UnitPrice" > (SELECT AVG("UnitPrice")
+                     FROM "Products")
+ORDER BY "UnitPrice" DESC;
+```
+
+<Say who="leo" pose="excited">
+
+**Brackets, like in maths, so the inside is worked out first.** Today `AVG` hands back 24.01, tomorrow it hands back tomorrow's average, **and I never have to update that number myself.**
+
+</Say>
+
+{/* keep:run-the-inside:0 */}
+<Point title="SQL habit" side="left">
+
+Select just the subquery and run it on its own before you trust the whole query.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="pointing-right">
+
+Here's the habit that saves you hours with subqueries: **in CloudBeaver, select just the subquery and run it on its own.** If it doesn't hand back what you expect, **the whole query can't either.**
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+A subquery — a query inside a query. **Of course.** So I test the inner one like any other query — **before I trust the outer one.**
+
+</Say>
+
+<Beat title="A subquery that returns one value" />
+
+{/* keep:one-value-only:0 */}
+<Point title="SQL point" side="right">
+
+After `>` the subquery has to return exactly one value. A column of ten prices raises an error.
+
+</Point>
+{/* /keep */}
+
+<Say who="leo" pose="surprised">
+
+Let me try one of my own: **which products cost more than our drinks?** The subquery hands back the prices of category 1, the beverages.
+
+</Say>
+
+```sql {3-5}#err
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+WHERE "UnitPrice" > (SELECT "UnitPrice"
+                     FROM "Products"
+                     WHERE "CategoryID" = 1);
+```
+
+```
+SQL Error [21000]: ERROR: more than one row returned by a subquery used as an expression
+```
+
+<Say who="mnemosyne" pose="questioning">
+
+**How many beverages are there, Leo?**
+
+</Say>
+
+<Say who="leo" pose="surprised">
+
+10… **so that's 10 prices.** And, row by row, `WHERE "UnitPrice" >` can't compare one price with 10 — **more than one row returned by a subquery.**
+
+</Say>
+
+{/* keep:pick-one-value:0 */}
+<Point title="SQL technique" side="left">
+
+To turn a list into one value, collapse it with `MAX`, `MIN` or `AVG` — you decide which one you mean.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="proud">
+
+**So decide which one you mean.** More than every beverage is more than the **dearest** beverage: `MAX("UnitPrice")`. Ten prices go in, **one value comes out** — or, if you meant **any of the ten**, use `IN`, which we'll meet shortly.
+
+</Say>
+
+```sql {3}#good
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+WHERE "UnitPrice" > (SELECT MAX("UnitPrice")
+                     FROM "Products"
+                     WHERE "CategoryID" = 1)
+ORDER BY "UnitPrice" DESC;
+```
+
+<ResultCard spec={{"columns":["ProductName","UnitPrice"],"rows":[],"badge":"14 rows fetched"}} />
+
+<Say who="leo" pose="excited">
+
+**14 products** dearer than our dearest drink. So the error was really asking me a question — **which of the ten did I mean?**
+
+</Say>
+
+<Beat />
+
+{/* keep:no-rows-no-error:0 */}
+<Point title="SQL point" side="left">
+
+A subquery that matches nothing hands back no rows and raises no error. An empty result can mean there is no answer, or that the question was wrong.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="pointing-right">
+
+**Now a quiet one, Leo.** Take the same query and change a single digit: **category 9.**
+
+</Say>
+
+```sql {5}#warn
+SELECT "ProductName", "UnitPrice"
+FROM "Products"
+WHERE "UnitPrice" > (SELECT MAX("UnitPrice")
+                     FROM "Products"
+                     WHERE "CategoryID" = 9)
+ORDER BY "UnitPrice" DESC;
+```
+
+<ResultCard spec={{"columns":["ProductName","UnitPrice"],"rows":[]}} />
+
+<Say who="leo" pose="confused">
+
+Running it… and nothing. **0 rows — and no error.** Did it work?
+
+</Say>
+
+<Say who="mnemosyne" pose="pointing-right">
+
+Look at the inside. **I picked category 9 on purpose, because I know there is no category 9.** So the brackets found no products, and a subquery that finds nothing hands back **NULL.** Nothing is ever greater than NULL, so the `WHERE` keeps no rows, and raises no error.
+
+</Say>
+
+<Say who="leo" pose="confused">
+
+So zero rows can mean two things: there really is no answer, or my question was wrong. **Running the inside alone shows me which — a NULL means the question needs fixing.**
+
+</Say>
+
+<Beat title="The three types of subquery" />
+
+{/* keep:three-shapes:0 */}
+<Point title="SQL point" side="left">
+
+A subquery returns a single value, a list, or a whole table. What the outer query needs decides which one to write.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="talking">
+
+**Good, Leo. So far the subqueries we tried have handed back one value, like the average or the maximum price you just saw — but they can also hand back a list, or a whole table.** What a subquery hands back decides where it can go. One value goes where a number could go. A list goes inside `IN (…)`. And a whole table goes where a table goes — **in the FROM.** You've just done the first one.
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+So subqueries can return either a single value, a list or a whole table. **And the main query depends on what comes out of the subquery.**
+
+</Say>
+
+<Beat title="A subquery that returns a list" />
+
+{/* keep:a-list:0 */}
+<Point title="SQL technique" side="left">
+
+`IN` with a subquery that returns a list: keep the rows whose value appears in that list.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="questioning">
+
+**Now let's see where a subquery that returns a list helps.** Royal Raisins has been discontinued, and sales wants to tell everyone who bought it this year — **which customers bought it in 2024?**
+
+</Say>
+
+```sql {2-3,6}
+SELECT "CompanyName"
+FROM "Customers"
+WHERE "CustomerID" IN (
+  SELECT o."CustomerID"
+  FROM "Orders" o
+  JOIN "Order Details" d
+    ON d."OrderID" = o."OrderID"
+  WHERE d."ProductID" = 39
+    AND o."OrderDate" >= DATE '2024-01-01'
+    AND o."OrderDate" <  DATE '2025-01-01'
+)
+ORDER BY "CompanyName";
+```
+
+<Say who="mnemosyne" pose="questioning">
+
+The subquery hands back the customer of every 2024 order line for product id 39 (Royal Raisins), and `IN` keeps **each customer whose id is somewhere in that list.**
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+You told me to **run the inside on its own first.** Let me do that now — select just the subquery, and run it.
+
+</Say>
+
+<Braced braces={[{"from":3.5,"to":8.5,"label":"9 rows","sub":"per \"Order Details\"\ngrain"}]}>
+
+```sql {2-3,6} stampdown
+SELECT "CompanyName"
+FROM "Customers"
+WHERE "CustomerID" IN (
+  SELECT o."CustomerID"
+  FROM "Orders" o
+  JOIN "Order Details" d
+    ON d."OrderID" = o."OrderID"
+  WHERE d."ProductID" = 39
+    AND o."OrderDate" >= DATE '2024-01-01'
+    AND o."OrderDate" <  DATE '2025-01-01'
+)
+ORDER BY "CompanyName";
+```
+
+</Braced>
+
+<Say who="mnemosyne" pose="questioning">
+
+**9 rows.** Write that number down. **Now run the whole query** — and watch how many come back.
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+One moment — **selecting all of it, and running.**
+
+</Say>
+
+<Braced braces={[{"from":3.5,"to":8.5,"label":"9 rows","sub":"per \"Order Details\"\ngrain"},{"from":0.2,"to":10.8,"label":"8 rows","sub":"per Customer\ngrain"}]}>
+
+```sql {2-3,6} stampdown
+SELECT "CompanyName"
+FROM "Customers"
+WHERE "CustomerID" IN (
+  SELECT o."CustomerID"
+  FROM "Orders" o
+  JOIN "Order Details" d
+    ON d."OrderID" = o."OrderID"
+  WHERE d."ProductID" = 39
+    AND o."OrderDate" >= DATE '2024-01-01'
+    AND o."OrderDate" <  DATE '2025-01-01'
+)
+ORDER BY "CompanyName";
+```
+
+</Braced>
+
+<Say who="leo" pose="thinking">
+
+**8?** The inside handed me 9… **ah.** One customer bought Royal Raisins **twice** in 2024, so the `Order Details` join inside hands their id back twice — **but** `IN` asks **once per customer**, so they come back **once**.
+
+</Say>
+
+{/* keep:eight-not-nine:0 */}
+<Point title="SQL point" side="left">
+
+Grain: in the subquery a row is one order line, outside it a row is one customer. `IN` asks each customer one yes-or-no question, so repeated lines do not repeat customers.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="pointing-right">
+
+**You worked that out exactly right, Leo.** In the subquery a row is **one order line** — that is its grain. **9** of them, because Royal Raisins sold 9 times in 2024, and **Yarrow Pantry is two of the 9.**
+
+</Say>
+
+<InFold spec={{"fromTurn":0,"startAt":0.4,"leftTitle":"one row per order line","rightTitle":"one row per customer","lines":[{"id":"ALPI2","to":0},{"id":"GOLDE","to":1},{"id":"GOLD4","to":2},{"id":"NORD1","to":3},{"id":"TUNDR","to":4},{"id":"YARR4","to":5},{"id":"YARR4","to":5},{"id":"YARR1","to":6},{"id":"ZENI4","to":7}],"rows":["Alpine Provisions","Golden Food Hall","Golden Pantry","Nordic Delicatessen","Tundra Foods","Yarrow Pantry","Yarrow Trading","Zenith Food Hall"],"focus":[5],"resultLeft":true,"tags":{"left":"main query","right":"subquery"},"badge":"two lines —\none customer","noteCols":{"left":"8 customers","mid":"WHERE \"CustomerID\" IN","right":"9 order lines","leftSub":"SELECT CompanyName FROM Customers","rightSub":"(JOIN with Order Details)"}}} />
+
+<Say who="leo" pose="thinking">
+
+And out here a row is **one customer** — a different grain. So Yarrow Pantry can only be **one of the 8.**
+
+</Say>
+
+<Say who="mnemosyne" pose="pointing-right">
+
+**Exactly.** `IN` never counts lines: it asks each customer **one** question — is your id in that list? — and a yes is a yes **however often the id appears.**
+
+</Say>
+
+<Beat title="Subquery or join?" />
+
+{/* keep:the-join-version:0 */}
+<Point title="SQL argument" side="left">
+
+Could a `JOIN` with `DISTINCT` replace the `IN` subquery? Compare the two versions.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="talking">
+
+**Leo, you might think the outer query isn't doing much, and that the join inside could answer on its own.** As we already saw, this join returns **9 rows, with Yarrow Pantry twice.**
+
+</Say>
+
+<Braced circles={[{"from":3,"to":10}]}>
+
+```sql {1-3}#good
+SELECT "CompanyName"
+FROM "Customers"
+WHERE "CustomerID" IN (
+  SELECT o."CustomerID"
+  FROM "Orders" o
+  JOIN "Order Details" d
+    ON d."OrderID" = o."OrderID"
+  WHERE d."ProductID" = 39
+    AND o."OrderDate" >= DATE '2024-01-01'
+    AND o."OrderDate" <  DATE '2025-01-01'
+)
+ORDER BY "CompanyName";
+```
+
+</Braced>
+
+<ResultCard label={"9 rows, one per order line"} spec={{"columns":["CustomerID"],"rows":[["ALPI2"],["GOLDE"],["GOLD4"],["NORD1"],["TUNDR"],["YARR4"],["YARR4"],["YARR1"],["ZENI4"]],"highlight":{"row":5,"rows":[5,6],"tone":"grey"},"rowNumbers":["","","","","","Yarrow Pantry","Yarrow Pantry","",""]}} />
+
+<Say who="leo" pose="proud">
+
+**You have a point, Mnemosyne — the outer part looks anemic.** The join does most of the work, and `DISTINCT` **could remove the duplicates.** So tell me: **with a JOIN together with** `DISTINCT`**, do I need subqueries at all?**
+
+</Say>
+
+<Say who="mnemosyne" pose="talking">
+
+**Fair question, Leo, and you are right: you could use a** `JOIN` **with** `DISTINCT` **to return the correct** **8** customers here.
+
+</Say>
+
+<QaTable callout={"SELECT .. FROM \"Customers\" IN (subquery)"} rows={[{"left":"grain is per \"Order Details\" line","cmd":"SELECT DISTINCT name ... JOIN \"Order Details\"","rows":"->  8 rows","right":"DISTINCT is a hack to remove the duplicates afterwards"},{"left":"grain is per \"Order Details\" line","cmd":"SELECT DISTINCT name, order id ... JOIN \"Order Details\"","rows":"->  9 rows   Yarrow Pantry twice","right":"DISTINCT name, order id brings the duplication back","tone":"bad"},{"left":"grain is what we need: per customer","cmd":"SELECT .. FROM \"Customers\" IN (subquery)","rows":"->  8 rows   one row per customer","right":"No hack needed: SELECT .. FROM \"Customers\" defines the grain","tone":"good"}]} />
+
+<Say who="mnemosyne" pose="talking">
+
+But it would be fragile. `SELECT DISTINCT name` **does return the 8 customers here. But the moment a second column joins it, as in** `SELECT DISTINCT name, order id` **— and believe me, people do this often — the duplicates come back.** The real problem is deeper: **the JOIN itself is at the per-order-line grain**, and you were looking for an answer **about customers.**
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+Mnemo, I think what you're telling me is that it should **feel strange** to answer a question about **customers** with a query on **"Order Details"** — even if a hack like `DISTINCT` can patch the result to bring back the correct customers here.
+
+</Say>
+
+<Say who="mnemosyne" pose="talking">
+
+**Exactly, Leo.** Instead of returning order lines and then patching them to get customers, it is better to ask for customers directly.
+
+</Say>
+
+<Beat title="Subquery and join: which one, when" />
+
+<Say who="mnemosyne" pose="talking">
+
+**Leo, subqueries and joins are both tools you have at your disposal now.** Depending on the context you will use either one, and **many times both together in the same query.** Here are some hints for when you need each.
+
+</Say>
+
+{/* keep:which-tool:5 */}
+<Point title="SQL argument" side="left">
+
+Subquery or join: choose by what the answer has to contain, not by speed.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="talking">
+
+**Look at what the answer has to contain.** Customers who bought Royal Raisins in 2024? Only **customer names** — the Royal Raisins product is just how you pick them. So: `SELECT "CompanyName" … WHERE "CustomerID" IN (subquery)` is asking for customers directly.
+
+</Say>
+
+<Say who="mnemosyne" pose="talking">
+
+**Now change the question:** which customers bought Royal Raisins, **and how many boxes each?** The request needs information from two tables, `Customers` and `Order Details` — and **only a join can put both side by side.**
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+I get it! **If the answer needs columns from only one table and the other table just picks the rows, I use a subquery. If it needs columns from both tables, I use a join.** But is one of them faster? **I keep hearing that subqueries are slow.**
+
+</Say>
+
+<Say who="mnemosyne" pose="talking">
+
+**Not by nature.** Databases often run both the same way, so choose by **what the answer needs.** When a query really is slow, you read its plan and measure — you don't guess. **In Series 3, I'll teach you how to tune SQL query performance and how to read execution plans.**
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+So I choose by **what the answer needs**, not by speed. And **in some bigger queries I'll have to use subqueries and joins together anyway.**
+
+</Say>
+
+<Beat />
+
+> Your turn, Leo.
+>
+> **How many products sell at or below the average price?**
+>
+> Thirty are above it. Predict the rest before you run it.
+>
+> ▶ Continue once you've run it.
+
+```sql
+SELECT count(*) AS "Products"
+FROM "Products"
+WHERE "UnitPrice" <= ___;
+```
+
+<Beat title="Back to the manager's question" />
+
+<Say who="mnemosyne" pose="questioning">
+
+**Leo, that was quite a long detour. Let's now come back to your manager's question.** Customers who spend more than the average — as we discussed, that is really **two questions**, so, question one: **what is the average?**
+
+</Say>
+
+```sql
+SELECT ROUND(AVG("UnitPrice" * "Quantity"
+         * (1 - "Discount")), 2) AS "Average"
+FROM "Order Details";
+```
+
+<ResultCard spec={{"columns":["Average"],"rows":[["595.13"]]}} />
+
+<Say who="leo" pose="excited">
+
+Same move as the prices. **Average the money** — price times quantity, less the discount, over every line. **595.13.**
+
+</Say>
+
+<Say who="leo" pose="proud">
+
+**Then the second part: customers, grouped by what they spend.** I remember this query — it's the report I built at the end of the last series, **now with a HAVING on the end: total sales above 595.13.**
+
+</Say>
+
+```sql {10-11}
+SELECT c."CompanyName",
+       ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")), 2) AS "Total sales"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID"
+GROUP BY c."CompanyName"
+HAVING SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")) > 595.13
+ORDER BY "Total sales" DESC;
+```
+
+<Say who="mnemosyne" pose="questioning">
+
+**Run it. And count what comes back.**
+
+</Say>
+
+<Beat />
+
+<ResultCard label={"118 rows — of the 119 customers who ever ordered"} spec={{"columns":["CompanyName","Total sales"],"rows":[["Fjord Foods","797164"],["Yarrow Pantry","786022.56"],["… +114 more customers","…"],["Willow Wholefoods","1662.83"],["Tundra Grocers","1239.25"]],"rowNumbers":["1","2","","117","118"],"belowLine":{"label":"the average","value":"595.13","tone":"fault","then":{"label":"Upland Food Hall","value":"465.75","number":"119"}}}} />
+
+<Say who="leo" pose="surprised">
+
+**118 rows.** Of the 119 customers who ever ordered, **118 are above average** — even Tundra Grocers, on 1239.25.
+
+</Say>
+
+<Say who="mnemosyne" pose="questioning">
+
+**Can nearly every customer be above the average customer?**
+
+</Say>
+
+<Say who="leo" pose="surprised">
+
+…No. If almost all of them are above it, **it isn't their average.**
+
+</Say>
+
+<Say who="mnemosyne" pose="questioning">
+
+**Right. So whose average is 595.13?**
+
+</Say>
+
+{/* keep:average-of-what:0 */}
+<Point title="SQL point" side="right">
+
+Grain of an average: one row per order line gives the average order line, not the average customer.
+
+</Point>
+{/* /keep */}
+
+<Say who="leo" pose="thinking">
+
+It averaged the money column — **and every row of that is one order line.** So 595.13 is **the average order line.**
+
+</Say>
+
+```sql {3}
+SELECT ROUND(AVG("UnitPrice" * "Quantity"
+         * (1 - "Discount")), 2) AS "Average"
+FROM "Order Details";
+```
+
+<ResultCard spec={{"columns":["CompanyName","Total sales"],"rows":[["Fjord Foods","797164"],["Yarrow Pantry","786022.56"],["… +114 more customers","…"],["Willow Wholefoods","1662.83"],["Tundra Grocers","1239.25"]],"rowNumbers":["1","2","","117","118"],"belowLine":{"label":"average order line","value":"595.13","tone":"fault","then":{"label":"Upland Food Hall","value":"465.75","number":"119"},"note":"It is not correct to compare customers' total spending with an average of order lines."}}} />
+
+<Say who="mnemosyne" pose="pointing-right">
+
+**One row per what — the question from the report lesson, back again.** A customer's total is lines added together, so it almost always beats one line. **By coincidence, the one customer left out, Upland Food Hall, bought only two lines in five years** — that is why it was the only one below your number.
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+So I wrongly compared customers' total spending against order lines — that is why you keep reminding me to watch the grain. I need **one total per customer first** — and then the average of **those.**
+
+</Say>
+
+<Beat />
+
+{/* keep:a-table:0 */}
+<Point title="SQL technique" side="left">
+
+A subquery in `FROM` returns a table. Every table needs a name, so it ends with an alias such as `AS t`.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="talking">
+
+**Leo, I'll use this opportunity to show a subquery which returns a table.** As I told you, a subquery can return a number, a list or a whole table. This one is the query you wrote earlier: it builds **one row per customer**, with that customer's total — and the outer query averages **that** table.
+
+</Say>
+
+<Braced braces={[{"from":1.5,"to":7.5,"label":"Leo's customer\nspend query"}]}>
+
+```sql {2,9} stampdown
+SELECT ROUND(AVG("Total"), 2) AS "Average customer"
+FROM (SELECT o."CustomerID",
+             SUM(d."UnitPrice" * d."Quantity"
+               * (1 - d."Discount"))
+               AS "Total"
+      FROM "Orders" o
+      JOIN "Order Details" d
+        ON d."OrderID" = o."OrderID"
+      GROUP BY o."CustomerID") AS t;
+```
+
+</Braced>
+
+<Say who="leo" pose="excited">
+
+A table, right inside the `FROM`. **But why does it need that** `AS t` **at the end?**
+
+</Say>
+
+<Say who="mnemosyne" pose="talking">
+
+**Because** `FROM` **expects a table, and every table needs a name** — so the outer query can say what it is reading from. Some databases refuse a subquery in the `FROM` without one.
+
+</Say>
+
+<ResultCard spec={{"columns":["Average customer"],"rows":[["126193.54"]],"badge":"126193.54"}} />
+
+<Say who="leo" pose="excited">
+
+A query I can query. **The average customer is 126193.54** — over two hundred times the average line.
+
+</Say>
+
+**Average order line**
+
+```sql
+SELECT ROUND(AVG("UnitPrice" * "Quantity"
+         * (1 - "Discount")), 2) AS "Average"
+FROM "Order Details";
+```
+
+Result: **595.13**
+
+**Average customer spend**
+
+```sql
+SELECT ROUND(AVG(t."Total"), 2) AS "Average"
+FROM (SELECT o."CustomerID",
+             SUM(d."UnitPrice" * d."Quantity"
+               * (1 - d."Discount")) AS "Total"
+      FROM "Orders" o
+      JOIN "Order Details" d ON d."OrderID" = o."OrderID"
+      GROUP BY o."CustomerID") AS t;
+```
+
+Result: **126193.54**
+
+> **The only difference is what one row is.**
+
+<Say who="mnemosyne" pose="proud">
+
+**These are two very different averages — over two hundred times apart.** Neither of them is wrong. They answer different questions — **and only one of them is your manager's.**
+
+</Say>
+
+<Say who="leo" pose="excited">
+
+Measured against **126193.54**, the answer can't be nearly everybody any more. **Show me who's left.**
+
+</Say>
+
+<Beat title="The monster query" />
+
+{/* keep:thirty-sql:0 */}
+<Point title="SQL technique" side="left">
+
+Reading nested subqueries from the innermost out. A subquery that never mentions the outer row runs once.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="questioning">
+
+**This is the whole monster query, Leo — let's see if you can read it.** It is the query you built earlier, and at the end, a `HAVING` that compares each customer's total with **a subquery that builds a table of customer totals and hands back their average.** A table, inside a value, inside a query.
+
+</Say>
+
+<Braced braces={[{"from":12.57,"to":19,"label":"Leo's query","sub":"spend per customer"},{"from":11.57,"to":19,"label":"Get AVG spend"}]} notes={[{"from":0,"to":1,"text":"show CompanyName and Total Sales"},{"from":4,"to":5,"text":"links customers with orders"},{"from":6,"to":7,"text":"join needed to get UnitPrice, Quantity, Discount"},{"from":8,"to":8,"text":"group per customer"},{"from":9,"to":10,"text":"get customers with spend > AVG"}]}>
+
+```sql {12-20} stampdown
+SELECT c."CompanyName",
+       ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")), 2) AS "Total sales"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID"
+GROUP BY c."CompanyName"
+HAVING SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount"))
+     > (SELECT AVG(t."Total")
+        FROM (SELECT o2."CustomerID",
+                     SUM(d2."UnitPrice"
+                       * d2."Quantity"
+                       * (1 - d2."Discount")) AS "Total"
+              FROM "Orders" o2
+              JOIN "Order Details" d2
+                ON d2."OrderID" = o2."OrderID"
+              GROUP BY o2."CustomerID") AS t)
+ORDER BY "Total sales" DESC;
+```
+
+</Braced>
+
+<Say who="leo" pose="surprised">
+
+**Indeed — what a monster, Mnemo.** Let me see if I understand it. **I start from the deepest subquery**, the way you taught me: that one is **my query, the spend per customer.** The next one, with `AVG`, turns all those spends into **a single average.**
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+Then the `HAVING` keeps only customers who spent **more than that average.** Wait — it checks every customer against it. **Does the database work the average out again for each customer?** With 119 customers, that sounds slow.
+
+</Say>
+
+<Say who="mnemosyne" pose="questioning">
+
+**Good instinct, Leo, but no.** That subquery never mentions the customer being checked, so it does not change from row to row. **The database works it out once** and reuses the number — exactly like the 24.01 you used to paste in. Subqueries that do depend on the outer row exist too — those are worked out row by row, and that is for later in this series.
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+Right — **once, like my old 24.01**, only now the database fills it in. So: the joins, from Customers down to Order Details, reach the money. On top, the `SELECT` shows **CompanyName and Total sales** — and last, `ORDER BY` puts **the biggest at the top.**
+
+</Say>
+
+<ResultCard label={"30 customers above the average, 119 customers in total"} labelTone="green" spec={{"columns":["CompanyName","Total sales"],"rows":[["Fjord Foods","797164"],["Yarrow Pantry","786022.56"],["… +27 more customers","…"],["Emerald Grocers","175249.7"]],"rowNumbers":["1","2","","30"],"belowLine":{"label":"the average customer","value":"126193.54","tone":"good","then":{"label":"Kestrel Pantry","value":"121607.73","number":"31","more":"… +88 more customers"}},"highlight":{"row":3,"tone":"grey"}}} />
+
+<Say who="mnemosyne" pose="proud">
+
+**Leo, you explained the query better than I could.** Here is what it returns: **30 customers who spend more than the average, not 118.** Emerald Grocers is the last one above the line, on 175249.7.
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+And Kestrel Pantry, on 121607.73, is the first one below it. **The report used to say nearly everybody was above the average.** The only thing I changed was **the inner query:** instead of the average order line — the wrong grain — it now uses **the average customer spend.**
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+I see once more why you insist on the grain. **Get it wrong and the query raises no error — it just hands back wrong results.** Get it right, and the results are correct.
+
+</Say>
+
+<Say who="mnemosyne" pose="proud">
+
+**That's the power and the danger of a subquery in one sentence.** The outer query trusts whatever the subquery hands it.
+
+</Say>
+
+<Beat />
+
+<Say who="leo" pose="confused">
+
+Can I say something, Mnemosyne? **It works — and I can't read it.** Subqueries inside subqueries inside a HAVING. If somebody handed me that on a Monday, **I'd need ten minutes to work out what it does.**
+
+</Say>
+
+<Braced braces={[{"from":12.57,"to":19,"label":"Leo's query","sub":"spend per customer"},{"from":11.57,"to":19,"label":"Get AVG spend"}]} notes={[{"from":0,"to":1,"text":"show CompanyName and Total Sales"},{"from":4,"to":5,"text":"links customers with orders"},{"from":6,"to":7,"text":"join needed to get UnitPrice, Quantity, Discount"},{"from":8,"to":8,"text":"group per customer"},{"from":9,"to":10,"text":"get customers with spend > AVG"}]}>
+
+```sql stampdown
+SELECT c."CompanyName",
+       ROUND(SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount")), 2) AS "Total sales"
+FROM "Customers" c
+JOIN "Orders" o
+  ON o."CustomerID" = c."CustomerID"
+JOIN "Order Details" d
+  ON d."OrderID" = o."OrderID"
+GROUP BY c."CompanyName"
+HAVING SUM(d."UnitPrice" * d."Quantity"
+         * (1 - d."Discount"))
+     > (SELECT AVG(t."Total")
+        FROM (SELECT o2."CustomerID",
+                     SUM(d2."UnitPrice"
+                       * d2."Quantity"
+                       * (1 - d2."Discount")) AS "Total"
+              FROM "Orders" o2
+              JOIN "Order Details" d2
+                ON d2."OrderID" = o2."OrderID"
+              GROUP BY o2."CustomerID") AS t)
+ORDER BY "Total sales" DESC;
+```
+
+</Braced>
+
+<Say who="mnemosyne" pose="smiling">
+
+**Keep that complaint, Leo — it's a good one.** Later in this series we'll improve the situation: every one of those subqueries gets a **name**, and the query reads top to bottom. **For today: read it from the inside out.**
+
+</Say>
+
+<Say who="mnemosyne" pose="smiling">
+
+**But I disagree that you can't read it** — a moment ago you explained this monster better than I could. And **ten minutes to understand a query like this is perfectly normal.**
+
+</Say>
+
+<Beat title="Orders versus invoices" />
+
+<Say who="mnemosyne" pose="questioning">
+
+**Let's move on, Leo. Before sending these 30 largest spenders back, read the second line of your manager's note.** 2024: orders are up 10 per cent on last year — but invoicing is down. Which is it?
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+**That's two totals for 2024: what customers ordered, and what we invoiced.** Two values — **side by side, in one query?**
+
+</Say>
+
+{/* keep:case-two-values:0 */}
+<Point title="SQL technique" side="left">
+
+A subquery in the select list: each one hands back one value, so two subqueries give two numbers side by side.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="talking">
+
+**Two numbers, so two subqueries** — and a value can go anywhere one value can go, **even in the select list.** The first is your report's money, for orders placed in 2024. The second reads `"Invoices"`: **one row for every invoice the company sent, with its date and its amount.**
+
+</Say>
+
+<Braced circles={[{"from":0,"to":6},{"from":7,"to":10}]}>
+
+```sql {3,9} stampdown
+SELECT (SELECT ROUND(SUM(d."UnitPrice" * d."Quantity"
+                 * (1 - d."Discount")), 2)
+        FROM "Order Details" d
+        JOIN "Orders" o
+          ON o."OrderID" = d."OrderID"
+        WHERE o."OrderDate" >= DATE '2024-01-01'
+          AND o."OrderDate" <  DATE '2025-01-01') AS "Ordered 2024",
+       (SELECT ROUND(SUM("Amount"), 2)
+        FROM "Invoices"
+        WHERE "InvoiceDate" >= DATE '2024-01-01'
+          AND "InvoiceDate" <  DATE '2025-01-01') AS "Invoiced 2024";
+```
+
+</Braced>
+
+<Say who="leo" pose="excited">
+
+**One query, one row, two numbers side by side.** Each subquery runs on its own first: the first returns the total ordered in 2024, the second returns what was invoiced in 2024. Then **the outer SELECT on the first line shows both values next to each other.**
+
+</Say>
+
+<Beat />
+
+<ResultCard spec={{"columns":["Ordered 2024","Invoiced 2024"],"rows":[["3628572.55","3190372.69"]]}} />
+
+<Say who="mnemosyne" pose="pointing-right">
+
+**About 3.6 million ordered, but only 3.2 million invoiced.** Quite a big difference between them.
+
+</Say>
+
+<Say who="leo" pose="surprised">
+
+So which one is **wrong?**
+
+</Say>
+
+<Say who="mnemosyne" pose="pointing-right">
+
+**Neither.** They answer different questions. **Ordered measures demand — what customers asked us for. Invoiced is what the company actually billed.** Your `largest spenders` query summed order lines, so it was about the first one.
+
+</Say>
+
+<Say who="leo" pose="surprised">
+
+Then the question is the gap between them. **Orders grew, and invoicing fell — why?**
+
+</Say>
+
+<Say who="mnemosyne" pose="pointing-right">
+
+**That is our mystery.** Throughout this series you'll gather your SQL knowledge piece by piece, and **we'll apply it, step by step, to solve it.**
+
+</Say>
+
+<Beat title="What to take away, and what is next" />
+
+<Say who="mnemosyne" pose="talking">
+
+**Leo, we're almost done. Before we go: three checks before you trust a subquery.** Run the inside on its own. Check its shape, because the shape decides where it can go. **And check its grain**, because that is the one that never raises an error.
+
+</Say>
+
+<Say who="leo" pose="smiling">
+
+The right subquery shape stops the error. **The right grain stops a silent wrong answer — 118 of 119 customers "above average"**, because I compared their totals with an average taken per order line.
+
+</Say>
+
+> Your turn, Leo.
+>
+> ▶ Walk the path to enlightenment.
+
+```powershell
+cd c:/DataPallas/db/datazeus
+.\zeus.bat koans learnsql series2 _00
+```
+
+- [x] a value in brackets: freight above the average
+- [x] a value in brackets can be the whole comparison
+- [ ] one value only: turn a column of values into one
+- [ ] …and seven more, ending with two you write yourself
+
+`…/learnsql/series2/_00/SubqueriesKoans.groovy`
+
+<Beat />
+
+<Say who="mnemosyne" pose="excited">
+
+**That's subqueries, Leo.** The subquery runs first, and what it hands back — **a value, a list or a table** — decides where it can go. You caught the trap yourself: **the right average, of the wrong thing.**
+
+</Say>
+
+<Say who="leo" pose="excited">
+
+And I've got my question for this series: **why did invoicing fall while orders grew?** **What's missing, where, since when — and how much?**
+
+</Say>
+
+**That's all, folks!**
+
+<Say who="mnemosyne" pose="excited">
+
+**We'll do it all, Leo.** Next lesson is **CASE**: labels for rows, and **several kinds of order counted side by side** — a column each, in one query.
+
+</Say>
+
+**That's all, folks!**
+
+1. Subqueries — one query's result inside another
+2. CASE — SQL's if/then for labels & buckets
+3. Dates & Times — ranges and boundaries
+4. Multi-Table JOINs & Grain — rows dropped or multiplied
+5. CTEs (WITH) — a long query, in named steps
+6. VIEWs, CREATE TABLE AS & Temp Tables — query or answer
+7. EXISTS & Correlated Subqueries — and the NOT IN trap
+8. Self-JOINs & Hierarchies — rows in the same table
+9. Window Functions I: OVER, PARTITION BY & ROW_NUMBER
+10. String Functions, LIKE & Regex — clean up messy data
+11. Window Functions II: LAG/LEAD, Running Totals & Frames
+12. UNION, INTERSECT, EXCEPT — stack and reconcile lists
+13. GROUPING SETS, ROLLUP & CUBE — subtotals in one pass
+14. INSERT, UPDATE, DELETE & Transactions — safely
+15. UPSERT & MERGE — insert or update, safely re-run
+16. Median and Percentiles — WITHIN GROUP, not AVG
+17. Subqueries + CTEs + Window Functions — a real case
+
+{/* dialogue:end */}
