@@ -89,6 +89,32 @@ ORDER BY min("Freight");
 
 PostgreSQL and DuckDB both let `GROUP BY` use the name `"Band"` from the `SELECT`. Some databases do not, and there you repeat the whole CASE in the `GROUP BY`.
 
+### Heavy first, on purpose
+
+`ORDER BY min("Freight")` puts light first. The shipping team may want the opposite — the heaviest freight at the top — and `'heavy'` sorts under `'light'` alphabetically, so a plain `ORDER BY "Band"` cannot give it to them. The order has to be written, as a CASE:
+
+{/* The same highlight as the video: the ORDER BY CASE lines, in green. */}
+
+```sql file=./scripts/orders-per-band-urgency.sql {8-9}#good
+SELECT "Band", count(*) AS "Orders"
+FROM (SELECT CASE
+               WHEN "Freight" < 25 THEN 'light'
+               WHEN "Freight" < 60 THEN 'medium'
+               ELSE 'heavy' END AS "Band"
+      FROM "Orders") AS t
+GROUP BY "Band"
+ORDER BY CASE "Band" WHEN 'heavy' THEN 1
+                     WHEN 'medium' THEN 2 ELSE 3 END;
+```
+
+| Band   | Orders |
+| ------ | ------ |
+| heavy  | 3725   |
+| medium | 3941   |
+| light  | 2334   |
+
+The same three counts as before, in the order the team asked for. The label is built in a subquery for the same reason the next section builds one: PostgreSQL will not resolve a name given in the `SELECT` inside an `ORDER BY` expression in the same query. DuckDB will, so do not rely on it.
+
 ## The first true WHEN wins
 
 Now swap the first two `WHEN` lines, so medium is tested before light:
@@ -281,6 +307,30 @@ ORDER BY "CustomerID";
 | Zenith Food Hall   | Poland  | (none)        | (none)    |
 
 The two columns are identical, and they stay identical for all 120 customers.
+
+### NULLIF, the other mirror
+
+`NULLIF` is `COALESCE`'s mirror: when the two values match, it hands back NULL; otherwise it hands back the first. It is a CASE too — `NULLIF(x, y)` is `CASE WHEN x = y THEN NULL ELSE x END`. Here it removes the shipped rows, so `count` skips them, and what is left is each channel's orders that are not shipped:
+
+{/* The same highlight as the video: the NULLIF line, in green. */}
+
+```sql file=./scripts/not-shipped-by-nullif.sql {3}#good
+SELECT "Channel",
+       count(*) AS "Orders",
+       count(NULLIF("Status", 'Shipped')) AS "Not shipped"
+FROM "Orders"
+GROUP BY "Channel"
+ORDER BY "Orders" DESC;
+```
+
+| Channel   | Orders | Not shipped |
+| --------- | ------ | ----------- |
+| Sales rep | 3749   | 80          |
+| Web       | 2765   | 96          |
+| Phone     | 2485   | 72          |
+| EDI       | 1001   | 32          |
+
+Sales rep's 80 is its 61 cancelled plus 19 open, and the same holds for the others. The <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a> owns `NULLIF`; here it is shown only as one more CASE.
 
 ## Your turn: online or offline
 

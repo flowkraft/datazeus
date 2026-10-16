@@ -18,7 +18,7 @@
 # FILE ORDER IS THE CURRICULUM, in the lesson's order: what CASE is and how it reads, grouping by
 # the label, the first-true-WHEN trap, the missing-ELSE trap and its NULL, the short form and when a
 # join is better, COALESCE, CASE inside an aggregate, the share and its integer division, and last
-# the production card. 15 basic, 5 cloze — about the 3:1 the existing decks run.
+# the production card. 17 basic, 5 cloze — about the 3:1 the existing decks run.
 #
 # THE SHARE CARDS CARRY A RULE THAT HAS NO KOAN. DuckDB, which the koans run on, keeps the fraction
 # of an integer division that PostgreSQL throws away, so a koan would pass the query CloudBeaver
@@ -58,6 +58,10 @@ cards:
       front: "You have given each order a band with CASE, <code>AS band</code>. How do you count the orders in each band in the same query?"
       back: "Group by the label: <code>GROUP BY band</code> with <code>count(*)</code>. PostgreSQL and DuckDB accept the alias in GROUP BY; in databases that do not, repeat the whole CASE there."
 
+  - basic:
+      front: "You labelled each order with a band (<code>light</code>, <code>medium</code>, <code>heavy</code>) and want the heaviest first. A plain <code>ORDER BY band</code> sorts them alphabetically, and 'heavy' comes under 'light'. How do you sort them in the order you want?"
+      back: "Order by a CASE that gives each label a number: <code>ORDER BY CASE band WHEN 'heavy' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END</code>. The rows come out in that order. If the label is made in the same query's SELECT, build it in a subquery first: PostgreSQL will not resolve the alias inside an ORDER BY expression."
+
   # ── 3. THE FIRST TRUE WHEN WINS ──
   - basic:
       front: "<code>CASE WHEN freight &lt; 60 THEN 'medium' WHEN freight &lt; 25 THEN 'light' ELSE 'heavy' END</code> runs with no error, but no order is ever labelled light. Why?"
@@ -89,6 +93,10 @@ cards:
 
   # ── 6. COALESCE ──
   - cloze: "<code>COALESCE(region, '(none)')</code> is a short way of writing <code>CASE WHEN region {{c1::IS NULL}} THEN '(none)' ELSE {{c2::region}} END</code>."
+
+  - basic:
+      front: "What does <code>NULLIF(x, y)</code> return, and what CASE is it short for?"
+      back: "NULL when x equals y, otherwise x. It is <code>CASE WHEN x = y THEN NULL ELSE x END</code>. It is COALESCE's mirror: COALESCE puts a value where there was none, NULLIF takes one away. (Series 1 · 45 owns NULLIF.)"
 
   # ── 7. CASE INSIDE AN AGGREGATE ──
   - basic:

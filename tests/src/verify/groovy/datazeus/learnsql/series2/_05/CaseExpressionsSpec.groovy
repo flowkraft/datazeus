@@ -3,6 +3,8 @@ package datazeus.learnsql.series2._05
 import datazeus.support.NorthwindCoGateSpec
 import spock.lang.Unroll
 
+import java.sql.SQLException
+
 /**
  * VERIFIED spec = the PUBLISH GATE for Series 2 · lesson _05
  * "CASE — SQL's If/Then for Labels & Buckets".
@@ -15,12 +17,15 @@ import spock.lang.Unroll
  * learner is asserted here, on BOTH engines. The lesson's scripts, and the sections that run them:
  *
  *    freight-band-per-order, orders-per-band                        §1 the shape
+ *    orders-per-band-urgency                                        §1 CASE in ORDER BY
  *    orders-per-band-whens-swapped                                  §2 the first true WHEN wins
  *    heavy-label-no-else, not-heavy-no-else, not-heavy-with-else    §3 no ELSE means NULL
+ *    label-in-where                                                 §3 the alias in WHERE: PER ENGINE
  *    shipper-names-by-case, shipper-names-by-join,
  *    region-coalesce-and-case                                       §4 the short form, and COALESCE
  *    orders-online-or-offline                                       §5 the hands-on
  *    status-per-channel, status-per-channel-counted-with-count      §6 CASE inside an aggregate
+ *    not-shipped-by-nullif                                          §6 NULLIF, the other mirror
  *    cancelled-share-per-channel-integer-division                   §7 the share: PER ENGINE
  *    cancelled-share-per-channel, cancelled-share-company           §7 the share, portable
  *    shipped-no-ship-date-per-courier-2024                          §8 the case segment
@@ -147,6 +152,21 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
         engine << ENGINES
     }
 
+    @Unroll
+    def "[#engine] CASE in ORDER BY: the same three bands, heaviest first — 3725 / 3941 / 2334"() {
+        given:
+        def rows = sqlFor(engine).rows(script("orders-per-band-urgency"))
+
+        expect: "order-by-case's card — the band-counts rows in the order the shipping team asked for"
+        rows.collect { [it.Band, it.Orders] } == [["heavy", 3725], ["medium", 3941], ["light", 2334]]
+
+        and: "the same three counts as orders-per-band, only the order changed"
+        rows*.Orders.sum() == 10000
+
+        where:
+        engine << ENGINES
+    }
+
     // --- 2. THE FIRST TRUE WHEN WINS -----------------------------------------------------------------
 
     @Unroll
@@ -187,6 +207,31 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
 
         where:
         engine << ENGINES
+    }
+
+    def "PostgreSQL refuses a SELECT alias in WHERE — the top CASE question, and the exact error the video draws"() {
+        // why-where-refuses' ErrorPanel: SQLSTATE 42703, "column \"Label\" does not exist",
+        // Position 115 — the offset of \"Label\" in label-in-where.sql as written.
+        when:
+        sqlFor("postgres").rows(script("label-in-where"))
+
+        then:
+        SQLException e = thrown()
+        e.SQLState == "42703"
+        e.message.contains('column "Label" does not exist')
+        e.message.contains("Position: 115")
+    }
+
+    def "DuckDB accepts it — which is why the video names CloudBeaver, and why this rule has no koan"() {
+        // DuckDB resolves the alias (a lenient extension), so the same query returns the heavy
+        // orders instead of refusing. Asserted rather than assumed, like §7's integer division:
+        // a learner who tries it on the koans' engine sees it work, and the video says so.
+        when:
+        def rows = sqlFor("duckdb").rows(script("label-in-where"))
+
+        then:
+        rows.size() == 4654
+        rows.every { it.Label == 'heavy' }
     }
 
     // --- 4. THE SHORT FORM, AND COALESCE -----------------------------------------------------------
@@ -273,6 +318,23 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
 
         and: "count-version: the missing ELSE on purpose gives the same columns"
         viaCount.collect(cells) == CHANNELS
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] NULLIF hands NULL back for the shipped rows, so count() skips them: 80 / 96 / 72 / 32 not shipped"() {
+        given:
+        def rows = sqlFor(engine).rows(script("not-shipped-by-nullif"))
+
+        expect: "nullif-is-case's card — each channel's Open plus Cancelled"
+        rows.collect { [it.Channel, it.Orders as int, it["Not shipped"] as int] } ==
+                [["Sales rep", 3749, 80], ["Web", 2765, 96], ["Phone", 2485, 72], ["EDI", 1001, 32]]
+
+        and: "Not shipped is exactly Orders minus Shipped — the rows NULLIF handed back NULL for"
+        def shipped = CHANNELS.collectEntries { [(it[0]): it[2]] }
+        rows.every { (it["Not shipped"] as int) == (it.Orders as int) - (shipped[it.Channel] as int) }
 
         where:
         engine << ENGINES
