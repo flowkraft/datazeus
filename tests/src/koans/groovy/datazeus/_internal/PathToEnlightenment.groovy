@@ -167,6 +167,15 @@ class PathToEnlightenment implements IGlobalExtension {
             // with the recorded values; detect by the property, not an exact class name.
             if (t != null && t.hasProperty('condition') && t.condition != null) {
                 def values = t.condition.values
+                // A predict koan the learner has ANSWERED (`rows == 6`, no `___` left). Spock
+                // records each part before the expression that holds it, so the last three
+                // values are the left side, the typed answer and the `==` that came out false.
+                // Without this the typed 6 was the last value kept below and was shown as what
+                // the query returned.
+                def typed = (t.condition.text ?: "") =~ /==\s*(-?\d+(?:\.\d+)?|true|false|null|'[^']*'|"[^"]*")\s*$/
+                if (typed.find() && values != null && values.size() >= 3 && values[-1] == false) {
+                    return "the query returned " + values[-3] + ",\nbut your answer says " + typed.group(1)
+                }
                 def interesting = values?.findAll { v ->
                     v != null &&
                     !(v instanceof Boolean) &&
