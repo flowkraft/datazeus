@@ -6,7 +6,8 @@ package datazeus.support
  * scale()). Both engines are re-checksummed against `_dataset_info` before any figure is asserted
  * (see {@link GateEngines}).
  *
- *   PGHOST=localhost mvn test    expects Northwind Company installed in that PostgreSQL via Seed Data
+ *   PGHOST=localhost mvn test    expects Northwind Company in that PostgreSQL's database northwind_co,
+ *                                where DataPallas installs it when its Northwind PostgreSQL starts
  */
 abstract class NorthwindCoGateSpec extends GateSpec {
 
@@ -18,4 +19,10 @@ abstract class NorthwindCoGateSpec extends GateSpec {
 
     @Override
     protected String schema() { "northwind_co_" + scale() }
+
+    @Override
+    protected String pgDatabase() { "northwind_co" }
+
+    @Override
+    protected List<String> duckdbOnlyTables() { [] }
 }

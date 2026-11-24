@@ -42,12 +42,16 @@ class GateEngines {
     final Sql pg
     private final File dbCopy
 
-    /** The engines for `dataset` (a .duckdb path) on `schema`, opened the first time they are asked for. */
-    static synchronized GateEngines of(String dataset, String schema) {
-        OPEN.computeIfAbsent("${dataset}|${schema}".toString()) { new GateEngines(dataset, schema) }
+    /**
+     * The engines for `dataset` (a .duckdb path) on `schema`, opened the first time they are asked for.
+     * `pgDatabase` and `duckdbOnly` are used only with PGHOST: the database DataPallas installs the dataset
+     * into, and the file's tables it does not install there.
+     */
+    static synchronized GateEngines of(String dataset, String schema, String pgDatabase, List<String> duckdbOnly) {
+        OPEN.computeIfAbsent("${dataset}|${schema}".toString()) { new GateEngines(dataset, schema, pgDatabase, duckdbOnly) }
     }
 
-    private GateEngines(String dataset, String schema) {
+    private GateEngines(String dataset, String schema, String pgDatabase, List<String> duckdbOnly) {
         // The copy's file name becomes DuckDB's catalog name; it must not equal the schema, or
         // "northwind_co_s"."Orders" is ambiguous (catalog or schema). "gate-<file>-…" is safe.
         File src = new File(dataset)
@@ -62,9 +66,9 @@ class GateEngines {
 
         String liveHost = System.getenv("PGHOST")
         if (liveHost) {
-            String url = "jdbc:postgresql://${liveHost}:${env('PGPORT', '5432')}/${env('PGDATABASE', 'Northwind')}"
+            String url = "jdbc:postgresql://${liveHost}:${env('PGPORT', '5432')}/${env('PGDATABASE', pgDatabase)}"
             pg = Sql.newInstance(url, env('PGUSER', 'postgres'), env('PGPASSWORD', 'postgres'), "org.postgresql.Driver")
-            List<String> missing = tables - pg.rows("SELECT table_name FROM information_schema.tables WHERE table_schema = ?", [pgSchema]).collect { it.table_name as String }
+            List<String> missing = tables - duckdbOnly - pg.rows("SELECT table_name FROM information_schema.tables WHERE table_schema = ?", [pgSchema]).collect { it.table_name as String }
             assert missing.isEmpty(): "PGHOST is set but ${url} has no ${missing.take(3)}… in schema ${pgSchema}: install " +
                     "${src.name}${schema ? ' (' + schema + ')' : ''} there first — tests/README.md says how."
         } else {
@@ -77,7 +81,7 @@ class GateEngines {
             ["duckdb": duck, "postgres": pg].each { engine, sql ->
                 List<String> differ = DatasetChecksum.problems(sql, schema)
                 assert differ.isEmpty(): "${engine}: ${schema} is not the dataset the lessons were measured on — " +
-                        "reinstall it (DataPallas ▸ the connection ▸ Seed Data). Differs: ${differ}"
+                        "reinstall it (DataPallas reinstalls it when its Northwind PostgreSQL starts). Differs: ${differ}"
             }
         }
 

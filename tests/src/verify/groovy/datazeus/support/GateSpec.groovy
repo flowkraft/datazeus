@@ -32,9 +32,19 @@ abstract class GateSpec extends Specification {
     /** The schema inside it, or null for the file's default. */
     protected String schema() { null }
 
+    /** With PGHOST set: the PostgreSQL database DataPallas installs this dataset into (PGDATABASE overrides it). */
+    protected String pgDatabase() { "Northwind" }
+
+    /**
+     * With PGHOST set: tables of the .duckdb file that DataPallas's PostgreSQL does not have, so the check
+     * that the dataset is installed there does not ask for them. Classic Northwind's file also carries the
+     * random star (fact_sales, dim_*) that DataPallas builds on DuckDB only; no lesson on it queries them.
+     */
+    protected List<String> duckdbOnlyTables() { ["dim_customer", "dim_employee", "dim_product", "dim_time", "fact_sales"] }
+
     /** The Sql for a given engine label — used by each feature's where: block. */
     protected Sql sqlFor(String engine) {
-        GateEngines e = GateEngines.of(dataset(), schema())
+        GateEngines e = GateEngines.of(dataset(), schema(), pgDatabase(), duckdbOnlyTables())
         engine == "postgres" ? e.pg : e.duck
     }
 }

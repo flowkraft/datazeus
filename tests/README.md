@@ -18,7 +18,8 @@ new dataset is those two overrides, like `NorthwindCoKoanBase` and `NorthwindCoG
 Without `PGHOST`, one Testcontainers PostgreSQL gets a type-faithful copy of each dataset, in its own
 schema. With `PGHOST` set, it expects the dataset already installed in that PostgreSQL: classic
 Northwind via DataPallas ▸ Apps / Starter Packs ▸ Northwind DB (PostgreSQL) ▸ Start, Northwind
-Company via DataPallas ▸ Seed Data ▸ Academy Northwind Co Install. A dataset that carries
+Company is installed by DataPallas itself, into the database `northwind_co`, when that same
+Northwind PostgreSQL starts; each dataset finds its own database. A dataset that carries
 `_dataset_info` (Northwind Company) is re-checksummed on BOTH engines before a single figure is
 asserted, so a spec can never pass on data that is not the lessons' data.
 
