@@ -44,6 +44,21 @@ Short aliases: sql=learnsql, S1=series1. Courses: sql modeling etl warehousing d
 EOF
 }
 
+_zeus_older_ours() {
+  # IS $2 BYTE FOR BYTE A BUILD OF OURS FROM AN EARLIER RELEASE? The workspace marker $1 - read
+  # from the download, so the list is always the current one - names every build of a file it
+  # covers as "shipped <file name> <md5>". A file the marker does not name (a koan) is never
+  # hashed. No md5 tool at all just means "can't tell", which leaves the merge as it was.
+  _name="$(basename "$2")"
+  grep -q "^shipped $_name " "$1" 2>/dev/null || return 1
+  if command -v md5sum >/dev/null 2>&1; then _h="$(md5sum "$2" | cut -d' ' -f1)"
+  elif command -v md5 >/dev/null 2>&1; then _h="$(md5 -q "$2")"
+  elif command -v openssl >/dev/null 2>&1; then _h="$(openssl md5 -r "$2" | cut -d' ' -f1)"
+  else return 1
+  fi
+  [ -n "$_h" ] && grep -qiE "^shipped $_name $_h[[:space:]]*\$" "$1"
+}
+
 _zeus_sweep_orphans() {
   # DELETE COMPILED CLASSES WHOSE SOURCE IS GONE.
   #
@@ -141,6 +156,21 @@ zeus_update() {
           cp "$src" "$loc"
         elif [ -f "$bas" ] && cmp -s "$loc" "$bas"; then
           cp "$src" "$loc"                                              # untouched -> update
+        elif _zeus_older_ours "$new/$w/.zeus-keep" "$loc" && ! cmp -s "$src" "$loc"; then
+          # AN OLDER COPY OF OURS THAT AN EARLIER UPDATE MISSED. Untouched means "equal to the
+          # baseline", and the baseline can be wrong: the first update after datasets/northwind-co
+          # became a workspace ran the PREVIOUS launcher, which skipped the dataset and then
+          # recorded ours as the baseline anyway. From then on the stale copy looked edited and
+          # was kept forever, in silence. A file identical to a build we shipped was never
+          # edited (installing data changes its bytes), so it is ours to replace.
+          if cp "$src" "$loc" 2>/dev/null; then
+            rm -f "$loc.new"
+            echo "  $w/$f"
+            echo "      was an older copy of ours that an earlier update missed - replaced with the current one"
+          else
+            echo "  $w/$f"
+            echo "      is an older copy of ours but could not be replaced - close whatever has it open and run update again"
+          fi
         elif [ -f "$bas" ] && cmp -s "$src" "$bas"; then
           :                                                             # yours differs, ours didn't change -> nothing to say
         elif cmp -s "$src" "$loc"; then
@@ -241,6 +271,11 @@ zeus_update() {
   rm -rf "$tmp"
   echo
   echo "DataZeus is up to date. Your in-progress edits were left untouched."
+  # The launcher is staged, not swapped (step 2), so THIS update ran the old one. Say so: a fix
+  # in the launcher itself only takes effect on the next update.
+  if [ -f "$DIR/zeus.sh.new" ]; then
+    echo "The zeus launcher itself changed too: run './zeus.sh update' once more so the new one finishes the job."
+  fi
 }
 
 zeus_koans_python() {

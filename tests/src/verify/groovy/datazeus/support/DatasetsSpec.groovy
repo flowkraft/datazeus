@@ -644,6 +644,31 @@ class DatasetsSpec extends Specification {
         true
     }
 
+    def "zeus update: every dataset build we ship is listed by MD5 in its workspace marker"() {
+        // `zeus update` replaces a learner's dataset only while it is a build we shipped: the
+        // baseline, or any build its folder's .zeus-keep lists as "shipped <file> <md5>". A
+        // rebuilt file left off that list is a build the NEXT rebuild cannot recognise, so a
+        // learner stuck on it - an earlier update missed it - keeps it forever.
+        when:
+        def problems = []
+        new File("../datasets").eachFileRecurse(groovy.io.FileType.FILES) { marker ->
+            if (marker.name != ".zeus-keep") return
+            def listed = marker.readLines().findAll { it.startsWith("shipped ") }
+            listed.findAll { !(it ==~ /shipped \S+ [0-9a-f]{32}\s*/) }.each { problems <<
+                "${marker.path}: '${it}' is not 'shipped <file name> <md5>' - zeus.sh and zeus.bat would never match it." }
+            marker.parentFile.listFiles().findAll { it.name.endsWith(".duckdb") }.each { db ->
+                def md5 = java.security.MessageDigest.getInstance("MD5").digest(db.bytes).encodeHex().toString()
+                if (!listed.any { it.trim() == "shipped ${db.name} ${md5}".toString() }) problems <<
+                    "${db.path} (MD5 ${md5}) is not listed in ${marker.path}.\n" +
+                    "  FIX: add the line 'shipped ${db.name} ${md5}' and keep every older line."
+            }
+        }
+
+        then:
+        failWithReasons(problems)
+        true
+    }
+
     // ════════════════════════════════════════════════════════════════════════════════════════
     //  3. HELPERS
     // ════════════════════════════════════════════════════════════════════════════════════════

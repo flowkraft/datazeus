@@ -2,3 +2,12 @@
 # `zeus update` refreshes northwind_co.duckdb only while it is exactly as we shipped it. Once you
 # have installed data into it (Medium, Large), your copy is kept and a newer one of ours arrives
 # beside it as northwind_co.duckdb.new. Don't delete this marker.
+#
+# Every northwind_co.duckdb we have ever shipped, by MD5. A copy that matches one of them has no
+# data installed into it, so `zeus update` replaces it - even when an earlier update missed it.
+# A rebuilt northwind_co.duckdb adds its own line here (DatasetsSpec checks that it is listed).
+shipped northwind_co.duckdb bfa5ce562cd48431157716381e41a345
+shipped northwind_co.duckdb 39d223c79cf2419a9678496ac8b24d5d
+shipped northwind_co.duckdb 102dfdbe85b02a37968120d176612fd4
+shipped northwind_co.duckdb f745189d427a23dbd6d286d4a9117ff2
+shipped northwind_co.duckdb 19108bdc45d031986a8693c18ddef2b3

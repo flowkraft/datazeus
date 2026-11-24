@@ -520,7 +520,7 @@ for /f "usebackq delims=" %%W in ("%WSLIST%") do if exist "%NEW%\%%W" (
       REM step 2 refreshed it like every other file of ours, so what is on disk is ours.
       call :dzcopy "%%F" "!loc!"
     ) else if exist "!bas!" (
-      call :dzmerge "%%F" "!loc!" "!bas!" "!rel!"
+      call :dzmerge "%%F" "!loc!" "!bas!" "!rel!" "%NEW%\%%W\.zeus-keep"
     )
   )
 )
@@ -608,6 +608,9 @@ for %%R in ("courses" "tests\src\verify" "datasets" "tools") do (
 rmdir /s /q "%TMP_DZ%" 2>nul
 echo.
 echo DataZeus is up to date. Your in-progress edits were left untouched.
+REM The launcher is staged, not swapped (step 2), so THIS update ran the old one. Say so: a fix
+REM in the launcher itself only takes effect on the next update.
+if exist "%ROOT%\zeus.bat.new" echo The zeus launcher itself changed too: run `zeus update` once more so the new one finishes the job.
 endlocal & exit /b 0
 
 :dzcopy
@@ -616,13 +619,36 @@ copy /y "%~1" "%~2" >nul 2>nul
 exit /b 0
 
 :dzmerge
-REM  %1 = the shipped file, %2 = the learner's file, %3 = the baseline, %4 = relative path.
-REM  Mirror of the same branch in zeus.sh - keep the two in step.
+REM  %1 = the shipped file, %2 = the learner's file, %3 = the baseline, %4 = relative path,
+REM  %5 = the workspace's marker in the download. Mirror of the same branch in zeus.sh - keep
+REM  the two in step.
 call :dzfc "%~2" "%~3"
 if not errorlevel 1 (
   REM Byte-identical to the baseline: never touched, so it is ours to update.
   copy /y "%~1" "%~2" >nul 2>nul
   exit /b 0
+)
+REM  AN OLDER COPY OF OURS THAT AN EARLIER UPDATE MISSED. Untouched means "equal to the
+REM  baseline", and the baseline can be wrong: the first update after datasets\northwind-co
+REM  became a workspace ran the PREVIOUS launcher, which skipped the dataset and then recorded
+REM  ours as the baseline anyway. From then on the stale copy looked edited and was kept
+REM  forever, in silence. A file identical to a build we shipped was never edited (installing
+REM  data changes its bytes), so it is ours to replace.
+call :dzours "%~2" "%~5"
+if not errorlevel 1 (
+  call :dzfc "%~1" "%~2"
+  if errorlevel 1 (
+    echo   %~4
+    copy /y "%~1" "%~2" >nul 2>nul
+    call :dzfc "%~1" "%~2"
+    if errorlevel 1 (
+      echo       is an older copy of ours but could not be replaced - close whatever has it open and run zeus update again
+    ) else (
+      if exist "%~2.new" del /q "%~2.new" >nul 2>nul
+      echo       was an older copy of ours that an earlier update missed - replaced with the current one
+    )
+    exit /b 0
+  )
 )
 call :dzfc "%~1" "%~3"
 if not errorlevel 1 exit /b 0
@@ -651,6 +677,20 @@ if /I "%dzrel:~0,9%"=="datasets\" (
 )
 for %%N in ("%~2") do echo       ours is beside it as %%~nxN.new
 exit /b 0
+
+:dzours
+REM  errorlevel 0 when %1 is byte for byte a build of ours from an earlier release. The
+REM  workspace marker %2 - read from the download, so the list is always the current one -
+REM  names every build of a file it covers as "shipped <file name> <md5>". A file the marker
+REM  does not name (a koan) is never hashed. certutil ships with Windows; on Windows 7 it
+REM  prints the hash with spaces between the bytes, hence the strip.
+findstr /b /l /i /c:"shipped %~nx1 " "%~2" >nul 2>nul || exit /b 1
+set "dzh="
+for /f "skip=1 delims=" %%H in ('certutil -hashfile "%~1" MD5 2^>nul') do if not defined dzh set "dzh=%%H"
+if not defined dzh exit /b 1
+set "dzh=!dzh: =!"
+findstr /b /l /i /c:"shipped %~nx1 !dzh!" "%~2" >nul 2>nul
+exit /b
 
 :dzfc
 REM  errorlevel 0 when %1 and %2 hold the same content. Text compares as text (see step 2); a
