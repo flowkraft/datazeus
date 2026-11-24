@@ -29,7 +29,7 @@ import spock.lang.Stepwise
  *   a TABLE   rows and columns      query it:          FROM (SELECT ... ) AS t
  *
  * Put a list where a value belongs and the query stops with "more than one row returned
- * by a subquery used as an expression" (koan 3 is that mistake, fixed). Every subquery
+ * by a subquery used as an expression" (koan 2 is that mistake, fixed). Every subquery
  * here runs on its own: select the part in brackets and run it alone before you trust
  * the whole.
  *
@@ -40,22 +40,22 @@ import spock.lang.Stepwise
  * compare orders with the average FREIGHT, suppliers with the average SUPPLIER and sales
  * reps with the average SALES REP — so copying a query across from the video will not work.
  *
- * TEN KOANS, EASIEST FIRST, IN THE ORDER THE LESSON BUILDS THEM:
+ * TEN KOANS, EASIEST FIRST:
  *   1    a value in brackets: freight above the average
- *   2    a value in brackets can be the whole comparison
- *   3    one value only: turn a column of values into ONE
- *   4    a list: IN
- *   5    a join repeats what IN does not
+ *   2    one value only: turn a column of values into ONE
+ *   3    a list: IN
+ *   4    a join repeats what IN does not
+ *   5    a value in brackets can be the whole comparison
  *   6    a table in FROM, and its grain
  *   7    the average of WHAT: suppliers above the average supplier
  *   8    predict: a subquery that finds nothing raises no error and returns no rows
- *   9    write the whole query: sales reps who beat the average sales rep
- *  10    write the whole query: a value inside a value inside a list
+ *   9    write the whole query: a value inside a value inside a list
+ *  10    write the whole query: sales reps who beat the average sales rep
  *
- * These run on DuckDB, on Northwind Company — the same data the Seed Data tab installs
- * into CloudBeaver's PostgreSQL. Every one is written so it returns the SAME answer there,
- * once `SET search_path TO northwind_co_s;` has been run in the editor (this file does
- * that for you). KEEP THE DOUBLE QUOTES on every name, spelled exactly as the schema below
+ * These run on DuckDB, on Northwind Company — the same data DataPallas installs by itself
+ * into CloudBeaver's PostgreSQL, in the database northwind_co. Every one is written so it
+ * returns the SAME answer there, once `SET search_path TO northwind_co_s;` has been run in
+ * the editor (this file does that for you). KEEP THE DOUBLE QUOTES on every name, spelled exactly as the schema below
  * spells them: DuckDB forgives a missing quote or a wrong capital letter and PostgreSQL
  * does not, so a koan can go green here on a query that CloudBeaver refuses.
  *
@@ -116,21 +116,7 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
         '''
     }
 
-    // 2) THE BRACKETS CAN BE THE WHOLE RIGHT-HAND SIDE. Which order paid the most freight?
-    //    Nobody told you the number, so ask for it inside the comparison. Write the whole
-    //    query that goes in the brackets: it must hand back exactly one value.
-    //    (One row comes back. If your subquery hands back a list, the database refuses to
-    //     compare "=" with it — see koan 3.)
-    def "a value in brackets can be the whole comparison"() {
-        expect:
-        shouldReturn([[567, "BRAM2", 726.54]], '''
-            SELECT "OrderID", "CustomerID", "Freight"
-            FROM "Orders"
-            WHERE "Freight" = (___)
-        ''')
-    }
-
-    // 3) ONE VALUE ONLY. Which orders paid more freight than EVERY order Ines Torres took?
+    // 2) ONE VALUE ONLY. Which orders paid more freight than EVERY order Ines Torres took?
     //    ("EmployeeID" 9.) Written as SELECT "Freight" the brackets hand back 1,125 values —
     //    one per order of hers — and ">" cannot compare with 1,125 numbers: the query stops
     //    with "more than one row returned by a subquery used as an expression". More than
@@ -150,7 +136,7 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
         ''')
     }
 
-    // 4) A LIST. Which products has Zenith Fine Foods ever bought? The brackets hand back a
+    // 3) A LIST. Which products has Zenith Fine Foods ever bought? The brackets hand back a
     //    column of product ids — one for every line Zenith ever ordered — and the outer
     //    query keeps each product whose id is IN that list. Fill in the keyword that tests
     //    whether a value is one of a list.
@@ -171,30 +157,52 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
         ''')
     }
 
-    // 5) A JOIN REPEATS WHAT IN DOES NOT. The same question as koan 4, written as a join
-    //    from the product to its order lines to their orders. Fill in the join condition
-    //    that ties each order line to its product.
-    //    (Predict first: IN gave six rows. A join returns one row per MATCH, and Zenith
-    //     bought some of those products more than once — so how many rows now? IN asks a
-    //     yes-or-no question per product, which is why it never repeats one.)
+    // 4) A JOIN REPEATS WHAT IN DOES NOT. Koan 3's question again, written as a join from the
+    //    product to its order lines to their orders. The query is written for you; the
+    //    prediction is yours. IN gave six products. A join returns one row per MATCH, and
+    //    Zenith bought some of those products more than once — so how many rows come back
+    //    now? Put your number in BEFORE you run anything.
+    //    (IN asks a yes-or-no question per product — "is it in the list?" — which is why it
+    //     never repeats one. If your number is wrong, run the query alone and look for the
+    //     product names that come back more than once.)
     def "a join repeats what IN does not"() {
-        expect:
-        shouldReturn 8, '''
-            SELECT count(*)
+        given: "koan 3's question, written as a join"
+        int joinRows = rows('''
+            SELECT p."ProductName"
             FROM "Products" p
-            JOIN "Order Details" d ON ___
+            JOIN "Order Details" d ON d."ProductID" = p."ProductID"
             JOIN "Orders" o ON o."OrderID" = d."OrderID"
             WHERE o."CustomerID" = 'ZENIT'
-        '''
+        ''').size()
+
+        expect:
+        joinRows == ___
+    }
+
+    // 5) THE BRACKETS CAN BE THE WHOLE RIGHT-HAND SIDE. Which order paid the most freight?
+    //    Nobody told you the number, so ask for it inside the comparison. Write the whole
+    //    query that goes in the brackets: it must hand back exactly one value.
+    //    (One row comes back. If your subquery hands back a list, the database refuses to
+    //     compare "=" with it — koan 2's mistake.)
+    def "a value in brackets can be the whole comparison"() {
+        expect:
+        shouldReturn([[567, "BRAM2", 726.54]], '''
+            SELECT "OrderID", "CustomerID", "Freight"
+            FROM "Orders"
+            WHERE "Freight" = (___)
+        ''')
     }
 
     // 6) A TABLE IN FROM. What does the AVERAGE SUPPLIER sell? That needs one total per
     //    supplier first, and then the average of those totals. The brackets are that table
     //    of totals, named t. Fill in the clause that makes the inside return ONE ROW PER
     //    SUPPLIER.
-    //    (Without it the inside adds up every line into one total, and the "average" of a
-    //     single total is just 15017031.15 — the whole business over five years, not a
-    //     supplier. One row per WHAT is the question the brackets answer.)
+    //    (Leave the GROUP BY out and the query is refused — "must appear in the GROUP BY
+    //     clause": the inside still lists p."SupplierID", and without groups there is no one
+    //     supplier to show. Drop p."SupplierID" as well and it runs, but the inside then adds
+    //     up every line into ONE total, and the "average" of a single total is just
+    //     15017031.15 — the whole business over five years, not a supplier. One row per WHAT
+    //     is the question the brackets answer.)
     def "a table in FROM, and its grain"() {
         expect:
         shouldReturn 750851.56, '''
@@ -209,17 +217,18 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
     }
 
     // 7) THE AVERAGE OF WHAT. Which suppliers sell more than the average SUPPLIER?
-    //    Each supplier's total is compared with the average of the per-supplier totals —
-    //    koan 6's table, now inside the HAVING. Fill in what the average is taken over.
+    //    Each supplier's total is compared with ONE number in brackets. Write the query that
+    //    goes in the brackets, and choose what it averages: the average ORDER LINE (595.13)
+    //    or the average SUPPLIER (koan 6's answer, 750851.56). Only one of them answers the
+    //    question. Write it as a query, not as a number typed in.
     //    HAVING, not WHERE: the average of the totals only exists once the rows are grouped, and
     //    a WHERE that tried to compare with a SUM or an AVG of its own rows is refused with
     //    "aggregate functions are not allowed in WHERE". The brackets are worked out ONCE —
     //    they never mention the supplier being checked, so nothing in them changes from one
     //    supplier to the next.
-    //    (Nine suppliers of the twenty. Compare them with the average ORDER LINE instead —
-    //     595.13 — and all twenty would pass, which is the lesson's trap on different
-    //     tables: a supplier's total is thousands of lines added up, so of course it beats
-    //     one line.)
+    //    (Nine suppliers of the twenty. Compare them with the average ORDER LINE instead and
+    //     all twenty pass, which is the lesson's trap on different tables: a supplier's total
+    //     is thousands of lines added up, so of course it beats one line.)
     def "the average of what: suppliers above the average supplier"() {
         expect:
         shouldReturn([["Baltic Producers", 1653749.77],
@@ -239,13 +248,7 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
             JOIN "Order Details" d ON d."ProductID" = p."ProductID"
             GROUP BY s."CompanyName"
             HAVING SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount"))
-                 > (SELECT AVG(___)
-                    FROM (SELECT p2."SupplierID",
-                                 SUM(d2."UnitPrice" * d2."Quantity"
-                                   * (1 - d2."Discount")) AS "Total"
-                          FROM "Products" p2
-                          JOIN "Order Details" d2 ON d2."ProductID" = p2."ProductID"
-                          GROUP BY p2."SupplierID") AS t)
+                 > (___)
             ORDER BY "Total sales" DESC
         ''')
     }
@@ -291,39 +294,16 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
         insideWithoutMax == ___
     }
 
-    // 9) The whole query — no scaffolding.
-    //    THE QUESTION: which sales reps sold more than the average sales rep?
-    //      · one row per employee who took orders — GROUP BY "EmployeeID" (two reps share a
-    //        surname, so a name is not enough), with "FirstName" and "LastName" beside it
-    //      · what each sold: the line money, summed, ROUNDed to 2
-    //      · kept only if that total beats the average of the per-employee totals
-    //      · biggest seller first
-    //      · return "FirstName", "LastName", then the money — in that order
-    //    GRAIN FIRST: the average must be the average EMPLOYEE, one total per employee,
-    //    averaged — not the average order line. Only the nine reps who took orders have a
-    //    total, so the average is over those nine.
-    //    (Four reps. Checkable fact: the average rep sold 1668559.02 — and the fifth rep
-    //     misses it by less than 26,000.)
-    def "write the whole query: sales reps who beat the average sales rep"() {
-        expect:
-        shouldReturn([["Hugo", "Dubois", 2683582.70],
-                      ["Ravi", "Keller", 2262633.06],
-                      ["Yara", "Schmidt", 2173151.40],
-                      ["Umberto", "Jansen", 2027512.41]], '''
-            ___
-        ''')
-    }
-
-    // 10) The whole query again — brackets inside brackets.
-    //     THE QUESTION: which suppliers supply the category of our MOST EXPENSIVE product?
-    //       · nobody tells you which product that is: find the highest "UnitPrice" (a value),
-    //       · then the category of the product with that price (a value),
-    //       · then the suppliers of the products in that category (a list)
-    //       · return "SupplierID" and "CompanyName", ordered by "SupplierID"
-    //     BUILD IT FROM THE INSIDE OUT, running each bracket alone before you wrap the next
-    //     one around it. That is how anybody writes a query like this.
-    //     (Eight suppliers, from ten products: two suppliers make two of them each, and IN
-    //      still lists each supplier once.)
+    // 9) The whole query — no scaffolding, brackets inside brackets.
+    //    THE QUESTION: which suppliers supply the category of our MOST EXPENSIVE product?
+    //      · nobody tells you which product that is: find the highest "UnitPrice" (a value),
+    //      · then the category of the product with that price (a value),
+    //      · then the suppliers of the products in that category (a list)
+    //      · return "SupplierID" and "CompanyName", ordered by "SupplierID"
+    //    BUILD IT FROM THE INSIDE OUT, running each bracket alone before you wrap the next
+    //    one around it. That is how anybody writes a query like this.
+    //    (Eight suppliers, from ten products: two suppliers make two of them each, and IN
+    //     still lists each supplier once.)
     def "write the whole query: a value inside a value inside a list"() {
         expect:
         shouldReturn([[6, "Harbor Brewery"],
@@ -334,6 +314,29 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
                       [17, "Baltic Producers"],
                       [18, "Elm Fisheries"],
                       [20, "Delta Mills"]], '''
+            ___
+        ''')
+    }
+
+    // 10) The whole query again — the average of WHAT, on your own.
+    //     THE QUESTION: which sales reps sold more than the average sales rep?
+    //       · one row per employee who took orders — GROUP BY "EmployeeID" (two reps share a
+    //         surname, so a name is not enough), with "FirstName" and "LastName" beside it
+    //       · what each sold: the line money, summed, ROUNDed to 2
+    //       · kept only if that total beats the average of the per-employee totals
+    //       · biggest seller first
+    //       · return "FirstName", "LastName", then the money — in that order
+    //     GRAIN FIRST: the average must be the average EMPLOYEE, one total per employee,
+    //     averaged — not the average order line. Only the nine reps who took orders have a
+    //     total, so the average is over those nine.
+    //     (Four reps. Checkable fact: the average rep sold 1668559.02 — and the fifth rep
+    //      misses it by less than 26,000.)
+    def "write the whole query: sales reps who beat the average sales rep"() {
+        expect:
+        shouldReturn([["Hugo", "Dubois", 2683582.70],
+                      ["Ravi", "Keller", 2262633.06],
+                      ["Yara", "Schmidt", 2173151.40],
+                      ["Umberto", "Jansen", 2027512.41]], '''
             ___
         ''')
     }

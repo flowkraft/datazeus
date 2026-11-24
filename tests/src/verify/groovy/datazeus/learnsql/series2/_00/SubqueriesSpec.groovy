@@ -179,7 +179,7 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
     }
 
     def "DuckDB refuses it too — it does not silently take the first row"() {
-        // Older DuckDB versions DID take the first row without a word. Koan 3 depends on this
+        // Older DuckDB versions DID take the first row without a word. Koan 2 depends on this
         // refusal, so it is asserted rather than assumed — re-checked on 1.4.5.0 (2026-09-21),
         // which also offers SET scalar_subquery_error_on_multiple_rows=false to bring the old
         // behaviour back. The lesson never sets it.
@@ -404,17 +404,17 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
         expect: "koan 1: the average freight is 69.31"
         dec(sqlFor(engine).firstRow('SELECT ROUND(AVG("Freight"), 2) AS a FROM "Orders"').a) == dec("69.31")
 
-        and: "koan 2: exactly one order carries the highest freight"
+        and: "koan 5: exactly one order carries the highest freight"
         sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Orders" WHERE "Freight" = (SELECT MAX("Freight") FROM "Orders")').n == 1
 
-        and: "koan 3: Ines Torres (9) took 1,125 orders, and the two orders that beat all of them are not hers"
+        and: "koan 2: Ines Torres (9) took 1,125 orders, and the two orders that beat all of them are not hers"
         sqlFor(engine).firstRow('SELECT "FirstName" || \' \' || "LastName" AS n FROM "Employees" WHERE "EmployeeID" = 9').n == "Ines Torres"
         sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Orders" WHERE "EmployeeID" = 9').n == 1125
         sqlFor(engine).rows('''SELECT "EmployeeID" AS e FROM "Orders"
                                WHERE "Freight" > (SELECT MAX("Freight") FROM "Orders" WHERE "EmployeeID" = 9)''')
                 .with { it.size() == 2 && it.every { r -> r.e != 9 } }
 
-        and: "koan 4 and 5: ZENIT is Zenith Fine Foods, and it bought 6 different products on 8 order lines"
+        and: "koan 3 and 4: ZENIT is Zenith Fine Foods, and it bought 6 different products on 8 order lines"
         sqlFor(engine).firstRow("SELECT \"CompanyName\" AS n FROM \"Customers\" WHERE \"CustomerID\" = 'ZENIT'").n == "Zenith Fine Foods"
         sqlFor(engine).firstRow('''SELECT count(*) AS n, count(DISTINCT d."ProductID") AS p FROM "Order Details" d
                                    JOIN "Orders" o ON o."OrderID" = d."OrderID"
@@ -425,6 +425,9 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
                                        FROM (SELECT SUM(d."UnitPrice" * d."Quantity" * (1 - d."Discount")) AS "Total"
                                              FROM "Products" p
                                              JOIN "Order Details" d ON d."ProductID" = p."ProductID") AS t''').a) == dec("15017031.15")
+
+        and: "koan 6: leave out the GROUP BY and the inside is refused, because it still lists SupplierID"
+        refusedWithoutGroupBy(engine)
 
         and: "koan 7: nine of twenty — and against the average order line, all twenty suppliers would pass"
         sqlFor(engine).firstRow('SELECT count(DISTINCT "SupplierID") AS n FROM "Products"').n == 20
@@ -440,7 +443,7 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
         sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Orders" WHERE "EmployeeID" = 99').n == 0
         sqlFor(engine).firstRow('SELECT MAX("Freight") AS m FROM "Orders" WHERE "EmployeeID" = 99').m == null
 
-        and: "koan 9: nine reps took orders, two share a surname, the average rep sold 1668559.02, and the fifth misses it by under 26,000"
+        and: "koan 10: nine reps took orders, two share a surname, the average rep sold 1668559.02, and the fifth misses it by under 26,000"
         sqlFor(engine).firstRow('SELECT count(DISTINCT "EmployeeID") AS n FROM "Orders"').n == 9
         sqlFor(engine).firstRow('SELECT min("EmployeeID") AS n FROM "Orders"').n == 4
         sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Employees" WHERE "LastName" = \'Keller\' AND "Title" = \'Sales Representative\'').n == 2
@@ -454,7 +457,7 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
         avg == dec("1668559.02")
         reps[4] < avg && avg - reps[4] < 26000
 
-        and: "koan 10: the dearest product is ONE product, so '= (SELECT ...)' is safe; its category has ten products from eight suppliers"
+        and: "koan 9: the dearest product is ONE product, so '= (SELECT ...)' is safe; its category has ten products from eight suppliers"
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Products"
                                    WHERE "UnitPrice" = (SELECT MAX("UnitPrice") FROM "Products")''').n == 1
         sqlFor(engine).firstRow('''SELECT count(*) AS n, count(DISTINCT "SupplierID") AS s FROM "Products"
@@ -479,6 +482,22 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
 
         where:
         [engine, title] << [ENGINES, ANSWERS.findAll { it.value != null }.keySet() as List].combinations()
+    }
+
+    @Unroll
+    def "[#engine] koan 4 (predict), as written: the join query runs and returns the 8 rows the blank stands for"() {
+        given:
+        def title = "a join repeats what IN does not"
+        def queries = koanQueries(title)
+
+        expect: "one query, one blank, and the blank is its row count: 8 lines for 6 products"
+        queries.size() == 1
+        koanBody(title).count("== ___") == 1
+        sqlFor(engine).rows(queries[0]).size() == 8
+        sqlFor(engine).rows(queries[0]).collect { it.getAt(0) }.unique().size() == 6
+
+        where:
+        engine << ENGINES
     }
 
     @Unroll
@@ -507,8 +526,8 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
         titles == (ANSWERS.keySet() as List)
         titles.size() == 10
         titles[0] == "a value in brackets: freight above the average"
-        titles[1] == "a value in brackets can be the whole comparison"
-        titles[2] == "one value only: turn a column of values into one"
+        titles[1] == "one value only: turn a column of values into one"
+        titles[2] == "a list: IN"
         titles[7] == "predict: a subquery that finds nothing raises no error and returns no rows"
         koanQueries(titles[8])*.trim() == ["___"]
         koanQueries(titles[9])*.trim() == ["___"]
@@ -523,7 +542,7 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
         koanBody("a value in brackets: freight above the average")
                 .contains('WHERE "Freight" > (SELECT ___("Freight") FROM "Orders")')
         koanBody("a value in brackets: freight above the average").contains("shouldReturn 3029, '''")
-        koanBody("a value in brackets can be the whole comparison").contains('shouldReturn([[567, "BRAM2", 726.54]], \'\'\'')
+        koanBody("one value only: turn a column of values into one").contains('shouldReturn([[567, 726.54],')
     }
 
     // --- 7. THE QUERY TEXT: the video's SQL, the scripts' SQL and the koans' SQL --------------------
@@ -650,7 +669,7 @@ FROM (SELECT o."CustomerID",
         scripts.size() >= 14
         !videoPresent() || video.size() >= 19
         koans.size() >= 10
-        answers.size() == 9
+        answers.size() == 8
 
         and: "none of them uses a construct outside the standard"
         (scripts + video + koans + answers).collectEntries { name, q -> [name, ansiViolations(q)] }
@@ -727,13 +746,32 @@ FROM (SELECT o."CustomerID",
     /** THE INTENDED ANSWER FOR EACH BLANK, in koan order. */
     private static final Map<String, List<String>> ANSWERS = [
             "a value in brackets: freight above the average"                     : ["AVG"],
-            "a value in brackets can be the whole comparison"                     : ['SELECT MAX("Freight") FROM "Orders"'],
             "one value only: turn a column of values into one"                    : ['MAX("Freight")'],
             "a list: IN"                                                          : ["IN"],
-            "a join repeats what IN does not"                                     : ['d."ProductID" = p."ProductID"'],
+            "a join repeats what IN does not"                                     : null,
+            "a value in brackets can be the whole comparison"                     : ['SELECT MAX("Freight") FROM "Orders"'],
             "a table in FROM, and its grain"                                      : ['GROUP BY p."SupplierID"'],
-            "the average of what: suppliers above the average supplier"           : ['t."Total"'],
+            "the average of what: suppliers above the average supplier"           : ['''
+                SELECT AVG(t."Total")
+                FROM (SELECT p2."SupplierID",
+                             SUM(d2."UnitPrice" * d2."Quantity"
+                               * (1 - d2."Discount")) AS "Total"
+                      FROM "Products" p2
+                      JOIN "Order Details" d2 ON d2."ProductID" = p2."ProductID"
+                      GROUP BY p2."SupplierID") AS t
+            '''],
             "predict: a subquery that finds nothing raises no error and returns no rows" : null,
+            "write the whole query: a value inside a value inside a list"         : ['''
+                SELECT "SupplierID", "CompanyName"
+                FROM "Suppliers"
+                WHERE "SupplierID" IN (
+                  SELECT "SupplierID"
+                  FROM "Products"
+                  WHERE "CategoryID" = (SELECT "CategoryID" FROM "Products"
+                                        WHERE "UnitPrice" = (SELECT MAX("UnitPrice") FROM "Products"))
+                )
+                ORDER BY "SupplierID"
+            '''],
             "write the whole query: sales reps who beat the average sales rep"    : ['''
                 SELECT e."FirstName", e."LastName",
                        ROUND(SUM(d."UnitPrice" * d."Quantity"
@@ -752,18 +790,17 @@ FROM (SELECT o."CustomerID",
                               GROUP BY o2."EmployeeID") AS t)
                 ORDER BY "Total sales" DESC
             '''],
-            "write the whole query: a value inside a value inside a list"         : ['''
-                SELECT "SupplierID", "CompanyName"
-                FROM "Suppliers"
-                WHERE "SupplierID" IN (
-                  SELECT "SupplierID"
-                  FROM "Products"
-                  WHERE "CategoryID" = (SELECT "CategoryID" FROM "Products"
-                                        WHERE "UnitPrice" = (SELECT MAX("UnitPrice") FROM "Products"))
-                )
-                ORDER BY "SupplierID"
-            '''],
     ]
+
+    /** Koan 6 without its GROUP BY: the inside still lists p."SupplierID", so both engines refuse it. */
+    private boolean refusedWithoutGroupBy(String engine) {
+        try {
+            sqlFor(engine).firstRow(koanSql("a table in FROM, and its grain").replace('GROUP BY p."SupplierID"', ''))
+            return false
+        } catch (Exception e) {
+            return e.message.contains("must appear in the GROUP BY clause")
+        }
+    }
 
     private static String koanSql(String title) {
         def qs = koanQueries(title)
