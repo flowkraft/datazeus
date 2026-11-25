@@ -439,6 +439,7 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
                                           > (SELECT AVG("UnitPrice" * "Quantity" * (1 - "Discount")) FROM "Order Details")) t''').n == 20
 
         and: "koan 8: there is no employee 99 (the company has 29), so MAX over their orders is one row holding NULL"
+        sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Employees"').n == 29
         sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Employees" WHERE "EmployeeID" = 99').n == 0
         sqlFor(engine).firstRow('SELECT count(*) AS n FROM "Orders" WHERE "EmployeeID" = 99').n == 0
         sqlFor(engine).firstRow('SELECT MAX("Freight") AS m FROM "Orders" WHERE "EmployeeID" = 99').m == null
@@ -501,9 +502,9 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
     }
 
     @Unroll
-    def "[#engine] koan 8 (predict), as written: three queries that run, and the numbers the comment states"() {
+    def "[#engine] koan 8 (predict), as written: three queries that run, and the 0, 1 and 0 rows the blanks stand for"() {
         given:
-        def title = "predict: a subquery that finds nothing raises no error and returns no rows"
+        def title = "predict: a subquery that finds nothing"
         def queries = koanQueries(title)
 
         expect: "three queries, three blanks, and the blanks are the three row counts 0, 1 and 0"
@@ -528,7 +529,7 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
         titles[0] == "a value in brackets: freight above the average"
         titles[1] == "one value only: turn a column of values into one"
         titles[2] == "a list: IN"
-        titles[7] == "predict: a subquery that finds nothing raises no error and returns no rows"
+        titles[7] == "predict: a subquery that finds nothing"
         koanQueries(titles[8])*.trim() == ["___"]
         koanQueries(titles[9])*.trim() == ["___"]
         koansSource().contains("extends NorthwindCoKoanBase")
@@ -760,7 +761,7 @@ FROM (SELECT o."CustomerID",
                       JOIN "Order Details" d2 ON d2."ProductID" = p2."ProductID"
                       GROUP BY p2."SupplierID") AS t
             '''],
-            "predict: a subquery that finds nothing raises no error and returns no rows" : null,
+            "predict: a subquery that finds nothing"                              : null,
             "write the whole query: a value inside a value inside a list"         : ['''
                 SELECT "SupplierID", "CompanyName"
                 FROM "Suppliers"

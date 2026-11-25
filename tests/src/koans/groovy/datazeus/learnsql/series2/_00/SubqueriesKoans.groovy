@@ -48,7 +48,7 @@ import spock.lang.Stepwise
  *   5    a value in brackets can be the whole comparison
  *   6    a table in FROM, and its grain
  *   7    the average of WHAT: suppliers above the average supplier
- *   8    predict: a subquery that finds nothing raises no error and returns no rows
+ *   8    predict: a subquery that finds nothing
  *   9    write the whole query: a value inside a value inside a list
  *  10    write the whole query: sales reps who beat the average sales rep
  *
@@ -253,18 +253,14 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
         ''')
     }
 
-    // 8) PREDICT — nothing found, nothing said. Three queries are already written and all
-    //    three run without complaint. The first asks for the orders that paid more freight than
-    //    EVERY order taken by employee 99. The second is its brackets, run alone: the largest
-    //    freight among employee 99's orders. The third is the same brackets without MAX: the
-    //    freight of each of employee 99's orders. Say how many rows each one returns BEFORE you
-    //    look, then put your three numbers in.
-    //    (There is no employee 99 — the company has 29. A subquery that finds nothing hands
-    //     back NULL, and nothing is greater than NULL, so the outer WHERE keeps no row and
-    //     raises no error. Careful with the middle one: MAX over no rows is still ONE row,
-    //     and the value in it is NULL. Zero rows can mean "no answer" or "wrong question" —
-    //     running the inside alone is how you tell which.)
-    def "predict: a subquery that finds nothing raises no error and returns no rows"() {
+    // 8) PREDICT: NOTHING FOUND, NOTHING SAID. Koan 2's question with one digit wrong:
+    //    employee 99 instead of 9. There is no employee 99 (the company has 29). Three
+    //    queries are written for you and all three run without an error: the whole query,
+    //    its brackets run alone, and the same brackets without MAX. How many rows does
+    //    each one return? Put your three numbers in BEFORE you run anything.
+    //    (This is the lesson's "category 9" moment, on orders. Zero rows can mean "no
+    //     answer" or "wrong question"; running the inside alone is how you tell which.)
+    def "predict: a subquery that finds nothing"() {
         given: "the whole query — brackets and all"
         int wholeQuery = rows('''
             SELECT "OrderID", "Freight"
