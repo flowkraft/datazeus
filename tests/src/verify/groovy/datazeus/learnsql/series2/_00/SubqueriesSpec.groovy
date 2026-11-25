@@ -487,7 +487,7 @@ class SubqueriesSpec extends NorthwindCoGateSpec {
     @Unroll
     def "[#engine] koan 4 (predict), as written: the join query runs and returns the 8 rows the blank stands for"() {
         given:
-        def title = "a join repeats what IN does not"
+        def title = "a join repeats, IN does not"
         def queries = koanQueries(title)
 
         expect: "one query, one blank, and the blank is its row count: 8 lines for 6 products"
@@ -748,7 +748,7 @@ FROM (SELECT o."CustomerID",
             "a value in brackets: freight above the average"                     : ["AVG"],
             "one value only: turn a column of values into one"                    : ['MAX("Freight")'],
             "a list: IN"                                                          : ["IN"],
-            "a join repeats what IN does not"                                     : null,
+            "a join repeats, IN does not"                                         : null,
             "a value in brackets can be the whole comparison"                     : ['SELECT MAX("Freight") FROM "Orders"'],
             "a table in FROM, and its grain"                                      : ['GROUP BY p."SupplierID"'],
             "the average of what: suppliers above the average supplier"           : ['''

@@ -44,7 +44,7 @@ import spock.lang.Stepwise
  *   1    a value in brackets: freight above the average
  *   2    one value only: turn a column of values into ONE
  *   3    a list: IN
- *   4    a join repeats what IN does not
+ *   4    a join repeats, IN does not
  *   5    a value in brackets can be the whole comparison
  *   6    a table in FROM, and its grain
  *   7    the average of WHAT: suppliers above the average supplier
@@ -157,15 +157,15 @@ class SubqueriesKoans extends NorthwindCoKoanBase {
         ''')
     }
 
-    // 4) A JOIN REPEATS WHAT IN DOES NOT. Koan 3's question again, written as a join from the
+    // 4) A JOIN REPEATS, IN DOES NOT. Koan 3's question again, written as a join from the
     //    product to its order lines to their orders. The query is written for you; the
-    //    prediction is yours. IN gave six products. A join returns one row per MATCH, and
-    //    Zenith bought some of those products more than once — so how many rows come back
-    //    now? Put your number in BEFORE you run anything.
-    //    (IN asks a yes-or-no question per product — "is it in the list?" — which is why it
-    //     never repeats one. If your number is wrong, run the query alone and look for the
-    //     product names that come back more than once.)
-    def "a join repeats what IN does not"() {
+    //    prediction is yours. Zenith ordered twice: the six products in December 2020, then
+    //    Island Olives and Meadow Cider again in October 2023. IN gave six products. A join
+    //    returns one row per match: how many rows does this query return?
+    //    (IN asks one yes-or-no question per product, "is it in the list?", which is why it
+    //     never repeats one. SELECT DISTINCT would fold this join back to six too, but IN
+    //     says what you mean.)
+    def "a join repeats, IN does not"() {
         given: "koan 3's question, written as a join"
         int joinRows = rows('''
             SELECT p."ProductName"
