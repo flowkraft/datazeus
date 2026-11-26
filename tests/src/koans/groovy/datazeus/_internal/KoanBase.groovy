@@ -70,9 +70,12 @@ abstract class KoanBase extends Specification {
     /**
      * The schema the koans' plain table names resolve to, or null for the file's default. Series 2
      * onwards overrides dataset() and this together (see NorthwindCoKoanBase): Northwind Company
-     * lives in schema northwind_co_s, exactly where the Seed Data tab installs it.
+     * lives in schema northwind_co_s, exactly where DataPallas installs it in its PostgreSQL.
      */
     protected String schema() { null }
+
+    /** SET statements run on the koans' connection once it is open, after the search_path. None by default. */
+    protected List<String> settings() { [] }
 
     def setupSpec() {
         // Open a throwaway COPY of the shipped database, so a koan run can never lock
@@ -83,6 +86,7 @@ abstract class KoanBase extends Specification {
         Files.copy(src.toPath(), dbCopy.toPath(), StandardCopyOption.REPLACE_EXISTING)
         db = Sql.newInstance("jdbc:duckdb:" + dbCopy.absolutePath, "org.duckdb.DuckDBDriver")
         if (schema()) db.execute("SET search_path = '" + schema() + "'")
+        settings().each { db.execute(it) }
     }
 
     def cleanupSpec() {
@@ -112,9 +116,22 @@ abstract class KoanBase extends Specification {
         }
         if (actual != expected) {
             throw new KoanHint("your query returned ${show(actual)},\n" +
-                    "but it should return ${show(expected)}")
+                    "but it should return ${show(expected)}" + firstDifference(actual, expected))
         }
         return true
+    }
+
+    /**
+     * When both results have as many rows and the same first row, the two lines above read the
+     * same; name the first row that differs, so the hint still shows the mistake (a NULL on row 3,
+     * say). Every other hint is left exactly as it was.
+     */
+    private static String firstDifference(Object actual, Object expected) {
+        if (!(actual instanceof List) || !(expected instanceof List)) return ""
+        List a = actual as List, e = expected as List
+        if (a.size() != e.size() || a.isEmpty() || a[0] != e[0]) return ""
+        Integer i = (0..<a.size()).find { a[it] != e[it] }
+        return i == null ? "" : "\nthe first row that differs is row ${i + 1}: yours ${a[i]}, expected ${e[i]}"
     }
 
     /** The single value in the first cell of the first row (null if no rows). */
