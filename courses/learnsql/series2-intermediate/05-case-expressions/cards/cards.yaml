@@ -42,7 +42,7 @@
 #     here apply it to a CASE label: WHERE cannot see it, and GROUP BY borrows it on some databases.
 #   - Series 1 · 25 owns count(column) skipping NULLs. The count(CASE … END) card uses that rule.
 #   - Series 2 · 00 owns subqueries. Series 3 · 00 owns the pivot as a pattern; the SUM(CASE …)
-#     cards here are about one column per status.
+#     cards here are about counting each status side by side.
 
 deck: "DataZeus::Learn SQL::Series 2::05 CASE"
 guid: "datazeus-learn-sql-series2-05-case-expressions"
@@ -117,10 +117,10 @@ cards:
       front: "<code>CASE region WHEN NULL THEN '(none)' ELSE region END</code> runs with no error. What does a customer with no region get, and why?"
       back: "NULL, not '(none)'. The short form tests <code>region = NULL</code>, and <code>= NULL</code> is never true, so that WHEN never fires and the row falls through to the ELSE: its own NULL region. To test for NULL, write <code>CASE WHEN region IS NULL THEN …</code>."
 
-  # ── 7. CASE INSIDE SUM: A COLUMN FOR EACH STATUS ──
+  # ── 7. CASE INSIDE SUM: THREE COUNTS SIDE BY SIDE ──
   - basic:
       front: "For each sales channel you need the number of orders AND the number in each status (Shipped, Cancelled, Open), on one row. One query has only one WHERE. How do you get them all?"
-      back: "Move each condition into its own column: <code>count(*) AS orders, SUM(CASE WHEN status = 'Cancelled' THEN 1 ELSE 0 END) AS cancelled</code>, and one more SUM(CASE …) per status, grouped by channel. Each CASE turns an order in that status into a 1 and every other order into a 0, and SUM adds the ones. The status columns add back up to the orders."
+      back: "Give each status its own SUM(CASE …): <code>count(*) AS orders, SUM(CASE WHEN status = 'Cancelled' THEN 1 ELSE 0 END) AS cancelled</code>, then the same for Shipped and Open, grouped by channel. Each CASE turns an order in that status into a 1 and every other order into a 0, and SUM adds the ones. The three counts add back up to the orders."
 
   - cloze: "<code>SUM(CASE WHEN status = 'Open' THEN {{c1::1}} ELSE {{c2::0}} END)</code> counts the open orders in each group, without a WHERE."
 

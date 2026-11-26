@@ -7,7 +7,7 @@ level: "intermediate"
 module: "series2-intermediate"
 order: 5
 date: "2026-09-14"
-published: false
+published: true
 videoId: "learnsql-series2-05-case-expressions"
 dataset: "northwind_co_s"
 ---
@@ -720,7 +720,7 @@ FROM "Orders" GROUP BY "Channel type";
 {/* keep:one-column-per-status:0 */}
 <Point title="SQL technique" side="left">
 
-`SUM(CASE WHEN … THEN 1 ELSE 0 END)` counts one status in its own column, without a `WHERE`. Add one per status, all in the same `GROUP BY`.
+`SUM(CASE WHEN … THEN 1 ELSE 0 END)` counts the orders of one status, without a `WHERE`. Write one SUM for each status (shipped, cancelled, open) and the counts sit side by side, all in the same `GROUP BY`.
 
 </Point>
 {/* /keep */}
@@ -809,7 +809,7 @@ So there, the missing ELSE was the trap — **and here, it's the trick.** It dep
 
 <Say who="mnemosyne" pose="questioning">
 
-**Sales rep has the most cancelled orders — and by far the most orders.** So the fair comparison is **the share**: the count divided by `count(*)`. **What do you expect for Sales rep?**
+**Sales rep has the most cancelled orders — and by far the most orders.** So the fair comparison is **a percentage**: the cancelled count divided by `count(*)`. **What do you expect for Sales rep?**
 
 </Say>
 
@@ -903,13 +903,13 @@ So the **.0** is doing the real work. **And multiplying first** — before the d
 
 <Say who="leo" pose="questioning">
 
-**Real shares.** And look — Sales rep had **the most cancellations, and it has the lowest share: 1.6.**
+**Real percentages.** And look — Sales rep had **the most cancellations, and the lowest percentage: 1.6.**
 
 </Say>
 
 <Say who="mnemosyne" pose="questioning">
 
-**And EDI had the fewest, 22 — and the highest share, 2.2.** The count said one channel; the share says the other.
+**And EDI had the fewest, 22 — and the highest percentage, 2.2.** The count said one channel; the percentage says the other.
 
 </Say>
 
@@ -929,7 +929,7 @@ Always show a percentage next to its count, and compare it with the whole first:
 
 <Say who="mnemosyne" pose="questioning">
 
-**Careful, Leo — read it against the whole company first: 1.8.** EDI is 22 of 1001; four fewer and it reads 1.8 too. **A share always travels with its count.**
+**Careful, Leo — read it against the whole company first: 1.8.** EDI is 22 of 1001; four fewer and it reads 1.8 too. **A percentage always goes next to its count.**
 
 </Say>
 
@@ -958,7 +958,7 @@ ORDER BY s."CompanyName";
 
 <Say who="leo" pose="thinking">
 
-**Two tests in one WHEN, and the share beside its count.** Nothing I haven't just written.
+**Two tests in one WHEN, and the percentage beside its count.** Nothing I haven't just written.
 
 </Say>
 
@@ -1022,7 +1022,7 @@ cd c:/DataPallas/db/datazeus
 
 <Say who="mnemosyne" pose="excited">
 
-**That's CASE, Leo.** A label worked out row by row: the first true `WHEN` wins, a row nobody matched gets NULL, and inside a SUM it becomes a column for any status. **Next lesson: dates and times.**
+**That was CASE, Leo.** A label worked out row by row: the first true `WHEN` wins, a row nobody matched gets NULL, and inside a SUM it counts any status you name, side by side. **Next lesson: dates and times.**
 
 </Say>
 

@@ -125,6 +125,7 @@ class CaseExpressionsKoans extends NorthwindCoKoanBase {
     //    reorder level, 'discontinued' when the product is no longer sold, 'ok' otherwise.
     //    Write the WHEN lines. One fact decides their order: nobody reorders a product they
     //    have stopped selling, even when its stock is low.
+    //    A label is text, so it takes 'single quotes'; "double quotes" mean a column name.
     def "the first true WHEN wins: write the tests in the right order"() {
         expect:
         shouldReturn([["discontinued", 6], ["ok", 71], ["reorder", 3]], '''
