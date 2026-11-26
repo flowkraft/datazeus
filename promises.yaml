@@ -11,8 +11,12 @@
 #
 #   not_a_promise  Read it, it promises nothing. `why:` is required.
 #   kept           A hand-over inside the series, and the later lesson that keeps it:
-#                  `kept_by: "1 · 45"` and `about:` (a word that lesson must contain). The gate
-#                  checks both, and that the keeper is live whenever the promising lesson is.
+#                  `kept_by: "1 · 45"` and `about:` (a word, or a list of words, that lesson
+#                  must contain: its lesson file, or its brief while there is none). The gate
+#                  checks both. A promise no heuristic flags, found by reading, goes here too,
+#                  without `rule:`. Every kept promise is listed in the ledger,
+#                  tests/target/promises-ledger-<course>.txt: CLOSED once the keeper is live,
+#                  OPEN until then. OPEN is listed, not failed.
 #   covered        Names what ANOTHER series or course teaches: "query speed is covered in
 #                  Series 3". Safe only when that series certainly covers it, so the gate checks
 #                  its plan: `series: 3` (plus `course:` for another course) and `about:`, words
@@ -41,55 +45,35 @@ not_a_promise:
 
   - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
     rule: other-series
-    quote: 'The top 10 customers report from the last lesson of Series 1'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
-  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
-    rule: cross-link
-    quote: 'The top 10 customers report from the last lesson of Series 1'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+    quote: 'Remember my Series 1 top ten customers report?'
+    why: "Leo recalls the report he built in Series 1 · 50, published and frozen. Nothing is owed: the lesson prints that query again in full before it builds on it."
   - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
     rule: other-series
-    quote: 'Without SQL beyond Series 1, the only way to answer it is'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+    quote: 'Like in Series 1, the database comes bundled with DataPallas'
+    why: "Says how to connect, here and now: CloudBeaver, then SET search_path. Series 1 is only the comparison."
   - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
     rule: other-series
-    quote: 'Series 1 ran on Northwind: 79 orders over 18 months, 25 customers'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+    quote: 'Your Series 1 queries ran on the starter data'
+    why: "Says why the data is new, by contrast with Series 1's starter data. Looks back; promises nothing."
   - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
     rule: other-series
-    quote: 'Every Series 1 query runs on it unchanged; the answers are just'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+    quote: 'Series 1''s data was tiny on purpose'
+    why: "Leo's answer to the line before it: looks back at Series 1's data; promises nothing."
   - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
     rule: other-series
-    quote: 'It installs into a schema of its own, `northwind_co_s`, so Series 1''s'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
+    quote: 'mostly the Northwind tables I know from Series 1'
+    why: "Looks back at the Series 1 tables and says they are here again, with more rows. The lesson's own data model shows the ones it uses."
   - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
-    rule: cross-link
-    quote: 'This is the rule from the HAVING vs WHERE lesson .'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
-  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
-    rule: cross-link
-    quote: 'This is the repeated-rows problem from the report lesson , seen from'
+    rule: cross-phrase
+    quote: 'the report I built at the end of the last series'
+    why: "Looks back at the Series 1 · 50 report, and the whole query is printed right below it: nothing from Series 1 is needed to run it."
+  - file: learnsql/series2-intermediate/05-case-expressions/05-case-expressions.mdx
+    rule: cross-phrase
+    quote: 'In the last series I''d have run **three queries, one WHERE per'
     why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
   - file: learnsql/series2-intermediate/05-case-expressions/05-case-expressions.mdx
-    rule: other-series
-    quote: 'With Series 1 alone, this takes three queries, one `WHERE` per band,'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
-  - file: learnsql/series2-intermediate/05-case-expressions/05-case-expressions.mdx
-    rule: cross-link
-    quote: 'It is an expression, like the calculated columns from the aliases and'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
-  - file: learnsql/series2-intermediate/05-case-expressions/05-case-expressions.mdx
-    rule: cross-link
-    quote: 'Every one of them is labelled NULL, and this is the rule'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
-  - file: learnsql/series2-intermediate/05-case-expressions/05-case-expressions.mdx
-    rule: other-series
-    quote: 'Here it turns the courier number in `"ShipVia"` into a name, written'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
-  - file: learnsql/series2-intermediate/05-case-expressions/05-case-expressions.mdx
-    rule: cross-link
-    quote: 'The NULL lesson used `COALESCE` to put a stand-in where a value'
+    rule: cross-phrase
+    quote: 'I''d have spent the afternoon on that in the last series.'
     why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
   - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
     rule: other-series
@@ -299,41 +283,73 @@ kept:
     quote: 'The next lesson closes Series 1 · SQL Fundamentals, and it is'
     kept_by: "1 · 50"
     about: "JOIN"
+  # Series 2 follows one case. 2 · 00 opens it ("why did invoicing fall while orders grew? What's
+  # missing, where, since when — and how much?") and each lesson answers one part. The entries
+  # without `rule:` were found by reading: no heuristic flags them, and the case lives on them.
   - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
     rule: forward
-    quote: 'A later lesson in this series gives each step a name, so'
+    quote: 'Subqueries that do depend on the outer row exist too'
+    kept_by: "2 · 25"
+    about: ["correlated", "outer row"]
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    rule: forward
+    quote: 'Later in this series we''ll improve the situation'
     kept_by: "2 · 20"
-    about: "WITH"
+    about: ["30 customers", "top to bottom"]   # 2 · 20 rewrites this lesson's nested query with WITH
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    quote: 'we''ll apply it, step by step, to solve it'
+    kept_by: "2 · 60"
+    about: ["ordered sales grew while invoiced sales fell", "were those orders delivered"]
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    quote: 'What''s missing, where, since when'
+    kept_by: "2 · 05"
+    about: ["Speedy Express"]                  # where: one courier's orders, marked Shipped with no ship date
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    quote: 'What''s missing, where, since when'
+    kept_by: "2 · 10"
+    about: ["since when"]                      # since when: the week of 4 March to the end of August 2024
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    quote: 'What''s missing, where, since when'
+    kept_by: "2 · 15"
+    about: ["never invoiced", "how much money"]   # what's missing, and how much: 178 orders, 257319.65
   - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
     rule: forward
-    quote: 'The next lesson is **CASE**: how a query turns a value into'
+    quote: 'Next lesson is **CASE**: labels for rows'
     kept_by: "2 · 05"
-    about: "CASE"
+    about: ["CASE", "side by side"]
   - file: learnsql/series2-intermediate/05-case-expressions/05-case-expressions.mdx
     rule: forward
-    quote: 'The next lesson is **dates and times**: grouping by real months and'
+    quote: '**Next lesson: dates and times.**'
     kept_by: "2 · 10"
-    about: "date"
+    about: ["since when"]                      # Leo, right after it: "Next I want to know since when it started."
   - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
     rule: forward
     quote: 'The next lesson is **several tables at once**, and the case''s next'
     kept_by: "2 · 15"
-    about: "invoice"
+    about: ["how much money"]
+  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
+    quote: 'people who can check with the courier will'
+    kept_by: "2 · 48"
+    about: ["delivery confirmations"]
   - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
     rule: forward
     quote: 'The query is also hard to read, and May''s range is written'
     kept_by: "2 · 20"
-    about: "WITH"
+    about: ["May is written once"]
+  - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
+    quote: 'from here on in this series, Leo is the one who states it'
+    kept_by: "2 · 25"
+    about: ["the limits are his to state"]
   - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
     rule: forward
     quote: 'The next lesson is **CTEs**: `WITH`, which gives each step of a'
     kept_by: "2 · 20"
-    about: "WITH"
+    about: ["WITH", "May is written once"]
   - file: learnsql/series2-intermediate/20-ctes/20-ctes.mdx
     rule: forward
     quote: 'The next lesson is **views**: a step with a name that outlives'
     kept_by: "2 · 22"
-    about: "view"
+    about: ["view", "customer_totals"]
   - file: datamodeling/series1-modeling-fundamentals/00-start-here/00-start-here.mdx
     rule: forward
     quote: 'Go and look at its columns again before the next lesson.'
@@ -356,6 +372,11 @@ covered:
     quote: 'Series 2, Intermediate SQL, starts where this lesson ends: joining more tables,'
     series: 2
     about: ["JOINs", "Subqueries", "CTEs", "Window Functions"]
+  - file: learnsql/series2-intermediate/00-subqueries/00-subqueries.mdx
+    rule: other-series
+    quote: 'In Series 3, I''ll teach you how to tune SQL query performance'
+    series: 3
+    about: ["Reading the Plan", "Query Tuning"]   # 3 · 20 EXPLAIN, reading the plan; 3 · 30 Query Tuning
   - file: learnsql/series2-intermediate/20-ctes/20-ctes.mdx
     rule: other-series
     quote: 'A CTE is for the person reading the query, and query speed'

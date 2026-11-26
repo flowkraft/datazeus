@@ -25,10 +25,19 @@ import java.util.regex.Pattern
  *
  *   not_a_promise   "I read it; it points elsewhere but promises nothing." Needs a `why`.
  *   kept            A hand-over to a later lesson of the same series, and the lesson that
- *                   keeps it: `kept_by: "1 · 45"`, `about: "NULL"`. The gate then CHECKS it —
- *                   the lesson exists, comes later, is in this series, mentions `about`, and
- *                   is live if the promising lesson is. That check is what would have caught
- *                   Data Modeling 1 · 05 promising contacts that 10, 15 and 20 never cover.
+ *                   keeps it: `kept_by: "1 · 45"`, `about: "NULL"` (or a list, every word
+ *                   needed). The gate then CHECKS it — the lesson exists, comes later, is in this
+ *                   series and mentions `about` (in its lesson file, or in its brief while there
+ *                   is none). That check is what would have caught Data Modeling 1 · 05 promising
+ *                   contacts that 10, 15 and 20 never cover. A `kept` entry may also record a
+ *                   promise no heuristic flags, found by reading ("we'll apply it, step by step,
+ *                   to solve it"): leave out `rule:`, and it is checked the same way.
+ *
+ * Every `kept` promise goes into the ledger, target/promises-ledger-<track>.txt, printed on each
+ * run: where it is made, which lesson keeps it, and whether it is CLOSED (that lesson is live)
+ * or OPEN (written in a draft or a brief, not live yet). An OPEN promise is listed, not failed:
+ * a live lesson may promise the next one before it ships. A promise whose keeper does not say
+ * it fails, live or not.
  *   covered         Names what ANOTHER series or course teaches ("query speed is covered in
  *                   Series 3"). Safe only if that series certainly covers it, so the gate checks
  *                   its plan: `series: 3` (+ `course:` if another course) and `about: [EXPLAIN]`,
@@ -200,6 +209,35 @@ class PromisesSpec extends Specification {
         hitCache.computeIfAbsent(track) { scan(new File(CurriculumSpec.COURSES, track)) }
     }
 
+    @Shared Map<String, List<Hit>> sentenceCache = [:]
+
+    /** Every sentence of every written lesson, as a Hit with no rule: what a `kept` entry is matched against. */
+    List<Hit> sentences(String track) {
+        sentenceCache.computeIfAbsent(track) {
+            units(new File(CurriculumSpec.COURSES, track)).findAll { it.kind == "lesson" }.collectMany { u ->
+                sentencesOf(u).collect { seg ->
+                    new Hit(track: track, file: u.file, where: u.where, sentence: seg[0], line: seg[1] as int)
+                }
+            }
+        }
+    }
+
+    /** A unit's prose cut into sentences: [sentence, line, start, end] each, empty ones left out. */
+    static List<List> sentencesOf(Unit u) {
+        def boundary = (u.prose =~ /(?<=[.!?])\s+|\n[ \t]*\n/)
+        int start = 0
+        def segments = []
+        while (boundary.find()) { segments << [start, boundary.start()]; start = boundary.end() }
+        segments << [start, u.prose.length()]
+        segments.collect { seg ->
+            int a = seg[0], b = seg[1]
+            int line = u.lineOffset < 0 ? 0 :
+                    u.lineOffset + u.raw.substring(0, a).count("\n") + 1 +
+                    (u.prose.substring(a, b) =~ /^\s*/)[0].count("\n")
+            [norm(u.prose.substring(a, b)), line, a, b]
+        }.findAll { it[0] }
+    }
+
     static List<Hit> scan(File dir) {
         def units = units(dir)
         if (!units) return []
@@ -209,19 +247,10 @@ class PromisesSpec extends Specification {
         def out = []
 
         units.each { u ->
-            def boundary = (u.prose =~ /(?<=[.!?])\s+|\n[ \t]*\n/)
-            int start = 0
-            def segments = []
-            while (boundary.find()) { segments << [start, boundary.start()]; start = boundary.end() }
-            segments << [start, u.prose.length()]
-
-            segments.each { a, b ->
-                String s = norm(u.prose.substring(a, b))
-                if (!s) return
+            sentencesOf(u).each { seg ->
+                String s = seg[0]
+                int line = seg[1], a = seg[2], b = seg[3]
                 String rawSeg = u.raw.substring(a, b)
-                int line = u.lineOffset < 0 ? 0 :
-                        u.lineOffset + u.raw.substring(0, a).count("\n") + 1 +
-                        (u.prose.substring(a, b) =~ /^\s*/)[0].count("\n")
                 def hit = { String rule, String detail ->
                     if (!out.any { it.file == u.file && it.rule == rule && it.sentence == s && it.where == u.where })
                         out << new Hit(track: dir.name, file: u.file, where: u.where, rule: rule,
@@ -274,36 +303,71 @@ class PromisesSpec extends Specification {
 
     // ── matching hits against promises.yaml ────────────────────────────────────────────────
 
+    /** The entry quotes this sentence of this file. */
+    static boolean quotes(Map entry, Hit h) {
+        entry.file == h.file && entry.quote && h.sentence.contains(norm(entry.quote as String))
+    }
+
     static boolean covers(Map entry, Hit h) {
-        entry.file == h.file && entry.quote && h.sentence.contains(norm(entry.quote as String)) &&
-                (!entry.rule || entry.rule == h.rule)
+        quotes(entry, h) && (!entry.rule || entry.rule == h.rule)
     }
 
     static List<Map> entries(String section) { (config()[section] ?: []) as List<Map> }
 
-    /** A `kept` entry checked against the curriculum: null when it holds, else what's wrong. */
-    static String keptProblem(Map entry, Hit h) {
+    static List<String> abouts(Map entry) {
+        ((entry.about instanceof List) ? entry.about : [entry.about]).findAll { it }*.toString()
+    }
+
+    /**
+     * A `kept` entry checked against the curriculum. [problem: what's wrong] when it doesn't hold;
+     * otherwise where it is made and where it is kept, for the ledger.
+     */
+    static Map keptCheck(Map entry, Hit h) {
         def dir = new File(CurriculumSpec.COURSES, h.track)
         def unit = units(dir).find { it.file == h.file }
         def m = (entry.kept_by as String ?: "") =~ /^\s*(\d+)\s*·\s*(\d+)\s*$/
-        if (!m) return "kept_by must look like \"1 · 45\", got '${entry.kept_by}'"
+        if (!m) return [problem: "kept_by must look like \"1 · 45\", got '${entry.kept_by}'"]
         int sn = (m[0][1] as String).toInteger()
         def epN = m[0][2] as String
         if (sn != unit.seriesNo)
-            return "kept_by ${entry.kept_by} is in another series: a promise across series can't be kept, reword it"
+            return [problem: "kept_by ${entry.kept_by} is in another series: a promise across series can't be kept, reword it"]
         def ep = unit.series.episodes.find { it.n.toString().toInteger() == epN.toInteger() }
-        if (!ep) return "kept_by ${entry.kept_by}: no such episode in Series ${sn}"
-        if (ep.n.toString().toInteger() <= unit.ep.n.toString().toInteger()) return "kept_by ${entry.kept_by} comes before this lesson, not after it"
-        if (!entry.about) return "needs `about:` — a word the keeping lesson must mention"
+        if (!ep) return [problem: "kept_by ${entry.kept_by}: no such episode in Series ${sn}"]
+        if (ep.n.toString().toInteger() <= unit.ep.n.toString().toInteger())
+            return [problem: "kept_by ${entry.kept_by} comes before this lesson, not after it"]
+        def words = abouts(entry)
+        if (!words) return [problem: "needs `about:` — words the keeping lesson must mention"]
         def folder = "${unit.series.slug}/${ep.n}-${ep.slug}"
         def keeper = [new File(dir, "${folder}/${ep.n}-${ep.slug}.mdx"),
                       new File(dir, "${folder}/_todo-${ep.n}-${ep.slug}.mdx")].find { it.exists() }
-        if (!keeper) return "kept_by ${entry.kept_by} has no lesson file yet"
-        if (!keeper.getText("UTF-8").toLowerCase().contains((entry.about as String).toLowerCase()))
-            return "kept_by ${entry.kept_by} never mentions '${entry.about}' (${keeper.name})"
-        if (unit.live && !CurriculumSpec.isLive(dir, unit.series, ep))
-            return "this lesson is live and ${entry.kept_by} isn't: the promise points at a lesson nobody can open"
-        null
+        if (!keeper) return [problem: "kept_by ${entry.kept_by} has no lesson file yet"]
+        def text = keeper.getText("UTF-8").toLowerCase()
+        def missing = words.findAll { !text.contains(it.toLowerCase()) }
+        if (missing) return [problem: "kept_by ${entry.kept_by} never mentions ${missing.collect { "'${it}'" }.join(', ')} (${keeper.name})"]
+        boolean keeperLive = CurriculumSpec.isLive(dir, unit.series, ep)
+        [made: "${unit.seriesNo} · ${unit.ep.n}", madeLive: unit.live, keeperLive: keeperLive,
+         keeper: keeper.name.startsWith("_todo-") ? "brief" : keeperLive ? "live" : "draft"]
+    }
+
+    /** The ledger: every `kept` promise of a track, where it is made and where it is kept. */
+    static String ledger(String track, List<Map> rows) {
+        def lines = rows.sort { a, b -> a.h.file <=> b.h.file ?: a.h.line <=> b.h.line }.collect { r ->
+            def c = r.c
+            String status = c.keeperLive ? "CLOSED" : "OPEN"
+            String found = r.e.rule ? "" : "  (found by reading)"
+            "  ${status.padRight(7)}${c.made}:${r.h.line} (${c.madeLive ? 'live' : 'draft'})  →  ${r.e.kept_by} (${c.keeper})" +
+                    "  about ${abouts(r.e).collect { "'${it}'" }.join(', ')}${found}\n" +
+                    "         \"${r.h.sentence.take(160)}${r.h.sentence.length() > 160 ? '…' : ''}\""
+        }
+        int closed = rows.count { it.c.keeperLive } as int
+        int waiting = rows.count { !it.c.keeperLive && it.c.madeLive } as int
+        def text = "${track}: ${rows.size()} promises to a later lesson — ${closed} closed, ${rows.size() - closed} open" +
+                (waiting ? " (${waiting} made in a live lesson: learners are waiting on these)" : "") + "\n" +
+                "CLOSED: the keeping lesson is live and says it. OPEN: its draft or brief says it; not live yet.\n\n" +
+                lines.join("\n") + "\n"
+        DUMP_DIR.mkdirs()
+        new File(DUMP_DIR, "promises-ledger-${track}.txt").setText(text, "UTF-8")
+        text
     }
 
     /**
@@ -334,7 +398,7 @@ class PromisesSpec extends Specification {
         def yq = "'" + q.replace("'", "''") + "'"
         def base = "  - file: ${h.file}\n    rule: ${h.rule}\n    quote: ${yq}\n"
         h.rule == FORWARD
-                ? base + "    kept_by: \"S · EP\"      # the later lesson in this series that keeps it\n    about: \"\"               # a word that lesson must mention\n"
+                ? base + "    kept_by: \"S · EP\"      # the later lesson in this series that keeps it\n    about: [\"\"]             # words that lesson must mention\n"
                 : base + "    why: \"\"                 # why this is not a promise\n"
     }
 
@@ -378,17 +442,20 @@ class PromisesSpec extends Specification {
     @Unroll
     def "#track: every hand-over to a later lesson names the lesson that keeps it"() {
         given:
+        def kept = entries("kept").findAll { (it.file as String)?.startsWith("${track}/") }
         def problems = []
-        def open = []
-        hits(track).findAll { it.rule == FORWARD }.each { h ->
-            def kept = entries("kept").find { covers(it, h) }
-            if (kept) {
-                def p = keptProblem(kept, h)
-                if (p) problems << "  ${h.location}: ${p}"
-            } else if (!(entries("not_a_promise") + entries("unreviewed")).any { covers(it, h) }) {
-                open << h
-            }
+        def rows = []
+        kept.each { e ->
+            def h = sentences(track).find { quotes(e, it) }
+            if (!h) return                                   // the promises.yaml rule reports it
+            def c = keptCheck(e, h)
+            if (c.problem) problems << "  ${h.location}: ${c.problem}"
+            else rows << [e: e, h: h, c: c]
         }
+        def open = hits(track).findAll { it.rule == FORWARD }.findAll { h ->
+            !kept.any { quotes(it, h) } && !(entries("not_a_promise") + entries("unreviewed")).any { covers(it, h) }
+        }
+        if (rows) println("\n" + ledger(track, rows))
         def msg = report(track, "forward", open,
                 "These sentences promise a later lesson. Say which one keeps it (`kept:` in promises.yaml), and the gate checks it does.") +
                 (problems ? "\nkept: entries that don't hold:\n" + problems.join("\n") + "\n" : "")
@@ -404,6 +471,7 @@ class PromisesSpec extends Specification {
         given:
         def tracks = config().tracks as List
         def all = tracks.collectMany { hits(it) }
+        def said = tracks.collectMany { sentences(it) }
         def bad = []
         ["not_a_promise", "kept", "covered", "unreviewed"].each { section ->
             entries(section).each { e ->
@@ -417,7 +485,8 @@ class PromisesSpec extends Specification {
                 if (section == "not_a_promise" && !norm(e.why as String)) bad << "${label}: needs a `why`"
                 if (section == "kept" && (!e.kept_by || !e.about)) bad << "${label}: needs `kept_by` and `about`"
                 if (section == "covered" && (!e.series || !e.about)) bad << "${label}: needs `series` and `about`"
-                if (!all.any { covers(e, it) })
+                boolean matches = section == "kept" ? said.any { quotes(e, it) } : all.any { covers(e, it) }
+                if (!matches)
                     bad << "${label}: matches nothing any more — the sentence changed or went; remove the entry"
             }
         }
