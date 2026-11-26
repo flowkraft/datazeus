@@ -15,8 +15,8 @@ import spock.lang.Stepwise
  *
  *     zeus.bat koans learnsql series2 _05  (Windows)   ./zeus.sh koans learnsql series2 _05  (macOS/Linux)
  *
- * PREDICT the answer first — if it comes back wrong, the hint shows what your query
- * returned against what it should, so you fix the SQL rather than guess a value.
+ * If it comes back wrong, the hint shows what your query returned next to what it should.
+ * Read the difference — it usually names the mistake — and fix the SQL, not the numbers.
  *
  * ── THE SHAPE, AND ITS RULES ────────────────────────────────────────────────
  *
@@ -31,44 +31,55 @@ import spock.lang.Stepwise
  *   2. NO ELSE MEANS NULL. A row that no WHEN matches gets NULL — and a NULL fails every
  *      comparison, including "is not equal to". Write the ELSE, unless the NULLs are the
  *      point (count(CASE ... END) counts only what was labelled, on purpose).
- *   3. A SHARE IS 100.0 * SUM(CASE ...) / count(*). The decimal point, and the multiplying
- *      before the dividing, are what stop PostgreSQL from throwing the fraction away.
+ *   3. NULL NEEDS IS NULL. The short form, CASE x WHEN v, tests x = v — and x = NULL is never
+ *      true, not even when x is NULL. To catch a NULL, write the long form: WHEN x IS NULL.
+ *   4. A WHOLE NUMBER DIVIDED BY A WHOLE NUMBER STAYS WHOLE. SUM(CASE ...) and count(*) are
+ *      both whole numbers, so on PostgreSQL 1319 / 2686 is 0: the fraction is thrown away the
+ *      moment you divide. These koans divide the same way, so a % that CloudBeaver would show
+ *      wrong comes back wrong here too.
  *
  * ── THESE ARE NOT THE LESSON'S QUERIES ──────────────────────────────────────
  *
- * The same ideas, in the same order, asked DIFFERENT QUESTIONS. The lesson labels ORDERS by
- * freight, counts them per channel by status, and per courier. Here you label PRODUCTS by
- * price, stock and whether they are still sold, ORDER LINES by discount, the ship-to line of
- * the year's last orders, and the returns in the stock ledger.
+ * The same ideas, asked DIFFERENT QUESTIONS. The lesson labels ORDERS by freight, sorts the
+ * bands heaviest first, counts the orders per channel by status, and per courier. Here you
+ * label PRODUCTS by price, stock and whether they are still sold, put the ones to reorder at
+ * the top, label ORDER LINES by discount, the ship-to line of the year's last orders, and the
+ * returns in the stock ledger.
  *
- * ELEVEN KOANS, EASIEST FIRST:
+ * TWELVE KOANS, EASIEST FIRST:
  *   1    a label for every product: finish the CASE
  *   2    the first true WHEN wins: write the tests in the right order
  *   3    no ELSE means NULL: count only what the CASE labelled
  *   4    a NULL fails not-equal too: give the rest a label
  *   5    COALESCE is a CASE: write it the long way
- *   6    CASE inside SUM: a column for one status
- *   7    CASE inside SUM: money with and without a discount
- *   8    count(CASE ... END): the missing ELSE, on purpose
- *   9    a share of the lines: 100.0 before you divide
- *  10    write the whole query: price bands as columns, per category
- *  11    write the whole query: the return rate of each category
+ *   6    the short form never finds NULL: write the WHENs the long way
+ *   7    CASE inside SUM: the discontinued beside the total
+ *   8    CASE in ORDER BY: the products to reorder first
+ *   9    count(CASE ... END): the missing ELSE, on purpose
+ *  10    the discounted % of each category
+ *  11    write the whole query: price bands as columns, per category
+ *  12    write the whole query: the return rate of each category
  *
- * These run on DuckDB, on Northwind Company — the same rows the Seed Data tab installs into
- * the PostgreSQL in CloudBeaver — and every one returns the SAME answer there, as long as you
- * write the shares with 100.0, which is the one place the two engines part company (koan 9
- * says how). KEEP THE DOUBLE QUOTES on every name, spelled as the schema spells them: DuckDB
- * forgives a wrong capital letter and PostgreSQL does not.
+ * These run on DuckDB, on Northwind Company — the same data DataPallas installs by itself
+ * into CloudBeaver's PostgreSQL, in the database northwind_co. Every one returns the SAME
+ * answer there, once `SET search_path TO northwind_co_s;` has been run in the editor (this
+ * file does that for you), and the koans set DuckDB to divide whole numbers the way
+ * PostgreSQL does (rule 4). What DuckDB still forgives and PostgreSQL does not:
+ *   · a column's new name (its AS alias) used again in the same SELECT, in WHERE or inside an
+ *     ORDER BY CASE — CloudBeaver answers that the column does not exist;
+ *   · a name without its double quotes, or with a wrong capital letter. KEEP THE DOUBLE QUOTES
+ *     on every name, spelled as the schema below spells them.
+ * Either one can turn a koan green here on a query that CloudBeaver refuses.
  *
  * ── RELEVANT SCHEMA (Northwind Company, schema northwind_co_s) ──────────────
  *
- *   "Products" — 80 rows, 11 columns, ten products in each category.
+ *   "Products" — 80 rows, 12 columns, ten products in each category.
  *     "ProductID"       INTEGER        "ProductName"     VARCHAR
  *     "SupplierID"      INTEGER        "CategoryID"      INTEGER
  *     "QuantityPerUnit" VARCHAR        "UnitPrice"       DECIMAL(19,4)
  *     "UnitCost"        DECIMAL(19,4)  "UnitsInStock"    SMALLINT
  *     "UnitsOnOrder"    SMALLINT       "ReorderLevel"    SMALLINT
- *     "Discontinued"    BOOLEAN
+ *     "Discontinued"    BOOLEAN        "UpdatedAt"       TIMESTAMP
  *   "ReorderLevel" is the stock level at which the product should be ordered again; six
  *   products are discontinued (no longer sold, so never reordered). No product has a price of
  *   exactly 15 or 30.
@@ -82,7 +93,7 @@ import spock.lang.Stepwise
  *
  *   "Orders" — 10000 rows, 2020-01-01 to 2024-12-31. The columns these koans use:
  *     "OrderID" INTEGER, "OrderDate" TIMESTAMP, "ShipCity" VARCHAR,
- *     "ShipRegion" VARCHAR (empty for most countries), "ShipCountry" VARCHAR.
+ *     "ShipRegion" VARCHAR (NULL for most countries), "ShipCountry" VARCHAR.
  *
  *   "StockMovements" — 29264 rows: every time stock goes in or out.
  *     "MovementID" INTEGER, "ProductID" INTEGER, "MovementDate" DATE,
@@ -95,7 +106,6 @@ class CaseExpressionsKoans extends NorthwindCoKoanBase {
     // 1) A LABEL FOR EVERY PRODUCT. Under 15 is budget, under 30 is standard, and every
     //    other product is premium. Fill in the keyword that catches every row the two
     //    WHENs above it did not.
-    //    (Three bands. Checkable fact: 28 budget products, 27 standard, 25 premium.)
     def "a label for every product: finish the CASE"() {
         expect:
         shouldReturn([["budget", 28], ["standard", 27], ["premium", 25]], '''
@@ -111,13 +121,10 @@ class CaseExpressionsKoans extends NorthwindCoKoanBase {
         ''')
     }
 
-    // 2) THE FIRST TRUE WHEN WINS. Label the stock: 'discontinued' when the product is no
-    //    longer sold, 'reorder' when its stock is at or below the reorder level, 'ok' otherwise.
-    //    Write the two WHEN lines. ORDER MATTERS: a discontinued product can ALSO be low on
-    //    stock, and nobody reorders a product they have stopped selling — so the wrong order
-    //    labels it 'reorder' and puts it on the purchase list.
-    //    (Three labels: 6 discontinued, 71 ok, 3 reorder. If you get 5 discontinued and
-    //     4 reorder, the stock test came first.)
+    // 2) THE FIRST TRUE WHEN WINS. Label the stock: 'reorder' when the stock is at or below the
+    //    reorder level, 'discontinued' when the product is no longer sold, 'ok' otherwise.
+    //    Write the WHEN lines. One fact decides their order: nobody reorders a product they
+    //    have stopped selling, even when its stock is low.
     def "the first true WHEN wins: write the tests in the right order"() {
         expect:
         shouldReturn([["discontinued", 6], ["ok", 71], ["reorder", 3]], '''
@@ -133,10 +140,9 @@ class CaseExpressionsKoans extends NorthwindCoKoanBase {
     }
 
     // 3) NO ELSE MEANS NULL. This CASE labels discounted order lines and says nothing about
-    //    the rest, so every full-price line gets NULL. count(*) counts rows; count of a
-    //    column skips the NULLs. Fill in what to count so the answer is the number of lines
-    //    the CASE actually labelled.
-    //    (Predict first: 25233 lines in all. How many carry a discount?)
+    //    the rest, so every full-price line gets NULL. count(*) would say 25233: every line,
+    //    labelled or not. Fill in what to count so the answer is only the lines the CASE
+    //    actually labelled.
     def "no ELSE means NULL: count only what the CASE labelled"() {
         expect:
         shouldReturn 12559, '''
@@ -148,11 +154,10 @@ class CaseExpressionsKoans extends NorthwindCoKoanBase {
         '''
     }
 
-    // 4) A NULL FAILS "NOT EQUAL" TOO. Now count the lines that are NOT discounted. Without an
-    //    ELSE their label is NULL, NULL <> 'discounted' is unknown rather than true, and the
-    //    WHERE throws every one of them away — the answer would be 0. Fill in the line that
-    //    gives them a real label.
-    //    (25233 lines, 12559 discounted, so predict the rest.)
+    // 4) A NULL FAILS "NOT EQUAL" TOO. Now count the lines that are NOT discounted. Delete the
+    //    ___ and run the koans first: the hint shows what this query returns as it stands,
+    //    though about half the lines are full price. Then fill in the line that gives those
+    //    lines a real label.
     def "a NULL fails not-equal too: give the rest a label"() {
         expect:
         shouldReturn 12674, '''
@@ -168,8 +173,8 @@ class CaseExpressionsKoans extends NorthwindCoKoanBase {
 
     // 5) COALESCE IS A CASE. The ship-to line of the orders placed on the last day of 2024
     //    shows the region where the address has one, and the country where it does not:
-    //    COALESCE("ShipRegion", "ShipCountry"). Write it the long way — fill in the last line
-    //    of the CASE.
+    //    COALESCE("ShipRegion", "ShipCountry"). Write the same thing as a CASE — fill in its
+    //    inside.
     //    (Eleven orders, in "OrderID" order. Three of them go to Portland, in the region OR.
     //     One city comes back SHOUTED: nobody tidied it when it was typed in. Print it as it is
     //     stored — cleaning text is its own lesson, later in the series.)
@@ -181,7 +186,6 @@ class CaseExpressionsKoans extends NorthwindCoKoanBase {
                       [9999, "Portland", "OR"], [10000, "Paris", "France"]], '''
             SELECT "OrderID", "ShipCity",
                    CASE
-                     WHEN "ShipRegion" IS NULL THEN "ShipCountry"
                      ___
                    END AS "Region or country"
             FROM "Orders"
@@ -190,19 +194,40 @@ class CaseExpressionsKoans extends NorthwindCoKoanBase {
         ''')
     }
 
-    // 6) CASE INSIDE SUM: A COLUMN FOR ONE STATUS. For each category: how many products, and
-    //    how many of them are discontinued — on one row. The CASE turns a discontinued product
-    //    into a 1 and every other product into a 0, and SUM adds them up. Fill in what the CASE
-    //    returns in each case.
+    // 6) THE SHORT FORM NEVER FINDS NULL. Someone labelled the ship-to region of the same eleven
+    //    orders with the short form:
+    //
+    //        CASE "ShipRegion" WHEN 'OR' THEN 'Oregon' WHEN NULL THEN '(no region)' END
+    //
+    //    It runs without an error. Paste everything between its CASE and its END into the blank
+    //    and run the koans: the hint shows what it really returns. Then write the WHENs so that
+    //    both labels land.
+    def "the short form never finds NULL: write the WHENs the long way"() {
+        expect:
+        shouldReturn([["(no region)", 8], ["Oregon", 3]], '''
+            SELECT CASE
+                     ___
+                   END AS "Region",
+                   count(*) AS "Orders"
+            FROM "Orders"
+            WHERE "OrderDate" = DATE '2024-12-31'
+            GROUP BY "Region"
+            ORDER BY "Orders" DESC
+        ''')
+    }
+
+    // 7) CASE INSIDE SUM: THE DISCONTINUED BESIDE THE TOTAL. For each category: how many
+    //    products, and how many of them are discontinued — on one row. Fill in the CASE that
+    //    SUM adds up.
     //    (Eight categories of ten products each. Two of them have nothing discontinued.)
-    def "CASE inside SUM: a column for one status"() {
+    def "CASE inside SUM: the discontinued beside the total"() {
         expect:
         shouldReturn([["Beverages", 10, 1], ["Condiments", 10, 1], ["Confections", 10, 0],
                       ["Dairy Products", 10, 1], ["Grains/Cereals", 10, 1], ["Meat/Poultry", 10, 1],
                       ["Produce", 10, 1], ["Seafood", 10, 0]], '''
             SELECT c."CategoryName",
                    count(*) AS "Products",
-                   SUM(CASE WHEN p."Discontinued" = TRUE ___ END) AS "Discontinued"
+                   SUM(___) AS "Discontinued"
             FROM "Products" p
             JOIN "Categories" c ON c."CategoryID" = p."CategoryID"
             GROUP BY c."CategoryName"
@@ -210,32 +235,24 @@ class CaseExpressionsKoans extends NorthwindCoKoanBase {
         ''')
     }
 
-    // 7) CASE INSIDE SUM, WITH MONEY. Per order year: the money from discounted lines (after
-    //    the discount) and the money from full-price lines, side by side. The second column is
-    //    written for you. Fill in the test that decides which lines go into the first.
-    //    (Five years, 2020 to 2024. Every year about half of each.)
-    def "CASE inside SUM: money with and without a discount"() {
+    // 8) CASE IN ORDER BY: THE PRODUCTS TO REORDER FIRST. The buyer's list of the products still
+    //    sold: the ones at or below their reorder level at the top, then all the others — each
+    //    group in "ProductName" order. Write the ORDER BY.
+    //    (Three products need reordering, so the five rows are those three, then the first two
+    //     of the others.)
+    def "CASE in ORDER BY: the products to reorder first"() {
         expect:
-        shouldReturn([[2020, 1205673.17, 1268466.04],
-                      [2021, 1294494.28, 1434204.86],
-                      [2022, 1361895.85, 1541464.49],
-                      [2023, 1533790.73, 1748469.18],
-                      [2024, 1704648.13, 1923924.42]], '''
-            SELECT EXTRACT(YEAR FROM o."OrderDate") AS "Year",
-                   ROUND(SUM(CASE WHEN ___
-                                  THEN d."UnitPrice" * d."Quantity" * (1 - d."Discount")
-                                  ELSE 0 END), 2) AS "Discounted",
-                   ROUND(SUM(CASE WHEN d."Discount" = 0
-                                  THEN d."UnitPrice" * d."Quantity"
-                                  ELSE 0 END), 2) AS "Full price"
-            FROM "Orders" o
-            JOIN "Order Details" d ON d."OrderID" = o."OrderID"
-            GROUP BY EXTRACT(YEAR FROM o."OrderDate")
-            ORDER BY "Year"
+        shouldReturn([["Coastal Parmesan", 8, 20], ["Orchard Nougat", 3, 15], ["Stone Mussels", 7, 10],
+                      ["Alpine Ale", 88, 10], ["Alpine Butter", 23, 20]], '''
+            SELECT "ProductName", "UnitsInStock", "ReorderLevel"
+            FROM "Products"
+            WHERE "Discontinued" = FALSE
+            ORDER BY ___
+            LIMIT 5
         ''')
     }
 
-    // 8) count(CASE ... END): THE MISSING ELSE, ON PURPOSE. For the three products sold on the
+    // 9) count(CASE ... END): THE MISSING ELSE, ON PURPOSE. For the three products sold on the
     //    most order lines: how many lines, and how many of those were discounted. count skips
     //    NULLs, so a CASE with NO ELSE counts exactly the rows its WHEN matched. Fill in the
     //    whole argument to the second count.
@@ -257,16 +274,13 @@ class CaseExpressionsKoans extends NorthwindCoKoanBase {
         ''')
     }
 
-    // 9) A SHARE OF THE LINES. For each category: how many order lines, how many of them were
-    //    discounted, and what percentage of the category's lines that is, to one decimal
-    //    place. The two counts are written for you. Fill in what goes inside the ROUND.
-    //    MULTIPLY BY 100.0 — WITH THE DECIMAL POINT — AND DO IT BEFORE YOU DIVIDE. SUM(...)
-    //    and count(*) are both whole numbers, and on PostgreSQL a whole number divided by a
-    //    whole number throws the fraction away: every category would come back 0. DuckDB,
-    //    which runs these koans, keeps the fraction and would forgive you. CloudBeaver would
-    //    not. Write it the way both engines agree on.
-    //    (Eight categories. Beverages: 1319 of its 2686 lines were discounted, so 49.1.)
-    def "a share of the lines: 100.0 before you divide"() {
+    // 10) THE DISCOUNTED % OF EACH CATEGORY. For each category: how many order lines, how many
+    //    of them were discounted, and what percentage of the category's lines that is, to one
+    //    decimal place. The two counts are written for you. Fill in what goes inside the ROUND.
+    //    Rule 4 applies. And "Lines" and "Discounted" are new names made in this same SELECT:
+    //    DuckDB would let you use them here, CloudBeaver would say they do not exist.
+    //    (Eight categories. Beverages: 1319 of its 2686 lines were discounted.)
+    def "the discounted % of each category"() {
         expect:
         shouldReturn([["Beverages", 2686, 1319, 49.1], ["Condiments", 1211, 626, 51.7],
                       ["Confections", 4267, 2102, 49.3], ["Dairy Products", 2426, 1209, 49.8],
@@ -284,14 +298,14 @@ class CaseExpressionsKoans extends NorthwindCoKoanBase {
         ''')
     }
 
-    // 10) The whole query — no scaffolding.
+    // 11) The whole query — no scaffolding.
     //     THE QUESTION: for each category, how many products are budget, standard and premium?
     //       · one row per category, by name        -> "Categories"."CategoryName"
     //       · then three columns, in this order: budget (under 15), standard (15 up to but not
     //         including 30), premium (30 and above)
     //       · each column a count of that category's products in that band
     //       · ordered by "CategoryName"
-    //     ONE SUM(CASE ...) PER COLUMN — the lesson's column-per-status report, on products.
+    //     THE LESSON'S THREE COUNTS SIDE BY SIDE, on products instead of orders.
     //     (Eight rows. Grains/Cereals has no premium product and Meat/Poultry no budget one.)
     def "write the whole query: price bands as columns, per category"() {
         expect:
@@ -302,18 +316,16 @@ class CaseExpressionsKoans extends NorthwindCoKoanBase {
         ''')
     }
 
-    // 11) The whole query again.
+    // 12) The whole query again.
     //     THE QUESTION: for each category, how many sales and how many returns does the stock
     //     ledger record, and what is the return rate?
     //       · one row per category, by name        -> "Categories"."CategoryName"
     //       · return the name, the sales, the returns, the return rate — in that order
     //       · sales are "StockMovements" rows with "MovementType" 'Sale', returns those with
     //         'Return'; the ledger holds receipts and adjustments too, which are neither
-    //       · the return rate is the returns as a percentage OF THE SALES, to one decimal place,
-    //         written so CloudBeaver agrees
+    //       · the return rate is the returns as a percentage OF THE SALES, to one decimal place
+    //         (rule 4, and koan 10's note on new names, apply)
     //       · ordered by "CategoryName"
-    //     WATCH THE BOTTOM OF THE DIVISION: count(*) would count every movement, receipts and
-    //     adjustments included. The rate needs the sales column there.
     //     (Eight rows. Confections: 54 returns on 4141 sales, 1.3.)
     def "write the whole query: the return rate of each category"() {
         expect:

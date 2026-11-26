@@ -10,26 +10,37 @@
 #
 # ── WHAT ANKI IS FOR ────────────────────────────────────────────────────────────────────────
 # Reviewed on a phone, weeks later, with no database open. EVERY CARD CARRIES ITS OWN PREMISE:
-# where a card needs a value (a freight of 38.4, 5346 unlabelled rows, 61 matching rows of 3749) the
+# where a card needs a value (a freight of 38.4, 5346 unlabelled orders, 61 cancelled of 3749) the
 # FRONT states it, and the card tests the REASONING. No card names a Northwind table as something
 # to remember, and none asks for a figure from the dataset. The koans are where the SQL is written;
 # this deck is where the rules have to hold without rows in reach.
 #
-# FILE ORDER IS THE CURRICULUM, in the lesson's order: what CASE is and how it reads, grouping by
-# the label, the first-true-WHEN trap, the missing-ELSE trap and its NULL, the short form and when a
-# join is better, COALESCE, CASE inside an aggregate, the share and its integer division, and last
-# the production card. 17 basic, 5 cloze — about the 3:1 the existing decks run.
+# THE CARDS ARE THE VIDEO'S POINTS, AND ONLY THOSE: its queries, its traps, its numbers. Nothing is
+# drilled here that the video does not teach. NUMBERS FROM THE DATASET APPEAR ONLY AS A STATED
+# PREMISE (2334, 3941 and 6275; 5346; 61 of 3749; 22 of 1001 and the 1.6, 2.2 and 1.8 shares;
+# 178 of 1768 and 630), and each is asserted in
+# tests/src/verify/groovy/datazeus/learnsql/series2/_05/CaseExpressionsSpec.groovy.
 #
-# THE SHARE CARDS CARRY A RULE THAT HAS NO KOAN. DuckDB, which the koans run on, keeps the fraction
-# of an integer division that PostgreSQL throws away, so a koan would pass the query CloudBeaver
-# shows as a column of zeros. The lesson says so; this deck is where the rule is drilled instead.
+# FILE ORDER IS THE CURRICULUM, the video's order: why CASE, what it is and how it reads, the label
+# WHERE cannot see, counting the bands and sorting them, the first true WHEN, the missing ELSE and
+# its NULL, one type per CASE, the short form and when to join instead, COALESCE, CASE inside SUM,
+# the share and its integer division, what the case file does and does not say, the habit the
+# video ends on (which mistakes give no error, like the subqueries deck's three checks), and last
+# the production card, which is the case-file query. 21 basic, 5 cloze: most of the lesson is
+# traps, and a trap is a "why does this happen" card, which is what basic is for.
+#
+# THE SHARE CARDS' RULE HAS A KOAN TOO, SINCE 2026-11-26. Plain DuckDB keeps the fraction of an
+# integer division that PostgreSQL throws away; the koans turn on DuckDB's integer_division
+# (NorthwindCoKoanBase), so koan 10 comes back as wrong as CloudBeaver shows it until the 100.0 is
+# written. The cards say what the video says: plain DuckDB keeps the fraction, PostgreSQL does not.
 #
 # WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
-#   - Series 1 · 45 owns NULL, three-valued logic and COALESCE itself. The cards here state the
-#     rule a missing ELSE runs into ("a comparison with NULL is unknown") without re-teaching it,
-#     and COALESCE appears only as the CASE it abbreviates.
-#   - Series 1 · 20 owns expressions, aliases and ROUND in the SELECT. The alias-in-WHERE card here
-#     is about why the label had to go into a subquery, in one line.
+#   - Series 1 · 45 owns NULL, three-valued logic, COALESCE and NULLIF. The cards here state the
+#     rule a missing ELSE runs into ("a comparison with NULL is unknown") without re-teaching it;
+#     COALESCE appears only as the CASE it abbreviates, and NULLIF not at all.
+#   - Series 1 · 20 owns aliases and the running order (FROM, WHERE, SELECT, ORDER BY). The cards
+#     here apply it to a CASE label: WHERE cannot see it, and GROUP BY borrows it on some databases.
+#   - Series 1 · 25 owns count(column) skipping NULLs. The count(CASE … END) card uses that rule.
 #   - Series 2 · 00 owns subqueries. Series 3 · 00 owns the pivot as a pattern; the SUM(CASE …)
 #     cards here are about one column per status.
 
@@ -38,89 +49,109 @@ guid: "datazeus-learn-sql-series2-05-case-expressions"
 tags: ["datazeus", "learn-sql", "series-2", "sql"]
 
 cards:
-  # ── 1. WHAT CASE IS ──
-  - cloze: "<code>CASE WHEN freight &lt; 25 THEN 'light' ELSE 'heavy' {{c1::END}}</code> — every CASE is closed by {{c1::END}}, and the value for rows no WHEN matched comes after {{c2::ELSE}}."
-
+  # ── 1. WHY CASE, AND HOW IT READS ──
   - basic:
-      front: "In what order does CASE check its WHEN lines, and when does it stop?"
-      back: "From the top down, one row at a time. It stops at the first WHEN whose test is true and returns that THEN value; the WHENs below it are never checked for that row. If none is true, it returns the ELSE value."
+      front: "Every order needs a band: freight under 25 is light, under 60 is medium, anything more is heavy. Without CASE, how would you do it, and what would you still not have?"
+      back: "Three queries, one WHERE per band, and the answers put together by hand. That gives three counts, but still no label on each order. CASE puts the label on every row, in one query."
 
-  - basic:
-      front: "<code>CASE WHEN freight &lt; 25 THEN 'light' WHEN freight &lt; 60 THEN 'medium' ELSE 'heavy' END</code>. An order has a freight of 38.4. Walk through what CASE does."
-      back: "The first WHEN asks \"under 25?\": no. The second asks \"under 60?\": yes, so CASE stops and returns 'medium'. The ELSE is never reached."
+  - cloze: "<code>CASE WHEN freight &lt; 25 THEN 'light' ELSE 'heavy' {{c1::END}}</code>: every CASE is closed by {{c1::END}}, and the rows no WHEN matched get the value after {{c2::ELSE}}."
 
   - basic:
       front: "How is CASE different from a calculated column such as <code>price * quantity</code>?"
-      back: "Both are expressions that produce a value for every row. A calculation computes its value; CASE chooses one of several values depending on which test the row passes."
-
-  # ── 2. GROUPING BY THE LABEL ──
-  - basic:
-      front: "You have given each order a band with CASE, <code>AS band</code>. How do you count the orders in each band in the same query?"
-      back: "Group by the label: <code>GROUP BY band</code> with <code>count(*)</code>. PostgreSQL and DuckDB accept the alias in GROUP BY; in databases that do not, repeat the whole CASE there."
+      back: "Both are expressions that produce a value for every row. A calculation computes its value; CASE chooses one of several values, depending on which test the row passes."
 
   - basic:
-      front: "You labelled each order with a band (<code>light</code>, <code>medium</code>, <code>heavy</code>) and want the heaviest first. A plain <code>ORDER BY band</code> sorts them alphabetically, and 'heavy' comes under 'light'. How do you sort them in the order you want?"
-      back: "Order by a CASE that gives each label a number: <code>ORDER BY CASE band WHEN 'heavy' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END</code>. The rows come out in that order. If the label is made in the same query's SELECT, build it in a subquery first: PostgreSQL will not resolve the alias inside an ORDER BY expression."
+      front: "<code>CASE WHEN freight &lt; 25 THEN 'light' WHEN freight &lt; 60 THEN 'medium' ELSE 'heavy' END</code>. An order has a freight of 38.4. Walk through what CASE does."
+      back: "It checks the WHENs from the top, one row at a time. \"Under 25?\" No. \"Under 60?\" Yes, so CASE stops and returns 'medium'; nothing below that line is checked. A row that no WHEN matches gets the ELSE."
+
+  - basic:
+      front: "A query makes a label with CASE in the SELECT, <code>AS label</code>, and filters <code>WHERE label = 'heavy'</code>. PostgreSQL stops with <i>column \"label\" does not exist</i>. Why, and what do you do?"
+      back: "WHERE runs before the SELECT, so when it looks, the label has not been made yet. Build the label in a subquery in FROM, and filter it in the outer query."
+
+  # ── 2. COUNTING THE BANDS, AND SORTING THEM ──
+  - basic:
+      front: "WHERE cannot see a CASE label made in the SELECT. Yet <code>GROUP BY band</code>, on that same label, runs on PostgreSQL. Why, and why not count on it everywhere?"
+      back: "GROUP BY also runs before the SELECT. PostgreSQL lets it borrow the SELECT's name as a favour, and DuckDB and MySQL do too, but it is not standard: SQL Server refuses it. There, repeat the whole CASE in the GROUP BY, or build the label in a subquery."
+
+  - basic:
+      front: "Orders are labelled light, medium or heavy, and the team wants the heaviest first. A plain <code>ORDER BY band</code> sorts them alphabetically: heavy, light, medium. How do you get heavy, medium, light?"
+      back: "Order by a CASE that gives each label a number: <code>ORDER BY CASE WHEN band = 'heavy' THEN 1 WHEN band = 'medium' THEN 2 ELSE 3 END</code>. Build the label in a subquery first, so that CASE can reach it."
+
+  - basic:
+      front: "Bands counted with <code>GROUP BY band ORDER BY min(freight)</code> come out light, medium, heavy, so adding <code>DESC</code> would put heavy first. Why prefer a subquery with <code>ORDER BY CASE</code>?"
+      back: "<b>1.</b> The short query leans on GROUP BY borrowing the label, which SQL Server refuses.<br><b>2.</b> It is not explicit: it sorts by the smallest freight, and works only because freight runs in band order. It can never give medium, heavy, light.<br><br>ORDER BY CASE is standard, sorts by the label itself, and gives any order you write."
 
   # ── 3. THE FIRST TRUE WHEN WINS ──
   - basic:
-      front: "<code>CASE WHEN freight &lt; 60 THEN 'medium' WHEN freight &lt; 25 THEN 'light' ELSE 'heavy' END</code> runs with no error, but no order is ever labelled light. Why?"
-      back: "Every freight under 25 is also under 60, so the first WHEN catches it and CASE stops. The light test is never reached. Put the narrow test first: <code>&lt; 25</code> above <code>&lt; 60</code>."
+      front: "Freight bands count 2334 light and 3941 medium. Someone swaps the first two WHENs: <code>CASE WHEN freight &lt; 60 THEN 'medium' WHEN freight &lt; 25 THEN 'light' ELSE 'heavy' END</code>. It runs with no error, and now there are no light orders and 6275 medium. Why?"
+      back: "Every freight under 25 is also under 60, so the first WHEN catches it and CASE stops: the light test is never reached. All 2334 light orders were counted as medium, and 2334 + 3941 = 6275. Put the narrow test first: <code>&lt; 25</code> above <code>&lt; 60</code>."
 
-  - cloze: "When two WHEN tests can both be true for the same row, write the {{c1::narrow}} test first, or the {{c2::wide}} one catches its rows before it is checked."
+  - cloze: "When two WHEN tests can both be true for the same row, write the {{c1::narrow}} test first, or the {{c2::wide}} one catches its rows before the narrow one is checked."
 
-  # ── 4. NO ELSE MEANS NULL ──
+  # ── 4. NO ELSE MEANS NULL, AND ONE TYPE PER CASE ──
   - basic:
       front: "A CASE has one WHEN, <code>WHEN freight &gt; 50 THEN 'heavy'</code>, and no ELSE. What label does an order with a freight of 20 get?"
       back: "NULL. A CASE with no ELSE returns NULL for every row that no WHEN matched."
 
   - basic:
       front: "5346 orders have a label of NULL because the CASE had no ELSE. You filter <code>WHERE label &lt;&gt; 'heavy'</code>. How many of the 5346 come back, and why?"
-      back: "None. <code>NULL &lt;&gt; 'heavy'</code> is unknown, not true, and WHERE keeps only rows where the test is true. Add an ELSE so those rows get a real label, and the filter finds all 5346."
+      back: "None. <code>NULL &lt;&gt; 'heavy'</code> is unknown, not true, and WHERE keeps only the rows where the test is true. Write the ELSE, such as <code>ELSE 'standard'</code>, and the same filter finds all 5346."
 
   - basic:
-      front: "You want to filter on a label made by CASE in the SELECT. Why can't <code>WHERE band = 'heavy'</code> in the same query see it, and what do you do?"
-      back: "WHERE runs before the SELECT has named its columns, so the alias does not exist there yet. Make the label in a subquery in FROM and filter it in the outer query (or repeat the CASE in the WHERE)."
+      front: "<code>CASE WHEN freight &gt; 50 THEN 'heavy' ELSE 0 END</code> fails on PostgreSQL with <i>invalid input syntax for type integer: \"heavy\"</i>. Why does the error point at 'heavy', the line that looks fine?"
+      back: "A CASE returns one column, and a column has one type. The 0 made PostgreSQL decide the column is a whole number, and then 'heavy' cannot be read as one. Every THEN and the ELSE must agree: words with words, numbers with numbers."
 
-  # ── 5. THE SHORT FORM, AND WHEN NOT TO USE CASE ──
-  - basic:
-      front: "<code>CASE ship_via WHEN 1 THEN 'Speedy Express' WHEN 2 THEN 'United Package' WHEN 3 THEN 'Federal Shipping' END</code> runs with no error, but one group comes back with a NULL shipper. The names are stored in a <code>shippers</code> table, which has four rows. What happened, and what should the query do instead?"
-      back: "The fourth shipper (ship_via 4) matches no WHEN, and there is no ELSE, so its rows get NULL. JOIN to <code>shippers</code> and read the name: when a shipper is added or renamed, the table changes and the query does not have to. CASE is for labels nobody stored, such as light, medium and heavy."
-
+  # ── 5. THE SHORT FORM, AND WHEN TO JOIN INSTEAD ──
   - basic:
       front: "When can you use the short form <code>CASE column WHEN value THEN …</code> instead of <code>CASE WHEN column = value THEN …</code>?"
-      back: "When every WHEN compares the same column with a value using equals. For ranges (<code>&lt; 25</code>) or tests on different columns, use the full form."
+      back: "When every WHEN compares the same column with a value, using equals. For ranges (<code>&lt; 25</code>) or tests on different columns, use the full form."
 
-  # ── 6. COALESCE ──
+  - basic:
+      front: "<code>CASE ship_via WHEN 1 THEN 'Speedy Express' WHEN 2 THEN 'United Package' WHEN 3 THEN 'Federal Shipping' END</code> runs with no error, but one group of orders comes back with a NULL courier. The names are stored in a <code>shippers</code> table, which has four rows. What happened, and what should the query do instead?"
+      back: "The fourth courier (ship_via 4) matches no WHEN, and there is no ELSE, so its orders get NULL. JOIN to <code>shippers</code> and read the stored name: when a courier is added or renamed, the table changes and the query does not have to. CASE is for labels nobody stored, such as light, medium and heavy."
+
+  # ── 6. COALESCE IS A CASE ──
   - cloze: "<code>COALESCE(region, '(none)')</code> is a short way of writing <code>CASE WHEN region {{c1::IS NULL}} THEN '(none)' ELSE {{c2::region}} END</code>."
 
   - basic:
-      front: "What does <code>NULLIF(x, y)</code> return, and what CASE is it short for?"
-      back: "NULL when x equals y, otherwise x. It is <code>CASE WHEN x = y THEN NULL ELSE x END</code>. It is COALESCE's mirror: COALESCE puts a value where there was none, NULLIF takes one away. (Series 1 · 45 owns NULLIF.)"
+      front: "<code>CASE region WHEN NULL THEN '(none)' ELSE region END</code> runs with no error. What does a customer with no region get, and why?"
+      back: "NULL, not '(none)'. The short form tests <code>region = NULL</code>, and <code>= NULL</code> is never true, so that WHEN never fires and the row falls through to the ELSE: its own NULL region. To test for NULL, write <code>CASE WHEN region IS NULL THEN …</code>."
 
-  # ── 7. CASE INSIDE AN AGGREGATE ──
+  # ── 7. CASE INSIDE SUM: A COLUMN FOR EACH STATUS ──
   - basic:
-      front: "For each sales channel you need the number of orders AND the number in each status (shipped, cancelled, open), on one row. One query has only one WHERE. How do you get them all?"
-      back: "Move each condition into its own column: <code>count(*) AS orders, SUM(CASE WHEN status = 'Cancelled' THEN 1 ELSE 0 END) AS cancelled</code>, and one more SUM(CASE …) per status, grouped by channel. Each CASE turns an order in its status into a 1 and every other order into a 0, and SUM adds the ones. The status columns add back up to the orders."
+      front: "For each sales channel you need the number of orders AND the number in each status (Shipped, Cancelled, Open), on one row. One query has only one WHERE. How do you get them all?"
+      back: "Move each condition into its own column: <code>count(*) AS orders, SUM(CASE WHEN status = 'Cancelled' THEN 1 ELSE 0 END) AS cancelled</code>, and one more SUM(CASE …) per status, grouped by channel. Each CASE turns an order in that status into a 1 and every other order into a 0, and SUM adds the ones. The status columns add back up to the orders."
 
-  - cloze: "<code>SUM(CASE WHEN status = 'returned' THEN {{c1::1}} ELSE {{c2::0}} END)</code> counts the returned rows in each group, without a WHERE."
+  - cloze: "<code>SUM(CASE WHEN status = 'Open' THEN {{c1::1}} ELSE {{c2::0}} END)</code> counts the open orders in each group, without a WHERE."
 
   - basic:
       front: "<code>count(CASE WHEN status = 'Cancelled' THEN 1 END)</code> has no ELSE. Is that a bug?"
-      back: "No, it is on purpose. Rows that do not match get NULL, and count of an expression skips NULLs, so it counts exactly the matching rows, the same as SUM(CASE … THEN 1 ELSE 0 END). A missing ELSE is a bug when you filter on the label, not when you count it."
+      back: "No, it is on purpose. Every other row gets NULL, and count skips NULLs, so it counts exactly the cancelled rows, the same as SUM(CASE … THEN 1 ELSE 0 END). A missing ELSE is a bug when you filter on the label, and a trick when you count it: it depends on whether you meant the NULLs."
 
-  # ── 8. THE SHARE, AND THE DIVISION THAT THROWS THE FRACTION AWAY ──
+  # ── 8. A SHARE THAT COMES BACK AS 0 ──
   - basic:
-      front: "A group has 3749 rows and 61 of them match. <code>SUM(CASE WHEN … THEN 1 ELSE 0 END) / count(*)</code> returns 0 on PostgreSQL, and 0.01627… on DuckDB. Why the 0, and how do you write the share so every database agrees?"
-      back: "Both sides are whole numbers, and on PostgreSQL (and SQL Server, and SQLite) a whole number divided by a whole number is a whole number: the fraction is thrown away. DuckDB keeps it. Put a decimal number in first: <code>ROUND(100.0 * SUM(CASE … END) / count(*), 1)</code> gives 1.6 on both. There is no error either way — the zeros simply look like an answer."
+      front: "A channel has 3749 orders and 61 of them are cancelled. <code>SUM(CASE WHEN … THEN 1 ELSE 0 END) / count(*)</code> returns 0 on PostgreSQL, and 0.016… on DuckDB. Why the 0?"
+      back: "Both sides are whole numbers, and on PostgreSQL a whole number divided by a whole number is a whole number: 61 / 3749 is 0.016 and a bit, and the fraction is thrown away. There is no error; the zeros simply look like an answer. DuckDB keeps the fraction, so the same query gives two answers."
 
-  - cloze: "<code>ROUND({{c1::100.0}} * SUM(CASE … END) / count(*), 1)</code> — the decimal point makes the division keep its fraction, and the multiplication comes {{c2::before}} the division."
+  - cloze: "<code>ROUND({{c1::100.0}} * SUM(CASE … END) / count(*), 1)</code>: the decimal point keeps the fraction on every database, and the multiplication comes {{c2::before}} the division."
 
   - basic:
-      front: "One sales channel has the most cancelled orders and the lowest cancellation share (1.6%); another has the fewest and the highest (2.2%); the whole company is at 1.8%. Before anyone calls the 2.2% channel the problem, what has to be on the report beside each share, and what is the overall 1.8% for?"
-      back: "Its count. 2.2% can be 22 orders of 1001, where four fewer cancellations would make it 1.8%. A share always travels with its count, and the overall share is what tells you whether any group is really high rather than a few orders away from everyone else."
+      front: "One sales channel has the most cancelled orders and the lowest cancelled share, 1.6%. Another has the fewest, 22 of 1001, and the highest share, 2.2%. The whole company is at 1.8%. Is the 2.2% channel where orders get cancelled?"
+      back: "Not on this evidence. Four fewer cancellations would put it at 1.8%, the same as the whole company. A share always travels with its count, and you read it against the whole first: a few rows can move a small group's share a long way."
 
-  # ── 9. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  # ── 9. THE CASE FILE: WHAT THE COLUMNS SAY, AND WHAT THEY DO NOT ──
   - basic:
-      front: "Write the query. <code>products</code> has <code>category</code> and <code>price</code>. For each category, return three counts: <code>budget</code> (price under 15), <code>standard</code> (15 up to but not including 30) and <code>premium</code> (30 and above), ordered by category."
-      back: "<code>SELECT category,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN price &lt; 15 THEN 1 ELSE 0 END) AS budget,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN price &gt;= 15 AND price &lt; 30 THEN 1 ELSE 0 END) AS standard,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN price &gt;= 30 THEN 1 ELSE 0 END) AS premium<br>FROM products<br>GROUP BY category<br>ORDER BY category;</code><br><br>One SUM(CASE …) per column. A product priced exactly 30 is premium."
+      front: "For one year, a query counts each courier's orders that are marked Shipped but have no ship date. One courier has 178 of its 1768 orders like that; the other three have none of their 630. What does the result tell you, and what does it not?"
+      back: "It tells you where to look: one courier, not every courier. It does not say why, or whether those orders arrived. SQL tells you where to look; people confirm it."
+
+  # ── 10. THE HABIT: WHICH MISTAKES ARE SILENT (the video's last word on the rules) ──
+  - basic:
+      front: "Two CASE mistakes give a report that is quietly wrong, with no error. Which two, and what prevents each?"
+      back: "<b>1.</b> Overlapping WHENs in the wrong order: a wide test above a narrow one catches its rows first. Put the narrow test first.<br><b>2.</b> No ELSE: every row no WHEN matched gets NULL, and a filter on the label silently drops them. Write the ELSE, unless the NULLs are the point.<br><br>The label WHERE cannot see is the loud one: it stops with an error, so you fix it at once."
+
+  # ── 11. PRODUCTION — hardest, and last. The schema it needs is ON THE CARD. ──
+  # It is the case-file query, the lesson's last, with the year left out: CASE inside SUM with two
+  # tests in one WHEN, the share beside its count, and the names read from a table, not a CASE.
+  - basic:
+      front: "Write the query. <code>couriers</code> has <code>courier_id</code> and <code>name</code>; <code>orders</code> has <code>order_id</code>, <code>courier_id</code>, <code>status</code> and <code>shipped_date</code>. For each courier, by name: the number of orders, how many are marked 'Shipped' but have no shipped_date, and that number as a percentage of the courier's orders, to 1 decimal place."
+      back: "<code>SELECT c.name,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;count(*) AS orders,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SUM(CASE WHEN o.status = 'Shipped'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AND o.shipped_date IS NULL<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;THEN 1 ELSE 0 END) AS no_date,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROUND(100.0 * SUM(CASE<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;WHEN o.status = 'Shipped'<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;AND o.shipped_date IS NULL<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;THEN 1 ELSE 0 END)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/ count(*), 1) AS no_date_pct<br>FROM orders o<br>JOIN couriers c ON c.courier_id = o.courier_id<br>GROUP BY c.name<br>ORDER BY c.name;</code><br><br>The names come from a join, because they are stored. Both tests go in one WHEN, joined by AND. The 100.0 comes before the division, so the share keeps its fraction, and it sits beside its count."

@@ -5,5 +5,5 @@ FROM (SELECT CASE
                ELSE 'heavy' END AS "Band"
       FROM "Orders") AS t
 GROUP BY "Band"
-ORDER BY CASE "Band" WHEN 'heavy' THEN 1
-                     WHEN 'medium' THEN 2 ELSE 3 END;
+ORDER BY CASE WHEN "Band" = 'heavy' THEN 1
+              WHEN "Band" = 'medium' THEN 2 ELSE 3 END;

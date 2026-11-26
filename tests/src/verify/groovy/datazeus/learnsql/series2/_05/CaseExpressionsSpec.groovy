@@ -21,11 +21,12 @@ import java.sql.SQLException
  *    orders-per-band-whens-swapped                                  §2 the first true WHEN wins
  *    heavy-label-no-else, not-heavy-no-else, not-heavy-with-else    §3 no ELSE means NULL
  *    label-in-where                                                 §3 the alias in WHERE: PER ENGINE
+ *    label-else-zero                                                §3 one CASE, one type
  *    shipper-names-by-case, shipper-names-by-join,
  *    region-coalesce-and-case                                       §4 the short form, and COALESCE
  *    orders-online-or-offline                                       §5 the hands-on
  *    status-per-channel, status-per-channel-counted-with-count      §6 CASE inside an aggregate
- *    not-shipped-by-nullif                                          §6 NULLIF, the other mirror
+ *    not-shipped-by-nullif                                          §6 NULLIF, the other mirror (article only)
  *    cancelled-share-per-channel-integer-division                   §7 the share: PER ENGINE
  *    cancelled-share-per-channel, cancelled-share-company           §7 the share, portable
  *    shipped-no-ship-date-per-courier-2024                          §8 the case segment
@@ -48,8 +49,10 @@ import java.sql.SQLException
  * are asserted, each on its own engine, WITH THE TYPE, exactly as Series 1 · 15 asserts NULL
  * placement per engine; then the 100.0 * … version is asserted identical on both. The two
  * near-misses the article names (100 without the .0, and dividing before multiplying) are
- * asserted the same way. THE ENGINE DIFFERENCE HAS NO KOAN: a DuckDB koan would go green for the
- * column CloudBeaver shows as zeros (Series 1 · 20's precedent). The share koans use the portable form.
+ * asserted the same way. THE KOANS DIVIDE LIKE POSTGRESQL: NorthwindCoKoanBase turns on DuckDB's
+ * integer_division, so a koan % written without 100.0 fails on the koans' engine with the same 49
+ * or 0 CloudBeaver shows (§9 asserts it, and §10 runs DuckDB with that setting). Series 1 · 20 had
+ * no such koan; the setting is what lets Series 2 have one.
  *
  * ── THE CASE SEGMENT, AND WHAT THIS GATE DOES NOT CLAIM (§8) ───────────────────────────────
  * The LOCKED figure (.docs/plan-academy-figures-northwind-co-s.md, column C): in 2024, Speedy
@@ -167,6 +170,53 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
         engine << ENGINES
     }
 
+    @Unroll
+    def "[#engine] a plain ORDER BY \"Band\" sorts heavy, light, medium — heavy already first, light stuck in the middle"() {
+        // order-by-case's and the article's reason for the CASE in ORDER BY (owner review, 2026-11-25:
+        // they used to say "heavy sorts under light", which this assertion would have refused).
+        expect:
+        sqlFor(engine).rows('''SELECT CASE
+                                        WHEN "Freight" < 25 THEN 'light'
+                                        WHEN "Freight" < 60 THEN 'medium'
+                                        ELSE 'heavy'
+                                      END AS "Band",
+                                      count(*) AS "Orders"
+                               FROM "Orders"
+                               GROUP BY "Band"
+                               ORDER BY "Band"''').collect { [it.Band, it.Orders] } ==
+                [["heavy", 3725], ["light", 2334], ["medium", 3941]]
+
+        where:
+        engine << ENGINES
+    }
+
+    def "PostgreSQL will not see the alias inside an ORDER BY CASE — why order-by-case builds the label in a subquery; DuckDB will"() {
+        // Leo's "the label is built in a subquery first, so that CASE can reach it". Without the
+        // subquery, PostgreSQL refuses with 42703; DuckDB resolves the alias and sorts.
+        given:
+        def noSubquery = '''SELECT CASE
+                                     WHEN "Freight" < 25 THEN 'light'
+                                     WHEN "Freight" < 60 THEN 'medium'
+                                     ELSE 'heavy'
+                                   END AS "Band",
+                                   count(*) AS "Orders"
+                            FROM "Orders"
+                            GROUP BY "Band"
+                            ORDER BY CASE WHEN "Band" = 'heavy' THEN 1 WHEN "Band" = 'medium' THEN 2 ELSE 3 END'''
+
+        when:
+        sqlFor("postgres").rows(noSubquery)
+
+        then:
+        SQLException e = thrown()
+        e.SQLState == "42703"
+        e.message.contains('column "Band" does not exist')
+
+        and: "DuckDB forgives it"
+        sqlFor("duckdb").rows(noSubquery).collect { [it.Band, it.Orders] } ==
+                [["heavy", 3725], ["medium", 3941], ["light", 2334]]
+    }
+
     // --- 2. THE FIRST TRUE WHEN WINS -----------------------------------------------------------------
 
     @Unroll
@@ -234,6 +284,30 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
         rows.every { it.Label == 'heavy' }
     }
 
+    def "PostgreSQL refuses THEN 'heavy' ... ELSE 0 — the exact error else-one-type draws, pointing at 'heavy'"() {
+        // else-one-type's ErrorPanel: SQLSTATE 22P02, invalid input syntax for type integer: "heavy",
+        // Position 65 — the offset of 'heavy' in label-else-zero.sql as written. The 0 settles the
+        // CASE's type as integer, and then 'heavy' cannot be read as one.
+        when:
+        sqlFor("postgres").rows(script("label-else-zero"))
+
+        then:
+        SQLException e = thrown()
+        e.SQLState == "22P02"
+        e.message.contains('invalid input syntax for type integer: "heavy"')
+        e.message.contains("Position: 65")
+    }
+
+    def "DuckDB refuses it too — one CASE, one type holds on both engines"() {
+        // The article quotes DuckDB's wording: Could not convert string 'heavy' to INT32.
+        when:
+        sqlFor("duckdb").rows(script("label-else-zero"))
+
+        then:
+        SQLException e = thrown()
+        e.message.contains("Could not convert string 'heavy' to INT32")
+    }
+
     // --- 4. THE SHORT FORM, AND COALESCE -----------------------------------------------------------
 
     @Unroll
@@ -277,6 +351,37 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
         and: "identical for all 120 customers"
         every.size() == 120
         every.every { it.a == it.b }
+
+        where:
+        engine << ENGINES
+    }
+
+    @Unroll
+    def "[#engine] the short form's WHEN NULL never fires: Poland comes back NULL, Canada keeps its regions"() {
+        // coalesce-is-case's third turn and the article's paragraph: CASE "Region" WHEN NULL tests
+        // "Region" = NULL, which is never true, so every customer with no region falls to the ELSE.
+        given:
+        def rows = sqlFor(engine).rows('''SELECT "CompanyName", "Country",
+                                                  CASE "Region" WHEN NULL THEN '(none)' ELSE "Region" END AS r
+                                           FROM "Customers"
+                                           WHERE "Country" IN ('Canada', 'Poland')
+                                           ORDER BY "CustomerID"''')
+
+        expect:
+        rows.findAll { it.Country == "Poland" }.size() == 3
+        rows.findAll { it.Country == "Poland" }.every { it.r == null }
+        rows.findAll { it.Country == "Canada" }.every { it.r in ["BC", "QC"] }
+
+        and: "not one customer of the 120 is ever labelled '(none)' that way"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Customers"
+                                   WHERE CASE "Region" WHEN NULL THEN '(none)' ELSE "Region" END = '(none)' ''').n == 0
+
+        and: "koan 6: the broken short form, pasted into the blank, gives 8 NULL and 3 Oregon — what the hint shows"
+        sqlFor(engine).rows('''SELECT CASE "ShipRegion" WHEN 'OR' THEN 'Oregon' WHEN NULL THEN '(no region)' END AS "Region",
+                                      count(*) AS "Orders"
+                               FROM "Orders" WHERE "OrderDate" = DATE '2024-12-31'
+                               GROUP BY "Region" ORDER BY "Orders" DESC''').collect { [it.Region, it.Orders] } ==
+                [[null, 8], ["Oregon", 3]]
 
         where:
         engine << ENGINES
@@ -328,7 +433,7 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
         given:
         def rows = sqlFor(engine).rows(script("not-shipped-by-nullif"))
 
-        expect: "nullif-is-case's card — each channel's Open plus Cancelled"
+        expect: "the article's NULLIF table (the video slide was cut 2026-11-25) — each channel's Open plus Cancelled"
         rows.collect { [it.Channel, it.Orders as int, it["Not shipped"] as int] } ==
                 [["Sales rep", 3749, 80], ["Web", 2765, 96], ["Phone", 2485, 72], ["EDI", 1001, 32]]
 
@@ -359,8 +464,9 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
 
     def "duckdb: the same query keeps the fraction — Sales rep 0.016…, as a DOUBLE"() {
         // The Callout's and share-zero's "DuckDB keeps the fraction: 0.016 and a bit for Sales rep".
-        // DuckDB's `/` is always floating-point division (`//` is its integer division), so the koans'
-        // engine would pass a query CloudBeaver shows as zeros — which is why this rule has no koan.
+        // DuckDB's `/` is floating-point division by default (`//` is its integer division), so the
+        // koans' engine would pass a query CloudBeaver shows as zeros — unless told otherwise, which
+        // is what the koans' integer_division setting does (§9).
         given:
         def rows = sqlFor("duckdb").rows(script("cancelled-share-per-channel-integer-division"))
 
@@ -403,7 +509,7 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
         given:
         def company = sqlFor(engine).firstRow(script("cancelled-share-company"))
 
-        expect: "company-share's one row"
+        expect: "the article's company row; share-result's label and last turn in the video"
         (company.Orders as int) == 10000
         (company.Cancelled as int) == 175
         dec(company["Cancelled %"]) == dec("1.8")
@@ -474,8 +580,14 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
         sql.firstRow('SELECT count(*) AS n FROM "Products" WHERE "Discontinued" = TRUE').n == 6
         sql.firstRow('SELECT count(*) AS n FROM "Products" WHERE "UnitPrice" IN (15, 30)').n == 0
         sql.firstRow('SELECT count(*) AS n FROM "Products" WHERE "UnitsInStock" IS NULL OR "ReorderLevel" IS NULL OR "Discontinued" IS NULL').n == 0
+        sql.firstRow('''SELECT count(*) AS n FROM information_schema.columns
+                        WHERE table_schema = 'northwind_co_s' AND table_name = 'Products' ''').n == 12
 
-        and: "koan 2: with the stock test first, the answer is 5 discontinued and 4 reorder"
+        and: "the schema note: a missing ship region is NULL, never an empty string — koans 5 and 6 stand on it"
+        sql.firstRow('''SELECT count(*) AS n FROM "Orders" WHERE "ShipRegion" = '' ''').n == 0
+        sql.firstRow('SELECT count(*) AS n FROM "Orders" WHERE "ShipRegion" IS NULL').n == 7423
+
+        and: "koan 2: the WHENs in the order the comment lists them (stock first) give 5 discontinued and 4 reorder — the trap is real"
         sql.rows('''SELECT CASE
                              WHEN "UnitsInStock" <= "ReorderLevel" THEN 'reorder'
                              WHEN "Discontinued" = TRUE THEN 'discontinued'
@@ -484,14 +596,16 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
                     FROM "Products" GROUP BY "Stock" ORDER BY "Stock"''')
                 .collect { [it.Stock, it.Products] } == [["discontinued", 5], ["ok", 71], ["reorder", 4]]
 
-        and: "koan 3 and 4: 25233 lines; without an ELSE the not-discounted count would be 0"
-        sql.firstRow('SELECT count(*) AS n FROM "Order Details"').n == 25233
+        and: "koan 3: count(*) would say 25233; koan 4 with its blank deleted returns 0 — what the hint shows"
+        sql.firstRow('''SELECT count(*) AS n
+                        FROM (SELECT CASE WHEN "Discount" > 0 THEN 'discounted' END AS "Label"
+                              FROM "Order Details") AS t''').n == 25233
         sql.firstRow('''SELECT count(*) AS n
                         FROM (SELECT CASE WHEN "Discount" > 0 THEN 'discounted' END AS "Label"
                               FROM "Order Details") AS t
                         WHERE "Label" <> 'discounted' ''').n == 0
 
-        and: "koans 7 and 9: the discount is only ever 0, 0.05, 0.1 or 0.15, so '= 0' and '> 0' split every line"
+        and: "koans 3, 4, 9 and 10: the discount is only ever 0, 0.05, 0.1 or 0.15, so '> 0' is every discounted line"
         sql.rows('SELECT DISTINCT "Discount" AS d FROM "Order Details" ORDER BY d')
                 .collect { dec(it.d) } == [dec("0"), dec("0.05"), dec("0.1"), dec("0.15")]
 
@@ -500,17 +614,22 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
         sql.rows('''SELECT DISTINCT "ShipRegion" AS r FROM "Orders"
                     WHERE "OrderDate" = DATE '2024-12-31' AND "ShipRegion" IS NOT NULL''')*.r == ["OR"]
 
-        and: "koan 7: five order years, 2020 to 2024"
-        sql.rows('SELECT DISTINCT EXTRACT(YEAR FROM "OrderDate") AS y FROM "Orders" ORDER BY y').collect { dec(it.y) } ==
-                (2020..2024).collect { dec(it) }
+        and: "koan 7: two categories have nothing discontinued, so a CASE with no ELSE would SUM to NULL there, not 0"
+        sql.rows('''SELECT c."CategoryName" AS name, SUM(CASE WHEN p."Discontinued" = TRUE THEN 1 END) AS k
+                    FROM "Products" p JOIN "Categories" c ON c."CategoryID" = p."CategoryID"
+                    GROUP BY c."CategoryName"''').findAll { it.k == null }*.name.toSet() == ["Confections", "Seafood"] as Set
 
-        and: "koan 8: the top three products by lines do not tie with the fourth — LIMIT 3 cuts no tie"
+        and: "koan 8: three products still sold are at or below their reorder level"
+        sql.firstRow('''SELECT count(*) AS n FROM "Products"
+                        WHERE "Discontinued" = FALSE AND "UnitsInStock" <= "ReorderLevel"''').n == 3
+
+        and: "koan 9: the top three products by lines do not tie with the fourth — LIMIT 3 cuts no tie"
         def lineCounts = sql.rows('''SELECT count(*) AS n FROM "Order Details"
                                      GROUP BY "ProductID" ORDER BY n DESC LIMIT 4''')*.n
         lineCounts.take(3) == [1252, 1160, 1156]
         lineCounts[3] < 1156
 
-        and: "koan 9: the eight categories hold all 25233 lines, and no share sits on a rounding half"
+        and: "koan 10: the eight categories hold all 25233 lines, and no % sits on a rounding half"
         def cat = sql.rows('''SELECT c."CategoryName" AS name, count(*) AS n,
                                      SUM(CASE WHEN d."Discount" > 0 THEN 1 ELSE 0 END) AS k
                               FROM "Order Details" d
@@ -522,7 +641,7 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
         cat.collect { it.n as int }.sum() == 25233
         cat.every { r -> notOnHalf(r.k as long, r.n as long) }
 
-        and: "koan 11: the ledger holds four movement types, so count(*) is NOT the number of sales — the comment's warning is real"
+        and: "koan 12: the ledger holds four movement types, so count(*) is NOT the number of sales"
         sql.rows('SELECT DISTINCT "MovementType" AS t FROM "StockMovements"')*.t.toSet() == ["Receipt", "Sale", "Return", "Adjustment"] as Set
         sql.firstRow('''SELECT count(*) AS n FROM "StockMovements" WHERE "MovementType" IN ('Receipt', 'Adjustment')''').n > 0
 
@@ -530,18 +649,41 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
         engine << ENGINES
     }
 
-    def "koan 9's warning is true: on PostgreSQL the category share WITHOUT 100.0 is 0 for every category"() {
-        // The koan comment tells the learner that DuckDB would forgive a share written without the
-        // decimal point and CloudBeaver would not. This is the CloudBeaver half, on the koan's own data.
-        expect:
-        sqlFor("postgres").rows('''SELECT SUM(CASE WHEN d."Discount" > 0 THEN 1 ELSE 0 END) / count(*) AS s
-                                    FROM "Order Details" d
-                                    JOIN "Products" p ON p."ProductID" = d."ProductID"
-                                    GROUP BY p."CategoryID"''').every { it.s == 0 }
-        sqlFor("duckdb").rows('''SELECT SUM(CASE WHEN d."Discount" > 0 THEN 1 ELSE 0 END) / count(*) AS s
+    def "koan 10 on the koans' DuckDB, which divides like PostgreSQL: 49.1 the right way, CloudBeaver's 49 and 0 for the near-misses"() {
+        // NorthwindCoKoanBase turns on integer_division, so koan 10 fails on the lesson's mistake
+        // instead of forgiving it. Each form is run on PostgreSQL and on DuckDB with that setting,
+        // and must give the same numbers on both.
+        given:
+        def k = 'SUM(CASE WHEN d."Discount" > 0 THEN 1 ELSE 0 END)'
+        def forms = [right      : "100.0 * ${k} / count(*)".toString(),
+                     noPoint    : "100 * ${k} / count(*)".toString(),
+                     divideFirst: "${k} / count(*) * 100".toString()]
+        def pct = { String engine, String expr ->
+            sqlFor(engine).rows(('SELECT ROUND(' + expr + ''', 1) AS pct
                                   FROM "Order Details" d
                                   JOIN "Products" p ON p."ProductID" = d."ProductID"
-                                  GROUP BY p."CategoryID"''').every { it.s > 0 && it.s < 1 }
+                                  JOIN "Categories" c ON c."CategoryID" = p."CategoryID"
+                                  GROUP BY c."CategoryName" ORDER BY c."CategoryName"''') as String).collect { dec(it.pct) }
+        }
+
+        when:
+        sqlFor("duckdb").execute("SET integer_division = true")
+        def onDuck = forms.collectEntries { name, expr -> [name, pct("duckdb", expr)] }
+        def onPg = forms.collectEntries { name, expr -> [name, pct("postgres", expr)] }
+
+        then: "every form gives the same eight numbers on both engines"
+        onDuck == onPg
+
+        and: "Beverages: 49.1 with 100.0 first, 49 without the point, 0 when the division comes first"
+        onDuck.right[0] == dec("49.1")
+        onDuck.noPoint[0] == dec("49")
+        onDuck.divideFirst.every { it == dec("0") }
+
+        and: "the koans' base really sets it"
+        new File("src/koans/groovy/datazeus/_internal/NorthwindCoKoanBase.groovy").text.contains('["SET integer_division = true"]')
+
+        cleanup:
+        sqlFor("duckdb").execute("SET integer_division = false")
     }
 
     // --- 10. THE KOAN FILE ITSELF, RUN AS WRITTEN (Series 1 · 50 §8) -------------------------------
@@ -552,31 +694,38 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
         def sql = koanSql(title)
         def expected = koanExpected(title)
 
-        expect:
-        resultOf(engine, sql, expected) == expected
+        when: "DuckDB set the way the koans' base sets it"
+        if (engine == "duckdb") sqlFor(engine).execute("SET integer_division = true")
+        def actual = resultOf(engine, sql, expected)
+
+        then:
+        actual == expected
+
+        cleanup:
+        if (engine == "duckdb") sqlFor(engine).execute("SET integer_division = false")
 
         where:
         [engine, title] << [ENGINES, ANSWERS.keySet() as List].combinations()
     }
 
-    def "the koans file matches the video's koans slide: eleven koans, its three names, two whole queries last"() {
+    def "the koans file matches the video's koans slide: twelve koans, its three names, two whole queries last"() {
         given:
         def titles = (koansSource() =~ /(?m)^    def "(.+?)"\(\)/).collect { it[1] }
 
         expect:
         titles == (ANSWERS.keySet() as List)
-        titles.size() == 11
+        titles.size() == 12
         titles[0] == "a label for every product: finish the CASE"
         titles[1] == "the first true WHEN wins: write the tests in the right order"
         titles[2] == "no ELSE means NULL: count only what the CASE labelled"
-        koanQueries(titles[9])*.trim() == ["___"]
         koanQueries(titles[10])*.trim() == ["___"]
+        koanQueries(titles[11])*.trim() == ["___"]
 
         and: "the koans run on Northwind Company"
         koansSource().contains("extends NorthwindCoKoanBase")
 
-        and: "the share koans are written the portable way — 100.0, with the point"
-        ANSWERS["a share of the lines: 100.0 before you divide"][0].startsWith("100.0 * ")
+        and: "the % koans are written the portable way — 100.0, with the point"
+        ANSWERS["the discounted % of each category"][0].startsWith("100.0 * ")
         ANSWERS["write the whole query: the return rate of each category"][0].contains("100.0 * SUM(")
     }
 
@@ -616,11 +765,12 @@ class CaseExpressionsSpec extends NorthwindCoGateSpec {
             "the first true WHEN wins: write the tests in the right order"   : ["WHEN \"Discontinued\" = TRUE THEN 'discontinued' WHEN \"UnitsInStock\" <= \"ReorderLevel\" THEN 'reorder'"],
             "no ELSE means NULL: count only what the CASE labelled"          : ['"Label"'],
             "a NULL fails not-equal too: give the rest a label"              : ["ELSE 'full price'"],
-            "COALESCE is a CASE: write it the long way"                      : ['ELSE "ShipRegion"'],
-            "CASE inside SUM: a column for one status"                       : ["THEN 1 ELSE 0"],
-            "CASE inside SUM: money with and without a discount"             : ['d."Discount" > 0'],
+            "COALESCE is a CASE: write it the long way"                      : ['WHEN "ShipRegion" IS NOT NULL THEN "ShipRegion" ELSE "ShipCountry"'],
+            "the short form never finds NULL: write the WHENs the long way"  : ["WHEN \"ShipRegion\" = 'OR' THEN 'Oregon' WHEN \"ShipRegion\" IS NULL THEN '(no region)'"],
+            "CASE inside SUM: the discontinued beside the total"             : ['CASE WHEN p."Discontinued" = TRUE THEN 1 ELSE 0 END'],
+            "CASE in ORDER BY: the products to reorder first"                : ['CASE WHEN "UnitsInStock" <= "ReorderLevel" THEN 1 ELSE 2 END, "ProductName"'],
             "count(CASE ... END): the missing ELSE, on purpose"              : ['CASE WHEN d."Discount" > 0 THEN 1 END'],
-            "a share of the lines: 100.0 before you divide"                  : ['100.0 * SUM(CASE WHEN d."Discount" > 0 THEN 1 ELSE 0 END) / count(*)'],
+            "the discounted % of each category"                              : ['100.0 * SUM(CASE WHEN d."Discount" > 0 THEN 1 ELSE 0 END) / count(*)'],
             "write the whole query: price bands as columns, per category"    : ['''
                 SELECT c."CategoryName",
                        SUM(CASE WHEN p."UnitPrice" < 15 THEN 1 ELSE 0 END) AS "Budget",

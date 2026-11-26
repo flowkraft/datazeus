@@ -1,6 +1,6 @@
 ---
 title: "CASE — SQL's If/Then for Labels & Buckets"
-description: "Label every row inside the query with CASE, put the tests in the right order, write the ELSE, use CASE inside SUM to build a column for each status, and turn it into a share that does not come back as 0."
+description: "Label every row with CASE, put the tests in the right order and always write the ELSE. Then use CASE inside SUM to count shipped, cancelled and open orders side by side, and work out what percentage of orders were cancelled."
 topic: "learn-sql"
 tags: ["sql", "intermediate", "case", "case-when", "conditional-aggregation", "percentages", "integer-division", "coalesce"]
 level: "intermediate"
@@ -9,6 +9,7 @@ order: 5
 date: "2026-09-14"
 published: false
 videoId: "learnsql-series2-05-case-expressions"
+dataset: "northwind_co_s"
 ---
 
 {/* HANDS-ON (from curriculum.yaml): koan:complete, koan:predict — the koans in
@@ -16,19 +17,58 @@ videoId: "learnsql-series2-05-case-expressions"
     CurriculumSpec requires a PLANNED lesson to name these; this comment can go when the episode is
     published (curriculum status: published, front matter published: true). Invisible on the page. */}
 
-## Light, medium or heavy?
+{/* dialogue:begin all */}
 
-The shipping team is reviewing freight costs, and they want **every order labelled light, medium or heavy**: freight under 25 is light, under 60 is medium, and anything more is heavy.
+{/* keep:intro */}
+<Point title="The data model">
 
-With Series 1 alone, this takes three queries, one `WHERE` per band, and the three answers put together by hand. Even then the result is three counts, not a label on each order. This lesson adds the tool that does it in one query: **CASE**, SQL's if-then.
+Three tables carry this lesson. **Orders** does most of the work: each order's freight, courier (`ShipVia`), sales channel, status and dates. **Shippers** holds the courier names, matched by `ShipVia`. **Customers** appears once, on its own, for its regions.
 
-Every query below runs on Northwind Company, the dataset installed in the <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">first lesson of this series</a>, and assumes `SET search_path TO northwind_co_s;` has been run in the CloudBeaver editor. Write each query and compare the result with the table under it.
+<DataModel tables={[{"name":"Shippers","x":10,"y":20,"cols":["ShipperID","CompanyName"],"keys":["ShipperID"]},{"name":"Orders","x":277,"y":20,"cols":["OrderID","OrderDate","ShippedDate","ShipVia","Freight","Channel","Status"],"keys":["OrderID"]},{"name":"Customers","x":543,"y":20,"cols":["CustomerID","CompanyName","Country","Region"],"keys":["CustomerID"],"alone":true}]} links={[{"from":["Shippers","ShipperID"],"to":["Orders","ShipVia"]}]} notes={[{"x":543,"y":196,"text":"Customers stands on its own here:"},{"x":543,"y":218,"text":"one query reads its regions, with no join."}]} label="Tables used in this lesson: Orders and Shippers, related by the courier id; Customers on its own" />
 
-## CASE: a value chosen row by row
+</Point>
 
-{/* The same highlight as the video: the three branch lines, in grey. */}
+<Point title="The questions this lesson answers">
 
-```sql file=./scripts/freight-band-per-order.sql {3-5}
+- How do I label every order light, medium or heavy, in one query?
+- How many orders fall in each band, sorted heaviest first?
+- For each sales channel, how many orders are shipped, cancelled and open, side by side, and what percentage is cancelled?
+- **Which courier has the 2024 orders marked Shipped with no ship date?** (series mystery)
+
+</Point>
+{/* /keep */}
+
+<Beat title="A label for every order" />
+
+<Say who="mnemosyne" pose="questioning">
+
+**Your invoicing question is still open, Leo — we'll get there.** First, a job from the shipping team: they want **every order labelled light, medium or heavy** — freight under 25 is light, under 60 is medium, anything more is heavy. **How would you do this?**
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+In the last series I'd have run **three queries, one WHERE per band**, and put the answers together by hand. And even then I'd have three counts — **not a label on each order.**
+
+</Say>
+
+<Beat />
+
+{/* keep:case-shape:0 */}
+<Point title="SQL technique" side="left">
+
+`CASE WHEN … THEN … ELSE … END` is a value chosen row by row: the `WHEN`s are tested from the top, the first true one gives the row its value, and the `ELSE` takes every row left over.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="pointing-right">
+
+**CASE is SQL's if-then.** It checks each `WHEN` from the top: under 25 is light, under 60 is medium, and `ELSE` catches everything left over. **One new column, worked out row by row.**
+
+</Say>
+
+```sql {3-5}
 SELECT "OrderID", "Freight",
        CASE
          WHEN "Freight" < 25 THEN 'light'
@@ -40,34 +80,99 @@ ORDER BY "OrderID"
 LIMIT 6;
 ```
 
-For every row, CASE checks each `WHEN` **from the top**. The first test that is true gives the row its value, and CASE stops there. If no test is true, the `ELSE` value is used. `END` closes the CASE, and `AS "Band"` names the new column.
+<Say who="leo" pose="thinking">
 
-It is an expression, like the calculated columns from the <a href="/academy/learn-sql/distinct-aliases-expressions" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">aliases and expressions lesson</a>. The difference is that it chooses its value instead of calculating it.
+So it's an expression, like the ones from the aliases lesson — **it just chooses its value instead of calculating it.**
 
-{/* The same highlight as the video: order 1 in blue, the row the text reads. */}
+</Say>
 
-<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+<ResultCard spec={{"columns":["OrderID","Freight","Band"],"rows":[[1,"38.4","medium"],[2,"114.85","heavy"],[3,"37.25","medium"],[4,"29.15","medium"],[5,"18.58","light"],[6,"18.43","light"]],"highlight":{"row":0,"tone":"pick"}}} />
 
-| OrderID | Freight | Band   |
-| ------- | ------- | ------ |
-| 1       | 38.4    | medium |
-| 2       | 114.85  | heavy  |
-| 3       | 37.25   | medium |
-| 4       | 29.15   | medium |
-| 5       | 18.58   | light  |
-| 6       | 18.43   | light  |
+<Say who="leo" pose="questioning">
 
-</div>
+Order 1 is on **38.4** — so it's **medium**, because it isn't under 25.
 
-Read order 1 the way CASE does. Its freight is 38.4. The first `WHEN` asks "under 25?", and the answer is no. The second asks "under 60?", and the answer is yes, so CASE stops and returns medium. Order 5, on 18.58, stops at the first `WHEN`. Order 2, on 114.85, fails both tests and gets the `ELSE` value, heavy.
+</Say>
 
-## Count the bands
+*one order, one question at a time*
 
-The new column can be grouped like any other. Use the same CASE with `GROUP BY "Band"`:
+| | Test | Gives |
+| --- | --- | --- |
+| `WHEN` | `"Freight" < 25` | `'light'` |
+| `WHEN` | `"Freight" < 60` | `'medium'` |
+| `ELSE` |  | `'heavy'` |
 
-{/* The same highlight as the video: the GROUP BY line, in grey. */}
+> **The first yes wins.** Everything under it is never even asked.
 
-```sql file=./scripts/orders-per-band.sql {8}
+<Say who="mnemosyne" pose="pointing-right">
+
+**Right — and look how it got there.** The first `WHEN` asked "under 25?" — no. The second asked "under 60?" — yes, **so CASE stopped and answered medium.** Order 5 stopped at the very first one, and order 2, on 114.85, fell through both to the `ELSE`.
+
+</Say>
+
+<Say who="leo" pose="questioning">
+
+**So it reads top to bottom and takes the first yes.**
+
+</Say>
+
+<Beat />
+
+<Say who="mnemosyne" pose="talking">
+
+Now you want **only the heavy ones** — so you reach for the label you just made. **And CloudBeaver refuses it.**
+
+</Say>
+
+```sql {6}#err
+SELECT "OrderID",
+       CASE
+         WHEN "Freight" > 50 THEN 'heavy'
+       END AS "Label"
+FROM "Orders"
+WHERE "Label" = 'heavy';
+```
+
+```
+SQL Error [42703]: ERROR: column "Label" does not exist
+  Position: 115
+```
+
+<Say who="leo" pose="questioning">
+
+But the label is **right there** — **I just wrote it.** Why won't the WHERE see it?
+
+</Say>
+
+{/* keep:why-where-refuses:2 */}
+<Point title="SQL point" side="left">
+
+`WHERE` runs before the `SELECT`, so it cannot see a label the `SELECT` made. Build the label in a subquery and filter outside it.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="talking">
+
+**Because of the running order from the aliases lesson.** The database reads `FROM` and `WHERE` before it has run the `SELECT` — so at the moment the WHERE looks, `"Label"` **does not exist yet.** The name is given later, in the part that runs last.
+
+</Say>
+
+<Say who="leo" pose="questioning">
+
+So I build the label **where the WHERE can reach it** — first, in a subquery — and filter outside.
+
+</Say>
+
+<Beat title="Count the bands, in the order you want" />
+
+<Say who="mnemosyne" pose="questioning">
+
+**Now count them.** The same CASE, and `GROUP BY "Band"` makes one group per label it produced — sorted by the smallest freight in each band, so light comes first.
+
+</Say>
+
+```sql {8-9}
 SELECT CASE
          WHEN "Freight" < 25 THEN 'light'
          WHEN "Freight" < 60 THEN 'medium'
@@ -79,23 +184,49 @@ GROUP BY "Band"
 ORDER BY min("Freight");
 ```
 
-| Band   | Orders |
-| ------ | ------ |
-| light  | 2334   |
-| medium | 3941   |
-| heavy  | 3725   |
+<Say who="leo" pose="excited">
 
-2334, 3941 and 3725 add up to 10000, every order in the table. The label the query made up is the thing it groups by. `ORDER BY min("Freight")` sorts the bands by the smallest freight in each, so light comes first instead of in alphabetical order.
+Wait, **Mnemo** — the WHERE couldn't see my label. **So how can the GROUP BY?**
 
-PostgreSQL and DuckDB both let `GROUP BY` use the name `"Band"` from the `SELECT`. Some databases do not, and there you repeat the whole CASE in the `GROUP BY`.
+</Say>
 
-### Heavy first, on purpose
+<Say who="mnemosyne" pose="questioning">
 
-`ORDER BY min("Freight")` puts light first. The shipping team may want the opposite — the heaviest freight at the top — and `'heavy'` sorts under `'light'` alphabetically, so a plain `ORDER BY "Band"` cannot give it to them. The order has to be written, as a CASE:
+**Good eye, Leo.** GROUP BY runs before the SELECT too — **PostgreSQL just lets it borrow the name, as a favour.** SQL Server doesn't: there you repeat the whole CASE, or build the label in a subquery.
 
-{/* The same highlight as the video: the ORDER BY CASE lines, in green. */}
+</Say>
 
-```sql file=./scripts/orders-per-band-urgency.sql {8-9}#good
+<ResultCard spec={{"columns":["Band","Orders"],"rows":[["light",2334],["medium",3941],["heavy",3725]]}} />
+
+<Say who="mnemosyne" pose="proud">
+
+**All 10000 orders, three bands: 2334 light, 3941 medium, 3725 heavy.** That's the whole report the shipping team asked for.
+
+</Say>
+
+<Say who="leo" pose="smiling">
+
+**One query over five years of orders**, and I never wrote a band twice. I'd have spent the afternoon on that in the last series.
+
+</Say>
+
+<Beat />
+
+{/* keep:order-by-case:0 */}
+<Point title="SQL technique" side="left">
+
+To sort in an order no column has, `ORDER BY` a CASE that numbers the values: heavy 1, medium 2, light 3.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="pointing-right">
+
+**The shipping team wants the heaviest freight first.** A plain `ORDER BY "Band"` won't do it — **alphabetically it's heavy, light, medium**, with light stuck in the middle. So write the order you want, as a CASE.
+
+</Say>
+
+```sql {8-9} stampdown
 SELECT "Band", count(*) AS "Orders"
 FROM (SELECT CASE
                WHEN "Freight" < 25 THEN 'light'
@@ -103,25 +234,99 @@ FROM (SELECT CASE
                ELSE 'heavy' END AS "Band"
       FROM "Orders") AS t
 GROUP BY "Band"
-ORDER BY CASE "Band" WHEN 'heavy' THEN 1
-                     WHEN 'medium' THEN 2 ELSE 3 END;
+ORDER BY CASE WHEN "Band" = 'heavy' THEN 1
+              WHEN "Band" = 'medium' THEN 2 ELSE 3 END;
 ```
 
-| Band   | Orders |
-| ------ | ------ |
-| heavy  | 3725   |
-| medium | 3941   |
-| light  | 2334   |
+<ResultCard spec={{"columns":["Band","Orders"],"rows":[["heavy",3725],["medium",3941],["light",2334]]}} />
 
-The same three counts as before, in the order the team asked for. The label is built in a subquery for the same reason the next section builds one: PostgreSQL will not resolve a name given in the `SELECT` inside an `ORDER BY` expression in the same query. DuckDB will, so do not rely on it.
+<Say who="leo" pose="smiling">
 
-## The first true WHEN wins
+**ORDER BY a CASE that gives each band a number** — heavy 1, medium 2, light 3. And the label is built in a subquery first, **so that CASE can reach it.**
 
-Now swap the first two `WHEN` lines, so medium is tested before light:
+</Say>
 
-{/* The same highlight as the video: the two swapped lines, in red. */}
+**The query on the left:** before — no subquery, simpler ORDER BY
 
-```sql file=./scripts/orders-per-band-whens-swapped.sql {2-3}#err
+```sql {8-9}
+SELECT CASE
+         WHEN "Freight" < 25 THEN 'light'
+         WHEN "Freight" < 60 THEN 'medium'
+         ELSE 'heavy'
+       END AS "Band",
+       count(*) AS "Orders"
+FROM "Orders"
+GROUP BY "Band"
+ORDER BY min("Freight");  -- DESC reverses the order
+```
+
+**The query on the right:** now — subquery + ORDER BY CASE: general, ANSI
+
+```sql {8-9}#good
+SELECT "Band", count(*) AS "Orders"
+FROM (SELECT CASE
+               WHEN "Freight" < 25 THEN 'light'
+               WHEN "Freight" < 60 THEN 'medium'
+               ELSE 'heavy' END AS "Band"
+      FROM "Orders") AS t
+GROUP BY "Band"
+ORDER BY CASE WHEN "Band" = 'heavy' THEN 1
+              WHEN "Band" = 'medium' THEN 2 ELSE 3 END;
+```
+
+{/* keep:why-not-desc:0 */}
+<Point title="SQL argument" side="right">
+
+Could `DESC` on `min("Freight")` replace the `ORDER BY CASE`? Compare the two queries.
+
+</Point>
+{/* /keep */}
+
+<Say who="leo" pose="questioning">
+
+Hold on, **Mnemosyne** — wait. **The query on the left** looks simpler: it sorts light first, by `min("Freight")`. Heavy first is just that order, reversed. **Wouldn't adding** `DESC` **there do it?**
+
+</Say>
+
+<Say who="mnemosyne" pose="proud">
+
+**Yes — and I'm glad you saw it.** `DESC` would work, for us. But that query leans on **PostgreSQL's favour**, `GROUP BY "Band"` — and SQL Server refuses it: *invalid column name `Band`*.
+
+</Say>
+
+<Say who="leo" pose="questioning">
+
+So it only works **where PostgreSQL does me the favour.** Is that the only catch?
+
+</Say>
+
+<Say who="mnemosyne" pose="proud">
+
+**No — and the second one is easy to miss: it isn't explicit.** We want to sort by `Band`, but we sort by the **minimum freight** — a trick that works only because freight happens to run in the same order as the bands. **If the team wanted medium first, then heavy, then light, no column sorts that way.**
+
+</Say>
+
+<Say who="leo" pose="questioning">
+
+So **the query on the right** is a bit longer — but it's **standard**, it sorts by `Band` itself, and **it can give any order** — medium, heavy, light too, if that's what they want.
+
+</Say>
+
+| The query on the left | The query on the right |
+| --- | --- |
+| ✓ **it works on PostgreSQL, DuckDB, MySQL** | ✓ **standard**: it runs on every engine |
+| ✗ **not standard**: SQL Server refuses it | ✓ **explicit and general**: it sorts by the label itself |
+| ✗ **not explicit or general**: needs a column already sorted |  |
+
+<Beat title="The first true WHEN wins" />
+
+<Say who="mnemosyne" pose="questioning">
+
+Those bands are right, Leo — **and CASE will let you break them without a single warning.** Swap the first two `WHEN`s — medium above light.
+
+</Say>
+
+```sql {2-3}#err
 SELECT CASE
          WHEN "Freight" < 60 THEN 'medium'
          WHEN "Freight" < 25 THEN 'light'
@@ -133,28 +338,65 @@ GROUP BY "Band"
 ORDER BY min("Freight");
 ```
 
-{/* The same highlight as the video: medium in terracotta — it swallowed the light orders. */}
+<Say who="leo" pose="surprised">
 
-<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-fault-ink))]">
+Same two tests, same three labels. **How can the order of the lines matter?**
 
-| Band   | Orders |
-| ------ | ------ |
-| medium | 6275   |
-| heavy  | 3725   |
+</Say>
 
-</div>
+<ResultCard spec={{"columns":["Band","Orders"],"rows":[["medium",6275],["heavy",3725]],"highlight":{"row":0,"tone":"fault"}}} />
 
-There are no light orders at all, and medium went from 3941 to 6275, which is 2334 + 3941. The 2334 light orders are still in the table, and their freight did not change. What changed is the order of the tests: **under 25 is also under 60**. The first `WHEN` now asks "under 60?", every light order answers yes, and CASE stops there. The light test is never reached.
+<Say who="mnemosyne" pose="questioning">
 
-There is no error and no warning. The result simply has one band fewer. So **write the narrow tests first**: a wide test above a narrow one catches its rows before the narrow one is checked.
+**No light orders at all** — and medium jumped from 3941 to 6275. **Where do you think they went?**
 
-## No ELSE means NULL
+</Say>
 
-Finance only cares about heavy orders, freight over 50. So the CASE gets one `WHEN` and no `ELSE`:
+<Say who="leo" pose="surprised">
 
-{/* The same highlight as the video: the CASE's one WHEN, in grey. */}
+But the 2334 light orders are still in the table. **Their freight didn't change.**
 
-```sql file=./scripts/heavy-label-no-else.sql {2-3}
+</Say>
+
+*the same two tests — in the other order*
+
+| | Test | Gives | Count |
+| --- | --- | --- | --- |
+| `WHEN` | `"Freight" < 60` | `'medium'` | **6275** |
+| `WHEN` | `"Freight" < 25` | `'light'` | *never reached* |
+| `ELSE` |  | `'heavy'` | 3725 |
+
+> **2334 light + 3941 medium = 6275.** The narrow test is still there — nothing ever gets to it.
+
+{/* keep:swap-the-whens:4 */}
+<Point title="SQL point" side="left">
+
+Put the narrow tests first. A wide `WHEN` above a narrow one catches its rows before the narrow one is asked, with no error and no warning.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="questioning">
+
+**Under 25 is also under 60.** The first `WHEN` now asks "under 60?", every light order says yes, and CASE stops right there. **The light test is never even asked.**
+
+</Say>
+
+<Say who="leo" pose="surprised">
+
+**So the narrow test goes first.** Otherwise a wide one catches everything before it gets a chance.
+
+</Say>
+
+<Beat title="No ELSE means NULL" />
+
+<Say who="mnemosyne" pose="pointing-right">
+
+**Here's a second trap — a quieter one.** Finance only cares about heavy orders — freight over 50 — so you write one `WHEN` **and no ELSE at all.**
+
+</Say>
+
+```sql {2-3}
 SELECT CASE
          WHEN "Freight" > 50 THEN 'heavy'
        END AS "Label",
@@ -164,26 +406,62 @@ GROUP BY "Label"
 ORDER BY "Label" NULLS LAST;
 ```
 
-{/* The same highlight as the video: the NULL row in terracotta. */}
+<Say who="leo" pose="thinking">
 
-<div className="[&_tbody_tr:nth-child(2)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(2)_td]:font-bold [&_tbody_tr:nth-child(2)_td]:text-[rgb(var(--hl-fault-ink))]">
+Then every other order just has no label. **That sounds harmless.**
 
-| Label    | Orders |
-| -------- | ------ |
-| heavy    | 4654   |
-| `[NULL]` | 5346   |
+</Say>
 
-</div>
+<ResultCard spec={{"columns":["Label","Orders"],"rows":[["heavy",4654],["[NULL]",5346]],"highlight":{"row":1,"tone":"fault"}}} />
 
-4654 orders are heavy, and **5346 orders are labelled NULL**, more than half of them. A CASE with no `ELSE` returns NULL for every row that no `WHEN` matched. It does not look harmful here, because the 5346 are still counted. The trouble starts when a query tests the label.
+<Say who="mnemosyne" pose="pointing-right">
 
-### How many orders are not heavy?
+**4654 heavy — and 5346 orders labelled NULL.**
 
-The label is made in a subquery in `FROM` (the <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a>), because a `WHERE` cannot see a name given in the same query's `SELECT`. Then the `WHERE` keeps the orders whose label is not 'heavy':
+</Say>
 
-{/* The same highlight as the video: the WHERE, in red. */}
+<Say who="leo" pose="thinking">
 
-```sql file=./scripts/not-heavy-no-else.sql {7}#err
+NULL? **I never wrote NULL anywhere.**
+
+</Say>
+
+*one gate — and no floor under it*
+
+| | Test | Gives | Count |
+| --- | --- | --- | --- |
+| `WHEN` | `"Freight" > 50` | `'heavy'` | 4654 |
+| (no ELSE) |  | `NULL` | **5346** |
+
+> **Nothing catches 38.4.** A CASE that runs out of WHENs hands back NULL.
+
+{/* keep:no-else:4 */}
+<Point title="SQL point" side="left">
+
+A CASE with no `ELSE` returns NULL for every row that no `WHEN` matched.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="pointing-right">
+
+**You didn't have to, Leo.** A CASE with no ELSE returns NULL for every row no `WHEN` matched.
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+**The empty cells from the lesson on missing values.** And those don't behave like a value.
+
+</Say>
+
+<Say who="leo" pose="surprised">
+
+Then I'll **count the orders that are NOT heavy.** The label lives in a subquery, so the WHERE can see it.
+
+</Say>
+
+```sql {7}#err
 SELECT count(*) AS "Not heavy"
 FROM (SELECT CASE
                WHEN "Freight" > 50
@@ -193,19 +471,41 @@ FROM (SELECT CASE
 WHERE "Label" <> 'heavy';
 ```
 
-| Not heavy |
-| --------- |
-| 0         |
+<ResultCard spec={{"columns":["Not heavy"],"rows":[[0]]}} />
 
-Zero, although 5346 orders are not heavy. Every one of them is labelled NULL, and this is the rule from the <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a>: NULL is not unequal to 'heavy'. The comparison `NULL <> 'heavy'` is **unknown**, and `WHERE` keeps only rows where the test is true. All 5346 are dropped.
+<Say who="mnemosyne" pose="shrugging">
 
-### Write the ELSE
+**Zero.**
 
-Give every other order a real label:
+</Say>
 
-{/* The same highlight as the video: the ELSE line, in green. */}
+<Say who="leo" pose="surprised">
 
-```sql file=./scripts/not-heavy-with-else.sql {5}#good
+…Zero? Hang on, **Mnemosyne** — **there are 5346 of them.** We just counted them.
+
+</Say>
+
+<Say who="mnemosyne" pose="shrugging">
+
+**And every one of them is labelled NULL.** NULL isn't unequal to 'heavy' — the comparison is **unknown**, and WHERE keeps only true. So all 5346 fell straight through.
+
+</Say>
+
+{/* keep:always-else:0 */}
+<Point title="SQL habit" side="left">
+
+Write the `ELSE`, unless the NULLs are the point: a NULL label fails every comparison, `<>` included.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="proud">
+
+**So write the ELSE.** Give every other order a real label — here, 'standard' — and the same filter finds **5346.**
+
+</Say>
+
+```sql {5}#good
 SELECT count(*) AS "Not heavy"
 FROM (SELECT CASE
                WHEN "Freight" > 50
@@ -216,19 +516,80 @@ FROM (SELECT CASE
 WHERE "Label" <> 'heavy';
 ```
 
-| Not heavy |
-| --------- |
-| 5346      |
+<ResultCard spec={{"columns":["Not heavy"],"rows":[[5346]]}} />
 
-One line, and the 5346 orders are back.
+*the same gate — with a floor*
 
-## The short form
+| | Test | Gives | Count |
+| --- | --- | --- | --- |
+| `WHEN` | `"Freight" > 50` | `'heavy'` | 4654 |
+| `ELSE` |  | `'standard'` | 5346 |
 
-When every `WHEN` compares the same column with a value, the column can be written once, after `CASE`. Here it turns the courier number in `"ShipVia"` into a name, written from memory with the three couriers Series 1's Northwind had:
+> **One line, and the hole is a rung.** The 5346 come back with a label on them.
 
-{/* The same highlight as the video: CASE "ShipVia" and its first WHEN, in grey. */}
+<Say who="leo" pose="excited">
 
-```sql file=./scripts/shipper-names-by-case.sql {1-2}
+**One line.** And the orders I couldn't see come straight back.
+
+</Say>
+
+<Beat />
+
+<Say who="leo" pose="questioning">
+
+Could the ELSE just be **0**, Mnemosyne? **A number for 'not heavy'?**
+
+</Say>
+
+```sql {4}#err
+SELECT "OrderID",
+       CASE
+         WHEN "Freight" > 50 THEN 'heavy'
+         ELSE 0
+       END AS "Label"
+FROM "Orders";
+```
+
+```
+SQL Error [22P02]: ERROR: invalid input syntax for type integer: "heavy"
+  Position: 65
+```
+
+{/* keep:else-one-type:1 */}
+<Point title="SQL point" side="left">
+
+A CASE returns one column of one type, so every `THEN` and the `ELSE` must agree: words with words, numbers with numbers.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="talking">
+
+**Try it — CloudBeaver refuses.** The 0 made PostgreSQL decide the whole column is a number, **so now** `'heavy'` **is the line it can't read.**
+
+</Say>
+
+<Say who="leo" pose="questioning">
+
+So a CASE gives back **one column, with one type** — every THEN and the ELSE have to agree. **Words with words, numbers with numbers.**
+
+</Say>
+
+<Say who="mnemosyne" pose="talking">
+
+**Exactly, Leo.** That's why the ELSE said `'standard'`, not 0.
+
+</Say>
+
+<Beat title="The short form, and when to join instead" />
+
+<Say who="mnemosyne" pose="questioning">
+
+**CASE has a shorter form, too.** When every `WHEN` compares the same column with a value, write the column once: `CASE "ShipVia" WHEN 1 THEN 'Speedy Express'` and so on. **Which couriers go in, Leo?**
+
+</Say>
+
+```sql {1-2}
 SELECT CASE "ShipVia"
          WHEN 1 THEN 'Speedy Express'
          WHEN 2 THEN 'United Package'
@@ -240,49 +601,69 @@ GROUP BY "Shipper"
 ORDER BY "Shipper";
 ```
 
-{/* The same highlight as the video: the NULL row in terracotta. */}
+<Say who="leo" pose="proud">
 
-<div className="[&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-fault)/var(--hl-row))] [&_tbody_tr:nth-child(4)_td]:font-bold [&_tbody_tr:nth-child(4)_td]:text-[rgb(var(--hl-fault-ink))]">
+Speedy Express, United Package, Federal Shipping — **the three from the first series.**
 
-| Shipper          | Orders |
-| ---------------- | ------ |
-| Federal Shipping | 831    |
-| Speedy Express   | 7513   |
-| United Package   | 1145   |
-| `[NULL]`         | 511    |
+</Say>
 
-</div>
+<ResultCard spec={{"columns":["Shipper","Orders"],"rows":[["Federal Shipping",831],["Speedy Express",7513],["United Package",1145],["[NULL]",511]],"highlight":{"row":3,"tone":"fault"}}} />
 
-511 orders have no courier name. Northwind Company has a fourth courier, Northern Freight Lines, with `"ShipVia"` 4. The CASE does not name it and has no `ELSE`, so its orders get NULL: the missing `ELSE` again, arriving the way it usually does at work, through a list typed into a query that went out of date.
+<Say who="leo" pose="surprised">
 
-The names are already stored in the `"Shippers"` table, and a join reads them from there:
+**511 orders with no courier?** And no error.
 
-```sql file=./scripts/shipper-names-by-join.sql
-SELECT s."CompanyName" AS "Shipper",
-       count(*) AS "Orders"
-FROM "Orders" o
-JOIN "Shippers" s
-  ON s."ShipperID" = o."ShipVia"
-GROUP BY s."CompanyName"
-ORDER BY s."CompanyName";
-```
+</Say>
 
-| Shipper                | Orders |
-| ---------------------- | ------ |
-| Federal Shipping       | 831    |
-| Northern Freight Lines | 511    |
-| Speedy Express         | 7513   |
-| United Package         | 1145   |
+<Say who="mnemosyne" pose="questioning">
 
-All four couriers, by the names the company stores. The join is better here: when a courier is added or renamed, the table changes and the query does not have to. **CASE is for labels that nobody stored**, such as light, medium and heavy. If the label already lives in a table, read it from the table.
+**Northwind Company has a fourth courier: ShipVia 4, Northern Freight Lines.** Your CASE didn't name it, and there's no `ELSE` — so its orders came back NULL.
 
-## COALESCE is a CASE
+</Say>
 
-The <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a> used `COALESCE` to put a stand-in where a value is missing. It is a short way of writing a CASE: when the value is NULL, use the stand-in; otherwise use the value. Customers in Canada have a province in `"Region"`, and customers in Poland have none, so these rows take both branches:
+<Say who="leo" pose="surprised">
 
-{/* The same highlight as the video: COALESCE and the CASE's three lines, in grey. */}
+But the courier names are **already in a table**, Mnemosyne. Wouldn't I just join to `"Shippers"`?
 
-```sql file=./scripts/region-coalesce-and-case.sql {2,4-6}
+</Say>
+
+<ResultCard label={"JOIN \"Shippers\" ON \"ShipperID\" = \"ShipVia\" — every courier, by its stored name"} spec={{"columns":["Shipper","Orders"],"rows":[["Federal Shipping",831],["Northern Freight Lines",511],["Speedy Express",7513],["United Package",1145]],"highlight":{"row":1,"tone":"good"}}} />
+
+{/* keep:join-instead:0 */}
+<Point title="SQL argument" side="left">
+
+CASE or JOIN? If the label is already stored in a table, join to it. CASE is for labels nobody stored.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="proud">
+
+**Yes — join.** All four couriers, the 511 included. And when a courier is added or renamed, the table changes **and your query doesn't have to.**
+
+</Say>
+
+<Say who="leo" pose="thinking">
+
+**So CASE is for labels nobody stored** — like light, medium and heavy.
+
+</Say>
+
+<Say who="mnemosyne" pose="proud">
+
+**Exactly.** If the label already lives in a table, read it from the table.
+
+</Say>
+
+<Beat title="COALESCE is a CASE" />
+
+<Say who="mnemosyne" pose="smiling">
+
+And you've already written one without knowing it. In the lesson on missing values you used `COALESCE` — **it's a CASE:** when the value is NULL, use the stand-in, otherwise use the value.
+
+</Say>
+
+```sql {2,4-6}
 SELECT "CompanyName", "Country",
        COALESCE("Region", '(none)')
          AS "With COALESCE",
@@ -295,72 +676,62 @@ WHERE "Country" IN ('Canada', 'Poland')
 ORDER BY "CustomerID";
 ```
 
-| CompanyName        | Country | With COALESCE | With CASE |
-| ------------------ | ------- | ------------- | --------- |
-| Cedar Grocers      | Poland  | (none)        | (none)    |
-| Emerald Fine Foods | Canada  | BC            | BC        |
-| Golden Supermarket | Canada  | BC            | BC        |
-| Kestrel Provisions | Poland  | (none)        | (none)    |
-| Pampas Foods       | Canada  | BC            | BC        |
-| Tundra Foods       | Canada  | QC            | QC        |
-| Upland Trading     | Canada  | QC            | QC        |
-| Zenith Food Hall   | Poland  | (none)        | (none)    |
+<ResultCard spec={{"columns":["CompanyName","Country","With COALESCE","With CASE"],"colFr":[1.7,0.8,1.3,1],"rows":[["Cedar Grocers","Poland","(none)","(none)"],["Emerald Fine Foods","Canada","BC","BC"],["Golden Supermarket","Canada","BC","BC"],["Kestrel Provisions","Poland","(none)","(none)"],["Pampas Foods","Canada","BC","BC"],["Tundra Foods","Canada","QC","QC"],["Upland Trading","Canada","QC","QC"],["Zenith Food Hall","Poland","(none)","(none)"]],"highlight":{"row":0,"rows":[0,3,7],"tone":"grey"}}} />
 
-The two columns are identical, and they stay identical for all 120 customers.
+<Say who="leo" pose="proud">
 
-### NULLIF, the other mirror
+Identical columns — so COALESCE is that CASE, abbreviated. **But why not the short form here, Mnemo:** `CASE "Region" WHEN NULL`?
 
-`NULLIF` is `COALESCE`'s mirror: when the two values match, it hands back NULL; otherwise it hands back the first. It is a CASE too — `NULLIF(x, y)` is `CASE WHEN x = y THEN NULL ELSE x END`. Here it removes the shipped rows, so `count` skips them, and what is left is each channel's orders that are not shipped:
+</Say>
 
-{/* The same highlight as the video: the NULLIF line, in green. */}
+{/* keep:coalesce-is-case:2 */}
+<Point title="SQL point" side="left">
 
-```sql file=./scripts/not-shipped-by-nullif.sql {3}#good
-SELECT "Channel",
-       count(*) AS "Orders",
-       count(NULLIF("Status", 'Shipped')) AS "Not shipped"
-FROM "Orders"
-GROUP BY "Channel"
-ORDER BY "Orders" DESC;
-```
+The short form tests with `=`, and `= NULL` is never true, so `CASE x WHEN NULL` never fires. To test for NULL, write `WHEN x IS NULL`.
 
-| Channel   | Orders | Not shipped |
-| --------- | ------ | ----------- |
-| Sales rep | 3749   | 80          |
-| Web       | 2765   | 96          |
-| Phone     | 2485   | 72          |
-| EDI       | 1001   | 32          |
+</Point>
+{/* /keep */}
 
-Sales rep's 80 is its 61 cancelled plus 19 open, and the same holds for the others. The <a href="/academy/learn-sql/null-and-three-valued-logic" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">NULL lesson</a> owns `NULLIF`; here it is shown only as one more CASE.
+<Say who="mnemosyne" pose="smiling">
 
-## Your turn: online or offline
+Because the short form tests with `=`, and `= NULL` **is never true** — not even for a NULL. That `WHEN` would never fire, and Poland would come back NULL. **For NULL, always write** `IS NULL`.
 
-Every order in Northwind Company came in through a `"Channel"`: Sales rep, Web, Phone or EDI (orders sent system to system). Label every order **online** when it came through Web or EDI, and **offline** otherwise. A `WHEN` can hold any test a `WHERE` can, `IN` included. Predict the counts before you run it:
+</Say>
 
-```sql file=./scripts/orders-online-or-offline.sql
-SELECT CASE
-         WHEN "Channel" IN ('Web', 'EDI') THEN 'online'
-         ELSE 'offline'
-       END AS "Channel type",
+<Beat />
+
+> Your turn, Leo.
+>
+> **Label every order: online, or offline.**
+>
+> Web and EDI orders are online. You should get 6234 offline and 3766 online.
+>
+> ▶ Continue once you've run it.
+
+```sql
+SELECT CASE WHEN "Channel" IN (___) THEN 'online'
+            ELSE 'offline' END AS "Channel type",
        count(*) AS "Orders"
-FROM "Orders"
-GROUP BY "Channel type"
-ORDER BY "Orders" DESC;
+FROM "Orders" GROUP BY "Channel type";
 ```
 
-| Channel type | Orders |
-| ------------ | ------ |
-| offline      | 6234   |
-| online       | 3766   |
+<Beat title="CASE inside SUM: three counts side by side" />
 
-## CASE inside SUM: a column for each status
+{/* keep:one-column-per-status:0 */}
+<Point title="SQL technique" side="left">
 
-Every order also has a `"Status"`: Shipped, Cancelled or Open. A manager wants, for every channel, **how many orders there are and how many are in each status**, side by side, one row per channel.
+`SUM(CASE WHEN … THEN 1 ELSE 0 END)` counts one status in its own column, without a `WHERE`. Add one per status, all in the same `GROUP BY`.
 
-That is three counts with three different conditions, and one query has only one `WHERE`. The way around it is to move each condition into its own column:
+</Point>
+{/* /keep */}
 
-{/* The same highlight as the video: the SUM(CASE …) lines, in grey. */}
+<Say who="mnemosyne" pose="excited">
 
-```sql file=./scripts/status-per-channel.sql {3-8}
+**Here's the trick that makes CASE worth the whole lesson: count shipped, cancelled and open orders side by side.** Every order has a `Status`, one of those three. For each sales channel: how many orders, **and how many of each** — one row per channel.
+
+</Say>
+
+```sql {3-8}
 SELECT "Channel",
        count(*) AS "Orders",
        SUM(CASE WHEN "Status" = 'Shipped'
@@ -374,30 +745,47 @@ GROUP BY "Channel"
 ORDER BY "Orders" DESC;
 ```
 
-{/* The same highlight as the video: Sales rep in blue, the row the text reads. */}
+<Say who="leo" pose="questioning">
 
-<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-pick)/var(--hl-row-pick))] [&_tbody_tr:nth-child(1)_td]:font-bold [&_tbody_tr:nth-child(1)_td]:text-[rgb(var(--hl-pick-ink))]">
+Three counts with three different WHEREs… **but one query only gets one WHERE.**
 
-| Channel   | Orders | Shipped | Cancelled | Open |
-| --------- | ------ | ------- | --------- | ---- |
-| Sales rep | 3749   | 3669    | 61        | 19   |
-| Web       | 2765   | 2669    | 50        | 46   |
-| Phone     | 2485   | 2413    | 42        | 30   |
-| EDI       | 1001   | 969     | 22        | 10   |
+</Say>
 
-</div>
+<ResultCard spec={{"columns":["Channel","Orders","Shipped","Cancelled","Open"],"rows":[["Sales rep",3749,3669,61,19],["Web",2765,2669,50,46],["Phone",2485,2413,42,30],["EDI",1001,969,22,10]],"highlight":{"row":0,"tone":"pick"}}} />
 
-Sales rep has 3749 orders: 3669 shipped, 61 cancelled and 19 open. `SUM` adds numbers, so how did it count? Each CASE turns every order in its status into a 1 and every other order into a 0, and `SUM` adds the ones. The result is a count, **without a `WHERE`**, next to the count of all orders. The three status columns add back up to the orders on every row, which is a quick check that no status was missed.
+<Say who="mnemosyne" pose="proud">
 
-You can add as many of these columns as you need, one per status, all in the same `GROUP BY`. This is how a report with a column for each status is built.
+**Sales rep: 3749 orders — 3669 shipped, 61 cancelled, 19 open.** Every channel on one row.
 
-### The same, with count
+</Say>
 
-You will also see it written with `count`, and there the missing `ELSE` is on purpose:
+<Say who="leo" pose="excited">
 
-{/* The same highlight as the video: the count(CASE …) lines, in green. */}
+But how did **SUM** count anything, Mnemo? It adds numbers.
 
-```sql file=./scripts/status-per-channel-counted-with-count.sql {3-8}#good
+</Say>
+
+<Say who="mnemosyne" pose="proud">
+
+**Each CASE turns an order in its status into a 1, and every other order into a 0.** SUM adds the ones. That's a count — **without a WHERE.**
+
+</Say>
+
+<Say who="leo" pose="excited">
+
+**And the three columns add back up to the orders.** One column per status, all in the same GROUP BY.
+
+</Say>
+
+<Beat />
+
+<Say who="mnemosyne" pose="questioning">
+
+You'll also see it written with `count` — and this time **the missing ELSE is on purpose.** Every other order gets NULL, `count` skips NULLs, **and Sales rep still says 61 cancelled.**
+
+</Say>
+
+```sql {3-8}#good
 SELECT "Channel",
        count(*) AS "Orders",
        count(CASE WHEN "Status" = 'Shipped'
@@ -411,19 +799,21 @@ GROUP BY "Channel"
 ORDER BY "Orders" DESC;
 ```
 
-Every order outside the status gets NULL, `count` of a column skips NULLs, and the result is the same table: Sales rep still has 61 cancelled. In the filter above, the missing `ELSE` was a bug. Here it does the counting. The difference is whether you meant the NULLs.
+<Say who="leo" pose="thinking">
 
-### A shorter spelling: FILTER
+So there, the missing ELSE was the trap — **and here, it's the trick.** It depends on whether I meant the NULLs.
 
-PostgreSQL and DuckDB have a third way to write the same column: `count(*) FILTER (WHERE "Status" = 'Cancelled')`. The `WHERE` inside `FILTER` narrows the rows for **that one count only**, so the other columns still see every order, and Sales rep still gets 61. It is the SQL standard's spelling, and it reads well. SQL Server, MySQL and Oracle do not have it, so this course keeps writing `SUM(CASE …)`, which runs everywhere.
+</Say>
 
-## A share that comes back as 0
+<Beat title="Cancelled %: a division that comes back as 0" />
 
-Sales rep has the most cancelled orders. It also has by far the most orders, so 61 on its own says little. The fair comparison is **the share**: the cancelled count divided by all of that channel's orders. Add it as a fourth column:
+<Say who="mnemosyne" pose="questioning">
 
-{/* The same highlight as the video: the division, in grey. Nothing on the card looks wrong yet. */}
+**Sales rep has the most cancelled orders — and by far the most orders.** So the fair comparison is **the share**: the count divided by `count(*)`. **What do you expect for Sales rep?**
 
-```sql file=./scripts/cancelled-share-per-channel-integer-division.sql {5-6}
+</Say>
+
+```sql {5-6}
 SELECT "Channel",
        count(*) AS "Orders",
        SUM(CASE WHEN "Status" = 'Cancelled'
@@ -435,32 +825,63 @@ GROUP BY "Channel"
 ORDER BY "Orders" DESC;
 ```
 
-This is what CloudBeaver shows:
+<Say who="leo" pose="thinking">
 
-{/* The same highlight as the video: the Share column in terracotta, with Sales rep's cell bold — share-zero's fault column. */}
+**61 out of 3749.** Small — but not nothing.
 
-<div className="[&_th:nth-child(4)]:bg-[rgb(var(--hl-fault)/var(--hl-head))] [&_th:nth-child(4)]:text-[rgb(var(--hl-fault-ink))] [&_td:nth-child(4)]:bg-[rgb(var(--hl-fault)/var(--hl-col))] [&_td:nth-child(4)]:text-[rgb(var(--hl-fault-ink))] [&_tbody_tr:nth-child(1)_td:nth-child(4)]:font-bold">
+</Say>
 
-| Channel   | Orders | Cancelled | Share |
-| --------- | ------ | --------- | ----- |
-| Sales rep | 3749   | 61        | 0     |
-| Web       | 2765   | 50        | 0     |
-| Phone     | 2485   | 42        | 0     |
-| EDI       | 1001   | 22        | 0     |
+<ResultCard label={"What CloudBeaver shows — PostgreSQL"} spec={{"columns":["Channel","Orders","Cancelled","Share"],"rows":[["Sales rep",3749,61,0],["Web",2765,50,0],["Phone",2485,42,0],["EDI",1001,22,0]],"highlight":{"row":0,"col":3,"column":true,"tone":"fault"}}} />
 
-</div>
+<Say who="leo" pose="surprised">
 
-**Every share is 0**, on a row that says 61 cancelled right next to it. There is no error. On PostgreSQL, **a whole number divided by a whole number is a whole number**: `SUM` of ones and zeros is a whole number, `count(*)` is a whole number, so 61 ÷ 3749 is worked out as 0.016… and the fraction is thrown away. Every channel has fewer cancelled orders than orders, so every channel gets 0.
+**Zero?** Sales rep has **61 cancelled** right there in the next column. **That isn't zero.**
 
-<Callout>
-**The engines disagree here, and the koans run on the other one.** Run the same query in DuckDB and Sales rep's share is **0.01627…**: DuckDB's `/` always keeps the fraction. PostgreSQL, SQL Server and SQLite throw it away when both sides are whole numbers; MySQL and DuckDB keep it. So a share that looks right in one tool can be a column of zeros in the next. **Write it so that it cannot depend on the engine**: put a decimal number into the calculation before the division, as below.
-</Callout>
+</Say>
 
-### Multiply by 100.0 first
+{/* keep:share-zero:1 */}
+<Point title="SQL point" side="left">
 
-{/* The same highlight as the video: the ROUND(100.0 * …) lines, in green. */}
+On PostgreSQL a whole number divided by a whole number is a whole number: 61 / 3749 comes back as 0, with no error. DuckDB keeps the fraction.
 
-```sql file=./scripts/cancelled-share-per-channel.sql {5-6}#good
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="shrugging">
+
+**On PostgreSQL — what CloudBeaver runs — a whole number divided by a whole number is a whole number.** 61 ÷ 3749 is 0.016 and a bit, and the fraction is thrown away. **Every channel: 0. No error.**
+
+</Say>
+
+<Say who="leo" pose="surprised">
+
+And if I'd tried it in **DuckDB** first, Mnemo?
+
+</Say>
+
+<Say who="mnemosyne" pose="shrugging">
+
+**0.016 and a string of digits, for Sales rep.** DuckDB keeps the fraction. Same query, two answers — **so write it the way that's right on both.**
+
+</Say>
+
+<Beat />
+
+{/* keep:share-fixed:0 */}
+<Point title="SQL technique" side="left">
+
+`ROUND(100.0 * SUM(CASE …) / count(*), 1)`: the decimal point, multiplied in before the division, keeps the fraction on every database.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="proud">
+
+**Multiply by 100.0 before you divide.** The decimal point makes the whole calculation decimal, **on every database** — and ROUND to one place gives a percentage a person can read.
+
+</Say>
+
+```sql {5-6}#good stampdown
 SELECT "Channel",
        count(*) AS "Orders",
        SUM(CASE WHEN "Status" = 'Cancelled'
@@ -472,49 +893,55 @@ GROUP BY "Channel"
 ORDER BY "Orders" DESC;
 ```
 
-`100.0` has a decimal point, so `100.0 * SUM(…)` is a decimal number, and a decimal divided by a whole number keeps its fraction on every database. The 100 turns the share into a percentage, and `ROUND(…, 1)` keeps one decimal place. The order matters: `100.0 * SUM(…) / count(*)` multiplies first. Writing `100 * SUM(…) / count(*)` without the `.0` gives PostgreSQL 1 for Sales rep instead of 1.6, and `SUM(…) / count(*) * 100.0` divides first and gives 0 again.
+<Say who="leo" pose="excited">
 
-{/* The same highlight as the video: Sales rep's and EDI's shares in grey — look here, no verdict. */}
+So the **.0** is doing the real work. **And multiplying first** — before the division gets a chance to throw anything away.
 
-<div className="[&_tbody_tr:nth-child(1)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(4)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(1)_td:nth-child(4)]:font-bold [&_tbody_tr:nth-child(4)_td:nth-child(4)]:font-bold">
+</Say>
 
-| Channel   | Orders | Cancelled | Cancelled % |
-| --------- | ------ | --------- | ----------- |
-| Sales rep | 3749   | 61        | 1.6         |
-| Web       | 2765   | 50        | 1.8         |
-| Phone     | 2485   | 42        | 1.7         |
-| EDI       | 1001   | 22        | 2.2         |
+<ResultCard label={"The whole company: 175 of 10000 cancelled — 1.8"} spec={{"columns":["Channel","Orders","Cancelled","Cancelled %"],"rows":[["Sales rep",3749,61,"1.6"],["Web",2765,50,"1.8"],["Phone",2485,42,"1.7"],["EDI",1001,22,"2.2"]],"highlight":{"row":0,"rows":[0,3],"col":3,"tone":"grey"}}} />
 
-</div>
+<Say who="leo" pose="questioning">
 
-### A share travels with its count
+**Real shares.** And look — Sales rep had **the most cancellations, and it has the lowest share: 1.6.**
 
-The count and the share point at opposite ends of the table. Sales rep has **the most** cancelled orders and **the lowest** share, 1.6. EDI has **the fewest**, 22, and **the highest** share, 2.2. It is tempting to read that as "EDI is where orders get cancelled".
+</Say>
 
-First compare it with the whole company. The same columns without a `GROUP BY` give one row for all the orders:
+<Say who="mnemosyne" pose="questioning">
 
-```sql file=./scripts/cancelled-share-company.sql
-SELECT count(*) AS "Orders",
-       SUM(CASE WHEN "Status" = 'Cancelled'
-           THEN 1 ELSE 0 END) AS "Cancelled",
-       ROUND(100.0 * SUM(CASE WHEN "Status" = 'Cancelled'
-             THEN 1 ELSE 0 END) / count(*), 1) AS "Cancelled %"
-FROM "Orders";
-```
+**And EDI had the fewest, 22 — and the highest share, 2.2.** The count said one channel; the share says the other.
 
-| Orders | Cancelled | Cancelled % |
-| ------ | --------- | ----------- |
-| 10000  | 175       | 1.8         |
+</Say>
 
-1.8 for the company. EDI's 2.2 is above it, but by very little: it is 22 orders of 1001, and **with four fewer cancellations EDI would read 1.8**, the company's own share. Every channel sits close to the company's figure. A share on its own hides how few rows are behind a difference, which is why a report prints the count beside every share.
+<Say who="leo" pose="questioning">
 
-## Case file: one courier stands out
+**So EDI is where orders get cancelled.**
 
-This series follows one case through Northwind Company. The <a href="/academy/learn-sql/subqueries" target="_blank" rel="noopener" className="font-medium underline underline-offset-4">subqueries lesson</a> ended with Leo taking that case on as his own question: in 2024, orders grew while invoicing fell. Why? An order is invoiced once its ship date is recorded, so one place to look is **the orders marked Shipped that have no `"ShippedDate"`**. The report is this lesson's shape: per courier, all of its 2024 orders, how many of them are marked shipped with no ship date, and the share, beside its count. The one new thing is a `WHEN` with two tests joined by `AND`:
+</Say>
 
-{/* The same highlight as the video: the two SUM(CASE …) columns, in grey. */}
+{/* keep:share-result:3 */}
+<Point title="SQL habit" side="left">
 
-```sql file=./scripts/shipped-no-ship-date-per-courier-2024.sql {3-6}
+Always show a percentage next to its count, and compare it with the whole first: in a small group, a few rows can move it a long way.
+
+</Point>
+{/* /keep */}
+
+<Say who="mnemosyne" pose="questioning">
+
+**Careful, Leo — read it against the whole company first: 1.8.** EDI is 22 of 1001; four fewer and it reads 1.8 too. **A share always travels with its count.**
+
+</Say>
+
+<Beat title="Case file: one courier stands out" />
+
+<Say who="mnemosyne" pose="questioning">
+
+**And now your question, Leo — the one from the subqueries lesson: in 2024, orders grew and invoicing fell.** An order is invoiced once its ship date is recorded. So per courier, for 2024: **how many orders are marked Shipped but have no ship date?**
+
+</Say>
+
+```sql {3-6} stampdown
 SELECT s."CompanyName" AS "Courier",
        count(*) AS "Orders",
        SUM(CASE WHEN o."Status" = 'Shipped' AND o."ShippedDate" IS NULL
@@ -529,53 +956,100 @@ GROUP BY s."CompanyName"
 ORDER BY s."CompanyName";
 ```
 
-{/* The same highlight as the video: the Speedy Express row, in grey — the finding, no verdict. */}
+<Say who="leo" pose="thinking">
 
-<div className="[&_tbody_tr:nth-child(3)]:bg-[rgb(var(--hl-grey)/var(--hl-row))] [&_tbody_tr:nth-child(3)_td]:font-bold">
+**Two tests in one WHEN, and the share beside its count.** Nothing I haven't just written.
 
-| Courier                | Orders | Shipped, no date | Share % |
-| ---------------------- | ------ | ---------------- | ------- |
-| Federal Shipping       | 216    | 0                | 0       |
-| Northern Freight Lines | 125    | 0                | 0       |
-| Speedy Express         | 1768   | 178              | 10.1    |
-| United Package         | 289    | 0                | 0       |
+</Say>
 
-</div>
+<ResultCard spec={{"columns":["Courier","Orders","Shipped, no date","Share %"],"colFr":[1.45,0.8,1.15,0.8],"rows":[["Federal Shipping",216,0,"0"],["Northern Freight Lines",125,0,"0"],["Speedy Express",1768,178,"10.1"],["United Package",289,0,"0"]],"highlight":{"row":2,"tone":"grey"}}} />
 
-Both tests are needed: cancelled and open orders never have a ship date, so `"ShippedDate" IS NULL` on its own would count them too.
+<Say who="leo" pose="surprised">
 
-In Northwind Company, **178 of Speedy Express's 1768 orders from 2024 are marked shipped with no ship date, 10.1%. The other three couriers have none, not one of their 630 orders.** It is one courier. That is what the columns say, and all they say: not why, and not whether those orders arrived. SQL tells us where to look; people confirm it.
+**Speedy Express: 178 of its 1768 orders are marked Shipped with no ship date. 10.1.**
 
-## Four rules for CASE
+</Say>
 
-1. **The first true `WHEN` wins.** Put the narrow tests first.
-2. **Write the `ELSE`**, unless the NULLs are the point. A row that no `WHEN` matches gets NULL, and NULL fails every comparison, including "not equal".
-3. **`SUM(CASE …)` gives one column per status**, all in the same `GROUP BY`.
-4. **A share is `100.0 * SUM(CASE …) / count(*)`**, with the decimal point, multiplied before the division, and printed next to its count.
+<Say who="mnemosyne" pose="questioning">
 
-## Practice
+**And the other three couriers: zero.** Not one of their 630 orders.
 
-There are eleven koans for this lesson. They ask different questions from this page and its case file: products labelled by price, by stock and by whether they are still sold, order lines with and without a discount, the ship-to line of the year's last orders, and the returns in the stock ledger, so copying a query from this page will not answer them. The koans ship with their own copy of Northwind Company, so they need no setup.
+</Say>
+
+<Say who="leo" pose="surprised">
+
+**So it isn't everywhere. It's one courier.**
+
+</Say>
+
+<Say who="mnemosyne" pose="questioning">
+
+**That's what the columns say — and all they say.** Not why, and not whether those orders arrived. **SQL tells us where to look; people confirm it.**
+
+</Say>
+
+<Beat title="What to take away, and what is next" />
+
+<Say who="mnemosyne" pose="questioning">
+
+**Four rules, Leo.** The first true `WHEN` wins, so put the narrow tests first. Write the `ELSE`, unless you mean the NULLs. The WHERE can't see a label the SELECT made — build it in a subquery. **And a CASE that gives 1 or 0, inside a SUM, counts each status in its own column.**
+
+</Say>
+
+<Say who="leo" pose="smiling">
+
+The first two stop a report that's quietly wrong. **The third gets me past the first error everybody hits — and the fourth builds the report everybody asks for.**
+
+</Say>
+
+> Your turn, Leo.
+>
+> ▶ Walk the path to enlightenment.
 
 ```powershell
 cd c:/DataPallas/db/datazeus
 .\zeus.bat koans learnsql series2 _05
 ```
 
-On macOS or Linux, run `./zeus.sh koans learnsql series2 _05` from the same folder.
+- [x] a label for every product: finish the CASE
+- [x] the first true WHEN wins: write the tests in the right order
+- [ ] no ELSE means NULL: count only what the CASE labelled
+- [ ] …and nine more, ending with two you write yourself
 
-The file to edit is:
+`…/learnsql/series2/_05/CaseExpressionsKoans.groovy`
 
-```
-c:\DataPallas\db\datazeus\tests\src\koans\groovy\datazeus\learnsql\series2\_05\CaseExpressionsKoans.groovy
-```
+<Beat />
 
-Each koan has a `___` where the answer belongs. Predict the answer, replace the blank, save, run the command again, and watch that koan go green.
+<Say who="mnemosyne" pose="excited">
 
-The koans follow this page: finishing a CASE with its `ELSE`, writing the tests in the right order, the NULL a missing `ELSE` produces, `COALESCE` written the long way, `SUM(CASE …)` for a count and for money, `count(CASE …)` with the `ELSE` left out on purpose, and the share of discounted order lines in each category. The last two give only the question, and the whole query has to be written from scratch: price bands as columns, and the return rate of each category.
+**That's CASE, Leo.** A label worked out row by row: the first true `WHEN` wins, a row nobody matched gets NULL, and inside a SUM it becomes a column for any status. **Next lesson: dates and times.**
 
-**One idea here has no koan, on purpose.** The share that comes back as 0 is the most expensive mistake on this page, and DuckDB, which the koans run on, keeps the fraction that PostgreSQL throws away. A koan would go green for the very query CloudBeaver shows as a column of zeros, so that rule lives here, in the video and in the flashcards instead. The share koans still ask for `100.0 *`: write it that way and your answer is right on both.
+</Say>
 
-## What is next
+<Say who="leo" pose="excited">
 
-The next lesson is **dates and times**: grouping by real months and weeks, date ranges and their boundaries, and how long ago something happened. For the orders marked shipped with no ship date, that is the next question after where: **since when?**
+Good — now we know which courier has the orders **marked Shipped with no ship date: Speedy Express.** **Next I want to know since when it started.**
+
+</Say>
+
+**That's all, folks!**
+
+1. [Subqueries — one query's result inside another](/academy/learn-sql/subqueries)
+2. <span className="text-brand"><strong>CASE — SQL's if/then for labels & buckets</strong> (this lesson)</span>
+3. Dates & Times — ranges and boundaries
+4. Multi-Table JOINs & Grain — rows dropped or multiplied
+5. CTEs (WITH) — a long query, in named steps
+6. VIEWs, CREATE TABLE AS & Temp Tables — query or answer
+7. EXISTS & Correlated Subqueries — and the NOT IN trap
+8. Self-JOINs & Hierarchies — rows in the same table
+9. Window Functions I: OVER, PARTITION BY & ROW_NUMBER
+10. String Functions, LIKE & Regex — clean up messy data
+11. Window Functions II: LAG/LEAD, Running Totals & Frames
+12. UNION, INTERSECT, EXCEPT — stack and reconcile lists
+13. GROUPING SETS, ROLLUP & CUBE — subtotals in one pass
+14. INSERT, UPDATE, DELETE & Transactions — safely
+15. UPSERT & MERGE — insert or update, safely re-run
+16. Median and Percentiles — WITHIN GROUP, not AVG
+17. Subqueries + CTEs + Window Functions — a real case
+
+{/* dialogue:end */}
