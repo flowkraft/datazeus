@@ -75,30 +75,6 @@ not_a_promise:
     rule: cross-phrase
     quote: 'I''d have spent the afternoon on that in the last series.'
     why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
-  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
-    rule: other-series
-    quote: 'It sounds like something Series 1 already covered.'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
-  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
-    rule: cross-link
-    quote: 'The GROUP BY lesson used `EXTRACT` to pull the month out of'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
-  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
-    rule: cross-link
-    quote: 'This is the half-open range from the WHERE lesson , and here'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
-  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
-    rule: cross-link
-    quote: 'This is why the NULL lesson cast both sides when it measured'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
-  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
-    rule: cross-link
-    quote: '`generate_series` produces one timestamp per month from January to December, and a'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
-  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
-    rule: cross-link
-    quote: 'On an empty month `o."OrderID"` is NULL, and count of a column'
-    why: "Looks back at Series 1, which is published and frozen: the thing it points at exists and won't move."
   - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
     rule: other-series
     quote: 'In the last lesson of Series 1 , a join multiplied the'
@@ -324,13 +300,9 @@ kept:
     about: ["since when"]                      # Leo, right after it: "Next I want to know since when it started."
   - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
     rule: forward
-    quote: 'The next lesson is **several tables at once**, and the case''s next'
+    quote: '**Next lesson: several tables at once**'
     kept_by: "2 · 15"
-    about: ["how much money"]
-  - file: learnsql/series2-intermediate/10-dates-and-times/10-dates-and-times.mdx
-    quote: 'people who can check with the courier will'
-    kept_by: "2 · 48"
-    about: ["delivery confirmations"]
+    about: ["how much money"]                  # "— and how much money is on those orders?"
   - file: learnsql/series2-intermediate/15-multi-table-joins-duplicate-rows/15-multi-table-joins-duplicate-rows.mdx
     rule: forward
     quote: 'The query is also hard to read, and May''s range is written'

@@ -102,7 +102,7 @@ class DatesAndTimesKoans extends NorthwindCoKoanBase {
     //    in March 2024?", and somebody wrote
     //        WHERE EXTRACT(MONTH FROM "PaidDate") = 3
     //    It returned 826. What else did it count? Write a WHERE that keeps the year.
-    //    (A half-open range works; so does date_trunc('month', "PaidDate") = DATE '2024-03-01'.)
+    //    (Either tool from the lesson works: a half-open range, or date_trunc.)
     def "diagnose: five Marches in one count"() {
         expect:
         shouldReturn 199, '''
@@ -128,9 +128,8 @@ class DatesAndTimesKoans extends NorthwindCoKoanBase {
     // 4) DIAGNOSE: BETWEEN MISSES THE EVENING OF THE LAST DAY. How many web orders reached
     //    the web shop in December 2024? Somebody wrote
     //        WHERE "ReceivedAt" BETWEEN DATE '2024-12-01' AND DATE '2024-12-31'
-    //    and got 100. "ReceivedAt" has a time of day, and against a timestamp
-    //    DATE '2024-12-31' is midnight at the START of December 31 — so every order received
-    //    later that day is past the end of the range. Write the half-open version.
+    //    and got 100. "ReceivedAt" has a time of day. Against a timestamp, what moment is
+    //    DATE '2024-12-31'? Answer that, then write the half-open version.
     //    (Predict how many were received on the 31st before you run it.)
     def "diagnose: BETWEEN misses the evening of the last day"() {
         expect:
@@ -141,10 +140,11 @@ class DatesAndTimesKoans extends NorthwindCoKoanBase {
         '''
     }
 
-    // 5) ANCHOR "RECENT" ON THE DATA. How many invoices were issued in the last 7 days of
-    //    invoicing? CURRENT_DATE would find none — this data stops at the end of 2024. Fill in
-    //    the latest invoice date, worked out by the database.
-    //    (A subquery in brackets, from the lesson on subqueries.)
+    // 5) ANCHOR "RECENT" ON THE DATA. How many invoices were issued on the latest invoice
+    //    date or in the 7 days before it? CURRENT_DATE would find none — this data stops at
+    //    the end of 2024. Fill in the latest invoice date, worked out by the database.
+    //    (A subquery in brackets, from the lesson on subqueries. The window is 8 dates,
+    //     22 to 29 December 2024, because >= keeps the first one.)
     def "anchor recent on the data: the last week of invoicing"() {
         expect:
         shouldReturn 67, '''
@@ -181,12 +181,13 @@ class DatesAndTimesKoans extends NorthwindCoKoanBase {
     }
 
     // 8) DIAGNOSE: AN INTERVAL IS NOT A NUMBER. How many web orders reached the web shop
-    //    MORE than one day after their order date? Somebody wrote
+    //    two or more CALENDAR days after their order date? Somebody wrote
     //        WHERE w."ReceivedAt" - o."OrderDate" > 1
     //    and neither database runs it: a timestamp minus a timestamp is an INTERVAL, and an
     //    interval cannot be compared with the number 1. Write a WHERE that compares whole
     //    days with days.
-    //    (Most arrive on the day itself. A few were keyed in late.)
+    //    (Most arrive on the day itself. One received the next afternoon is one calendar
+    //     day late, not two, even though more than 24 hours have passed.)
     def "diagnose: an INTERVAL is not a number"() {
         expect:
         shouldReturn 31, '''

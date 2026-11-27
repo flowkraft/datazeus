@@ -17,8 +17,7 @@ import java.sql.SQLException
  *    shipped-in-november-between, shipped-in-december-between,
  *    shipped-in-november-half-open, keyed-in-november, orders-in-may-2024      §2 half-open ranges
  *    last-30-days, last-30-days-of-data                                         §3 anchor on the data
- *    slow-orders-interval-error, slow-orders, days-to-ship,
- *    average-days-to-ship, late-orders                                          §4 date arithmetic
+ *    slow-orders-interval-error, slow-orders, late-orders                       §4 date arithmetic
  *    orders-per-month-one-customer, customer-month-spine,
  *    customer-spine-count-star                                                  §5 the months with no rows
  *    no-ship-date-per-week                                                      §6 the case: since when?
@@ -31,6 +30,10 @@ import java.sql.SQLException
  * 2020-01-01 – 2024-12-31). Every example was re-found on the new data; the superseded case file
  * ("since when", per quarter, days waiting, past the required date) is replaced by the story map's
  * S2·10 segment: 'Shipped' orders with no ship date, week by week over 2024 (figures sheet, column C).
+ *
+ * 2026-11-27 (owner review): the article is the video's dialogue, generated from it (v2). What only
+ * the old page said left with it, and so did its checks: days-to-ship and average-days-to-ship (and
+ * their scripts), PostgreSQL's AVG of an INTERVAL, the 2-to-7 and 15-to-24 days, and the 27 weeks.
  *
  * ── DATES, AS VALUES ───────────────────────────────────────────────────────────────────────
  * date_trunc hands back a TIMESTAMP on PostgreSQL and a DATE on DuckDB; the drivers hand back
@@ -60,7 +63,7 @@ class DatesAndTimesSpec extends NorthwindCoGateSpec {
         day(r.s2) == "2024-12-29"
         r.n == 10000
 
-        and: "the article's 'every order, required and ship date is midnight'"
+        and: "the data model's 'OrderDate, RequiredDate and ShippedDate always sit at midnight'"
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
                                    WHERE CAST("OrderDate" AS TIME) <> TIME '00:00:00'
                                       OR CAST("RequiredDate" AS TIME) <> TIME '00:00:00'
@@ -182,7 +185,7 @@ class DatesAndTimesSpec extends NorthwindCoGateSpec {
     }
 
     @Unroll
-    def "[#engine] on CreatedAt, which has a time of day, BETWEEN … the 30th drops the 7 orders keyed in on 30 November: 271 against 278"() {
+    def "[#engine] on CreatedAt, which has a time of day, BETWEEN … the 30th drops the 7 orders keyed in on 30 November: 271 against 278; = DATE '2024-11-30' finds none"() {
         given:
         def r = sqlFor(engine).firstRow(script("keyed-in-november"))
 
@@ -196,6 +199,9 @@ class DatesAndTimesSpec extends NorthwindCoGateSpec {
 
         and: "a timestamp compared with a DATE is compared with midnight at the start of that day"
         sqlFor(engine).firstRow('''SELECT TIMESTAMP '2024-11-30 14:00:00' BETWEEN DATE '2024-11-01' AND DATE '2024-11-30' AS b''').b == false
+
+        and: "Mnemosyne's 'same trap with =': CreatedAt = DATE '2024-11-30' finds none, because nobody keys an order in at midnight"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders" WHERE "CreatedAt" = DATE '2024-11-30' ''').n == 0
 
         where:
         engine << ENGINES
@@ -213,7 +219,7 @@ class DatesAndTimesSpec extends NorthwindCoGateSpec {
     // --- 3. ANCHOR ON THE DATA ---------------------------------------------------------------------
 
     @Unroll
-    def "[#engine] the last 30 days of today: 0 — the last 30 days of the data: 254 orders, 1 to 31 December 2024"() {
+    def "[#engine] the 30 days before today: 0 — the last 30 days of the data: 254 orders, 1 to 31 December 2024"() {
         given:
         def anchored = sqlFor(engine).firstRow(script("last-30-days-of-data"))
 
@@ -252,21 +258,9 @@ class DatesAndTimesSpec extends NorthwindCoGateSpec {
         e.message.contains("Cannot compare values of type INTERVAL")
     }
 
-    // DuckDB 1.1.3 refused AVG(INTERVAL) and 1.4+ answers, so only PostgreSQL's figure is asserted:
-    // the article quotes PostgreSQL's and makes no claim about DuckDB (reworded 2026-09-19).
-    def "the article's aside: PostgreSQL averages an INTERVAL"() {
-        when:
-        def pg = sqlFor("postgres").firstRow('SELECT AVG("ShippedDate" - "OrderDate") AS a FROM "Orders"').a
-
-        then:
-        pg.toString().contains("4 days 19 hours")
-    }
-
     @Unroll
-    def "[#engine] cast to DATE, then subtract: 193 slow orders, orders 1–5 took 4 3 4 3 6 days, average 4.8, longest 24, three late in December"() {
+    def "[#engine] cast to DATE, then subtract: 193 slow orders, the same 193 against an INTERVAL, three late in December"() {
         given:
-        def firstFive = sqlFor(engine).rows(script("days-to-ship"))
-        def avg = sqlFor(engine).firstRow(script("average-days-to-ship"))
         def late = sqlFor(engine).rows(script("late-orders"))
 
         expect: "slow-orders' 193"
@@ -275,20 +269,6 @@ class DatesAndTimesSpec extends NorthwindCoGateSpec {
         and: "the same 193 with the interval compared with an interval — the cast changed the type, not the answer"
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders"
                                    WHERE "ShippedDate" - "OrderDate" > INTERVAL '7 days' ''').n == 193
-
-        and: "the article's days-to-ship"
-        firstFive.collect { [it.OrderID, day(it.OrderDate), day(it.ShippedDate), it.Days as int] } ==
-                [[1, "2020-01-01", "2020-01-05", 4], [2, "2020-01-01", "2020-01-04", 3], [3, "2020-01-01", "2020-01-05", 4],
-                 [4, "2020-01-01", "2020-01-04", 3], [5, "2020-01-01", "2020-01-07", 6]]
-
-        and: "the article's average and longest, and the 468 orders with no ship date AVG skips"
-        dec(avg["Average days"]) == dec("4.8")
-        (avg.Longest as int) == 24
-        sqlFor(engine).firstRow('SELECT count(*) - count("ShippedDate") AS n FROM "Orders"').n == 468
-
-        and: "the article's 'a normal shipment takes 2 to 7 days; the slow ones 15 to 24'"
-        sqlFor(engine).rows('''SELECT DISTINCT CAST("ShippedDate" AS DATE) - CAST("OrderDate" AS DATE) AS d FROM "Orders"
-                               WHERE "ShippedDate" IS NOT NULL ORDER BY d''').collect { it.d as int } == (2..7) + (15..24)
 
         and: "late-orders' card: December 2024, ordered by ship date and then order id (9696 and 9725 share the 20th)"
         late.collect { [it.OrderID, day(it.RequiredDate), day(it.ShippedDate)] } ==
@@ -376,12 +356,6 @@ class DatesAndTimesSpec extends NorthwindCoGateSpec {
         (cells.take(start) + cells.drop(stop + 1)).every { it[2] <= 1 }
         (cells.take(start) + cells.drop(stop + 1)).findAll { it[2] == 1 }*.getAt(0) == ["2024-10-28"]
 
-        and: "the article's aside: filtered in the WHERE and counted as rows, only the 27 weeks that have some come back"
-        sqlFor(engine).rows('''SELECT date_trunc('week', "OrderDate") AS w, count(*) AS n FROM "Orders"
-                               WHERE "Status" = 'Shipped' AND "ShippedDate" IS NULL
-                                 AND "OrderDate" >= DATE '2024-01-01' AND "OrderDate" < DATE '2025-01-01'
-                               GROUP BY date_trunc('week', "OrderDate")''').size() == 27
-
         and: "178 in all — the CASE lesson's 178 for Speedy Express, and every one of them is Speedy Express's"
         cells.sum { it[2] } == 178
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Orders" WHERE "Status" = 'Shipped' AND "ShippedDate" IS NULL
@@ -417,6 +391,20 @@ class DatesAndTimesSpec extends NorthwindCoGateSpec {
         and: "koan 5: CURRENT_DATE would find no invoice in the last 7 days"
         sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "Invoices"
                                    WHERE "InvoiceDate" >= CURRENT_DATE - INTERVAL '7 days' ''').n == 0
+
+        and: "koan 5: the latest date and the 7 before it are 8 dates, 22 to 29 December 2024, every one with invoices"
+        sqlFor(engine).rows('''SELECT DISTINCT CAST("InvoiceDate" AS VARCHAR) AS d FROM "Invoices"
+                               WHERE "InvoiceDate" >= (SELECT max("InvoiceDate") FROM "Invoices") - INTERVAL '7 days'
+                               ORDER BY d''').collect { day(it.d) } == (22..29).collect { "2024-12-${it}" as String }
+
+        and: "koan 8: 2730 web orders arrive on the order's own day, and the 4 that arrive the next calendar day are all more than 24 hours after its midnight, so the INTERVAL reading counts 35 against the calendar-day 31"
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "WebOrders" w JOIN "Orders" o ON o."OrderID" = w."OrderID"
+                                   WHERE CAST(w."ReceivedAt" AS DATE) = CAST(o."OrderDate" AS DATE)''').n == 2730
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "WebOrders" w JOIN "Orders" o ON o."OrderID" = w."OrderID"
+                                   WHERE CAST(w."ReceivedAt" AS DATE) - CAST(o."OrderDate" AS DATE) = 1
+                                     AND w."ReceivedAt" - o."OrderDate" > INTERVAL '1 day' ''').n == 4
+        sqlFor(engine).firstRow('''SELECT count(*) AS n FROM "WebOrders" w JOIN "Orders" o ON o."OrderID" = w."OrderID"
+                                   WHERE w."ReceivedAt" - o."OrderDate" > INTERVAL '1 day' ''').n == 35
 
         and: "koan 9: 13 of January 2020's 31 days had a web order, so a day can hold two"
         sqlFor(engine).firstRow('''SELECT count(DISTINCT date_trunc('day', "ReceivedAt")) AS n FROM "WebOrders"

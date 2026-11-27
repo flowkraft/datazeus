@@ -19,11 +19,14 @@
 # BETWEEN and the half-open range, the time of day, CURRENT_DATE and anchoring, interval against
 # days, the conditional count that keeps empty weeks (from the case), the date spine and count(*),
 # and last the production card.
-# 14 basic, 4 cloze — about the 3:1 the existing decks run. Every date literal is DATE '…'.
+# 13 basic, 4 cloze — about the 3:1 the existing decks run. Every date literal is DATE '…'.
 # 2026-09-15: the two time-of-day cards became one (Series 1 · 10 owns that argument).
 # 2026-09-17 (step C, Northwind Company): premises re-cut to the new examples — five Junes, a partial
 # last week, 1 December in two monthly reports, a keyed-in time of day that is real, one customer's
 # empty months; the old overdue-with-no-ship-date card became the empty-weeks card of the new case.
+# 2026-11-27 (owner review; the article follows the video since then): the AVG-skips-NULL card left,
+# because the video never says it; the first-week card (labelled 30 December 2019) joined the
+# partial periods; the INTERVAL cloze says timestamp, because a DATE plus an INTERVAL is one too.
 #
 # WHAT THIS DECK OWNS, AND WHAT IT LEAVES ALONE:
 #   - Series 1 · 10 owns the half-open range as a WHERE pattern; the cards here are about why dates
@@ -54,6 +57,10 @@ cards:
       front: "The data ends on Tuesday 31 December 2024. Grouped by <code>date_trunc('week', …)</code>, the last week has 20 orders and the week before it 60. Did orders collapse?"
       back: "No. Weeks start on Monday, so the last week holds only 30 and 31 December: two days. A partial period can look like a crash or a record, so its count alone does not show it. Ask for min() and max() of the date in each group, and label partial periods on the report."
 
+  - basic:
+      front: "Orders start on Wednesday 1 January 2020. Grouped by <code>date_trunc('week', …)</code>, the first row is labelled 30 December 2019. Is there data from 2019?"
+      back: "No. A week is labelled by its Monday, and 1 January 2020 falls in the week that starts on Monday 30 December 2019. That week holds only 1 to 5 January: five days, a partial period like the last one."
+
   # ── 3. BETWEEN AND THE HALF-OPEN RANGE ──
   - basic:
       front: "November's report uses <code>shipped BETWEEN DATE '2024-11-01' AND DATE '2024-12-01'</code>; December's uses <code>BETWEEN DATE '2024-12-01' AND DATE '2025-01-01'</code>. Some orders shipped on 1 December. What goes wrong?"
@@ -73,9 +80,9 @@ cards:
   # ── 5. "RECENT" ──
   - basic:
       front: "The data is a snapshot that ends on 31 December 2024. <code>WHERE order_date &gt;= CURRENT_DATE - INTERVAL '30 days'</code> returns 0 rows. Is the query wrong?"
-      back: "No, it is correct: CURRENT_DATE is today, and no order is from the last 30 days of today. On a snapshot, anchor on the data instead: <code>(SELECT max(order_date) FROM orders) - INTERVAL '30 days'</code>. On a live database, CURRENT_DATE is right."
+      back: "No, it is correct: CURRENT_DATE is today, and no order is from the 30 days before today. On a snapshot, anchor on the data instead: <code>(SELECT max(order_date) FROM orders) - INTERVAL '30 days'</code>. On a live database, CURRENT_DATE is right."
 
-  - cloze: "A date or timestamp plus an {{c1::INTERVAL}}, such as <code>order_date + INTERVAL '14 days'</code>, is still a {{c2::date or timestamp}}."
+  - cloze: "A timestamp plus or minus an {{c1::INTERVAL}}, such as <code>ordered_at + INTERVAL '14 days'</code>, is still a {{c2::timestamp}}."
 
   # ── 6. SUBTRACTING DATES ──
   - basic:
@@ -83,10 +90,6 @@ cards:
       back: "A timestamp minus a timestamp is an INTERVAL, a length of time such as '4 days', not the number 4, and an interval cannot be compared with a plain number."
 
   - cloze: "To get whole days between two timestamps, {{c1::CAST both to DATE}} first: a date minus a date is {{c2::a whole number of days}}."
-
-  - basic:
-      front: "An order has no shipped date yet. What is <code>CAST(shipped_at AS DATE) - CAST(ordered_at AS DATE)</code> for it, and what does AVG do with it?"
-      back: "NULL, not 0: there is nothing to subtract from. AVG skips NULLs, so unshipped orders do not pull the average days to ship down."
 
   # ── 7. EMPTY PERIODS ──
   - basic:

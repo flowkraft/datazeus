@@ -815,10 +815,10 @@ series:
       # beginners get stuck. On the shipped data "OrderDate" is a TIMESTAMP: timestamp minus
       # timestamp is an INTERVAL, and CAST(… AS DATE) minus CAST(… AS DATE) is a whole number of
       # days. That is what makes "days to ship" go wrong, and it is why Series 1 · 45 cast both
-      # sides — this episode owes the explanation that one borrowed. AGE() too, in one line
-      # (PostgreSQL and DuckDB both have it). Averaging an INTERVAL works on PostgreSQL and on DuckDB 1.4+ (the
-      # koan runner is on 1.4.5.0, so it answers — see the header's upgrade note); the lesson casts to DATE either way,
-      # because a whole number of days is what a report shows.
+      # sides — this episode owes the explanation that one borrowed. AGE() and averaging an INTERVAL are
+      # NOT in the lesson: since 2026-11-27 (owner review) the article is the video's dialogue, and the
+      # video says neither. The lesson casts to DATE, because a whole number of days is what a report
+      # shows; Series 4 owns the per-engine spellings.
       #
       # ON NORTHWIND COMPANY S (step C, 2026-09-17; every figure asserted by DatesAndTimesSpec on both engines):
       # THE EARN — EXTRACT(MONTH) over five years puts 739 orders in "June" (120 + 130 + 144 + 168 + 177)
@@ -830,20 +830,22 @@ series:
       # BETWEEN'S BOUNDARY — November 2024 BETWEEN '11-01' AND '12-01' is 277 and December's BETWEEN starts on
       # '12-01' (236): the 14 shipments of 1 December are in both; half-open November is 263. Ending on the
       # 30th instead is REAL here: "OrderDate"/"ShippedDate" are midnight, but "CreatedAt" has a time of day,
-      # so BETWEEN … '11-30' on it drops the 7 orders keyed in on 30 November (271 against 278).
+      # so BETWEEN … '11-30' on it drops the 7 orders keyed in on 30 November (271 against 278), and
+      # = DATE '2024-11-30' on it finds none, because CreatedAt runs 08:00 to 17:59 — one day's rows asked
+      # for with = on a timestamp is the date question people post most (owner review 2026-11-27).
       #
       # THE MISSING PERIODS — A REPORT WITH HOLES IN IT. Series 1 · 30 closed a beat on "a zero is a
       # fact; a missing row is a silence", and nothing has paid it off since. The company has orders on
       # almost every day, so the example is ONE CUSTOMER: Bramble Supermarket (BRAM3) per month in 2024
       # comes back as 4 rows, and a chart drawn from it hides the 8 months with no orders. The fix is a
-      # DATE SPINE — every month, generated with generate_series (a calendar table is the same idea,
-      # stored) — with the orders LEFT JOINed onto it, the customer's condition in the ON (Series 1 · 40).
+      # DATE SPINE — every month, generated with generate_series — with the orders LEFT JOINed onto it,
+      # the customer's condition in the ON (Series 1 · 40).
       # THE TRAP INSIDE THE FIX: count(*) over that LEFT JOIN reports 14 — six order rows plus one row per
       # empty month — while count(o."OrderID") reports the real 6, with 8 zeros: Series 1 · 25's count(*)
       # against count(column), exactly where it costs the most.
-      # PORTABILITY, in one line: generate_series is PostgreSQL's and DuckDB's (DuckDB returns TIMESTAMPs
-      # even from DATE arguments); SQL Server and MySQL spell it differently, and a recursive CTE
-      # (Series 3 · 10) builds the same spine anywhere. Series 4 owns the spellings.
+      # PORTABILITY is not in the lesson either (2026-11-27, with AGE above): generate_series is
+      # PostgreSQL's and DuckDB's; calendar tables and the recursive-CTE spine are Series 3 · 10's, and
+      # Series 4 owns the spellings.
       # WORKPLACE: group by real months, half-open ranges, partial periods, days between dates, anchoring
       #   "recent" on the data, filling periods that have no rows.
       # LADDER (2026-09-21) — LEO OPENS. First rung of agency and the hinge of the arc: she does not say "now
