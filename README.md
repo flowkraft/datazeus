@@ -8,7 +8,7 @@ green when you get it right.
 
 ## The best hands on way to learn SQL and many other data topics
 
-<a href="#get-started">Start Learning Data →</a>
+<a href="https://datapallas.com/docs/learn-data" target="_blank">Start Learning Data →</a>
 
 Clone this repo and you have it all: the lessons, the sample data and the koans. The koans run on
 DuckDB, a database in a single file, so there is no server to install and nothing to sign up for.
@@ -124,7 +124,12 @@ being turned into lessons one at a time. Star the repo and you will see them as 
 
 ## Get started
 
-You need **git** and **Java 17 or newer**. Nothing else: the runner fetches its own build tool.
+**[Install DataPallas, start CloudBeaver and run your first koans →](https://datapallas.com/docs/learn-data)**
+
+A few minutes, once. Then you have a real database on your own machine and every lesson is
+ready to run.
+
+**Or, just the koans.** You need **git** and **Java 17 or newer**; the runner fetches its own build tool.
 
 ```bash
 git clone https://github.com/flowkraft/datazeus
@@ -143,8 +148,9 @@ DuckDB and PostgreSQL both, so you get the same answers.
 ## Links
 
 - **The courses, written out** — https://datapallas.com/academy
-- **DataPallas** — if you want Northwind on a PostgreSQL server too, ready-made, with CloudBeaver to
-  query it: https://github.com/flowkraft/datapallas (setup guide: https://datapallas.com/learn-data)
+- **Setup guide** — https://datapallas.com/docs/learn-data
+- **DataPallas** — everything you need to run the lessons, in one download:
+  https://github.com/flowkraft/datapallas
 
 Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Licensed under
 [LICENSE](LICENSE).
