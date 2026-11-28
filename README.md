@@ -8,10 +8,10 @@ green when you get it right.
 
 ## The best hands on way to learn SQL and many other data topics
 
-<a href="https://github.com/flowkraft/datapallas#learn-data" target="_blank">Start Learning Data →</a>
+<a href="#get-started">Start Learning Data →</a>
 
-The lessons run on **DataPallas** — it bundles the Northwind sample database on PostgreSQL and
-CloudBeaver to query it with, so there is nothing else to install and nothing to sign up for.
+Clone this repo and you have it all: the lessons, the sample data and the koans. The koans run on
+DuckDB, a database in a single file, so there is no server to install and nothing to sign up for.
 Everything runs on your own machine.
 
 ## News (Just Shipped)
@@ -36,12 +36,12 @@ Take either. Take both.
 
 **2. Then do it yourself — this is the part that counts.** Every episode comes with **koans**:
 runnable exercises with a blank to fill in. Most also ask you to type and run the queries
-yourself in CloudBeaver, against real tables with the kind of schema you actually meet at work
+yourself in a SQL editor, against real tables with the kind of schema you actually meet at work
 — customers, orders, products, employees, foreign keys and all — not three rows invented to
 make the example tidy.
 
-**3. Nothing to configure.** The database, the sample data and the koan runner all arrive with
-the install, already wired together. No connection strings to debug, no data to import, no
+**3. Nothing to configure.** The sample data and the koan runner arrive with the clone, already
+wired together. No connection strings to debug, no data to import, no
 account to make. You open the file, fill the blank, run it.
 
 ## What a koan looks like
@@ -64,15 +64,19 @@ $ ./zeus.sh koans learnsql series1 _00
 
   Forging 'series1 _00 Start Here'
 
-      You mastered 'count every order in the table' — +1 awareness.
+      You mastered 'count every order in the table' which expanded +1 your awareness.
       'the FROM decides which table you count' has damaged your karma.
 
   You have not yet reached enlightenment ...
+      you haven't written the query yet - replace the ___ with SQL.
       it should return 25
 
   Please meditate on the following code:
-      src/koans/groovy/datazeus/learnsql/series1/_00/StartHereKoans.groovy:44
-      44:   SELECT count(*) FROM ___
+      Your koans file is  StartHereKoans.groovy
+      Its location is     /home/you/datazeus/tests/src/koans/groovy/datazeus/learnsql/series1/_00/StartHereKoans.groovy
+
+      Fix line 70:
+      70:   SELECT count(*) FROM ___
 
       your path thus far  [#....]  1 of 5 koans
 ```
@@ -120,17 +124,27 @@ being turned into lessons one at a time. Star the repo and you will see them as 
 
 ## Get started
 
-**[Install DataPallas, start CloudBeaver and run your first koans →](https://datapallas.com/learn-data)**
+You need **git** and **Java 17 or newer**. Nothing else: the runner fetches its own build tool.
 
-A few minutes, once. Then you have a real database on your own machine and every lesson is
-ready to run.
+```bash
+git clone https://github.com/flowkraft/datazeus
+cd datazeus
+./zeus.sh koans learnsql series1 _00      # Windows: zeus.bat koans learnsql series1 _00
+```
+
+The first run downloads what the koans need, so give it a minute; after that it is quick.
+`zeus help` lists every command, and `zeus update` brings in new lessons while keeping the koans
+you have already edited.
+
+To type a lesson's queries yourself, open the DuckDB files in `datasets/` in any SQL editor that
+reads DuckDB (`datasets/README.md` says which lesson uses which). Every figure a lesson shows is checked on
+DuckDB and PostgreSQL both, so you get the same answers.
 
 ## Links
 
 - **The courses, written out** — https://datapallas.com/academy
-- **Setup guide** — https://datapallas.com/learn-data
-- **DataPallas** — everything you need to run the lessons, in one download:
-  https://github.com/flowkraft/datapallas
+- **DataPallas** — if you want Northwind on a PostgreSQL server too, ready-made, with CloudBeaver to
+  query it: https://github.com/flowkraft/datapallas (setup guide: https://datapallas.com/learn-data)
 
 Contributions welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Licensed under
 [LICENSE](LICENSE).
