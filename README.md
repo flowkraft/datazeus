@@ -91,11 +91,11 @@ tells you what it returned versus what it should have — so you debug SQL, not 
 
 | | |
 |---|---|
-| `courses/` | course roadmaps — the episode list, in order, with what each one owes you |
-| `tests/src/koans/` | the koans, by course and episode |
+| `courses/` | per course, its roadmap (`curriculum.yaml`, the episodes in order); per episode, the written lesson with its flashcards and SQL. A `_todo-` file is the brief of a lesson not written yet ([CONTRIBUTING.md](CONTRIBUTING.md)) |
+| `tests/src/koans/` | the koans, by course and episode (`_todo/` holds the ones not written yet) |
 | `tests/src/verify/` | the specs that prove every answer, on **DuckDB and PostgreSQL both** |
 | `datasets/` | Northwind — a production-like schema with the data to match, shared by every course |
-| `zeus.sh` / `zeus.bat` | the runner — `zeus koans <course> <series> <episode>`, and `zeus update` |
+| `zeus.sh` / `zeus.bat` | the runner — `zeus koans <course> <series> <episode>`, `zeus update`, `zeus help`. Needs Java 17 or newer |
 
 ## The courses
 
@@ -115,7 +115,7 @@ tells you what it returned versus what it should have — so you debug SQL, not 
 | **[AI for Data](https://datapallas.com/academy/learn-ai)** | Use AI on data you are responsible for — and be able to prove the answer is right |
 
 **Hundreds of episodes planned across all courses.** Being straight with you about where
-that stands: **Learn SQL Series 1 is publishing now** — the rest is written as roadmaps and is
+that stands: **Learn SQL is publishing now**, series by series — the rest is written as roadmaps and is
 being turned into lessons one at a time. Star the repo and you will see them as they land.
 
 ## Get started
